@@ -4,6 +4,8 @@ import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/
 import PostContent from './PostContent';
 import type { Post } from '@/lib/types';
 
+export const runtime = 'edge';
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -27,8 +29,10 @@ async function getPostBySlugOrId(identifier: string): Promise<Post | null> {
     if (docSnap.exists()) {
       return { ...docSnap.data() as Post, id: docSnap.id };
     }
-  } catch (error) {
-    console.error('Error fetching post for metadata:', error);
+  } catch (error: any) {
+    if (error.name !== 'AbortError' && !error.message?.includes('aborted')) {
+      console.error('Error fetching post for metadata:', error);
+    }
   }
   return null;
 }

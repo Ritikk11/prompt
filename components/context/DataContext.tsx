@@ -76,11 +76,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const unsubPosts = onSnapshot(collection(db, 'posts'), (snap) => {
       const data = snap.docs.map(doc => doc.data() as Post);
       setPosts(data);
+    }, (error) => {
+      if (error.name === 'AbortError' || error.message.includes('aborted')) return;
+      console.error('Firebase posts snapshot error:', error);
     });
 
     const unsubSections = onSnapshot(collection(db, 'sections'), (snap) => {
       const data = snap.docs.map(doc => doc.data() as Section);
       setSections(data);
+    }, (error) => {
+      if (error.name === 'AbortError' || error.message.includes('aborted')) return;
+      console.error('Firebase sections snapshot error:', error);
     });
 
     const unsubSettings = onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
@@ -91,6 +97,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         resetData();
       }
       setLoading(false);
+    }, (error) => {
+      if (error.name === 'AbortError' || error.message.includes('aborted')) return;
+      console.error('Firebase settings snapshot error:', error);
     });
 
     return () => {
