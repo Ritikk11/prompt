@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "Post": {
+      "title": "Post",
+      "description": "An AI image prompt post",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "slug": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "url": { "type": "string" },
+              "prompt": { "type": "string" },
+              "aiTool": { "type": "string" }
+            }
+          }
+        },
+        "category": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "featured": { "type": "boolean" },
+        "views": { "type": "number" },
+        "likes": { "type": "number" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "Section": {
+      "title": "Section",
+      "description": "Home page section configuration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "aiTool": { "type": "string" },
+        "postIds": { "type": "array", "items": { "type": "string" } },
+        "order": { "type": "number" },
+        "visible": { "type": "boolean" },
+        "limit": { "type": "number" }
+      }
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global application settings",
+      "type": "object",
+      "properties": {
+        "siteTitle": { "type": "string" },
+        "siteDescription": { "type": "string" },
+        "heroEnabled": { "type": "boolean" },
+        "heroAutoPlay": { "type": "boolean" },
+        "categories": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "firestore": {
+    "/posts/{postId}": {
+      "schema": { "$ref": "#/entities/Post" },
+      "description": "Stores individual prompt posts"
+    },
+    "/sections/{sectionId}": {
+      "schema": { "$ref": "#/entities/Section" },
+      "description": "Stores home page sections"
+    },
+    "/settings/global": {
+      "schema": { "$ref": "#/entities/Settings" },
+      "description": "Global configuration settings"
+    }
+  }
+}

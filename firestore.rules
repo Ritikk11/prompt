@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      // For this demo, any authenticated user is an admin
+      return isSignedIn(); 
+    }
+
+    // Allows the very first site visitor to seed the database if it's completely empty or partially failed.
+    function isBootstrapping() {
+      return !exists(/databases/$(database)/documents/posts/p15);
+    }
+
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if (isAdmin() || isBootstrapping())
+                    && isValidId(postId)
+                    && incoming().keys().hasAll(['id', 'title', 'description', 'images', 'category', 'tags', 'featured', 'views', 'likes', 'createdAt']);
+      allow update: if true; // Open update for likes and views right now
+      allow delete: if isAdmin();
+    }
+
+    match /sections/{sectionId} {
+      allow read: if true;
+      allow create: if (isAdmin() || isBootstrapping()) && isValidId(sectionId);
+      allow update: if isAdmin() || isBootstrapping();
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow create: if isAdmin() || isBootstrapping();
+      allow update: if isAdmin() || isBootstrapping();
+      allow delete: if isAdmin();
+    }
+  }
+}
