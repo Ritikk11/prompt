@@ -38,6 +38,7 @@ export interface SiteSettings {
   heroEnabled: boolean;
   heroAutoPlay: boolean;
   aiTools: string[];
+  toolDetails?: Record<string, { logo: string; color: string }>;
 }
 
 export type Theme = 'light' | 'dark';

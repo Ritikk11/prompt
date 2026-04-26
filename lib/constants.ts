@@ -1,4 +1,4 @@
-export const aiToolInfo: Record<string, { color: string; logo: string }> = {
+export const fallbackToolInfo: Record<string, { color: string; logo: string }> = {
   'ChatGPT': {
     color: 'bg-[#74aa9c]',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg'
@@ -25,6 +25,9 @@ export const aiToolInfo: Record<string, { color: string; logo: string }> = {
   }
 };
 
-export function getToolInfo(tool: string) {
-  return aiToolInfo[tool] || { color: 'bg-surface-500', logo: '' };
+export function getToolInfo(tool: string, customDetails?: Record<string, {logo: string; color: string}>) {
+  if (customDetails && customDetails[tool]) {
+    return customDetails[tool];
+  }
+  return fallbackToolInfo[tool] || { color: 'bg-surface-500', logo: '' };
 }

@@ -51,11 +51,11 @@ function CopyButton({ text }: { text: string }) {
 
 export default function PostContent() {
   const { slug } = useParams();
-  const { incrementViews, toggleLike, posts, loading } = useData();
+  const { incrementViews, toggleLike, posts, loading, settings } = useData();
   const viewIncrementedRef = useRef(false);
 
   const post = posts.find((p) => p.slug === slug || p.id === slug);
-  const heroToolInfo = post ? getToolInfo(post.images[0]?.aiTool || '') : { color: '', logo: '' };
+  const heroToolInfo = post ? getToolInfo(post.images[0]?.aiTool || '', settings?.toolDetails) : { color: '', logo: '' };
 
   useEffect(() => {
     if (post && !viewIncrementedRef.current) {
@@ -100,72 +100,58 @@ export default function PostContent() {
         <span className="truncate text-surface-900 dark:text-white max-w-[200px]">{post.title}</span>
       </nav>
 
-      {/* Hero Banner — NO cropping */}
-      <div className="relative rounded-2xl overflow-hidden mb-8 shadow-xl bg-surface-100 dark:bg-surface-800">
-        <div className="relative w-full overflow-hidden bg-black flex items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8 min-h-[300px] max-h-[80vh]">
-          {/* Blurred background for portrait images */}
-          <div className="absolute inset-0 opacity-40 blur-2xl transition-opacity">
-            <Image
-              src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
-              alt="background blur"
-              fill
-              unoptimized
-              className="object-cover"
-            />
-          </div>
-          
-          <div className="relative w-full max-w-4xl mx-auto flex items-center justify-center z-10 transition-transform duration-500">
-            <img
-              src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
-              alt={post.title}
-              className="max-w-full max-h-[70vh] w-auto h-auto block rounded-2xl shadow-2xl border border-white/10"
-              loading="eager"
-            />
-          </div>
+      {/* Post Header */}
+      <div className="mb-6 flex flex-col items-center text-center">
+        <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 tracking-tight leading-tight max-w-4xl">{post.title}</h1>
+        <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg max-w-3xl leading-relaxed mb-6">{post.description}</p>
+        
+        {/* Meta Info */}
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium text-surface-500 bg-surface-50 dark:bg-surface-900/50 py-3 px-6 rounded-full border border-surface-200 dark:border-surface-800">
+          <span className="flex items-center gap-1.5">
+            <Eye className="w-4.5 h-4.5 text-primary-500" /> {post.views.toLocaleString()} <span className="hidden sm:inline">views</span>
+          </span>
+          <span className="w-1 h-1 rounded-full bg-surface-300 dark:bg-surface-700" />
+          <button
+            onClick={() => toggleLike(post.id)}
+            className={`flex items-center gap-1.5 transition-colors ${
+              post.likedByUser ? 'text-red-500' : 'hover:text-red-400'
+            }`}
+          >
+            <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop' : ''}`} /> {post.likes.toLocaleString()} <span className="hidden sm:inline">likes</span>
+          </button>
+          <span className="w-1 h-1 rounded-full bg-surface-300 dark:bg-surface-700" />
+          <span className="flex items-center gap-1.5">
+            <Clock className="w-4.5 h-4.5" /> {formatDate(post.createdAt)}
+          </span>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none z-20" />
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 z-30">
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold text-white shadow-lg backdrop-blur-md ${heroToolInfo.color}/80 border border-white/10 uppercase tracking-wider`}>
+      </div>
+
+      {/* Main Hero Image — Natural layout without massive background box */}
+      <div className="relative mb-12 w-full max-w-5xl mx-auto flex justify-center">
+        <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-surface-100 dark:bg-surface-800/30">
+          <img
+            src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+            alt={post.title}
+            className="w-auto max-w-full max-h-[80vh] h-auto object-contain"
+            loading="eager"
+          />
+          <div className="absolute top-4 left-4 z-20">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white shadow-md backdrop-blur-md saturate-150 ${heroToolInfo.color}/90 border border-white/20 uppercase tracking-widest`}>
               {heroToolInfo.logo && (
-                <div className="relative w-3.5 h-3.5 shrink-0 bg-white/20 rounded-full p-0.5">
+                <div className="relative w-4 h-4 shrink-0 bg-black/10 rounded overflow-hidden p-[1px]">
                   <Image src={heroToolInfo.logo} alt="" fill className="object-contain" unoptimized />
                 </div>
               )}
               {post.images[0]?.aiTool}
             </span>
-            {post.featured && (
-              <span className="px-3 py-1.5 rounded-full text-[10px] font-bold bg-yellow-500/80 text-white backdrop-blur-md border border-white/10 uppercase tracking-wider">
+          </div>
+          {post.featured && (
+            <div className="absolute top-4 right-4 z-20">
+              <span className="inline-flex px-3 py-1.5 rounded-lg text-[11px] font-bold bg-yellow-400 text-yellow-900 border border-yellow-300 shadow-md uppercase tracking-widest">
                 ⭐ Featured
               </span>
-            )}
-          </div>
-          <h1 className="text-2xl md:text-5xl font-extrabold text-white mb-3 drop-shadow-xl tracking-tight leading-tight">{post.title}</h1>
-          <p className="text-white/80 text-sm md:text-lg max-w-3xl leading-relaxed font-medium">{post.description}</p>
-        </div>
-      </div>
-
-      {/* Meta bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-8 p-5 rounded-2xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm">
-        <div className="flex flex-wrap items-center gap-6">
-          <span className="flex items-center gap-2 text-sm font-semibold text-surface-500">
-            <Eye className="w-4.5 h-4.5 text-primary-500" /> {post.views.toLocaleString()} <span className="font-normal opacity-70">views</span>
-          </span>
-          <button
-            onClick={() => toggleLike(post.id)}
-            className={`flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 active:scale-95 ${
-              post.likedByUser ? 'text-red-500' : 'text-surface-500 hover:text-red-400'
-            }`}
-          >
-            <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop' : ''}`} /> {post.likes.toLocaleString()} <span className="font-normal opacity-70">likes</span>
-          </button>
-          <span className="flex items-center gap-2 text-sm font-semibold text-surface-500">
-            <Clock className="w-4.5 h-4.5 text-surface-400" /> <span className="font-normal opacity-70">{formatDate(post.createdAt)}</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold text-surface-400 uppercase tracking-widest hidden sm:inline">Collection Pack:</span>
-          <CopyButton text={allPromptsText} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -199,10 +185,10 @@ export default function PostContent() {
                       loading="lazy"
                     />
                     <div className="absolute top-4 left-4 z-20">
-                      <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[9px] font-bold text-white shadow-xl backdrop-blur-md ${getToolInfo(img.aiTool).color}/80 border border-white/10 uppercase tracking-wider`}>
-                        {getToolInfo(img.aiTool).logo && (
+                      <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[9px] font-bold text-white shadow-xl backdrop-blur-md ${getToolInfo(img.aiTool, settings?.toolDetails).color}/80 border border-white/10 uppercase tracking-wider`}>
+                        {getToolInfo(img.aiTool, settings?.toolDetails).logo && (
                           <div className="relative w-3.5 h-3.5 shrink-0 bg-white/20 rounded-full p-0.5 overflow-hidden">
-                            <Image src={getToolInfo(img.aiTool).logo} alt="" fill className="object-contain" unoptimized />
+                            <Image src={getToolInfo(img.aiTool, settings?.toolDetails).logo} alt="" fill className="object-contain" unoptimized />
                           </div>
                         )}
                         {img.aiTool}

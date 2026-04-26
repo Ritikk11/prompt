@@ -269,6 +269,8 @@ export default function Admin() {
   const [newAiTool, setNewAiTool] = useState('');
   const [editingAiTool, setEditingAiTool] = useState<string | null>(null);
   const [editAiToolValue, setEditAiToolValue] = useState('');
+  const [editAiToolLogo, setEditAiToolLogo] = useState('');
+  const [editAiToolColor, setEditAiToolColor] = useState('');
 
   const addAiTool = () => {
     const toolList = settings.aiTools || [];
@@ -293,19 +295,30 @@ export default function Admin() {
   const startEditAiTool = (tool: string) => {
     setEditingAiTool(tool);
     setEditAiToolValue(tool);
+    const existing = settings.toolDetails?.[tool] || getToolInfo(tool);
+    setEditAiToolLogo(existing.logo || '');
+    setEditAiToolColor(existing.color || 'bg-surface-500');
   };
 
   const saveEditAiTool = (oldTool: string) => {
     if (!editAiToolValue.trim()) return;
-    const newTools = (settings.aiTools || []).map(t => t === oldTool ? editAiToolValue.trim() : t);
+    const newToolName = editAiToolValue.trim();
+    const newTools = (settings.aiTools || []).map(t => (t === oldTool ? newToolName : t));
     
+    // Manage custom details
+    const newToolDetails = { ...settings.toolDetails };
+    if (oldTool !== newToolName && newToolDetails[oldTool]) {
+      delete newToolDetails[oldTool];
+    }
+    newToolDetails[newToolName] = { logo: editAiToolLogo, color: editAiToolColor };
+
     // Update posts using this tool
     posts.forEach(p => {
       let changed = false;
       const updatedImages = p.images.map(img => {
         if (img.aiTool === oldTool) {
           changed = true;
-          return { ...img, aiTool: editAiToolValue.trim() };
+          return { ...img, aiTool: newToolName };
         }
         return img;
       });
@@ -314,7 +327,7 @@ export default function Admin() {
       }
     });
 
-    updateSettings({ ...settings, aiTools: newTools });
+    updateSettings({ ...settings, aiTools: newTools, toolDetails: newToolDetails });
     setEditingAiTool(null);
   };
 
@@ -1091,48 +1104,70 @@ export default function Admin() {
             </div>
 
             {/* AI Tools list */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-3">
               {(settings.aiTools || []).map(tool => {
                 const imgCount = posts.reduce((acc, p) => acc + p.images.filter(img => img.aiTool === tool).length, 0);
+                const info = getToolInfo(tool, settings.toolDetails);
                 return (
-                  <div key={tool} className="flex items-center gap-2 p-2.5 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50">
+                  <div key={tool} className="flex flex-col gap-2 p-3 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50">
                     {editingAiTool === tool ? (
-                      <>
-                        <input
-                          value={editAiToolValue}
-                          onChange={e => setEditAiToolValue(e.target.value)}
-                          className="flex-1 px-2 py-1 rounded bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
-                          autoFocus
-                        />
-                        <button onClick={() => saveEditAiTool(tool)} className="p-1 rounded text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20">
-                          <Check className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={() => setEditingAiTool(null)} className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </>
+                      <div className="flex flex-col gap-2 w-full">
+                        <div className="flex items-center gap-2">
+                           <input
+                             value={editAiToolValue}
+                             onChange={e => setEditAiToolValue(e.target.value)}
+                             className="flex-1 px-2 py-1.5 rounded bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs font-semibold"
+                             autoFocus
+                             placeholder="Tool Name"
+                           />
+                           <input
+                             value={editAiToolColor}
+                             onChange={e => setEditAiToolColor(e.target.value)}
+                             className="w-24 px-2 py-1.5 rounded bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
+                             placeholder="bg-color-500"
+                           />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={editAiToolLogo}
+                            onChange={e => setEditAiToolLogo(e.target.value)}
+                            className="flex-1 px-2 py-1.5 rounded bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
+                            placeholder="Logo Image URL"
+                          />
+                          <button onClick={() => saveEditAiTool(tool)} className="p-1.5 rounded bg-primary-500 text-white hover:bg-primary-600 transition-colors">
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setEditingAiTool(null)} className="p-1.5 rounded bg-surface-200 dark:bg-surface-700 hover:bg-surface-300 dark:hover:bg-surface-600 transition-colors text-surface-600 dark:text-surface-300">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
                     ) : (
-                      <>
-                        {getToolInfo(tool).logo && (
-                          <div className="relative w-5 h-5 shrink-0 bg-white dark:bg-surface-800 rounded-sm p-0.5 border border-surface-200 dark:border-surface-700">
-                            <Image src={getToolInfo(tool).logo} alt="" fill className="object-contain" unoptimized />
-                          </div>
-                        )}
-                        <span className="flex-1 text-sm font-medium truncate">{tool}</span>
-                        <span className="text-[10px] text-surface-400 shrink-0">{imgCount} uses</span>
+                      <div className="flex items-center gap-3">
+                        <div className={`relative w-8 h-8 shrink-0 flex items-center justify-center rounded-md border border-white/20 shadow-sm ${info.color}`}>
+                          {info.logo && (
+                            <Image src={info.logo} alt="" fill className="object-contain p-1.5" unoptimized />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{tool}</p>
+                          <p className="text-[10px] text-surface-400">{imgCount} post uses</p>
+                        </div>
                         <button
                           onClick={() => startEditAiTool(tool)}
-                          className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 shrink-0"
+                          className="p-1.5 rounded hover:bg-surface-200 dark:hover:bg-surface-700 shrink-0"
+                          title="Edit Tool Details"
                         >
-                          <Edit3 className="w-3 h-3 text-primary-500" />
+                          <Edit3 className="w-3.5 h-3.5 text-primary-500" />
                         </button>
                         <button
                           onClick={() => removeAiTool(tool)}
-                          className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0"
+                          className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0"
+                          title="Delete Tool"
                         >
-                          <Trash2 className="w-3 h-3 text-red-400" />
+                          <Trash2 className="w-3.5 h-3.5 text-red-400" />
                         </button>
-                      </>
+                      </div>
                     )}
                   </div>
                 );
