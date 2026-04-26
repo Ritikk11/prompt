@@ -3,6 +3,7 @@ export interface ImagePrompt {
   url: string;
   prompt: string;
   aiTool: string;
+  model?: string;
 }
 
 export interface Post {

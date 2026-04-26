@@ -70,7 +70,7 @@ export default function Admin() {
   const [seoDescription, setSeoDescription] = useState('');
   const [tagsStr, setTagsStr] = useState('');
   const [featured, setFeatured] = useState(false);
-  const [images, setImages] = useState<ImagePrompt[]>([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT' }]);
+  const [images, setImages] = useState<ImagePrompt[]>([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
   const [assignedSections, setAssignedSections] = useState<string[]>([]);
 
 
@@ -96,7 +96,7 @@ export default function Admin() {
 
   const resetForm = () => {
     setTitle(''); setSlug(''); setDescription(''); setSeoTitle(''); setSeoDescription(''); setTagsStr('');
-    setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT' }]);
+    setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
   };
 
@@ -109,7 +109,7 @@ export default function Admin() {
     setSeoDescription(post.seoDescription || '');
     setTagsStr(post.tags.join(', '));
     setFeatured(post.featured);
-    setImages(post.images.length > 0 ? post.images : [{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT' }]);
+    setImages(post.images.length > 0 ? post.images : [{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
     // Find which custom sections contain this post
     const inSections = sections
       .filter(s => s.type === 'custom' && s.postIds?.includes(post.id))
@@ -119,7 +119,7 @@ export default function Admin() {
   };
 
   const addImageField = () => {
-    setImages(prev => [...prev, { id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT' }]);
+    setImages(prev => [...prev, { id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
   };
 
   const updateImage = (idx: number, field: keyof ImagePrompt, value: string) => {
@@ -706,15 +706,26 @@ export default function Admin() {
                               </label>
                             </div>
                           </div>
-                          <div>
-                            <label className="block text-xs text-surface-400 mb-1">AI Tool</label>
-                            <select
-                              value={img.aiTool}
-                              onChange={e => updateImage(idx, 'aiTool', e.target.value)}
-                              className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
-                            >
-                              {aiTools.map(t => <option key={t} value={t}>{t}</option>)}
-                            </select>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs text-surface-400 mb-1">AI Tool</label>
+                              <select
+                                value={img.aiTool}
+                                onChange={e => updateImage(idx, 'aiTool', e.target.value)}
+                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
+                              >
+                                {aiTools.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs text-surface-400 mb-1">Model (Optional)</label>
+                              <input
+                                value={img.model || ''}
+                                onChange={e => updateImage(idx, 'model', e.target.value)}
+                                placeholder="e.g. GPT-4, v6.0"
+                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
+                              />
+                            </div>
                           </div>
                         </div>
 

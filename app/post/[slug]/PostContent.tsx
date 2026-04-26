@@ -208,7 +208,7 @@ export default function PostContent() {
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-2">
                         <div className="w-1.5 h-4 bg-primary-500 rounded-full" />
-                        <h3 className="font-bold text-base tracking-tight">AI Instruction</h3>
+                        <h3 className="font-bold text-base tracking-tight">Prompt</h3>
                       </div>
                       <CopyButton text={img.prompt} />
                     </div>
@@ -220,7 +220,7 @@ export default function PostContent() {
                   </div>
                   <div className="flex items-center gap-2 text-xs font-bold text-surface-400 uppercase tracking-widest">
                     <Clock className="w-4 h-4 text-primary-500/50" />
-                    Engine: <span className="text-surface-600 dark:text-surface-200">{img.aiTool}</span>
+                    Model: <span className="text-surface-600 dark:text-surface-200">{img.model || img.aiTool}</span>
                   </div>
                 </div>
               </div>
