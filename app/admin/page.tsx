@@ -2,20 +2,20 @@
 import { useState, useEffect } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
-import type { Post, Section, ImagePrompt } from '@/lib/types';
+import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures } from '@/lib/types';
 import { auth } from '@/lib/firebase';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
 import {
   Plus, Trash2, Edit3, Eye, EyeOff, ChevronUp, ChevronDown,
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload,
   Settings, Check, Search, RotateCcw, GripVertical, Image as ImageIcon,
-  Zap, Layers, Info
+  Zap, Layers, Info, LayoutTemplate
 } from 'lucide-react';
 
 import Image from 'next/image';
 import { getToolInfo } from '@/lib/constants';
 
-type AdminTab = 'posts' | 'sections' | 'settings';
+type AdminTab = 'posts' | 'sections' | 'settings' | 'features' | 'submissions';
 
 function generateId() {
   return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
@@ -69,6 +69,7 @@ export default function Admin() {
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
   const [tagsStr, setTagsStr] = useState('');
+  const [category, setCategory] = useState('');
   const [featured, setFeatured] = useState(false);
   const [images, setImages] = useState<ImagePrompt[]>([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
   const [assignedSections, setAssignedSections] = useState<string[]>([]);
@@ -76,26 +77,66 @@ export default function Admin() {
 
   // Section form
   const [newSectionName, setNewSectionName] = useState('');
-  const [newSectionType, setNewSectionType] = useState<Section['type']>('custom');
+  const [newSectionSlug, setNewSectionSlug] = useState('');
+  const [newSectionType, setNewSectionType] = useState<Section['type']>('ai-tool');
+  const [newSectionLocation, setNewSectionLocation] = useState<'homepage' | 'header'>('homepage');
   const [newSectionTool, setNewSectionTool] = useState('');
+  const [newSectionTag, setNewSectionTag] = useState('');
+  const [newSectionCategory, setNewSectionCategory] = useState('');
   const [newSectionLimit, setNewSectionLimit] = useState(8);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editSectionName, setEditSectionName] = useState('');
+  const [editSectionSlug, setEditSectionSlug] = useState('');
   const [editSectionLimit, setEditSectionLimit] = useState(8);
   const [pickingPostsForSection, setPickingPostsForSection] = useState<string | null>(null);
   const [postPickerSearch, setPostPickerSearch] = useState('');
 
   // Settings form
   const [siteTitle, setSiteTitle] = useState(settings.siteTitle);
+  const [siteLogo, setSiteLogo] = useState(settings.siteLogo || '');
   const [siteDescription, setSiteDescription] = useState(settings.siteDescription);
   const [heroEnabled, setHeroEnabled] = useState(settings.heroEnabled);
   const [heroAutoPlay, setHeroAutoPlay] = useState(settings.heroAutoPlay);
+  const [heroStyle, setHeroStyle] = useState(settings.heroStyle || 'v1');
+  const [imgbbApiKey, setImgbbApiKey] = useState(settings.imgbbApiKey || '');
+  const [adsConfig, setAdsConfig] = useState<AdSettings>(
+    settings.ads || {
+      header: { enabled: false, code: '' },
+      inFeed: { enabled: false, code: '', frequency: 8 },
+      postTop: { enabled: false, code: '' },
+      postBottom: { enabled: false, code: '' },
+    }
+  );
+  
+  const [features, setFeatures] = useState<SiteFeatures>(
+    settings.features || {
+      userProfiles: false,
+      userSubmissions: false,
+      userSubmissionsAutoApprove: false,
+      comments: false,
+      commentsRequireApproval: false,
+      advancedFiltering: false,
+      smartTemplates: false,
+      infiniteScroll: false,
+      infiniteScrollItems: 20,
+      premiumPrompts: false,
+      premiumPrice: 5,
+      premiumPaymentUrl: '',
+      skeletonLoaders: false,
+      trendingAlgorithm: false,
+      trendingLikesWeight: 2,
+      trendingViewsWeight: 1,
+      mobileColumns: 2,
+    }
+  );
+
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'posts' | 'sections' | 'settings'>('dashboard');
 
   // Get custom sections for assignment
   const customSections = sections.filter(s => s.type === 'custom');
 
   const resetForm = () => {
-    setTitle(''); setSlug(''); setDescription(''); setSeoTitle(''); setSeoDescription(''); setTagsStr('');
+    setTitle(''); setSlug(''); setDescription(''); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory('');
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
   };
@@ -108,6 +149,7 @@ export default function Admin() {
     setSeoTitle(post.seoTitle || '');
     setSeoDescription(post.seoDescription || '');
     setTagsStr(post.tags.join(', '));
+    setCategory(post.category || '');
     setFeatured(post.featured);
     setImages(post.images.length > 0 ? post.images : [{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
     // Find which custom sections contain this post
@@ -130,7 +172,40 @@ export default function Admin() {
     setImages(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const handleImageUpload = (idx: number, file: File) => {
+  const handleImageUpload = async (idx: number, file: File) => {
+    // Check if file is > 800KB (to prevent hitting Firebase 1MB document limit)
+    if (file.size > 819200) {
+      if (imgbbApiKey) {
+        const formData = new FormData();
+        formData.append('image', file);
+        try {
+          // Set to a loading indicator temporarily (optional)
+          updateImage(idx, 'url', 'Uploading to ImgBB...'); 
+          const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          if (data.success) {
+            updateImage(idx, 'url', data.data.url);
+            return;
+          } else {
+            alert('ImgBB upload failed: ' + (data.error?.message || 'Unknown error'));
+            updateImage(idx, 'url', '');
+            return;
+          }
+        } catch (err) {
+           console.error(err);
+           alert('ImgBB upload failed.');
+           updateImage(idx, 'url', '');
+           return;
+        }
+      } else {
+         alert('Image is too large to store directly in database (>800KB). Please either compress the image, or configure an ImgBB API Key in settings to store large images.');
+         return;
+      }
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       updateImage(idx, 'url', e.target?.result as string);
@@ -147,34 +222,33 @@ export default function Admin() {
   };
 
   const handleSavePost = () => {
-    if (!title || !description || !slug || images.length === 0 || images.some(i => !i.url || !i.prompt)) {
-      alert('Please fill in all required fields (title, slug, description, image URLs and prompts)');
-      return;
-    }
+    const finalSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || generateId();
 
     // Check for duplicate slugs
-    const slugInUse = posts.some(p => p.slug === slug && p.id !== (editingPost?.id || ''));
+    const slugInUse = posts.some(p => p.slug === finalSlug && p.id !== (editingPost?.id || ''));
     if (slugInUse) {
       alert('This slug is already in use. Please choose a different one.');
       return;
     }
 
     const postId = editingPost?.id || generateId();
-    const post: Post = {
+    const post: any = {
       id: postId,
-      slug,
-      title,
-      description,
-      seoTitle: seoTitle || undefined,
-      seoDescription: seoDescription || undefined,
-      images: images.filter(i => i.url && i.prompt),
+      slug: finalSlug,
+      title: title || 'Untitled Post',
+      description: description || '',
+      images: images.filter(i => i.url || i.prompt || i.aiTool),
       tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
+      category: category || undefined,
       featured,
       views: editingPost?.views || 0,
       likes: editingPost?.likes || 0,
       likedByUser: editingPost?.likedByUser,
       createdAt: editingPost?.createdAt || new Date().toISOString(),
+      status: editingPost?.status || 'published',
     };
+    if (seoTitle) post.seoTitle = seoTitle;
+    if (seoDescription) post.seoDescription = seoDescription;
 
     if (editingPost) {
       updatePost(post);
@@ -200,31 +274,41 @@ export default function Admin() {
 
   const handleAddSection = () => {
     if (!newSectionName) return;
+    const sectionSlug = newSectionSlug || slugify(newSectionName);
     addSection({
       id: generateId(),
+      slug: sectionSlug,
       name: newSectionName,
       type: newSectionType,
+      location: newSectionLocation,
       aiTool: newSectionType === 'ai-tool' ? newSectionTool : undefined,
+      tag: newSectionType === 'tag' ? newSectionTag : undefined,
+      category: newSectionType === 'category' ? newSectionCategory : undefined,
       postIds: newSectionType === 'custom' ? [] : undefined,
-      order: sections.length,
+      order: sections.filter(s => s.location === newSectionLocation).length,
       visible: true,
       limit: newSectionLimit,
     });
     setNewSectionName('');
+    setNewSectionSlug('');
     setNewSectionLimit(8);
     setNewSectionTool('');
+    setNewSectionTag('');
+    setNewSectionCategory('');
   };
 
   const moveSection = (section: Section, dir: 'up' | 'down') => {
-    const sorted = [...sections].sort((a, b) => a.order - b.order);
+    const sorted = [...sections].filter(s => (s.location || 'homepage') === (section.location || 'homepage')).sort((a, b) => a.order - b.order);
     const idx = sorted.findIndex(s => s.id === section.id);
     if (dir === 'up' && idx > 0) {
       const prev = sorted[idx - 1];
-      updateSection({ ...section, order: prev.order });
+      const prevOrder = prev.order;
+      updateSection({ ...section, order: prevOrder });
       updateSection({ ...prev, order: section.order });
     } else if (dir === 'down' && idx < sorted.length - 1) {
       const next = sorted[idx + 1];
-      updateSection({ ...section, order: next.order });
+      const nextOrder = next.order;
+      updateSection({ ...section, order: nextOrder });
       updateSection({ ...next, order: section.order });
     }
   };
@@ -232,11 +316,12 @@ export default function Admin() {
   const startEditSection = (section: Section) => {
     setEditingSectionId(section.id);
     setEditSectionName(section.name);
+    setEditSectionSlug(section.slug || '');
     setEditSectionLimit(section.limit);
   };
 
   const saveEditSection = (section: Section) => {
-    updateSection({ ...section, name: editSectionName, limit: editSectionLimit });
+    updateSection({ ...section, name: editSectionName, slug: editSectionSlug || slugify(editSectionName), limit: editSectionLimit });
     setEditingSectionId(null);
   };
 
@@ -256,11 +341,17 @@ export default function Admin() {
 
   const handleSaveSettings = () => {
     updateSettings({
+      ...settings,
       siteTitle,
+      siteLogo,
       siteDescription,
       heroEnabled,
       heroAutoPlay,
+      heroStyle,
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
+      ads: adsConfig,
+      imgbbApiKey,
+      features,
     });
     alert('Settings saved!');
   };
@@ -361,8 +452,9 @@ export default function Admin() {
 
   const tabs: { key: AdminTab; label: string; icon: React.ReactNode; count?: number }[] = [
     { key: 'posts', label: 'Posts', icon: <FileText className="w-4 h-4" />, count: posts.length },
-    { key: 'sections', label: 'Sections', icon: <LayoutGrid className="w-4 h-4" />, count: sections.length },
     { key: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
+    { key: 'features', label: 'Features', icon: <Star className="w-4 h-4" /> },
+    { key: 'submissions', label: 'Submissions', icon: <Upload className="w-4 h-4" />, count: posts.filter(p => p.status === 'pending').length },
   ];
 
   if (authLoading) {
@@ -590,6 +682,15 @@ export default function Admin() {
                       placeholder="fantasy, landscape, magical"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Category</label>
+                    <input
+                      value={category}
+                      onChange={e => setCategory(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      placeholder="e.g. UI, Text, Images"
+                    />
+                  </div>
                   <div className="flex items-center gap-3 bg-surface-50 dark:bg-surface-800/50 p-3 rounded-xl border border-surface-200 dark:border-surface-700">
                     <input
                       type="checkbox"
@@ -714,7 +815,7 @@ export default function Admin() {
                                 onChange={e => updateImage(idx, 'aiTool', e.target.value)}
                                 className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
                               >
-                                {aiTools.map(t => <option key={t} value={t}>{t}</option>)}
+                                {(settings.aiTools || []).map(t => <option key={t} value={t}>{t}</option>)}
                               </select>
                             </div>
                             <div>
@@ -778,21 +879,39 @@ export default function Admin() {
             <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
               <Plus className="w-4 h-4 text-primary-500" /> Add New Section
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
               <input
                 value={newSectionName}
-                onChange={e => setNewSectionName(e.target.value)}
+                onChange={e => {
+                  setNewSectionName(e.target.value);
+                  if (!newSectionSlug) setNewSectionSlug(slugify(e.target.value));
+                }}
                 className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
                 placeholder="Section name (e.g., 🔥 Hot Prompts)..."
               />
+              <input
+                value={newSectionSlug}
+                onChange={e => setNewSectionSlug(slugify(e.target.value))}
+                className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                placeholder="URL Slug (optional)"
+              />
+              <select
+                value={newSectionLocation}
+                onChange={e => setNewSectionLocation(e.target.value as 'homepage' | 'header')}
+                className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+              >
+                <option value="homepage">Homepage</option>
+                <option value="header">Header Menu</option>
+              </select>
               <select
                 value={newSectionType}
                 onChange={e => setNewSectionType(e.target.value as Section['type'])}
                 className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
               >
-                <option value="custom">Custom (pick posts manually)</option>
                 <option value="ai-tool">AI Tool (auto-filter by tool)</option>
-                <option value="popular">Popular (auto-sort by views)</option>
+                <option value="tag">Tag (auto-filter by tag)</option>
+                <option value="category">Category (auto-filter by category)</option>
+                <option value="custom">Custom (pick posts manually)</option>
               </select>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
@@ -803,8 +922,24 @@ export default function Admin() {
                   className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
                 >
                   <option value="">Select AI tool...</option>
-                  {aiTools.map(t => <option key={t} value={t}>{t}</option>)}
+                  {(settings.aiTools || []).map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
+              )}
+              {newSectionType === 'tag' && (
+                <input
+                  value={newSectionTag}
+                  onChange={e => setNewSectionTag(e.target.value)}
+                  className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                  placeholder="Enter tag (e.g., character, funny)..."
+                />
+              )}
+              {newSectionType === 'category' && (
+                <input
+                  value={newSectionCategory}
+                  onChange={e => setNewSectionCategory(e.target.value)}
+                  className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                  placeholder="Enter category (e.g., UI, Game)..."
+                />
               )}
               <div className="flex items-center gap-2">
                 <label className="text-xs text-surface-400 whitespace-nowrap">Post limit:</label>
@@ -820,55 +955,66 @@ export default function Admin() {
             </div>
             <button
               onClick={handleAddSection}
-              disabled={!newSectionName || (newSectionType === 'ai-tool' && !newSectionTool)}
+              disabled={!newSectionName || (newSectionType === 'ai-tool' && !newSectionTool) || (newSectionType === 'tag' && !newSectionTag) || (newSectionType === 'category' && !newSectionCategory)}
               className="px-4 py-2 rounded-lg bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Add Section
             </button>
           </div>
 
-          {/* Sections list */}
-          <div className="space-y-3">
-            {[...sections].sort((a, b) => a.order - b.order).map((section, idx) => {
-              const isAutoSection = section.type === 'latest' || section.type === 'popular';
-              return (
-                <div
-                  key={section.id}
-                  className={`rounded-xl border bg-white dark:bg-surface-900 overflow-hidden transition-all ${
-                    !section.visible ? 'border-surface-200 dark:border-surface-800 opacity-60' : 'border-surface-200 dark:border-surface-800'
-                  }`}
-                >
-                  {/* Main row */}
-                  <div className="flex items-center gap-3 p-4">
-                    {/* Reorder buttons */}
-                    <div className="flex flex-col gap-0.5 shrink-0">
-                      <button
-                        onClick={() => moveSection(section, 'up')}
-                        disabled={idx === 0}
-                        className="p-1 rounded hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-20 transition-colors"
-                      >
-                        <ChevronUp className="w-3.5 h-3.5" />
-                      </button>
-                      <div className="flex items-center justify-center">
-                        <GripVertical className="w-3.5 h-3.5 text-surface-300" />
+          {/* Sections Lists by Location */}
+          <div className="space-y-8">
+            {(['homepage', 'header'] as const).map(loc => (
+              <div key={loc} className="mb-4">
+                <h3 className="font-semibold text-sm mb-4">{loc === 'homepage' ? 'Homepage Sections' : 'Header Sections'}</h3>
+                <div className="space-y-3">
+                  {[...sections].filter(s => (s.location || 'homepage') === loc).sort((a, b) => a.order - b.order).map((section, idx, arr) => {
+                const isAutoSection = section.type === 'latest' || section.type === 'popular';
+                return (
+                  <div
+                    key={section.id}
+                    className={`rounded-xl border bg-white dark:bg-surface-900 overflow-hidden transition-all ${
+                      !section.visible ? 'border-surface-200 dark:border-surface-800 opacity-60' : 'border-surface-200 dark:border-surface-800'
+                    }`}
+                  >
+                    {/* Main row */}
+                    <div className="flex items-center gap-3 p-4">
+                      {/* Reorder buttons */}
+                      <div className="flex flex-col gap-0.5 shrink-0">
+                        <button
+                          onClick={() => moveSection(section, 'up')}
+                          disabled={idx === 0}
+                          className="p-1 rounded hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-20 transition-colors"
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </button>
+                        <div className="flex items-center justify-center">
+                          <GripVertical className="w-3.5 h-3.5 text-surface-300" />
+                        </div>
+                        <button
+                          onClick={() => moveSection(section, 'down')}
+                          disabled={idx === arr.length - 1}
+                          className="p-1 rounded hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-20 transition-colors"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => moveSection(section, 'down')}
-                        disabled={idx === sections.length - 1}
-                        className="p-1 rounded hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-20 transition-colors"
-                      >
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
 
-                    {/* Section info */}
-                    <div className="flex-1 min-w-0">
+                      {/* Section info */}
+                      <div className="flex-1 min-w-0">
                       {editingSectionId === section.id ? (
                         <div className="flex items-center gap-2">
                           <input
                             value={editSectionName}
                             onChange={e => setEditSectionName(e.target.value)}
                             className="flex-1 px-3 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                            placeholder="Name"
+                          />
+                          <input
+                            value={editSectionSlug}
+                            onChange={e => setEditSectionSlug(slugify(e.target.value))}
+                            className="w-32 px-3 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                            placeholder="Slug"
                           />
                           <input
                             type="number"
@@ -897,8 +1043,12 @@ export default function Admin() {
                             )}
                           </h4>
                           <div className="flex items-center gap-2 mt-0.5 text-xs text-surface-400">
-                            <span className="capitalize px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800">{section.type}</span>
+                              <span className="capitalize px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800">{section.type}</span>
+                            <span className="capitalize px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400 font-semibold">{section.location || 'homepage'}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800 font-mono text-[10px]">/{section.slug || section.id}</span>
                             {section.aiTool && <span>· {section.aiTool}</span>}
+                            {section.tag && <span>· {section.tag}</span>}
+                            {section.category && <span>· {section.category}</span>}
                             <span>· Limit: {section.limit}</span>
                             {section.type === 'custom' && section.postIds && (
                               <span>· {section.postIds.length} posts selected</span>
@@ -1024,12 +1174,15 @@ export default function Admin() {
               );
             })}
 
-            {sections.length === 0 && (
+            {sections.filter(s => (s.location || 'homepage') === loc).length === 0 && (
               <div className="text-center py-10 text-surface-400">
                 <LayoutGrid className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                <p>No sections yet. Add one above.</p>
+                <p>No sections yet for {loc === 'homepage' ? 'Homepage' : 'Header'}.</p>
               </div>
             )}
+            </div>
+            </div>
+            ))}
           </div>
         </div>
       )}
@@ -1045,11 +1198,42 @@ export default function Admin() {
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-surface-400 mb-1">Site Title</label>
+                <div className="flex gap-2">
+                  <input
+                    value={siteTitle}
+                    onChange={e => setSiteTitle(e.target.value)}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    placeholder="PromptVault"
+                  />
+                  <button 
+                    onClick={async () => {
+                      try {
+                        const { GoogleGenAI } = await import('@google/genai');
+                        const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
+                        const response = await ai.models.generateContent({
+                          model: 'gemini-2.5-flash',
+                          contents: `Suggest 5 memorable, short domain names for a website titled "${siteTitle}" with description "${siteDescription}". Just return the options separated by commas.`
+                        });
+                        if (response.text) {
+                          alert(`Suggested domains:\n${response.text}`);
+                        }
+                      } catch(e) {
+                         alert('Could not generate domain names. Make sure NEXT_PUBLIC_GEMINI_API_KEY is configured.');
+                      }
+                    }}
+                    className="px-4 py-2.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-sm font-medium rounded-xl border border-surface-200 dark:border-surface-700 whitespace-nowrap"
+                  >
+                    Suggest Domains
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-surface-400 mb-1">Site Logo URL (Used in header & favicon)</label>
                 <input
-                  value={siteTitle}
-                  onChange={e => setSiteTitle(e.target.value)}
+                  value={siteLogo}
+                  onChange={e => setSiteLogo(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                  placeholder="PromptVault"
+                  placeholder="https://example.com/logo.png"
                 />
               </div>
               <div>
@@ -1060,6 +1244,16 @@ export default function Admin() {
                   rows={2}
                   className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-none"
                 />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-surface-400 mb-1">ImgBB API Key (For large images)</label>
+                <input
+                  value={imgbbApiKey}
+                  onChange={e => setImgbbApiKey(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                  placeholder="Paste ImgBB API key..."
+                />
+                <p className="mt-1 text-xs text-surface-500">Firebase has a 1MB limit. Set this to automatically offload images larger than 800KB.</p>
               </div>
               <div className="flex flex-wrap gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -1081,13 +1275,149 @@ export default function Admin() {
                   <span className="text-sm">Hero auto-play</span>
                 </label>
               </div>
+              <div className="mt-3">
+                <label className="block text-sm font-medium mb-1.5">Hero Style</label>
+                <select
+                  value={heroStyle}
+                  onChange={e => setHeroStyle(e.target.value as any)}
+                  className="w-full sm:w-1/2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                >
+                  <option value="v1">Version 1 (Classic Slider)</option>
+                  <option value="v2">Version 2 (Split Screen)</option>
+                  <option value="v3">Version 3 (Diagonal Cards)</option>
+                  <option value="v4">Version 4 (Masonry Feature)</option>
+                  <option value="v5">Version 5 (Minimal & Large)</option>
+                </select>
+              </div>
               <button
                 onClick={handleSaveSettings}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-8"
               >
                 <Save className="w-4 h-4" /> Save Settings
               </button>
             </div>
+          </div>
+
+          {/* Ad Spaces Management */}
+          <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+             <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+               <Settings className="w-4 h-4 text-primary-500" /> Ad Spaces
+             </h3>
+             <div className="space-y-6">
+                
+                {/* Header Ad */}
+                <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                   <div className="flex items-center justify-between mb-3">
+                     <span className="text-sm font-medium">Header Ad (Top of page)</span>
+                     <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={adsConfig.header.enabled}
+                          onChange={(e) => setAdsConfig(prev => ({ ...prev, header: { ...prev.header, enabled: e.target.checked } }))}
+                          className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+                        />
+                        <span className="text-xs">Enabled</span>
+                     </label>
+                   </div>
+                   <textarea
+                     value={adsConfig.header.code}
+                     onChange={(e) => setAdsConfig(prev => ({ ...prev, header: { ...prev.header, code: e.target.value } }))}
+                     rows={3}
+                     placeholder="Paste Ad HTML/JS code here (e.g., Google AdSense)"
+                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-none"
+                   />
+                </div>
+
+                {/* In-Feed Ad */}
+                <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                   <div className="flex items-center justify-between mb-3">
+                     <span className="text-sm font-medium">In-Feed Ad (Post Grids)</span>
+                     <div className="flex items-center gap-4">
+                       <div className="flex items-center gap-2">
+                         <span className="text-xs text-surface-500">Show every</span>
+                         <input
+                           type="number"
+                           min="1"
+                           max="20"
+                           value={adsConfig.inFeed.frequency}
+                           onChange={(e) => setAdsConfig(prev => ({ ...prev, inFeed: { ...prev.inFeed, frequency: parseInt(e.target.value) || 8 } }))}
+                           className="w-16 px-2 py-1 rounded bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none text-xs"
+                         />
+                         <span className="text-xs text-surface-500">posts</span>
+                       </div>
+                       <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={adsConfig.inFeed.enabled}
+                            onChange={(e) => setAdsConfig(prev => ({ ...prev, inFeed: { ...prev.inFeed, enabled: e.target.checked } }))}
+                            className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+                          />
+                          <span className="text-xs">Enabled</span>
+                       </label>
+                     </div>
+                   </div>
+                   <textarea
+                     value={adsConfig.inFeed.code}
+                     onChange={(e) => setAdsConfig(prev => ({ ...prev, inFeed: { ...prev.inFeed, code: e.target.value } }))}
+                     rows={3}
+                     placeholder="Paste Ad HTML/JS code here"
+                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-none"
+                   />
+                </div>
+
+                {/* Post Top Ad */}
+                <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                   <div className="flex items-center justify-between mb-3">
+                     <span className="text-sm font-medium">Post Details - Top</span>
+                     <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={adsConfig.postTop.enabled}
+                          onChange={(e) => setAdsConfig(prev => ({ ...prev, postTop: { ...prev.postTop, enabled: e.target.checked } }))}
+                          className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+                        />
+                        <span className="text-xs">Enabled</span>
+                     </label>
+                   </div>
+                   <textarea
+                     value={adsConfig.postTop.code}
+                     onChange={(e) => setAdsConfig(prev => ({ ...prev, postTop: { ...prev.postTop, code: e.target.value } }))}
+                     rows={3}
+                     placeholder="Paste Ad HTML/JS code here"
+                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-none"
+                   />
+                </div>
+
+                {/* Post Bottom Ad */}
+                <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                   <div className="flex items-center justify-between mb-3">
+                     <span className="text-sm font-medium">Post Details - Bottom</span>
+                     <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={adsConfig.postBottom.enabled}
+                          onChange={(e) => setAdsConfig(prev => ({ ...prev, postBottom: { ...prev.postBottom, enabled: e.target.checked } }))}
+                          className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+                        />
+                        <span className="text-xs">Enabled</span>
+                     </label>
+                   </div>
+                   <textarea
+                     value={adsConfig.postBottom.code}
+                     onChange={(e) => setAdsConfig(prev => ({ ...prev, postBottom: { ...prev.postBottom, code: e.target.value } }))}
+                     rows={3}
+                     placeholder="Paste Ad HTML/JS code here"
+                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-none"
+                   />
+                </div>
+
+                <button
+                  onClick={handleSaveSettings}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-8"
+                >
+                  <Save className="w-4 h-4" /> Save Ad Settings
+                </button>
+             </div>
           </div>
 
           {/* AI Tools Management */}
@@ -1196,6 +1526,281 @@ export default function Admin() {
             >
               <RotateCcw className="w-4 h-4" /> Reset All Data
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ===== FEATURES TAB ===== */}
+      {tab === 'features' && (
+        <div className="max-w-3xl space-y-6">
+          <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+            <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+              <Star className="w-4 h-4 text-primary-500" /> Feature Flags
+            </h3>
+            <p className="text-xs text-surface-500 mb-6">Toggle specific site capabilities on or off.</p>
+            
+            <div className="space-y-4">
+              {/* User Profiles */}
+              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">User Profiles & Bookmarks</span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={features.userProfiles} onChange={(e) => setFeatures(prev => ({ ...prev, userProfiles: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* User Submissions */}
+              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">User Submissions & Approval Queue</span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={features.userSubmissions} onChange={(e) => setFeatures(prev => ({ ...prev, userSubmissions: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+                {features.userSubmissions && (
+                  <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm">
+                      <input type="checkbox" checked={features.userSubmissionsAutoApprove} onChange={(e) => setFeatures(prev => ({ ...prev, userSubmissionsAutoApprove: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                      Auto-Approve User Submissions
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              {/* Comments */}
+              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Comments & Feedback</span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={features.comments} onChange={(e) => setFeatures(prev => ({ ...prev, comments: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+                {features.comments && (
+                  <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm">
+                      <input type="checkbox" checked={features.commentsRequireApproval} onChange={(e) => setFeatures(prev => ({ ...prev, commentsRequireApproval: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                      Require manual approval for user comments
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              {/* Advanced Filtering */}
+              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Advanced Search & Filtering</span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={features.advancedFiltering} onChange={(e) => setFeatures(prev => ({ ...prev, advancedFiltering: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Smart Templates */}
+              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Smart &quot;Fill-in-the-blank&quot; Templates</span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={features.smartTemplates} onChange={(e) => setFeatures(prev => ({ ...prev, smartTemplates: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Infinite Scrolling */}
+              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Infinite Scrolling (Explore)</span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={features.infiniteScroll} onChange={(e) => setFeatures(prev => ({ ...prev, infiniteScroll: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+                {features.infiniteScroll && (
+                  <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex items-center gap-4">
+                    <label className="text-sm">Items Per Load</label>
+                    <input 
+                      type="number" 
+                      min={1} 
+                      max={100}
+                      value={features.infiniteScrollItems || 20} 
+                      onChange={(e) => setFeatures(prev => ({ ...prev, infiniteScrollItems: parseInt(e.target.value) || 20 }))} 
+                      className="w-20 px-2 py-1 rounded border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm" 
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Premium Prompts */}
+              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Premium / Pro Prompts</span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={features.premiumPrompts} onChange={(e) => setFeatures(prev => ({ ...prev, premiumPrompts: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+                {features.premiumPrompts && (
+                  <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 space-y-3">
+                    <div className="flex items-center gap-4">
+                      <label className="text-sm w-32">Price ($)</label>
+                      <input 
+                        type="number" 
+                        min={0}
+                        value={features.premiumPrice || 5} 
+                        onChange={(e) => setFeatures(prev => ({ ...prev, premiumPrice: parseFloat(e.target.value) || 0 }))} 
+                        className="w-24 px-2 py-1 rounded border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm" 
+                      />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label className="text-sm w-32">Payment URL</label>
+                      <input 
+                        type="url" 
+                        placeholder="https://buy.stripe.com/..."
+                        value={features.premiumPaymentUrl || ''} 
+                        onChange={(e) => setFeatures(prev => ({ ...prev, premiumPaymentUrl: e.target.value }))} 
+                        className="flex-1 px-2 py-1 rounded border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm" 
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Skeleton Loaders */}
+              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Skeleton Loaders</span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={features.skeletonLoaders} onChange={(e) => setFeatures(prev => ({ ...prev, skeletonLoaders: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Trending Algorithm */}
+              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Trending Algorithms</span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={features.trendingAlgorithm} onChange={(e) => setFeatures(prev => ({ ...prev, trendingAlgorithm: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    <span className="text-xs">Enabled</span>
+                  </label>
+                </div>
+                {features.trendingAlgorithm && (
+                  <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 space-y-3">
+                    <div className="flex items-center gap-4">
+                      <label className="text-sm w-32">Likes Weighting</label>
+                      <input 
+                        type="number" 
+                        min={0}
+                        step={0.1}
+                        value={features.trendingLikesWeight !== undefined ? features.trendingLikesWeight : 2} 
+                        onChange={(e) => setFeatures(prev => ({ ...prev, trendingLikesWeight: parseFloat(e.target.value) || 0 }))} 
+                        className="w-20 px-2 py-1 rounded border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm" 
+                      />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label className="text-sm w-32">Views Weighting</label>
+                      <input 
+                        type="number" 
+                        min={0}
+                        step={0.1}
+                        value={features.trendingViewsWeight !== undefined ? features.trendingViewsWeight : 1} 
+                        onChange={(e) => setFeatures(prev => ({ ...prev, trendingViewsWeight: parseFloat(e.target.value) || 0 }))} 
+                        className="w-20 px-2 py-1 rounded border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm" 
+                      />
+                    </div>
+                    <p className="text-xs text-surface-500">Formula: (Views × weight) + (Likes × weight) = Trending Score</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Layout Features */}
+              <div className="flex flex-col gap-3 p-4 rounded-xl border border-surface-200 dark:border-surface-800 bg-surface-50/50 dark:bg-surface-900/50">
+                <div className="flex items-center gap-3">
+                  <LayoutTemplate className="w-5 h-5 text-primary-500" />
+                  <div>
+                    <h3 className="font-medium text-sm">Mobile Grid Layout</h3>
+                    <p className="text-xs text-surface-500">Columns to show on mobile devices.</p>
+                  </div>
+                </div>
+                <div className="pl-8 pt-2">
+                  <select 
+                    value={features.mobileColumns || 2} 
+                    onChange={(e) => setFeatures(prev => ({ ...prev, mobileColumns: parseInt(e.target.value) as 1 | 2 }))}
+                    className="w-48 px-3 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                  >
+                    <option value={1}>1 Column</option>
+                    <option value={2}>2 Columns</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSaveSettings}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-8"
+            >
+              <Save className="w-4 h-4" /> Save Feature Flags
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ===== SUBMISSIONS TAB ===== */}
+      {tab === 'submissions' && (
+        <div className="max-w-3xl">
+          <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+            <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+              <Upload className="w-4 h-4 text-primary-500" /> Pending Submissions
+            </h3>
+            {!features.userSubmissions ? (
+              <p className="text-sm text-surface-500">User submissions are currently disabled. Enable them in the Features tab.</p>
+            ) : (
+              <div>
+                {posts.filter(p => p.status === 'pending').length === 0 ? (
+                  <p className="text-sm text-surface-500 text-center py-8">No pending submissions.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {posts.filter(p => p.status === 'pending').map(post => (
+                      <div key={post.id} className="p-4 rounded-xl border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50 flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-sm">{post.title}</p>
+                          <p className="text-xs text-surface-500">{post.images.length} images</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                               updatePost({ ...post, status: 'published' });
+                               alert('Post approved and published!');
+                            }}
+                            className="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500 text-white hover:bg-green-600"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => startEdit(post)}
+                            className="px-3 py-1.5 text-xs font-medium rounded-lg bg-surface-200 dark:bg-surface-700 hover:bg-surface-300 transition-colors"
+                          >
+                            Review & Edit
+                          </button>
+                          <button
+                            onClick={() => deletePost(post.id)}
+                            className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -22,7 +22,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
   return (
     <Link
       href={`/post/${post.slug || post.id}`}
-      className={`group block relative rounded-2xl overflow-hidden bg-surface-100 dark:bg-surface-800 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 break-inside-avoid mb-2 md:mb-4 ${aspect ? aspect : ''}`}
+      className={`group block relative rounded-2xl overflow-hidden bg-surface-100 dark:bg-surface-800 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 break-inside-avoid ${aspect ? aspect : ''}`}
       style={{ animationDelay: `${(index || 0) * 80}ms` }}
     >
       <Image

@@ -2,19 +2,24 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 
 import { Search as SearchIcon } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
-import PostCard from '@/components/PostCard';
+import SkeletonPostCard from '@/components/SkeletonPostCard';
+
+const PostCard = dynamic(() => import('@/components/PostCard'), {
+  loading: () => <SkeletonPostCard />
+});
 
 function SearchContent() {
   const searchParams = useSearchParams();
-  const { searchPosts } = useData();
+  const { searchPosts, settings } = useData();
   const query = searchParams.get('q') || '';
   const results = searchPosts(query);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 fade-in">
+    <div className="max-w-7xl mx-auto px-1 py-4 sm:py-6 fade-in">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <SearchIcon className="w-6 h-6 text-primary-500" />
@@ -28,9 +33,11 @@ function SearchContent() {
       </div>
 
       {results.length > 0 ? (
-        <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-2 md:gap-4 px-0">
+        <div className={`${settings.features?.mobileColumns === 1 ? 'columns-1 sm:columns-2' : 'columns-2'} lg:columns-3 xl:columns-4 gap-1 px-0`}>
           {results.map((post, i) => (
-            <PostCard key={post.id} post={post} index={i} />
+             <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
+              <PostCard post={post} index={i} />
+            </div>
           ))}
         </div>
       ) : (

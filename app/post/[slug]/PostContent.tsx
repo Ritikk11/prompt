@@ -4,55 +4,63 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
 import Image from 'next/image';
-import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight } from 'lucide-react';
+import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
-import PostCard from '@/components/PostCard';
+import dynamic from 'next/dynamic';
 import { getToolInfo } from '@/lib/constants';
 import { useState } from 'react';
+import TemplatePrompt from '@/components/TemplatePrompt';
+import { auth } from '@/lib/firebase';
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
+
+import CopyButton from '@/components/CopyButton';
+
+const PostCard = dynamic(() => import('@/components/PostCard'));
+const AdSlot = dynamic(() => import('@/components/AdSlot'), { ssr: false });
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  return (
-    <button
-      onClick={handleCopy}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-        copied
-          ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-          : 'bg-surface-100 dark:bg-surface-800 hover:bg-primary-50 dark:hover:bg-primary-900/20 text-surface-600 dark:text-surface-300 hover:text-primary-600'
-      }`}
-    >
-      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-      {copied ? 'Copied!' : 'Copy'}
-    </button>
-  );
 }
 
 export default function PostContent() {
   const { slug } = useParams();
   const { incrementViews, toggleLike, posts, loading, settings } = useData();
   const viewIncrementedRef = useRef(false);
+
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; index: number; tool: string } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, u => setUser(u));
+    return () => unsub();
+  }, []);
+
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      window.open(url, '_blank');
+    }
+  };
+
+  const handleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const post = posts.find((p) => p.slug === slug || p.id === slug);
   const heroToolInfo = post ? getToolInfo(post.images[0]?.aiTool || '', settings?.toolDetails) : { color: '', logo: '' };
@@ -89,10 +97,12 @@ export default function PostContent() {
     .filter(p => p.id !== post.id && p.tags.some(t => post.tags.includes(t)))
     .slice(0, 4);
 
-  const allPromptsText = post.images.map((img, i) => `Image ${i + 1} (${img.aiTool}):\n${img.prompt}`).join('\n\n');
+  const allPromptsText = settings.features?.premiumPrompts && post.isPremium && !user 
+    ? "Premium Collection - Please sign in to view full prompts." 
+    : post.images.map((img, i) => `Image ${i + 1} (${img.aiTool}):\n${img.prompt}`).join('\n\n');
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 fade-in">
+    <div className="max-w-6xl mx-auto px-1 py-4 sm:py-6 fade-in">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-surface-400 mb-6 font-medium">
         <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
@@ -126,9 +136,12 @@ export default function PostContent() {
         </div>
       </div>
 
+      <AdSlot placement="postTop" />
+
       {/* Main Hero Image — Natural layout without massive background box */}
       <div className="relative mb-12 w-full max-w-5xl mx-auto flex justify-center">
         <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-surface-100 dark:bg-surface-800/30">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
             alt={post.title}
@@ -177,12 +190,14 @@ export default function PostContent() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
                 {/* Image — no cropping, natural display */}
                 <div className="relative bg-surface-50 dark:bg-surface-800 flex items-center justify-center p-3 sm:p-5">
-                  <div className="relative w-full overflow-hidden rounded-2xl shadow-lg group-hover:scale-[1.01] transition-transform duration-500">
+                  <div className="relative w-full overflow-hidden rounded-2xl shadow-lg group-hover:scale-[1.01] transition-transform duration-500 group/img">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={img.url || 'https://picsum.photos/seed/placeholder/800/600'}
                       alt={`Prompt ${index + 1}`}
-                      className="w-full h-auto block rounded-2xl shadow-inner border border-black/5 dark:border-white/5"
+                      className="w-full h-auto block rounded-2xl shadow-inner border border-black/5 dark:border-white/5 cursor-zoom-in"
                       loading="lazy"
+                      onClick={() => setLightboxImage({ url: img.url || '', index, tool: img.aiTool })}
                     />
                     <div className="absolute top-4 left-4 z-20">
                       <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[9px] font-bold text-white shadow-xl backdrop-blur-md ${getToolInfo(img.aiTool, settings?.toolDetails).color}/80 border border-white/10 uppercase tracking-wider`}>
@@ -194,10 +209,35 @@ export default function PostContent() {
                         {img.aiTool}
                       </div>
                     </div>
-                    <div className="absolute top-4 right-4">
+                    <div className="absolute top-4 right-4 z-20">
                       <span className="px-2.5 py-1.5 rounded-full text-[9px] font-bold bg-black/40 text-white backdrop-blur-md border border-white/10 uppercase tracking-widest shadow-xl">
                         PROMPT #{index + 1}
                       </span>
+                    </div>
+
+                    {/* Hover Actions */}
+                    <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors pointer-events-none rounded-2xl" />
+                    <div className="absolute bottom-4 right-4 flex items-center gap-2 opacity-0 group-hover/img:opacity-100 transition-opacity translate-y-2 group-hover/img:translate-y-0 duration-300 z-30">
+                      <button
+                        title="Download Image"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (img.url) handleDownload(img.url, `prompt_${post.id}_${index + 1}.png`);
+                        }}
+                        className="p-2.5 rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/80 hover:scale-110 transition-all shadow-xl"
+                      >
+                        <Download className="w-5 h-5" />
+                      </button>
+                      <button
+                        title="View Fullscreen"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLightboxImage({ url: img.url || '', index, tool: img.aiTool });
+                        }}
+                        className="p-2.5 rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/80 hover:scale-110 transition-all shadow-xl"
+                      >
+                        <ZoomIn className="w-5 h-5" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -205,18 +245,46 @@ export default function PostContent() {
                 {/* Prompt */}
                 <div className="p-6 md:p-10 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-4 bg-primary-500 rounded-full" />
-                        <h3 className="font-bold text-base tracking-tight">Prompt</h3>
-                      </div>
-                      <CopyButton text={img.prompt} />
-                    </div>
-                    <div className="bg-surface-50 dark:bg-surface-800/50 rounded-2xl p-6 mb-6 border border-surface-200/50 dark:border-surface-700/50 group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
-                      <p className="text-sm md:text-base leading-relaxed text-surface-700 dark:text-surface-300 font-mono">
-                        {img.prompt}
-                      </p>
-                    </div>
+                    {settings.features?.premiumPrompts && post.isPremium && !user ? (
+                       <div className="bg-surface-50 dark:bg-surface-800/50 rounded-2xl p-6 mb-6 text-center border border-surface-200/50 dark:border-surface-700/50 relative overflow-hidden group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
+                         <div className="absolute inset-0 bg-surface-50/80 dark:bg-surface-900/80 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6">
+                           <Lock className="w-8 h-8 text-yellow-500 mb-3" />
+                           <h4 className="font-bold text-lg mb-1">Premium Prompt</h4>
+                           <p className="text-sm text-surface-500 mb-4 max-w-sm">
+                             Sign in to view and copy this engineered prompt.
+                           </p>
+                           {settings.features?.premiumPaymentUrl ? (
+                             <a href={settings.features?.premiumPaymentUrl} target="_blank" rel="noreferrer" className="px-5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-yellow-500 to-yellow-600 text-white hover:from-yellow-600 hover:to-yellow-700 shadow-lg">
+                               Unlock All for ${settings.features?.premiumPrice || 5}
+                             </a>
+                           ) : (
+                             <button onClick={handleLogin} className="px-5 py-2.5 rounded-xl text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 shadow-lg">
+                               Sign in to Unlock
+                             </button>
+                           )}
+                         </div>
+                         <p className="text-sm md:text-base leading-relaxed text-surface-700 dark:text-surface-300 font-mono filter blur-[4px] truncate">
+                           {img.prompt.slice(0, 100)}...
+                         </p>
+                       </div>
+                    ) : settings.features?.smartTemplates && img.prompt.includes('[') && img.prompt.includes(']') ? (
+                       <TemplatePrompt originalPrompt={img.prompt} />
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-4 bg-primary-500 rounded-full" />
+                            <h3 className="font-bold text-base tracking-tight">Prompt</h3>
+                          </div>
+                          <CopyButton text={img.prompt} />
+                        </div>
+                        <div className="bg-surface-50 dark:bg-surface-800/50 rounded-2xl p-6 mb-6 border border-surface-200/50 dark:border-surface-700/50 group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
+                          <p className="text-sm md:text-base leading-relaxed text-surface-700 dark:text-surface-300 font-mono">
+                            {img.prompt}
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 text-xs font-bold text-surface-400 uppercase tracking-widest">
                     <Clock className="w-4 h-4 text-primary-500/50" />
@@ -245,6 +313,8 @@ export default function PostContent() {
         </div>
       </div>
 
+      <AdSlot placement="postBottom" />
+
       {/* Tags */}
       <div className="mb-16">
         <h3 className="text-sm font-bold text-surface-400 uppercase tracking-[0.2em] mb-6">Discovery Tags</h3>
@@ -252,7 +322,7 @@ export default function PostContent() {
           {post.tags.map(tag => (
             <Link
               key={tag}
-              href={`/search?q=${encodeURIComponent(tag)}`}
+              href={`/tag/${encodeURIComponent(tag)}`}
               className="px-4 py-2 rounded-xl text-xs font-bold bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:bg-primary-500 hover:text-white dark:hover:bg-primary-500 dark:hover:text-white transition-all transform hover:-translate-y-1 shadow-sm uppercase tracking-wider"
             >
               #{tag}
@@ -260,6 +330,40 @@ export default function PostContent() {
           ))}
         </div>
       </div>
+
+      {settings.features?.comments && (
+        <div className="mb-16 border-t border-surface-200 dark:border-surface-800 pt-16">
+          <h3 className="text-xl md:text-2xl font-bold tracking-tight mb-8">Comments & Feedback</h3>
+          <div className="bg-surface-50 dark:bg-surface-800/30 rounded-2xl p-8 text-center border border-surface-200 dark:border-surface-800">
+            {user ? (
+               <div className="max-w-2xl mx-auto flex flex-col gap-4">
+                 <textarea
+                   rows={3}
+                   placeholder="Share your experience using these prompts, or post your own variations..."
+                   className="w-full px-4 py-3 rounded-xl bg-white dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none transition-colors text-sm resize-none"
+                 />
+                 <div className="flex justify-end">
+                   <button className="px-5 py-2.5 rounded-xl text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors">
+                     Post Comment
+                   </button>
+                 </div>
+               </div>
+            ) : (
+               <div>
+                 <p className="text-surface-500 mb-4">Join the discussion and share your results.</p>
+                 <button onClick={handleLogin} className="px-5 py-2.5 rounded-xl text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors">
+                   Sign in to Comment
+                 </button>
+               </div>
+            )}
+            
+            <div className="mt-12 text-left">
+              <p className="text-sm font-medium text-surface-400 mb-6">0 comments</p>
+              {/* Future comment list maps here */}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Related Posts */}
       {relatedPosts.length > 0 && (
@@ -273,10 +377,73 @@ export default function PostContent() {
               Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
-          <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-2 md:gap-4 px-0">
+          <div className={`${settings.features?.mobileColumns === 1 ? 'columns-1 sm:columns-2' : 'columns-2'} lg:columns-3 xl:columns-4 gap-1 px-0`}>
             {relatedPosts.map((p, i) => (
-              <PostCard key={p.id} post={p} index={i} />
+              <div key={p.id} className="mb-1 inline-block w-full break-inside-avoid">
+                <PostCard post={p} index={i} />
+              </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Modal */}
+      {lightboxImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 md:p-10 transition-opacity"
+          onClick={() => setLightboxImage(null)}
+        >
+          <div className="relative max-w-7xl max-h-full w-full h-full flex items-center justify-center">
+            {/* Toolbar */}
+            <div className="absolute top-0 right-0 flex items-center gap-4 z-50 p-4">
+              <button 
+                className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all shadow-xl"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDownload(lightboxImage.url, `prompt_${post.id}_${lightboxImage.index + 1}.png`);
+                }}
+                title="Download Image"
+              >
+                <Download className="w-6 h-6" />
+              </button>
+              <button 
+                className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all shadow-xl"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxImage(null);
+                }}
+                title="Close"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            {/* Image */}
+            <div 
+              className="relative w-full h-full max-h-[90vh] flex items-center justify-center cursor-default"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold text-white shadow-xl backdrop-blur-md ${getToolInfo(lightboxImage.tool, settings?.toolDetails).color}/80 border border-white/10 uppercase tracking-wider`}>
+                  {getToolInfo(lightboxImage.tool, settings?.toolDetails).logo && (
+                    <div className="relative w-4 h-4 shrink-0 bg-white/20 rounded-full p-0.5 overflow-hidden">
+                      <Image src={getToolInfo(lightboxImage.tool, settings?.toolDetails).logo} alt="" fill className="object-contain" unoptimized />
+                    </div>
+                  )}
+                  {lightboxImage.tool}
+                </div>
+              </div>
+              <div className="absolute top-4 right-4 z-20 hidden md:block pointer-events-none">
+                 <span className="px-3 py-2 rounded-full text-xs font-bold bg-black/40 text-white backdrop-blur-md border border-white/10 uppercase tracking-widest shadow-xl">
+                   PROMPT #{lightboxImage.index + 1}
+                 </span>
+              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={lightboxImage.url}
+                alt={`Prompt ${lightboxImage.index + 1}`}
+                className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl"
+              />
+            </div>
           </div>
         </div>
       )}

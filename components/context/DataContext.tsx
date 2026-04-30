@@ -28,9 +28,28 @@ interface DataContextType {
 const defaultSettings: SiteSettings = {
   siteTitle: 'PromptVault',
   siteDescription: 'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.',
+  siteLogo: '',
   heroEnabled: true,
   heroAutoPlay: true,
   aiTools: ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
+  features: {
+    userProfiles: false,
+    userSubmissions: false,
+    userSubmissionsAutoApprove: false,
+    comments: false,
+    commentsRequireApproval: false,
+    advancedFiltering: false,
+    smartTemplates: false,
+    infiniteScroll: false,
+    infiniteScrollItems: 20,
+    premiumPrompts: false,
+    premiumPrice: 5,
+    premiumPaymentUrl: '',
+    skeletonLoaders: false,
+    trendingAlgorithm: false,
+    trendingLikesWeight: 2,
+    trendingViewsWeight: 1,
+  }
 };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -76,16 +95,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const unsubPosts = onSnapshot(collection(db, 'posts'), (snap) => {
       const data = snap.docs.map(doc => doc.data() as Post);
       setPosts(data);
-    }, (error) => {
-      if (error.name === 'AbortError' || error.message.includes('aborted')) return;
+    }, (error: any) => {
+      if (error?.name === 'AbortError' || error?.message?.includes('aborted') || String(error).includes('aborted')) return;
       console.error('Firebase posts snapshot error:', error);
     });
 
     const unsubSections = onSnapshot(collection(db, 'sections'), (snap) => {
       const data = snap.docs.map(doc => doc.data() as Section);
       setSections(data);
-    }, (error) => {
-      if (error.name === 'AbortError' || error.message.includes('aborted')) return;
+    }, (error: any) => {
+      if (error?.name === 'AbortError' || error?.message?.includes('aborted') || String(error).includes('aborted')) return;
       console.error('Firebase sections snapshot error:', error);
     });
 
@@ -97,8 +116,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         resetData();
       }
       setLoading(false);
-    }, (error) => {
-      if (error.name === 'AbortError' || error.message.includes('aborted')) return;
+    }, (error: any) => {
+      if (error?.name === 'AbortError' || error?.message?.includes('aborted') || String(error).includes('aborted')) return;
       console.error('Firebase settings snapshot error:', error);
     });
 
@@ -109,14 +128,33 @@ export function DataProvider({ children }: { children: ReactNode }) {
     };
   }, [resetData]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      document.title = settings.siteTitle ? `${settings.siteTitle} - AI Prompts` : 'PromptVault - AI Prompts';
+      
+      if (settings.siteLogo) {
+        let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.head.appendChild(link);
+        }
+        link.href = settings.siteLogo;
+      }
+    }
+  }, [settings.siteTitle, settings.siteLogo]);
+
   const addPost = useCallback(async (post: Post) => {
-    await setDoc(doc(db, 'posts', post.id), post);
+    const { likedByUser, ...saveable } = post;
+    const cleanPost = JSON.parse(JSON.stringify(saveable));
+    await setDoc(doc(db, 'posts', post.id), cleanPost);
   }, []);
 
   const updatePost = useCallback(async (post: Post) => {
     // Remove transient property before save
     const { likedByUser, ...saveable } = post;
-    await setDoc(doc(db, 'posts', post.id), saveable);
+    const cleanPost = JSON.parse(JSON.stringify(saveable));
+    await setDoc(doc(db, 'posts', post.id), cleanPost);
   }, []);
 
   const deletePost = useCallback(async (id: string) => {
@@ -172,10 +210,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const getPostById = useCallback((id: string) => enrichedPosts.find(p => p.id === id), [enrichedPosts]);
 
   const getFilteredPosts = useCallback((section: Section): Post[] => {
-    let filtered = [...enrichedPosts];
+    let filtered = [...enrichedPosts].filter(p => p.status === 'published' || !p.status);
     switch (section.type) {
       case 'ai-tool':
         filtered = filtered.filter(p => p.images.some(img => img.aiTool === section.aiTool));
+        break;
+      case 'tag':
+        filtered = filtered.filter(p => p.tags.some(t => t.toLowerCase() === section.tag?.toLowerCase()));
+        break;
+      case 'category':
+        filtered = filtered.filter(p => p.category?.toLowerCase() === section.category?.toLowerCase());
         break;
       case 'latest':
         filtered = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -183,24 +227,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
       case 'popular':
         filtered = filtered.sort((a, b) => b.views - a.views);
         break;
+      case 'trending':
+        const viewsW = settings.features?.trendingViewsWeight ?? 1;
+        const likesW = settings.features?.trendingLikesWeight ?? 2;
+        filtered = filtered.sort((a, b) => (b.views * viewsW + b.likes * likesW) - (a.views * viewsW + a.likes * likesW));
+        break;
       case 'custom':
         if (section.postIds && section.postIds.length > 0) {
           filtered = section.postIds
             .map(pid => enrichedPosts.find(p => p.id === pid))
-            .filter((p): p is Post => p !== undefined);
+            .filter((p): p is Post => p !== undefined && (p.status === 'published' || !p.status));
         }
         break;
     }
     return filtered;
-  }, [enrichedPosts]);
-
+  }, [enrichedPosts, settings.features?.trendingViewsWeight, settings.features?.trendingLikesWeight]);
+  
   const searchPosts = useCallback((query: string): Post[] => {
     const q = query.toLowerCase();
-    return enrichedPosts.filter(p =>
-      p.title.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q) ||
-      p.tags.some(t => t.toLowerCase().includes(q)) ||
-      p.images.some(img => img.aiTool.toLowerCase().includes(q))
+    return enrichedPosts.filter(p => 
+      (p.status === 'published' || !p.status) &&
+      (p.title.toLowerCase().includes(q) ||
+       p.description.toLowerCase().includes(q) ||
+       p.tags.some(t => t.toLowerCase().includes(q)) ||
+       p.images.some(img => img.aiTool.toLowerCase().includes(q)))
     );
   }, [enrichedPosts]);
 

@@ -28,7 +28,7 @@ async function getPostBySlugOrId(identifier: string): Promise<Post | null> {
       return { ...docSnap.data() as Post, id: docSnap.id };
     }
   } catch (error: any) {
-    if (error.name !== 'AbortError' && !error.message?.includes('aborted')) {
+    if (error.name !== 'AbortError' && !error?.message?.includes('aborted') && !String(error).includes('aborted')) {
       console.error('Error fetching post for metadata:', error);
     }
   }

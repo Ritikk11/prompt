@@ -19,7 +19,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTheme(stored);
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 

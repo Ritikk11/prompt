@@ -1,12 +1,22 @@
 'use client';
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useData } from '@/components/context/DataContext';
-import PostCard from './PostCard';
+import dynamic from 'next/dynamic';
+import SkeletonPostCard from './SkeletonPostCard';
 import type { Section } from '@/lib/types';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+
+const PostCard = dynamic(() => import('./PostCard'), {
+  loading: () => <SkeletonPostCard />
+});
+
+const AdSlot = dynamic(() => import('@/components/AdSlot'), {
+  ssr: false
+});
 
 export default function HomeSection({ section }: { section: Section }) {
-  const { posts, getFilteredPosts } = useData();
+  const { posts, getFilteredPosts, loading, settings } = useData();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const isLatest = section.type === 'latest';
@@ -17,7 +27,8 @@ export default function HomeSection({ section }: { section: Section }) {
     : [];
 
   // For other sections: use filtered posts with limit
-  const sectionPosts = !isLatest ? getFilteredPosts(section) : [];
+  const allSectionPosts = !isLatest ? getFilteredPosts(section) : [];
+  const sectionPosts = allSectionPosts.slice(0, 8);
 
   // Load more state for latest
   const [showCount, setShowCount] = useState(8);
@@ -27,8 +38,8 @@ export default function HomeSection({ section }: { section: Section }) {
   const hasMore = allLatestPosts.length > showCount;
 
   // Don't render empty sections
-  if (!isLatest && sectionPosts.length === 0) return null;
-  if (isLatest && allLatestPosts.length === 0) return null;
+  if (!loading && !isLatest && sectionPosts.length === 0) return null;
+  if (!loading && isLatest && allLatestPosts.length === 0) return null;
 
   const scroll = (dir: 'left' | 'right') => {
     if (!scrollRef.current) return;
@@ -37,35 +48,66 @@ export default function HomeSection({ section }: { section: Section }) {
   };
 
   return (
-    <section className="py-6">
+    <section id={`section-${section.id}`} className="py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-xl md:text-2xl font-bold">{section.name}</h2>
-        <span className="text-xs font-medium text-surface-400">
-          {isLatest ? `${allLatestPosts.length} posts` : `${sectionPosts.length} posts`}
-        </span>
+        <Link href={`/section/${section.slug || section.id}`} className="flex items-center gap-2">
+          <h2 className="text-xl md:text-2xl font-bold hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+            {section.name}
+          </h2>
+        </Link>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-medium text-surface-400 hidden sm:inline-block">
+            {isLatest ? `${allLatestPosts.length} posts` : `${allSectionPosts.length} posts`}
+          </span>
+          {!isLatest && (
+            <Link 
+              href={`/section/${section.slug || section.id}`} 
+              className="group flex items-center gap-1 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors bg-primary-50 dark:bg-primary-900/20 px-3 py-1.5 rounded-full"
+            >
+              View All <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          )}
+        </div>
       </div>
 
       {isLatest ? (
         /* Latest — Masonry grid with Load More */
         <div>
-          <div className="columns-2 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-2 md:gap-4 px-0">
-            {visibleLatest.map((post, i) => (
-              <PostCard key={post.id} post={post} index={i} />
-            ))}
-          </div>
+          {loading && settings.features?.skeletonLoaders ? (
+             <div className={`${settings.features?.mobileColumns === 1 ? 'columns-1 sm:columns-2' : 'columns-2'} lg:columns-3 xl:columns-4 gap-1 px-0`}>
+               {Array.from({ length: BATCH }).map((_, i) => (
+                 <div key={i} className="mb-1 inline-block w-full break-inside-avoid">
+                   <SkeletonPostCard />
+                 </div>
+               ))}
+             </div>
+          ) : (
+            <>
+              <div className={`${settings.features?.mobileColumns === 1 ? 'columns-1 sm:columns-2' : 'columns-2'} lg:columns-3 xl:columns-4 gap-1 px-0`}>
+                {visibleLatest.map((post, i) => (
+                  <React.Fragment key={post.id}>
+                    <div className="mb-1 inline-block w-full break-inside-avoid">
+                      <PostCard post={post} index={i} />
+                    </div>
+                    <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
+                  </React.Fragment>
+                ))}
+              </div>
 
-          {/* Load More Button */}
-          {hasMore && (
-            <div className="flex justify-center mt-8">
-              <button
-                onClick={() => setShowCount(prev => prev + BATCH)}
-                className="flex items-center gap-2 px-8 py-3 rounded-xl bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-semibold transition-all border border-surface-200 dark:border-surface-700 hover:shadow-md"
-              >
-                <ChevronDown className="w-4 h-4" />
-                Load More ({allLatestPosts.length - showCount} remaining)
-              </button>
-            </div>
+              {/* Load More Button */}
+              {hasMore && (
+                <div className="flex justify-center mt-8">
+                  <button
+                    onClick={() => setShowCount(prev => prev + BATCH)}
+                    className="flex items-center gap-2 px-8 py-3 rounded-xl bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-semibold transition-all border border-surface-200 dark:border-surface-700 hover:shadow-md"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                    Load More ({allLatestPosts.length - showCount} remaining)
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       ) : (
@@ -85,11 +127,22 @@ export default function HomeSection({ section }: { section: Section }) {
             className="flex gap-2 sm:gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-thin"
             style={{ scrollbarWidth: 'thin' }}
           >
-            {sectionPosts.map((post, i) => (
-              <div key={post.id} className="flex-none w-44 sm:w-48 md:w-52">
-                <PostCard post={post} index={i} aspect="aspect-[3/4]" />
-              </div>
-            ))}
+            {loading && settings.features?.skeletonLoaders ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex-none w-44 sm:w-48 md:w-52">
+                  <SkeletonPostCard />
+                </div>
+              ))
+            ) : (
+              sectionPosts.map((post, i) => (
+                <React.Fragment key={post.id}>
+                  <div className="flex-none w-44 sm:w-48 md:w-52">
+                    <PostCard post={post} index={i} aspect="aspect-[3/4]" />
+                  </div>
+                  <AdSlot placement="inFeed" inFeedIndex={i} className="flex-none w-44 sm:w-48 md:w-52 bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
+                </React.Fragment>
+              ))
+            )}
           </div>
 
           {/* Right arrow */}
