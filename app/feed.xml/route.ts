@@ -4,6 +4,8 @@ import { db } from '@/lib/firebase';
 import { Post, SiteSettings } from '@/lib/types';
 import { doc, getDoc } from 'firebase/firestore';
 
+export const runtime = 'edge';
+
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptgallery.com';
 
