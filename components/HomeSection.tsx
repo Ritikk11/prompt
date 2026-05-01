@@ -6,6 +6,7 @@ import SkeletonPostCard from './SkeletonPostCard';
 import type { Section } from '@/lib/types';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { getGridClasses } from '@/lib/utils';
 
 const PostCard = dynamic(() => import('./PostCard'), {
   loading: () => <SkeletonPostCard />
@@ -75,7 +76,7 @@ export default function HomeSection({ section }: { section: Section }) {
         /* Latest — Masonry grid with Load More */
         <div>
           {loading && settings.features?.skeletonLoaders ? (
-             <div className={`${settings.features?.mobileColumns === 1 ? 'columns-1 sm:columns-2' : 'columns-2'} lg:columns-3 xl:columns-4 gap-1 px-0`}>
+             <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
                {Array.from({ length: BATCH }).map((_, i) => (
                  <div key={i} className="mb-1 inline-block w-full break-inside-avoid">
                    <SkeletonPostCard />
@@ -84,7 +85,7 @@ export default function HomeSection({ section }: { section: Section }) {
              </div>
           ) : (
             <>
-              <div className={`${settings.features?.mobileColumns === 1 ? 'columns-1 sm:columns-2' : 'columns-2'} lg:columns-3 xl:columns-4 gap-1 px-0`}>
+              <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
                 {visibleLatest.map((post, i) => (
                   <React.Fragment key={post.id}>
                     <div className="mb-1 inline-block w-full break-inside-avoid">

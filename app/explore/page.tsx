@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useData } from '@/components/context/DataContext';
 import dynamic from 'next/dynamic';
 import SkeletonPostCard from '@/components/SkeletonPostCard';
+import { getGridClasses } from '@/lib/utils';
 
 const PostCard = dynamic(() => import('@/components/PostCard'), {
   loading: () => <SkeletonPostCard />
@@ -104,7 +105,7 @@ export default function Explore() {
 
       {/* Masonry layout like Pinterest */}
       {loading && settings.features?.skeletonLoaders ? (
-         <div className={`${settings.features?.mobileColumns === 1 ? 'columns-1 sm:columns-2' : 'columns-2'} lg:columns-3 xl:columns-4 gap-1 px-0`}>
+         <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
            {Array.from({ length: 10 }).map((_, i) => (
              <div key={i} className="mb-1 inline-block w-full break-inside-avoid">
                 <SkeletonPostCard />
@@ -113,7 +114,7 @@ export default function Explore() {
          </div>
       ) : (
         <>
-          <div className={`${settings.features?.mobileColumns === 1 ? 'columns-1 sm:columns-2' : 'columns-2'} lg:columns-3 xl:columns-4 gap-1 px-0`}>
+          <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
             {visiblePosts.map((post, i) => (
               <React.Fragment key={post.id}>
                 <div className="mb-1 inline-block w-full break-inside-avoid">

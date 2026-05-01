@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**', // This allows any path under the hostname
       },
+      // Also allow common firebase storage hostname just in case
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      }
     ],
   },
   output: 'standalone',

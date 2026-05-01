@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import SkeletonPostCard from '@/components/SkeletonPostCard';
+import { getGridClasses } from '@/lib/utils';
 
 const PostCard = dynamic(() => import('@/components/PostCard'), {
   loading: () => <SkeletonPostCard />
@@ -104,7 +105,7 @@ export default function TagContent() {
       </div>
 
       {/* Grid */}
-      <div className={`${settings.features?.mobileColumns === 1 ? 'columns-1 sm:columns-2' : 'columns-2'} lg:columns-3 xl:columns-4 gap-1 px-0`}>
+      <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
         {filtered.map((post, i) => (
           <React.Fragment key={post.id}>
             <div className="mb-1 inline-block w-full break-inside-avoid">

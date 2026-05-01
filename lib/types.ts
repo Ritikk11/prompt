@@ -11,6 +11,7 @@ export interface Post {
   slug: string;
   title: string;
   description: string;
+  extendedDescription?: string;
   seoTitle?: string;
   seoDescription?: string;
   images: ImagePrompt[];
@@ -61,6 +62,7 @@ export interface SiteFeatures {
   trendingLikesWeight?: number;
   trendingViewsWeight?: number;
   mobileColumns?: 1 | 2;
+  desktopColumns?: 3 | 4 | 5 | 6 | 7 | 8;
 }
 
 export interface AdSettings {

@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
+import { getGridClasses } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 import { getToolInfo } from '@/lib/constants';
 import { useState } from 'react';
@@ -377,11 +378,22 @@ export default function PostContent() {
               Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
-          <div className={`${settings.features?.mobileColumns === 1 ? 'columns-1 sm:columns-2' : 'columns-2'} lg:columns-3 xl:columns-4 gap-1 px-0`}>
+          <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns) + " mb-16"}>
             {relatedPosts.map((p, i) => (
               <div key={p.id} className="mb-1 inline-block w-full break-inside-avoid">
                 <PostCard post={p} index={i} />
               </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Extended HTML / Article Description */}
+      {post.extendedDescription && (
+        <div className="border-t border-surface-200 dark:border-surface-800 pt-16 mb-16">
+          <div className="max-w-4xl mx-auto prose dark:prose-invert prose-surface">
+            {post.extendedDescription.split('\n').map((paragraph, i) => (
+              paragraph.trim() ? <p key={i} className="mb-4 whitespace-pre-wrap">{paragraph}</p> : <br key={i} />
             ))}
           </div>
         </div>

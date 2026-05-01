@@ -5,6 +5,7 @@ import SkeletonPostCard from '@/components/SkeletonPostCard';
 import { useParams, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { LayoutTemplate } from 'lucide-react';
+import { getGridClasses } from '@/lib/utils';
 
 const PostCard = dynamic(() => import('@/components/PostCard'), {
   loading: () => <SkeletonPostCard />
@@ -18,7 +19,7 @@ export default function SectionContent() {
     return (
       <div className="max-w-7xl mx-auto px-1 py-6 sm:py-10 space-y-6">
         <div className="h-10 bg-surface-200 dark:bg-surface-800 rounded w-64 animate-pulse" />
-        <div className={`${settings.features?.mobileColumns === 1 ? 'columns-1 sm:columns-2' : 'columns-2'} lg:columns-3 xl:columns-4 gap-1 px-0`}>
+        <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
            {Array.from({ length: 8 }).map((_, i) => (
              <div key={i} className="mb-1 inline-block w-full break-inside-avoid">
                <SkeletonPostCard />
@@ -46,7 +47,7 @@ export default function SectionContent() {
         </div>
       </div>
 
-      <div className={`${settings.features?.mobileColumns === 1 ? 'columns-1 sm:columns-2' : 'columns-2'} lg:columns-3 xl:columns-4 gap-1 px-0 mb-8`}>
+      <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns) + " mb-8"}>
         {posts.map((post, i) => (
           <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
             <PostCard post={post} index={i} />

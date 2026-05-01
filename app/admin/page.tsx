@@ -66,6 +66,7 @@ export default function Admin() {
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
+  const [extendedDescription, setExtendedDescription] = useState('');
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
   const [tagsStr, setTagsStr] = useState('');
@@ -127,6 +128,7 @@ export default function Admin() {
       trendingLikesWeight: 2,
       trendingViewsWeight: 1,
       mobileColumns: 2,
+      desktopColumns: 4,
     }
   );
 
@@ -136,7 +138,7 @@ export default function Admin() {
   const customSections = sections.filter(s => s.type === 'custom');
 
   const resetForm = () => {
-    setTitle(''); setSlug(''); setDescription(''); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory('');
+    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory('');
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
   };
@@ -146,6 +148,7 @@ export default function Admin() {
     setTitle(post.title);
     setSlug(post.slug || '');
     setDescription(post.description);
+    setExtendedDescription(post.extendedDescription || '');
     setSeoTitle(post.seoTitle || '');
     setSeoDescription(post.seoDescription || '');
     setTagsStr(post.tags.join(', '));
@@ -237,6 +240,7 @@ export default function Admin() {
       slug: finalSlug,
       title: title || 'Untitled Post',
       description: description || '',
+      extendedDescription: extendedDescription || '',
       images: images.filter(i => i.url || i.prompt || i.aiTool),
       tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
       category: category || undefined,
@@ -648,6 +652,17 @@ export default function Admin() {
                     rows={3}
                     className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-none"
                     placeholder="Describe this prompt collection..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Extended Description / Content (Optional, useful for AdSense)</label>
+                  <textarea
+                    value={extendedDescription}
+                    onChange={e => setExtendedDescription(e.target.value)}
+                    rows={8}
+                    className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-none font-mono"
+                    placeholder="Write a longer article or detailed description here to display at the bottom of the post page..."
                   />
                 </div>
 
@@ -1736,6 +1751,33 @@ export default function Admin() {
                   >
                     <option value={1}>1 Column</option>
                     <option value={2}>2 Columns</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Desktop Columns Setting */}
+              <div className="border-b border-surface-200 dark:border-surface-800 pb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <LayoutTemplate className="w-5 h-5 text-surface-400" />
+                    <div>
+                      <p className="font-semibold text-sm">Desktop Grid Columns</p>
+                      <p className="text-xs text-surface-500">Columns to show on large desktop monitors (100% zoom).</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="pl-8 pt-2">
+                  <select 
+                    value={features.desktopColumns || 4} 
+                    onChange={(e) => setFeatures(prev => ({ ...prev, desktopColumns: parseInt(e.target.value) }))}
+                    className="w-48 px-3 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                  >
+                    <option value={3}>3 Columns</option>
+                    <option value={4}>4 Columns</option>
+                    <option value={5}>5 Columns</option>
+                    <option value={6}>6 Columns</option>
+                    <option value={7}>7 Columns</option>
+                    <option value={8}>8 Columns</option>
                   </select>
                 </div>
               </div>
