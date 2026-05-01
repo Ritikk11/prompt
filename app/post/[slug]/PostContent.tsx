@@ -64,7 +64,7 @@ export default function PostContent() {
   };
 
   const post = posts.find((p) => p.slug === slug || p.id === slug);
-  const heroToolInfo = post ? getToolInfo(post.images[0]?.aiTool || '', settings?.toolDetails) : { color: '', logo: '' };
+  const heroToolInfo = post ? getToolInfo(post.images?.[0]?.aiTool || '', settings?.toolDetails) : { color: '', logo: '' };
 
   useEffect(() => {
     if (post && !viewIncrementedRef.current) {
@@ -95,12 +95,12 @@ export default function PostContent() {
   }
 
   const relatedPosts = posts
-    .filter(p => p.id !== post.id && p.tags.some(t => post.tags.includes(t)))
+    .filter(p => p.id !== post.id && (p.tags || []).some(t => (post.tags || []).includes(t)))
     .slice(0, 4);
 
   const allPromptsText = settings.features?.premiumPrompts && post.isPremium && !user 
     ? "Premium Collection - Please sign in to view full prompts." 
-    : post.images.map((img, i) => `Image ${i + 1} (${img.aiTool}):\n${img.prompt}`).join('\n\n');
+    : (post.images || []).map((img, i) => `Image ${i + 1} (${img.aiTool}):\n${img.prompt}`).join('\n\n');
 
   return (
     <div className="max-w-6xl mx-auto px-1 py-4 sm:py-6 fade-in">
@@ -144,19 +144,19 @@ export default function PostContent() {
         <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-surface-100 dark:bg-surface-800/30">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+            src={post.images?.[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
             alt={post.title}
             className="w-auto max-w-full max-h-[80vh] h-auto object-contain"
             loading="eager"
           />
           <div className="absolute top-4 left-4 z-20">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white shadow-md backdrop-blur-md saturate-150 ${heroToolInfo.color}/90 border border-white/20 uppercase tracking-widest`}>
-              {heroToolInfo.logo && (
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white shadow-md backdrop-blur-md saturate-150 ${heroToolInfo?.color || 'bg-surface-500'}/90 border border-white/20 uppercase tracking-widest`}>
+              {heroToolInfo?.logo && (
                 <div className="relative w-4 h-4 shrink-0 bg-black/10 rounded overflow-hidden p-[1px]">
                   <Image src={heroToolInfo.logo} alt="" fill className="object-contain" unoptimized />
                 </div>
               )}
-              {post.images[0]?.aiTool}
+              {post.images?.[0]?.aiTool || 'AI'}
             </span>
           </div>
           {post.featured && (
@@ -176,12 +176,12 @@ export default function PostContent() {
             <Tag className="w-5 h-5 text-primary-500" />
           </div>
           <h2 className="text-xl md:text-2xl font-bold tracking-tight">
-            Prompt Gallery <span className="text-surface-400 font-medium ml-1">({post.images.length})</span>
+            Prompt Gallery <span className="text-surface-400 font-medium ml-1">({(post.images || []).length})</span>
           </h2>
         </div>
 
         <div className="space-y-10">
-          {post.images.map((img, index) => (
+          {(post.images || []).map((img, index) => (
             <div
               key={img.id}
               className="group rounded-2xl overflow-hidden border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm hover:shadow-xl transition-all duration-300"
@@ -305,7 +305,7 @@ export default function PostContent() {
         
         <div className="relative z-10">
           <h3 className="text-2xl md:text-3xl font-extrabold mb-3 tracking-tight">Copy Entire Collection</h3>
-          <p className="text-white/80 text-base md:text-lg mb-8 max-w-xl mx-auto font-medium">Grab all {post.images.length} creative prompts instantly to use in your favorite AI generator.</p>
+          <p className="text-white/80 text-base md:text-lg mb-8 max-w-xl mx-auto font-medium">Grab all {(post.images || []).length} creative prompts instantly to use in your favorite AI generator.</p>
           <div className="flex justify-center">
              <div className="bg-white/10 backdrop-blur-xl p-2 rounded-2xl border border-white/20">
                <CopyButton text={allPromptsText} />
@@ -320,7 +320,7 @@ export default function PostContent() {
       <div className="mb-16">
         <h3 className="text-sm font-bold text-surface-400 uppercase tracking-[0.2em] mb-6">Discovery Tags</h3>
         <div className="flex flex-wrap gap-2.5">
-          {post.tags.map(tag => (
+          {(post.tags || []).map(tag => (
             <Link
               key={tag}
               href={`/tag/${encodeURIComponent(tag)}`}

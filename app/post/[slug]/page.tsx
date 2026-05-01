@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const firstImageUrl = post.images[0]?.url || '';
+  const firstImageUrl = post.images?.[0]?.url || '';
   const isBase64 = firstImageUrl.startsWith('data:');
 
   const metaTitle = post.seoTitle || `${post.title} | AI Prompts - PromptVault`;
