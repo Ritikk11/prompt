@@ -1769,7 +1769,7 @@ export default function Admin() {
                 <div className="pl-8 pt-2">
                   <select 
                     value={features.desktopColumns || 4} 
-                    onChange={(e) => setFeatures(prev => ({ ...prev, desktopColumns: parseInt(e.target.value) }))}
+                    onChange={(e) => setFeatures(prev => ({ ...prev, desktopColumns: parseInt(e.target.value) as 3|4|5|6|7|8 }))}
                     className="w-48 px-3 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                   >
                     <option value={3}>3 Columns</option>
