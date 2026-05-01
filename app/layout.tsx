@@ -13,8 +13,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'PromptVault - AI Prompts',
+  title: 'Prompt Matrix - AI Prompts',
   description: 'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.',
+  other: {
+    'google-adsense-account': 'ca-pub-XXXXXXXXXXXXXXXX' // User needs to replace this
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

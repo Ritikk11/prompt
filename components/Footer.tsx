@@ -48,11 +48,21 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div>
-            <h3 className="font-semibold mb-4">Quick Links</h3>
-            <div className="space-y-2">
-              <Link href="/" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Home</Link>
-              <Link href="/explore" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Explore All</Link>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="font-semibold mb-4 text-surface-900 dark:text-white">Legal</h3>
+              <div className="space-y-2">
+                <Link href="/privacy" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Privacy Policy</Link>
+                <Link href="/terms" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Terms of Service</Link>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4 text-surface-900 dark:text-white">Platform</h3>
+              <div className="space-y-2">
+                <Link href="/explore" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Explore</Link>
+                <Link href="/about" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">About Us</Link>
+                <Link href="/contact" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Contact</Link>
+              </div>
             </div>
           </div>
 
