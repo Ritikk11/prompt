@@ -1,3 +1,6 @@
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+
 import { Metadata } from 'next';
 import { getPostBySlugOrIdREST } from '@/lib/firebase-rest';
 import PostContent from './PostContent';
