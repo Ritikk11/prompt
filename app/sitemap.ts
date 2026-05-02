@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
-import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 import { Post } from '@/lib/types';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

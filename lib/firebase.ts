@@ -1,6 +1,4 @@
-if (typeof navigator === 'undefined') {
-  (globalThis as any).navigator = { userAgent: 'Node.js' };
-}
+import './polyfills';
 
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';

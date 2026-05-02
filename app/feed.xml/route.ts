@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Post, SiteSettings } from '@/lib/types';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 
 export const runtime = 'edge';
 
