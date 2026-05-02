@@ -1,5 +1,3 @@
-export const runtime = 'edge';
-
 import { Metadata } from 'next';
 import { getPostBySlugOrIdREST } from '@/lib/firebase-rest';
 import PostContent from './PostContent';
