@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAllPostsREST, getSettingsREST } from '@/lib/firebase-rest';
 import { Post, SiteSettings } from '@/lib/types';
-import { doc, getDoc } from 'firebase/firestore';
 
 export const runtime = 'edge';
 
@@ -11,15 +9,12 @@ export async function GET() {
 
   try {
     // 1. Fetch site settings for title and description
-    const settingsDoc = await getDoc(doc(db, 'settings', 'global'));
-    const settings = settingsDoc.exists() ? (settingsDoc.data() as SiteSettings) : null;
+    const settings = await getSettingsREST() as SiteSettings | null;
     const siteTitle = settings?.siteTitle || 'PromptVault';
     const siteDescription = settings?.siteDescription || 'Curated AI Prompts';
 
     // 2. Fetch posts
-    const postsRef = collection(db, 'posts');
-    const snapshot = await getDocs(postsRef);
-    const posts = snapshot.docs.map(d => d.data() as Post);
+    const posts = await getAllPostsREST() as Post[];
     const publishedPosts = posts.filter(p => p.status === 'published' || !p.status)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 50); // only last 50 for RSS

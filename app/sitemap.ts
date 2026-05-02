@@ -1,6 +1,5 @@
 import { MetadataRoute } from 'next';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getAllPostsREST } from '@/lib/firebase-rest';
 import { Post } from '@/lib/types';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -23,9 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const postsRef = collection(db, 'posts');
-    const snapshot = await getDocs(postsRef);
-    const posts = snapshot.docs.map(doc => doc.data() as Post);
+    const posts = await getAllPostsREST() as Post[];
 
     // Add unique posts
     const publishedPosts = posts.filter(p => p.status === 'published' || !p.status);

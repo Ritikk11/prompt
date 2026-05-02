@@ -1,8 +1,7 @@
 export const runtime = 'edge';
 
 import { Metadata } from 'next';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
+import { getPostBySlugOrIdREST } from '@/lib/firebase-rest';
 import PostContent from './PostContent';
 import type { Post } from '@/lib/types';
 
@@ -10,36 +9,9 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-async function getPostBySlugOrId(identifier: string): Promise<Post | null> {
-  try {
-    // Try slug first
-    const q = query(
-      collection(db, 'posts'),
-      where('slug', '==', identifier),
-      limit(1)
-    );
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      const data = querySnapshot.docs[0].data() as Post;
-      return { ...data, id: querySnapshot.docs[0].id };
-    }
-
-    // Try ID fallback
-    const docSnap = await getDoc(doc(db, 'posts', identifier));
-    if (docSnap.exists()) {
-      return { ...docSnap.data() as Post, id: docSnap.id };
-    }
-  } catch (error: any) {
-    if (error.name !== 'AbortError' && !error?.message?.includes('aborted') && !String(error).includes('aborted')) {
-      console.error('Error fetching post for metadata:', error);
-    }
-  }
-  return null;
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPostBySlugOrId(slug);
+  const post = await getPostBySlugOrIdREST(slug);
 
   if (!post) {
     return {
