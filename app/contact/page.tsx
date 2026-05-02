@@ -1,5 +1,5 @@
 
-export const runtime = 'edge';
+
 
 import { Mail, MessageSquare } from 'lucide-react';
 

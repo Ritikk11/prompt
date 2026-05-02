@@ -1,11 +1,13 @@
 
-export const runtime = 'edge';
+
 
 import { Metadata } from 'next';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
 import PostContent from './PostContent';
 import type { Post } from '@/lib/types';
+
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: Promise<{ slug: string }>;

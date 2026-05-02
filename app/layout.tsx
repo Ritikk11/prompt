@@ -1,4 +1,3 @@
-import '@/lib/polyfills';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css'; // Global styles
@@ -12,6 +11,8 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
 });
+
+export const fetchCache = 'default-no-store';
 
 export const metadata: Metadata = {
   title: 'Prompt Matrix - AI Prompts',

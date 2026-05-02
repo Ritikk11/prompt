@@ -3,6 +3,8 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { Post } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Determine site URL dynamically or hardcode for now
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptgallery.com';
