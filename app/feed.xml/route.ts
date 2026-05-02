@@ -4,6 +4,7 @@ import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import type { SiteSettings, Post } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptgallery.com';

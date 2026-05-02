@@ -4,6 +4,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { Post } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Determine site URL dynamically or hardcode for now

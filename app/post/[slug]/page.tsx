@@ -8,6 +8,7 @@ import PostContent from './PostContent';
 import type { Post } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 interface Props {
   params: Promise<{ slug: string }>;
