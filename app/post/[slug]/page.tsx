@@ -1,3 +1,4 @@
+
 export const runtime = 'edge';
 
 import { Metadata } from 'next';
@@ -57,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: metaTitle,
     description: metaDescription,
-    keywords: [...post.tags, 'AI prompts', 'midjourney', 'dall-e'],
+    keywords: [...(post.tags || []), 'AI prompts', 'midjourney', 'dall-e'],
     openGraph: {
       title: metaTitle,
       description: metaDescription,

@@ -1,3 +1,7 @@
+if (typeof navigator === 'undefined') {
+  (globalThis as any).navigator = { userAgent: 'Node.js' };
+}
+
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';

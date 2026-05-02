@@ -20,7 +20,7 @@ const PostCard = dynamic(() => import('@/components/PostCard'));
 const AdSlot = dynamic(() => import('@/components/AdSlot'), { ssr: false });
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  return new Date(dateStr).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 export default function PostContent() {
