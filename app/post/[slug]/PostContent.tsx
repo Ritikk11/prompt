@@ -13,6 +13,7 @@ import { useState } from 'react';
 import TemplatePrompt from '@/components/TemplatePrompt';
 import { auth } from '@/lib/firebase';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
+import type { Post, SiteSettings } from '@/lib/types';
 
 import CopyButton from '@/components/CopyButton';
 
@@ -23,9 +24,9 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-export default function PostContent() {
+export default function PostContent({ initialPost, initialSettings }: { initialPost?: Post | null, initialSettings?: SiteSettings | null }) {
   const { slug } = useParams();
-  const { incrementViews, toggleLike, posts, loading, settings } = useData();
+  const { incrementViews, toggleLike, posts, loading, settings: contextSettings } = useData();
   const viewIncrementedRef = useRef(false);
 
   const [lightboxImage, setLightboxImage] = useState<{ url: string; index: number; tool: string } | null>(null);
@@ -63,7 +64,8 @@ export default function PostContent() {
     }
   };
 
-  const post = posts.find((p) => p.slug === slug || p.id === slug);
+  const post = posts.find((p) => p.slug === slug || p.id === slug) || initialPost;
+  const settings = (contextSettings && Object.keys(contextSettings).length > 0 && contextSettings.siteTitle) ? contextSettings : (initialSettings || contextSettings);
   const heroToolInfo = post ? getToolInfo(post.images[0]?.aiTool || '', settings?.toolDetails) : { color: '', logo: '' };
 
   useEffect(() => {
@@ -73,7 +75,7 @@ export default function PostContent() {
     }
   }, [post, incrementViews]);
 
-  if (loading) {
+  if (loading && !post) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-20 flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mb-4" />
@@ -98,11 +100,11 @@ export default function PostContent() {
     .filter(p => p.id !== post.id && p.tags.some(t => post.tags.includes(t)))
     .slice(0, 4);
 
-  const allPromptsText = settings.features?.premiumPrompts && post.isPremium && !user 
+  const allPromptsText = settings?.features?.premiumPrompts && post.isPremium && !user 
     ? "Premium Collection - Please sign in to view full prompts." 
     : post.images.map((img, i) => `Image ${i + 1} (${img.aiTool}):\n${img.prompt}`).join('\n\n');
 
-  const postHeroStyle = settings.postHeroStyle || 'v1';
+  const postHeroStyle = settings?.postHeroStyle || 'v1';
 
   const renderMetaInfo = () => (
     <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium text-surface-500 bg-surface-50 dark:bg-surface-900/50 py-3 px-6 rounded-full border border-surface-200 dark:border-surface-800 transition-colors ${postHeroStyle === 'v2' ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md' : ''}`}>
@@ -324,7 +326,7 @@ export default function PostContent() {
                 {/* Prompt */}
                 <div className="p-6 md:p-10 flex flex-col justify-between">
                   <div>
-                    {settings.features?.premiumPrompts && post.isPremium && !user ? (
+                    {settings?.features?.premiumPrompts && post.isPremium && !user ? (
                        <div className="bg-surface-50 dark:bg-surface-800/50 rounded-2xl p-6 mb-6 text-center border border-surface-200/50 dark:border-surface-700/50 relative overflow-hidden group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
                          <div className="absolute inset-0 bg-surface-50/80 dark:bg-surface-900/80 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6">
                            <Lock className="w-8 h-8 text-yellow-500 mb-3" />
@@ -332,9 +334,9 @@ export default function PostContent() {
                            <p className="text-sm text-surface-500 mb-4 max-w-sm">
                              Sign in to view and copy this engineered prompt.
                            </p>
-                           {settings.features?.premiumPaymentUrl ? (
-                             <a href={settings.features?.premiumPaymentUrl} target="_blank" rel="noreferrer" className="px-5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-yellow-500 to-yellow-600 text-white hover:from-yellow-600 hover:to-yellow-700 shadow-lg">
-                               Unlock All for ${settings.features?.premiumPrice || 5}
+                           {settings?.features?.premiumPaymentUrl ? (
+                             <a href={settings.features.premiumPaymentUrl} target="_blank" rel="noreferrer" className="px-5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-yellow-500 to-yellow-600 text-white hover:from-yellow-600 hover:to-yellow-700 shadow-lg">
+                               Unlock All for ${settings.features.premiumPrice || 5}
                              </a>
                            ) : (
                              <button onClick={handleLogin} className="px-5 py-2.5 rounded-xl text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 shadow-lg">
@@ -346,7 +348,7 @@ export default function PostContent() {
                            {img.prompt.slice(0, 100)}...
                          </p>
                        </div>
-                    ) : settings.features?.smartTemplates && img.prompt.includes('[') && img.prompt.includes(']') ? (
+                    ) : settings?.features?.smartTemplates && img.prompt.includes('[') && img.prompt.includes(']') ? (
                        <TemplatePrompt originalPrompt={img.prompt} />
                     ) : (
                       <>
@@ -410,7 +412,7 @@ export default function PostContent() {
         </div>
       </div>
 
-      {settings.features?.comments && (
+      {settings?.features?.comments && (
         <div className="mb-16 border-t border-surface-200 dark:border-surface-800 pt-16">
           <h3 className="text-xl md:text-2xl font-bold tracking-tight mb-8">Comments & Feedback</h3>
           <div className="bg-surface-50 dark:bg-surface-800/30 rounded-2xl p-8 text-center border border-surface-200 dark:border-surface-800">
@@ -456,7 +458,7 @@ export default function PostContent() {
               Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
-          <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns) + " mb-16"}>
+          <div className={getGridClasses(settings?.features?.mobileColumns, settings?.features?.desktopColumns) + " mb-16"}>
             {relatedPosts.map((p, i) => (
               <div key={p.id} className="mb-1 inline-block w-full break-inside-avoid">
                 <PostCard post={p} index={i} />

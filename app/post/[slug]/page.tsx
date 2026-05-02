@@ -2,9 +2,9 @@ export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
-import { getPostBySlugOrIdREST } from '@/lib/firebase-rest';
+import { getPostBySlugOrIdREST, getSettingsREST } from '@/lib/firebase-rest';
 import PostContent from './PostContent';
-import type { Post } from '@/lib/types';
+import type { Post, SiteSettings } from '@/lib/types';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -54,6 +54,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function PostPage() {
-  return <PostContent />;
+export default async function PostPage({ params }: Props) {
+  const { slug } = await params;
+  const [post, settings] = await Promise.all([
+    getPostBySlugOrIdREST(slug),
+    getSettingsREST()
+  ]);
+
+  return <PostContent initialPost={post as Post | null} initialSettings={settings as SiteSettings | null} />;
 }

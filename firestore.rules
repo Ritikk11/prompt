@@ -10,8 +10,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // For this demo, any authenticated user is an admin
-      return isSignedIn(); 
+      return isSignedIn() && (request.auth.token.email == 'ritikkewat11@gmail.com' || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
     }
 
     // Allows the very first site visitor to seed the database if it's completely empty or partially failed.
