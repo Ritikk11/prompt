@@ -79,6 +79,7 @@ export interface SiteSettings {
   heroEnabled: boolean;
   heroAutoPlay: boolean;
   heroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5';
+  postHeroStyle?: 'v1' | 'v2' | 'v3' | 'v4';
   aiTools: string[];
   toolDetails?: Record<string, { logo: string; color: string }>;
   headerSections?: Section[];

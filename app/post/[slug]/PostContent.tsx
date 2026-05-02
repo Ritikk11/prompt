@@ -102,6 +102,137 @@ export default function PostContent() {
     ? "Premium Collection - Please sign in to view full prompts." 
     : post.images.map((img, i) => `Image ${i + 1} (${img.aiTool}):\n${img.prompt}`).join('\n\n');
 
+  const postHeroStyle = settings.postHeroStyle || 'v1';
+
+  const renderMetaInfo = () => (
+    <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium text-surface-500 bg-surface-50 dark:bg-surface-900/50 py-3 px-6 rounded-full border border-surface-200 dark:border-surface-800 transition-colors ${postHeroStyle === 'v2' ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md' : ''}`}>
+      <span className="flex items-center gap-1.5">
+        <Eye className={`w-4.5 h-4.5 ${postHeroStyle === 'v2' ? 'text-white' : 'text-primary-500'}`} /> {post.views.toLocaleString()} <span className="hidden sm:inline">views</span>
+      </span>
+      <span className={`w-1 h-1 rounded-full ${postHeroStyle === 'v2' ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
+      <button
+        onClick={() => toggleLike(post.id)}
+        className={`flex items-center gap-1.5 transition-colors ${
+          post.likedByUser ? 'text-red-500' : 'hover:text-red-400'
+        }`}
+      >
+        <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop' : ''}`} /> {post.likes.toLocaleString()} <span className="hidden sm:inline">likes</span>
+      </button>
+      <span className={`w-1 h-1 rounded-full ${postHeroStyle === 'v2' ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
+      <span className="flex items-center gap-1.5">
+        <Clock className="w-4.5 h-4.5" /> {formatDate(post.createdAt)}
+      </span>
+    </div>
+  );
+
+  const renderHero = () => {
+    switch (postHeroStyle) {
+      case 'v2': // Immersive Blur Background
+        return (
+          <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-surface-900 shadow-2xl group min-h-[500px] flex items-end">
+            <Image src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="bg" fill unoptimized className="object-cover opacity-40 blur-xl scale-110" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+            <div className="relative z-20 p-8 md:p-12 w-full max-w-4xl mx-auto flex flex-col items-center text-center pb-12">
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-md backdrop-blur-md mb-6 saturate-150 ${heroToolInfo.color}/90 border border-white/20 uppercase tracking-widest`}>
+                {heroToolInfo.logo && (
+                  <div className="relative w-4 h-4 shrink-0 bg-black/10 rounded overflow-hidden p-[1px]">
+                    <Image src={heroToolInfo.logo} alt="" fill className="object-contain" unoptimized />
+                  </div>
+                )}
+                {post.images[0]?.aiTool}
+              </span>
+              <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight drop-shadow-lg">{post.title}</h1>
+              <p className="text-white/80 text-lg md:text-xl max-w-2xl leading-relaxed mb-8 drop-shadow">{post.description}</p>
+              {renderMetaInfo()}
+            </div>
+          </div>
+        );
+      case 'v3': // Diagonal Split
+        return (
+          <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-xl">
+             <div className="grid grid-cols-1 md:grid-cols-2 min-h-[400px]">
+                <div className="flex flex-col justify-center p-8 md:p-12 order-2 md:order-1">
+                   <div className="flex flex-wrap items-center gap-2 mb-4">
+                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white shadow-md ${heroToolInfo.color}/90 uppercase tracking-wider`}>
+                       {heroToolInfo.logo && (
+                         <div className="relative w-3.5 h-3.5 shrink-0 bg-white/20 rounded-full p-[1px] overflow-hidden">
+                           <Image src={heroToolInfo.logo} alt="" fill className="object-contain" unoptimized />
+                         </div>
+                       )}
+                       {post.images[0]?.aiTool}
+                     </span>
+                     {post.featured && <span className="px-3 py-1 rounded-full text-xs font-medium bg-surface-200 dark:bg-surface-800 text-surface-700 dark:text-surface-300">⭐ Featured</span>}
+                   </div>
+                   <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 leading-tight">{post.title}</h1>
+                   <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg mb-8 line-clamp-4">{post.description}</p>
+                   <div className="flex justify-start">{renderMetaInfo()}</div>
+                </div>
+                <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-surface-100 dark:bg-surface-800/30 flex items-center justify-center p-6 lg:p-10">
+                   <Image src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="" fill unoptimized className="object-cover blur-3xl opacity-20 scale-125 z-0" />
+                   {/* eslint-disable-next-line @next/next/no-img-element */}
+                   <img src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt={post.title} className="max-h-[400px] w-auto rounded-[24px] shadow-2xl object-contain relative z-10" />
+                </div>
+             </div>
+          </div>
+        );
+      case 'v4': // Minimalist Text
+        return (
+          <div className="mb-12 flex flex-col items-center text-center mt-6 md:mt-10">
+            <span className={`mb-6 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest text-white shadow-lg ${heroToolInfo.color}/90 saturate-150`}>
+                {heroToolInfo.logo && (
+                  <div className="relative w-4 h-4 shrink-0 bg-black/10 rounded overflow-hidden p-[1px]">
+                    <Image src={heroToolInfo.logo} alt="" fill className="object-contain" unoptimized />
+                  </div>
+                )}
+                {post.images[0]?.aiTool}
+            </span>
+            <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 tracking-tight leading-tight max-w-4xl">{post.title}</h1>
+            <p className="text-surface-600 dark:text-surface-400 text-lg md:text-2xl max-w-3xl leading-relaxed mb-10 font-medium">{post.description}</p>
+            {renderMetaInfo()}
+          </div>
+        );
+      case 'v1':
+      default: // Natural layout
+        return (
+          <>
+            <div className="mb-6 flex flex-col items-center text-center">
+              <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 tracking-tight leading-tight max-w-4xl">{post.title}</h1>
+              <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg max-w-3xl leading-relaxed mb-6">{post.description}</p>
+              {renderMetaInfo()}
+            </div>
+            <div className="relative mb-12 w-full max-w-5xl mx-auto flex justify-center">
+              <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-surface-100 dark:bg-surface-800/30 p-2 sm:p-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+                  alt={post.title}
+                  className="w-auto max-w-full max-h-[75vh] h-auto object-contain rounded-[24px] shadow-md"
+                  loading="eager"
+                />
+                <div className="absolute top-6 left-6 z-20">
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white shadow-md backdrop-blur-md saturate-150 ${heroToolInfo.color}/90 border border-white/20 uppercase tracking-widest`}>
+                    {heroToolInfo.logo && (
+                      <div className="relative w-4 h-4 shrink-0 bg-black/10 rounded overflow-hidden p-[1px]">
+                        <Image src={heroToolInfo.logo} alt="" fill className="object-contain" unoptimized />
+                      </div>
+                    )}
+                    {post.images[0]?.aiTool}
+                  </span>
+                </div>
+                {post.featured && (
+                  <div className="absolute top-6 right-6 z-20">
+                    <span className="inline-flex px-3 py-1.5 rounded-lg text-[11px] font-bold bg-yellow-400 text-yellow-900 border border-yellow-300 shadow-md uppercase tracking-widest">
+                      ⭐ Featured
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        );
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-1 py-4 sm:py-6 fade-in">
       {/* Breadcrumb */}
@@ -111,63 +242,10 @@ export default function PostContent() {
         <span className="truncate text-surface-900 dark:text-white max-w-[200px]">{post.title}</span>
       </nav>
 
-      {/* Post Header */}
-      <div className="mb-6 flex flex-col items-center text-center">
-        <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 tracking-tight leading-tight max-w-4xl">{post.title}</h1>
-        <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg max-w-3xl leading-relaxed mb-6">{post.description}</p>
-        
-        {/* Meta Info */}
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium text-surface-500 bg-surface-50 dark:bg-surface-900/50 py-3 px-6 rounded-full border border-surface-200 dark:border-surface-800">
-          <span className="flex items-center gap-1.5">
-            <Eye className="w-4.5 h-4.5 text-primary-500" /> {post.views.toLocaleString()} <span className="hidden sm:inline">views</span>
-          </span>
-          <span className="w-1 h-1 rounded-full bg-surface-300 dark:bg-surface-700" />
-          <button
-            onClick={() => toggleLike(post.id)}
-            className={`flex items-center gap-1.5 transition-colors ${
-              post.likedByUser ? 'text-red-500' : 'hover:text-red-400'
-            }`}
-          >
-            <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop' : ''}`} /> {post.likes.toLocaleString()} <span className="hidden sm:inline">likes</span>
-          </button>
-          <span className="w-1 h-1 rounded-full bg-surface-300 dark:bg-surface-700" />
-          <span className="flex items-center gap-1.5">
-            <Clock className="w-4.5 h-4.5" /> {formatDate(post.createdAt)}
-          </span>
-        </div>
-      </div>
+      {/* Post Header & Hero styles */}
+      {renderHero()}
 
       <AdSlot placement="postTop" />
-
-      {/* Main Hero Image — Natural layout without massive background box */}
-      <div className="relative mb-12 w-full max-w-5xl mx-auto flex justify-center">
-        <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-surface-100 dark:bg-surface-800/30">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
-            alt={post.title}
-            className="w-auto max-w-full max-h-[80vh] h-auto object-contain"
-            loading="eager"
-          />
-          <div className="absolute top-4 left-4 z-20">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white shadow-md backdrop-blur-md saturate-150 ${heroToolInfo.color}/90 border border-white/20 uppercase tracking-widest`}>
-              {heroToolInfo.logo && (
-                <div className="relative w-4 h-4 shrink-0 bg-black/10 rounded overflow-hidden p-[1px]">
-                  <Image src={heroToolInfo.logo} alt="" fill className="object-contain" unoptimized />
-                </div>
-              )}
-              {post.images[0]?.aiTool}
-            </span>
-          </div>
-          {post.featured && (
-            <div className="absolute top-4 right-4 z-20">
-              <span className="inline-flex px-3 py-1.5 rounded-lg text-[11px] font-bold bg-yellow-400 text-yellow-900 border border-yellow-300 shadow-md uppercase tracking-widest">
-                ⭐ Featured
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Images with Prompts — NO cropping, natural display */}
       <div className="mb-16">

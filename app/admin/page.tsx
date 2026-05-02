@@ -99,6 +99,7 @@ export default function Admin() {
   const [heroEnabled, setHeroEnabled] = useState(settings.heroEnabled);
   const [heroAutoPlay, setHeroAutoPlay] = useState(settings.heroAutoPlay);
   const [heroStyle, setHeroStyle] = useState(settings.heroStyle || 'v1');
+  const [postHeroStyle, setPostHeroStyle] = useState(settings.postHeroStyle || 'v1');
   const [imgbbApiKey, setImgbbApiKey] = useState(settings.imgbbApiKey || '');
   const [adsConfig, setAdsConfig] = useState<AdSettings>(
     settings.ads || {
@@ -352,6 +353,7 @@ export default function Admin() {
       heroEnabled,
       heroAutoPlay,
       heroStyle,
+      postHeroStyle,
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
       ads: adsConfig,
       imgbbApiKey,
@@ -1302,6 +1304,19 @@ export default function Admin() {
                   <option value="v3">Version 3 (Diagonal Cards)</option>
                   <option value="v4">Version 4 (Masonry Feature)</option>
                   <option value="v5">Version 5 (Minimal & Large)</option>
+                </select>
+              </div>
+              <div className="mt-3">
+                <label className="block text-sm font-medium mb-1.5">Post Hero Style</label>
+                <select
+                  value={postHeroStyle}
+                  onChange={e => setPostHeroStyle(e.target.value as any)}
+                  className="w-full sm:w-1/2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                >
+                  <option value="v1">Version 1 (Natural Display)</option>
+                  <option value="v2">Version 2 (Immersive Blur Background)</option>
+                  <option value="v3">Version 3 (Diagonal Split)</option>
+                  <option value="v4">Version 4 (Minimalist Text)</option>
                 </select>
               </div>
               <button
