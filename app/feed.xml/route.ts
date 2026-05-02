@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import type { SiteSettings, Post } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
