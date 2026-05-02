@@ -1,14 +1,10 @@
-
-
+export const runtime = 'edge';
 
 import { Metadata } from 'next';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
 import PostContent from './PostContent';
 import type { Post } from '@/lib/types';
-
-export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -52,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const firstImageUrl = post.images?.[0]?.url || '';
+  const firstImageUrl = post.images[0]?.url || '';
   const isBase64 = firstImageUrl.startsWith('data:');
 
   const metaTitle = post.seoTitle || `${post.title} | AI Prompts - PromptVault`;
@@ -61,7 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: metaTitle,
     description: metaDescription,
-    keywords: [...(post.tags || []), 'AI prompts', 'midjourney', 'dall-e'],
+    keywords: [...post.tags, 'AI prompts', 'midjourney', 'dall-e'],
     openGraph: {
       title: metaTitle,
       description: metaDescription,

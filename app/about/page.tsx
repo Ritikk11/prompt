@@ -1,5 +1,4 @@
-
-
+export const runtime = 'edge';
 
 import { Sparkles, Image as ImageIcon, Users } from 'lucide-react';
 

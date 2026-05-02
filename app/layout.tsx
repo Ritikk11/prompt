@@ -12,8 +12,6 @@ const inter = Inter({
   variable: '--font-sans',
 });
 
-export const fetchCache = 'default-no-store';
-
 export const metadata: Metadata = {
   title: 'Prompt Matrix - AI Prompts',
   description: 'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.',

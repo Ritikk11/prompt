@@ -151,10 +151,10 @@ export default function Admin() {
     setExtendedDescription(post.extendedDescription || '');
     setSeoTitle(post.seoTitle || '');
     setSeoDescription(post.seoDescription || '');
-    setTagsStr((post.tags || []).join(', '));
+    setTagsStr(post.tags.join(', '));
     setCategory(post.category || '');
     setFeatured(post.featured);
-    setImages((post.images || []).length > 0 ? post.images : [{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
+    setImages(post.images.length > 0 ? post.images : [{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
     // Find which custom sections contain this post
     const inSections = sections
       .filter(s => s.type === 'custom' && s.postIds?.includes(post.id))
@@ -564,8 +564,8 @@ export default function Admin() {
                 {filteredPosts.map(post => (
                   <div key={post.id} className="flex items-center gap-4 p-4 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 hover:shadow-md transition-shadow">
                     <div className="relative w-20 h-16 rounded-lg overflow-hidden shrink-0 bg-surface-100 dark:bg-surface-800">
-                      {post.images?.[0]?.url && (
-                        <Image src={post.images?.[0].url} alt="" fill unoptimized className="object-cover" sizes="80px" />
+                      {post.images[0]?.url && (
+                        <Image src={post.images[0].url} alt="" fill unoptimized className="object-cover" sizes="80px" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -1172,7 +1172,7 @@ export default function Admin() {
                                   className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
                                 />
                                 <div className="relative w-10 h-10 rounded overflow-hidden shrink-0 bg-surface-200 dark:bg-surface-700">
-                                  {p.images?.[0]?.url && <Image src={p.images?.[0].url} alt="" fill unoptimized className="object-cover" sizes="40px" />}
+                                  {p.images[0]?.url && <Image src={p.images[0].url} alt="" fill unoptimized className="object-cover" sizes="40px" />}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs font-medium truncate">{p.title}</p>
@@ -1769,7 +1769,7 @@ export default function Admin() {
                 <div className="pl-8 pt-2">
                   <select 
                     value={features.desktopColumns || 4} 
-                    onChange={(e) => setFeatures(prev => ({ ...prev, desktopColumns: parseInt(e.target.value) as 3|4|5|6|7|8 }))}
+                    onChange={(e) => setFeatures(prev => ({ ...prev, desktopColumns: parseInt(e.target.value) }))}
                     className="w-48 px-3 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                   >
                     <option value={3}>3 Columns</option>

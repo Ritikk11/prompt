@@ -1,5 +1,4 @@
-
-
+export const runtime = 'edge';
 
 import { Mail, MessageSquare } from 'lucide-react';
 
@@ -10,7 +9,7 @@ export default function Contact() {
       
       <div className="max-w-xl mx-auto bg-white dark:bg-surface-900 p-8 rounded-3xl shadow-xl border border-surface-200 dark:border-surface-800">
         <p className="text-surface-600 dark:text-surface-300 text-center mb-8">
-          Have a question, feedback, or need help? We&apos;d love to hear from you.
+          Have a question, feedback, or need help? We'd love to hear from you.
         </p>
 
         <form className="space-y-6">

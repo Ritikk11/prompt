@@ -1,11 +1,7 @@
-
-
+export const runtime = 'edge';
 
 import { Metadata } from 'next';
 import TagContent from './TagContent';
-
-export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 interface Props {
   params: Promise<{ tag: string }>;

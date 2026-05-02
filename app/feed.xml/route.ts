@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
-import type { SiteSettings, Post } from '@/lib/types';
+import { Post, SiteSettings } from '@/lib/types';
+import { doc, getDoc } from 'firebase/firestore';
 
-export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
 export async function GET() {

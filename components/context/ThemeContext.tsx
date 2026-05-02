@@ -29,38 +29,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [theme, isMounted]);
 
-  useEffect(() => {
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      if (
-        event.reason?.name === 'AbortError' ||
-        event.reason?.message?.includes('aborted') ||
-        event.reason?.message?.includes('The user aborted a request') ||
-        event.reason?.message?.includes('Connection closed')
-      ) {
-        event.preventDefault();
-      }
-    };
-
-    const handleError = (event: ErrorEvent) => {
-      if (
-        event.error?.name === 'AbortError' ||
-        event.message?.includes('aborted') ||
-        event.message?.includes('The user aborted a request') ||
-        event.message?.includes('Connection closed')
-      ) {
-        event.preventDefault();
-      }
-    };
-
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
-    window.addEventListener('error', handleError);
-
-    return () => {
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-      window.removeEventListener('error', handleError);
-    };
-  }, []);
-
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
   // To prevent the sun/moon icon from flashing initially if we want, we could use isMounted check in a component,
