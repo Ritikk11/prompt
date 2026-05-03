@@ -100,14 +100,14 @@ export default function PostContent() {
 
   const allPromptsText = settings.features?.premiumPrompts && post.isPremium && !user 
     ? "Premium Collection - Please sign in to view full prompts." 
-    : post.images.map((img, i) => `Image ${i + 1} (${img.aiTool}):\n${img.prompt}`).join('\n\n');
+    : (post.images || []).map((img, i) => `Image ${i + 1} (${img.aiTool}):\n${img.prompt}`).join('\n\n');
 
   const postHeroStyle = settings.postHeroStyle || 'v1';
 
   const renderMetaInfo = () => (
     <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium text-surface-500 bg-surface-50 dark:bg-surface-900/50 py-3 px-6 rounded-full border border-surface-200 dark:border-surface-800 transition-colors ${postHeroStyle === 'v2' ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md' : ''}`}>
       <span className="flex items-center gap-1.5">
-        <Eye className={`w-4.5 h-4.5 ${postHeroStyle === 'v2' ? 'text-white' : 'text-primary-500'}`} /> {post.views.toLocaleString()} <span className="hidden sm:inline">views</span>
+        <Eye className={`w-4.5 h-4.5 ${postHeroStyle === 'v2' ? 'text-white' : 'text-primary-500'}`} /> {(post.views || 0).toLocaleString()} <span className="hidden sm:inline">views</span>
       </span>
       <span className={`w-1 h-1 rounded-full ${postHeroStyle === 'v2' ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
       <button
@@ -116,7 +116,7 @@ export default function PostContent() {
           post.likedByUser ? 'text-red-500' : 'hover:text-red-400'
         }`}
       >
-        <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop' : ''}`} /> {post.likes.toLocaleString()} <span className="hidden sm:inline">likes</span>
+        <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop' : ''}`} /> {(post.likes || 0).toLocaleString()} <span className="hidden sm:inline">likes</span>
       </button>
       <span className={`w-1 h-1 rounded-full ${postHeroStyle === 'v2' ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
       <span className="flex items-center gap-1.5">
@@ -259,7 +259,7 @@ export default function PostContent() {
         </div>
 
         <div className="space-y-10">
-          {post.images.map((img, index) => (
+          {(post.images || []).map((img, index) => (
             <div
               key={img.id}
               className="group rounded-2xl overflow-hidden border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm hover:shadow-xl transition-all duration-300"
@@ -398,7 +398,7 @@ export default function PostContent() {
       <div className="mb-16">
         <h3 className="text-sm font-bold text-surface-400 uppercase tracking-[0.2em] mb-6">Discovery Tags</h3>
         <div className="flex flex-wrap gap-2.5">
-          {post.tags.map(tag => (
+          {(post.tags || []).map(tag => (
             <Link
               key={tag}
               href={`/tag/${encodeURIComponent(tag)}`}
