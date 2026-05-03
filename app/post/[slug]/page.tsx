@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const firstImageUrl = post.images[0]?.url || '';
+  const firstImageUrl = post.images?.[0]?.url || '';
   const isBase64 = firstImageUrl.startsWith('data:');
 
   const metaTitle = post.seoTitle || `${post.title} | AI Prompts - AI Prompt Matrix`;
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: metaTitle,
     description: metaDescription,
-    keywords: [...post.tags, 'AI prompts', 'midjourney', 'dall-e'],
+    keywords: [...(post.tags || []), 'AI prompts', 'midjourney', 'dall-e'],
     openGraph: {
       title: metaTitle,
       description: metaDescription,

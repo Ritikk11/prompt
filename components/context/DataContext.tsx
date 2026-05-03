@@ -22,6 +22,7 @@ interface DataContextType {
   getFilteredPosts: (section: Section) => Post[];
   searchPosts: (query: string) => Post[];
   resetData: () => void;
+  deleteMockData: () => void;
   loading: boolean;
 }
 
@@ -91,6 +92,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     seed().catch(console.error);
   }, []);
 
+  const deleteMockData = useCallback(async () => {
+    for (const post of seedPosts) {
+      await deleteDoc(doc(db, 'posts', post.id));
+    }
+    for (const section of seedSections) {
+      await deleteDoc(doc(db, 'sections', section.id));
+    }
+  }, []);
+
   useEffect(() => {
     const unsubPosts = onSnapshot(collection(db, 'posts'), (snap) => {
       const data = snap.docs.map(doc => doc.data() as Post);
@@ -111,9 +121,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const unsubSettings = onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
       if (docSnap.exists()) {
         setSettings(docSnap.data() as SiteSettings);
-      } else {
-        // Automatically seed mock data on an empty database
-        resetData();
       }
       setLoading(false);
     }, (error: any) => {
@@ -196,14 +203,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await setDoc(doc(db, 'settings', 'global'), s);
   }, []);
 
-  useEffect(() => {
-    if (!loading && posts.length > 0 && posts.length < 15) {
-      resetData();
-    } else if (!loading && posts.length === 0 && sections.length === 0) {
-      resetData();
-    }
-  }, [loading, posts.length, sections.length, resetData]);
-
   // Map localLikes onto posts efficiently
   const enrichedPosts: Post[] = posts.map(p => ({ ...p, likedByUser: localLikes.includes(p.id) }));
 
@@ -258,7 +257,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     <DataContext.Provider value={{
       posts: enrichedPosts, sections, settings, addPost, updatePost, deletePost,
       incrementViews, toggleLike, addSection, updateSection, deleteSection,
-      updateSettings, getPostById, getFilteredPosts, searchPosts, resetData, loading
+      updateSettings, getPostById, getFilteredPosts, searchPosts, resetData, deleteMockData, loading
     }}>
       {children}
     </DataContext.Provider>

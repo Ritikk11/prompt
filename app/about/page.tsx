@@ -33,7 +33,7 @@ export default function About() {
             <CheckCircle className="w-8 h-8 text-primary-500 shrink-0" />
             <div>
               <h3 className="font-bold text-lg mb-2">Meticulously Curated</h3>
-              <p className="text-surface-600 dark:text-surface-300 text-sm">We don't just accept any prompt. Every submission goes through a review process to ensure it produces consistent, high-quality results across different generations.</p>
+              <p className="text-surface-600 dark:text-surface-300 text-sm">We don&apos;t just accept any prompt. Every submission goes through a review process to ensure it produces consistent, high-quality results across different generations.</p>
             </div>
           </div>
           <div className="flex gap-4 p-6 bg-surface-50 dark:bg-surface-800 rounded-2xl">
