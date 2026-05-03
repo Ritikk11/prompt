@@ -1,3 +1,6 @@
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+
 import { MetadataRoute } from 'next';
 import { getAllPostsREST, getAllSeoPagesREST } from '@/lib/firebase-rest';
 import { Post } from '@/lib/types';
