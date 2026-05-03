@@ -1,11 +1,11 @@
-export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
-
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getPostBySlugOrIdREST, getSettingsREST } from '@/lib/firebase-rest';
 import PostContent from './PostContent';
 import type { Post, SiteSettings } from '@/lib/types';
+
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: Promise<{ slug: string }>;
