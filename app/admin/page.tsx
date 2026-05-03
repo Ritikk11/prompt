@@ -9,7 +9,7 @@ import {
   Plus, Trash2, Edit3, Eye, EyeOff, ChevronUp, ChevronDown,
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload,
   Settings, Check, Search, RotateCcw, GripVertical, Image as ImageIcon,
-  Zap, Layers, Info, LayoutTemplate
+  Zap, Layers, Info, LayoutTemplate, BarChart2
 } from 'lucide-react';
 
 import Image from 'next/image';
@@ -133,6 +133,22 @@ export default function Admin() {
       desktopColumns: 4,
     }
   );
+
+  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'features' | 'ads' | 'ai-tools' | 'danger'>('general');
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (settings.siteTitle !== undefined) setSiteTitle(settings.siteTitle);
+    if (settings.siteLogo !== undefined) setSiteLogo(settings.siteLogo);
+    if (settings.siteDescription !== undefined) setSiteDescription(settings.siteDescription);
+    if (settings.heroEnabled !== undefined) setHeroEnabled(settings.heroEnabled);
+    if (settings.heroAutoPlay !== undefined) setHeroAutoPlay(settings.heroAutoPlay);
+    if (settings.heroStyle !== undefined) setHeroStyle(settings.heroStyle);
+    if (settings.postHeroStyle !== undefined) setPostHeroStyle(settings.postHeroStyle);
+    if (settings.imgbbApiKey !== undefined) setImgbbApiKey(settings.imgbbApiKey);
+    if (settings.ads) setAdsConfig(settings.ads);
+    if (settings.features) setFeatures(settings.features);
+  }, [settings]);
 
   const [activeTab, setActiveTab] = useState<'dashboard' | 'posts' | 'sections' | 'settings'>('dashboard');
 
@@ -429,6 +445,36 @@ export default function Admin() {
     setEditingAiTool(null);
   };
 
+  const handleToolLogoUpload = async (file: File) => {
+    if (file.size > 819200) {
+      if (imgbbApiKey) {
+        const formData = new FormData();
+        formData.append('image', file);
+        setEditAiToolLogo('Uploading...');
+        try {
+          const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: 'POST', body: formData });
+          const data = await res.json();
+          if (data.success) {
+            setEditAiToolLogo(data.data.url);
+          } else {
+            alert('ImgBB upload failed: ' + (data.error?.message || 'Unknown error'));
+            setEditAiToolLogo('');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('ImgBB upload failed.');
+          setEditAiToolLogo('');
+        }
+      } else {
+        alert('Image is too large directly (>800KB). Add ImgBB key or use compression.');
+      }
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => setEditAiToolLogo(e.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
   // Custom Sections Management
   const createCustomSection = () => {
     const newSection: Section = {
@@ -458,9 +504,10 @@ export default function Admin() {
     : posts;
 
   const tabs: { key: AdminTab; label: string; icon: React.ReactNode; count?: number }[] = [
+    { key: 'dashboard', label: 'Dashboard', icon: <BarChart2 className="w-4 h-4" /> },
     { key: 'posts', label: 'Posts', icon: <FileText className="w-4 h-4" />, count: posts.length },
+    { key: 'sections', label: 'Sections', icon: <Layers className="w-4 h-4" /> },
     { key: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
-    { key: 'features', label: 'Features', icon: <Star className="w-4 h-4" /> },
     { key: 'submissions', label: 'Submissions', icon: <Upload className="w-4 h-4" />, count: posts.filter(p => p.status === 'pending').length },
     { key: 'seo-pages', label: 'SEO Pages', icon: <LayoutTemplate className="w-4 h-4" /> },
   ];
@@ -1222,14 +1269,37 @@ export default function Admin() {
 
       {/* ===== SETTINGS TAB ===== */}
       {tab === 'settings' && (
-        <div className="max-w-3xl space-y-6">
-          {/* Site Settings */}
-          <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-            <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-              <Settings className="w-4 h-4 text-primary-500" /> Site Settings
-            </h3>
-            <div className="space-y-4">
-              <div>
+        <div className="max-w-3xl">
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-1 border-b border-surface-200 dark:border-surface-800">
+            {[
+              { id: 'general', label: 'General' },
+              { id: 'features', label: 'Features' },
+              { id: 'ads', label: 'Ads' },
+              { id: 'ai-tools', label: 'AI Tools' },
+              { id: 'danger', label: 'Danger Zone' },
+            ].map(t => (
+              <button
+                key={t.id}
+                onClick={() => setSettingsSubTab(t.id as any)}
+                className={`px-4 py-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+                  settingsSubTab === t.id 
+                    ? 'border-primary-500 text-primary-500' 
+                    : 'border-transparent text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-6">
+            {settingsSubTab === 'general' && (
+              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+                  <Settings className="w-4 h-4 text-primary-500" /> Site Settings
+                </h3>
+                <div className="space-y-4">
+                  <div>
                 <label className="block text-xs font-medium text-surface-400 mb-1">Site Title</label>
                 <div className="flex gap-2">
                   <input
@@ -1343,8 +1413,10 @@ export default function Admin() {
               </button>
             </div>
           </div>
+          )}
 
           {/* Ad Spaces Management */}
+          {settingsSubTab === 'ads' && (
           <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
              <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
                <Settings className="w-4 h-4 text-primary-500" /> Ad Spaces
@@ -1465,8 +1537,10 @@ export default function Admin() {
                 </button>
              </div>
           </div>
+          )}
 
           {/* AI Tools Management */}
+          {settingsSubTab === 'ai-tools' && (
           <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
             <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
               <Star className="w-4 h-4 text-primary-500" /> AI Tools ({(settings.aiTools || []).length})
@@ -1521,6 +1595,18 @@ export default function Admin() {
                             className="flex-1 px-2 py-1.5 rounded bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
                             placeholder="Logo Image URL"
                           />
+                          <label className="p-1.5 rounded bg-surface-200 dark:bg-surface-700 hover:bg-surface-300 dark:hover:bg-surface-600 cursor-pointer transition-colors" title="Upload Logo">
+                            <Upload className="w-4 h-4 text-surface-600 dark:text-surface-300" />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleToolLogoUpload(file);
+                              }}
+                            />
+                          </label>
                           <button onClick={() => saveEditAiTool(tool)} className="p-1.5 rounded bg-primary-500 text-white hover:bg-primary-600 transition-colors">
                             <Check className="w-4 h-4" />
                           </button>
@@ -1561,24 +1647,9 @@ export default function Admin() {
               })}
             </div>
           </div>
+          )}
 
-          {/* Danger Zone */}
-          <div className="p-5 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10">
-            <h3 className="font-semibold text-sm mb-2 text-red-600 dark:text-red-400">⚠️ Danger Zone</h3>
-            <p className="text-xs text-red-500/70 mb-4">This will permanently reset all data to defaults.</p>
-            <button
-              onClick={handleResetData}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors"
-            >
-              <RotateCcw className="w-4 h-4" /> Reset All Data
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ===== FEATURES TAB ===== */}
-      {tab === 'features' && (
-        <div className="max-w-3xl space-y-6">
+          {settingsSubTab === 'features' && (
           <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
             <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
               <Star className="w-4 h-4 text-primary-500" /> Feature Flags
@@ -1821,7 +1892,23 @@ export default function Admin() {
               <Save className="w-4 h-4" /> Save Feature Flags
             </button>
           </div>
+          )}
+
+          {/* Danger Zone */}
+          {settingsSubTab === 'danger' && (
+          <div className="p-5 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10">
+            <h3 className="font-semibold text-sm mb-2 text-red-600 dark:text-red-400">⚠️ Danger Zone</h3>
+            <p className="text-xs text-red-500/70 mb-4">This will permanently reset all data to defaults.</p>
+            <button
+              onClick={handleResetData}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" /> Reset All Data
+            </button>
+          </div>
+          )}
         </div>
+      </div>
       )}
 
       {/* ===== SUBMISSIONS TAB ===== */}
