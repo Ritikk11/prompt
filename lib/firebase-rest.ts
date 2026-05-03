@@ -21,7 +21,7 @@ export async function getPostBySlugOrIdREST(identifier: string) {
           limit: 1
         }
       }),
-      cache: 'no-store' 
+      next: { revalidate: 60 } 
     });
 
     if (queryRes.ok) {
@@ -31,7 +31,7 @@ export async function getPostBySlugOrIdREST(identifier: string) {
       }
     }
 
-    const docRes = await fetch(`${baseUrl}/posts/${identifier}`, { cache: 'no-store' });
+    const docRes = await fetch(`${baseUrl}/posts/${identifier}`, { next: { revalidate: 60 } });
     if (docRes.ok) {
       const data = await docRes.json();
       return parseFirestoreDocument(data);
@@ -48,7 +48,7 @@ export async function getAllPostsREST() {
   const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/posts`;
 
   try {
-    const docRes = await fetch(baseUrl, { cache: 'no-store' });
+    const docRes = await fetch(baseUrl, { next: { revalidate: 60 } });
     if (docRes.ok) {
       const data = await docRes.json();
       if (!data.documents) return [];
@@ -66,7 +66,7 @@ export async function getSettingsREST() {
   const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents`;
 
   try {
-    const docRes = await fetch(`${baseUrl}/settings/global`, { cache: 'no-store' });
+    const docRes = await fetch(`${baseUrl}/settings/global`, { next: { revalidate: 60 } });
     if (docRes.ok) {
       const data = await docRes.json();
       return parseFirestoreDocument(data);
@@ -100,7 +100,7 @@ export async function getSectionBySlugREST(identifier: string) {
           limit: 1
         }
       }),
-      cache: 'no-store'
+      next: { revalidate: 60 }
     });
 
     if (queryRes.ok) {
@@ -138,7 +138,7 @@ export async function getSeoPageBySlugREST(identifier: string) {
           limit: 1
         }
       }),
-      cache: 'no-store'
+      next: { revalidate: 60 }
     });
 
     if (queryRes.ok) {
@@ -159,7 +159,7 @@ export async function getAllSeoPagesREST() {
   const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/seoPages`;
 
   try {
-    const docRes = await fetch(baseUrl, { cache: 'no-store' });
+    const docRes = await fetch(baseUrl, { next: { revalidate: 60 } });
     if (docRes.ok) {
       const data = await docRes.json();
       if (!data.documents) return [];
