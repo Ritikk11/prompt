@@ -13,22 +13,19 @@ import { useState } from 'react';
 import TemplatePrompt from '@/components/TemplatePrompt';
 import { auth } from '@/lib/firebase';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
-import type { Post, SiteSettings } from '@/lib/types';
 
 import CopyButton from '@/components/CopyButton';
 
 const PostCard = dynamic(() => import('@/components/PostCard'));
 const AdSlot = dynamic(() => import('@/components/AdSlot'), { ssr: false });
 
-function formatDate(dateStr?: string) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-export default function PostContent({ initialPost, initialSettings }: { initialPost?: Post | null, initialSettings?: SiteSettings | null }) {
+export default function PostContent() {
   const { slug } = useParams();
-  const { incrementViews, toggleLike, posts, loading, settings: contextSettings } = useData();
+  const { incrementViews, toggleLike, posts, loading, settings } = useData();
   const viewIncrementedRef = useRef(false);
 
   const [lightboxImage, setLightboxImage] = useState<{ url: string; index: number; tool: string } | null>(null);
@@ -66,9 +63,8 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
     }
   };
 
-  const post = posts.find((p) => p.slug === slug || p.id === slug) || initialPost;
-  const settings = (contextSettings && Object.keys(contextSettings).length > 0 && contextSettings.siteTitle) ? contextSettings : (initialSettings || contextSettings);
-  const heroToolInfo = post ? getToolInfo(post.images?.[0]?.aiTool || '', settings?.toolDetails) : { color: '', logo: '' };
+  const post = posts.find((p) => p.slug === slug || p.id === slug);
+  const heroToolInfo = post ? getToolInfo(post.images[0]?.aiTool || '', settings?.toolDetails) : { color: '', logo: '' };
 
   useEffect(() => {
     if (post && !viewIncrementedRef.current) {
@@ -77,7 +73,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
     }
   }, [post, incrementViews]);
 
-  if (loading && !post) {
+  if (loading) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-20 flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mb-4" />
@@ -99,19 +95,19 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
   }
 
   const relatedPosts = posts
-    .filter(p => p.id !== post.id && (p.tags || []).some(t => (post.tags || []).includes(t)))
+    .filter(p => p.id !== post.id && p.tags.some(t => post.tags.includes(t)))
     .slice(0, 4);
 
-  const allPromptsText = settings?.features?.premiumPrompts && post.isPremium && !user 
+  const allPromptsText = settings.features?.premiumPrompts && post.isPremium && !user 
     ? "Premium Collection - Please sign in to view full prompts." 
-    : (post.images || []).map((img, i) => `Image ${i + 1} (${img.aiTool}):\n${img.prompt}`).join('\n\n');
+    : post.images.map((img, i) => `Image ${i + 1} (${img.aiTool}):\n${img.prompt}`).join('\n\n');
 
-  const postHeroStyle = settings?.postHeroStyle || 'v1';
+  const postHeroStyle = settings.postHeroStyle || 'v1';
 
   const renderMetaInfo = () => (
     <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium text-surface-500 bg-surface-50 dark:bg-surface-900/50 py-3 px-6 rounded-full border border-surface-200 dark:border-surface-800 transition-colors ${postHeroStyle === 'v2' ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md' : ''}`}>
       <span className="flex items-center gap-1.5">
-        <Eye className={`w-4.5 h-4.5 ${postHeroStyle === 'v2' ? 'text-white' : 'text-primary-500'}`} /> {(post.views || 0).toLocaleString()} <span className="hidden sm:inline">views</span>
+        <Eye className={`w-4.5 h-4.5 ${postHeroStyle === 'v2' ? 'text-white' : 'text-primary-500'}`} /> {post.views.toLocaleString()} <span className="hidden sm:inline">views</span>
       </span>
       <span className={`w-1 h-1 rounded-full ${postHeroStyle === 'v2' ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
       <button
@@ -120,7 +116,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
           post.likedByUser ? 'text-red-500' : 'hover:text-red-400'
         }`}
       >
-        <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop' : ''}`} /> {(post.likes || 0).toLocaleString()} <span className="hidden sm:inline">likes</span>
+        <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop' : ''}`} /> {post.likes.toLocaleString()} <span className="hidden sm:inline">likes</span>
       </button>
       <span className={`w-1 h-1 rounded-full ${postHeroStyle === 'v2' ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
       <span className="flex items-center gap-1.5">
@@ -134,7 +130,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
       case 'v2': // Immersive Blur Background
         return (
           <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-surface-900 shadow-2xl group min-h-[500px] flex items-end">
-            <Image src={post.images?.[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="bg" fill unoptimized className="object-cover opacity-40 blur-xl scale-110" />
+            <Image src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="bg" fill unoptimized className="object-cover opacity-40 blur-xl scale-110" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
             <div className="relative z-20 p-8 md:p-12 w-full max-w-4xl mx-auto flex flex-col items-center text-center pb-12">
               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-md backdrop-blur-md mb-6 saturate-150 ${heroToolInfo.color}/90 border border-white/20 uppercase tracking-widest`}>
@@ -143,7 +139,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
                     <Image src={heroToolInfo.logo} alt="" fill className="object-contain" unoptimized />
                   </div>
                 )}
-                {post.images?.[0]?.aiTool}
+                {post.images[0]?.aiTool}
               </span>
               <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight drop-shadow-lg">{post.title}</h1>
               <p className="text-white/80 text-lg md:text-xl max-w-2xl leading-relaxed mb-8 drop-shadow">{post.description}</p>
@@ -163,7 +159,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
                            <Image src={heroToolInfo.logo} alt="" fill className="object-contain" unoptimized />
                          </div>
                        )}
-                       {post.images?.[0]?.aiTool}
+                       {post.images[0]?.aiTool}
                      </span>
                      {post.featured && <span className="px-3 py-1 rounded-full text-xs font-medium bg-surface-200 dark:bg-surface-800 text-surface-700 dark:text-surface-300">⭐ Featured</span>}
                    </div>
@@ -172,9 +168,9 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
                    <div className="flex justify-start">{renderMetaInfo()}</div>
                 </div>
                 <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-surface-100 dark:bg-surface-800/30 flex items-center justify-center p-6 lg:p-10">
-                   <Image src={post.images?.[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="" fill unoptimized className="object-cover blur-3xl opacity-20 scale-125 z-0" />
+                   <Image src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="" fill unoptimized className="object-cover blur-3xl opacity-20 scale-125 z-0" />
                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                   <img src={post.images?.[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt={post.title} className="max-h-[400px] w-auto rounded-[24px] shadow-2xl object-contain relative z-10" />
+                   <img src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt={post.title} className="max-h-[400px] w-auto rounded-[24px] shadow-2xl object-contain relative z-10" />
                 </div>
              </div>
           </div>
@@ -188,7 +184,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
                     <Image src={heroToolInfo.logo} alt="" fill className="object-contain" unoptimized />
                   </div>
                 )}
-                {post.images?.[0]?.aiTool}
+                {post.images[0]?.aiTool}
             </span>
             <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 tracking-tight leading-tight max-w-4xl">{post.title}</h1>
             <p className="text-surface-600 dark:text-surface-400 text-lg md:text-2xl max-w-3xl leading-relaxed mb-10 font-medium">{post.description}</p>
@@ -208,7 +204,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
               <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-surface-100 dark:bg-surface-800/30 p-2 sm:p-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={post.images?.[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+                  src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
                   alt={post.title}
                   className="w-auto max-w-full max-h-[75vh] h-auto object-contain rounded-[24px] shadow-md"
                   loading="eager"
@@ -220,7 +216,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
                         <Image src={heroToolInfo.logo} alt="" fill className="object-contain" unoptimized />
                       </div>
                     )}
-                    {post.images?.[0]?.aiTool}
+                    {post.images[0]?.aiTool}
                   </span>
                 </div>
                 {post.featured && (
@@ -258,12 +254,12 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
             <Tag className="w-5 h-5 text-primary-500" />
           </div>
           <h2 className="text-xl md:text-2xl font-bold tracking-tight">
-            Prompt Gallery <span className="text-surface-400 font-medium ml-1">({(post.images || []).length})</span>
+            Prompt Gallery <span className="text-surface-400 font-medium ml-1">({post.images.length})</span>
           </h2>
         </div>
 
         <div className="space-y-10">
-          {(post.images || []).map((img, index) => (
+          {post.images.map((img, index) => (
             <div
               key={img.id}
               className="group rounded-2xl overflow-hidden border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm hover:shadow-xl transition-all duration-300"
@@ -328,7 +324,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
                 {/* Prompt */}
                 <div className="p-6 md:p-10 flex flex-col justify-between">
                   <div>
-                    {settings?.features?.premiumPrompts && post.isPremium && !user ? (
+                    {settings.features?.premiumPrompts && post.isPremium && !user ? (
                        <div className="bg-surface-50 dark:bg-surface-800/50 rounded-2xl p-6 mb-6 text-center border border-surface-200/50 dark:border-surface-700/50 relative overflow-hidden group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
                          <div className="absolute inset-0 bg-surface-50/80 dark:bg-surface-900/80 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6">
                            <Lock className="w-8 h-8 text-yellow-500 mb-3" />
@@ -336,9 +332,9 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
                            <p className="text-sm text-surface-500 mb-4 max-w-sm">
                              Sign in to view and copy this engineered prompt.
                            </p>
-                           {settings?.features?.premiumPaymentUrl ? (
-                             <a href={settings.features.premiumPaymentUrl} target="_blank" rel="noreferrer" className="px-5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-yellow-500 to-yellow-600 text-white hover:from-yellow-600 hover:to-yellow-700 shadow-lg">
-                               Unlock All for ${settings.features.premiumPrice || 5}
+                           {settings.features?.premiumPaymentUrl ? (
+                             <a href={settings.features?.premiumPaymentUrl} target="_blank" rel="noreferrer" className="px-5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-yellow-500 to-yellow-600 text-white hover:from-yellow-600 hover:to-yellow-700 shadow-lg">
+                               Unlock All for ${settings.features?.premiumPrice || 5}
                              </a>
                            ) : (
                              <button onClick={handleLogin} className="px-5 py-2.5 rounded-xl text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 shadow-lg">
@@ -350,7 +346,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
                            {img.prompt.slice(0, 100)}...
                          </p>
                        </div>
-                    ) : settings?.features?.smartTemplates && img.prompt.includes('[') && img.prompt.includes(']') ? (
+                    ) : settings.features?.smartTemplates && img.prompt.includes('[') && img.prompt.includes(']') ? (
                        <TemplatePrompt originalPrompt={img.prompt} />
                     ) : (
                       <>
@@ -387,7 +383,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
         
         <div className="relative z-10">
           <h3 className="text-2xl md:text-3xl font-extrabold mb-3 tracking-tight">Copy Entire Collection</h3>
-          <p className="text-white/80 text-base md:text-lg mb-8 max-w-xl mx-auto font-medium">Grab all {(post.images || []).length} creative prompts instantly to use in your favorite AI generator.</p>
+          <p className="text-white/80 text-base md:text-lg mb-8 max-w-xl mx-auto font-medium">Grab all {post.images.length} creative prompts instantly to use in your favorite AI generator.</p>
           <div className="flex justify-center">
              <div className="bg-white/10 backdrop-blur-xl p-2 rounded-2xl border border-white/20">
                <CopyButton text={allPromptsText} />
@@ -402,7 +398,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
       <div className="mb-16">
         <h3 className="text-sm font-bold text-surface-400 uppercase tracking-[0.2em] mb-6">Discovery Tags</h3>
         <div className="flex flex-wrap gap-2.5">
-          {(post.tags || []).map(tag => (
+          {post.tags.map(tag => (
             <Link
               key={tag}
               href={`/tag/${encodeURIComponent(tag)}`}
@@ -414,7 +410,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
         </div>
       </div>
 
-      {settings?.features?.comments && (
+      {settings.features?.comments && (
         <div className="mb-16 border-t border-surface-200 dark:border-surface-800 pt-16">
           <h3 className="text-xl md:text-2xl font-bold tracking-tight mb-8">Comments & Feedback</h3>
           <div className="bg-surface-50 dark:bg-surface-800/30 rounded-2xl p-8 text-center border border-surface-200 dark:border-surface-800">
@@ -460,7 +456,7 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
               Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
-          <div className={getGridClasses(settings?.features?.mobileColumns, settings?.features?.desktopColumns) + " mb-16"}>
+          <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns) + " mb-16"}>
             {relatedPosts.map((p, i) => (
               <div key={p.id} className="mb-1 inline-block w-full break-inside-avoid">
                 <PostCard post={p} index={i} />

@@ -2,10 +2,9 @@ export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { getPostBySlugOrIdREST, getSettingsREST } from '@/lib/firebase-rest';
+import { getPostBySlugOrIdREST } from '@/lib/firebase-rest';
 import PostContent from './PostContent';
-import type { Post, SiteSettings } from '@/lib/types';
+import type { Post } from '@/lib/types';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -13,12 +12,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  let post = null;
-  try {
-    post = await getPostBySlugOrIdREST(slug);
-  } catch (error) {
-    console.error('generateMetadata error:', error);
-  }
+  const post = await getPostBySlugOrIdREST(slug);
 
   if (!post) {
     return {
@@ -27,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const firstImageUrl = post.images?.[0]?.url || '';
+  const firstImageUrl = post.images[0]?.url || '';
   const isBase64 = firstImageUrl.startsWith('data:');
 
   const metaTitle = post.seoTitle || `${post.title} | AI Prompts - AI Prompt Matrix`;
@@ -37,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: metaTitle,
     description: metaDescription,
-    keywords: [...(post.tags || []), 'AI prompts', 'midjourney', 'dall-e'],
+    keywords: [...post.tags, 'AI prompts', 'midjourney', 'dall-e'],
     openGraph: {
       title: metaTitle,
       description: metaDescription,
@@ -62,17 +56,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PostPage({ params }: Props) {
-  const { slug } = await params;
-  let post = null;
-  let settings = null;
-  try {
-    [post, settings] = await Promise.all([
-      getPostBySlugOrIdREST(slug),
-      getSettingsREST().catch(() => null)
-    ]);
-  } catch (error) {
-    console.error('PostPage error:', error);
-  }
-  if (!post) notFound();
-  return <PostContent initialPost={post as Post | null} initialSettings={settings as SiteSettings | null} />;
+  return <PostContent />;
 }
