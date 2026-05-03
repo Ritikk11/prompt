@@ -21,7 +21,7 @@ export async function getPostBySlugOrIdREST(identifier: string) {
           limit: 1
         }
       }),
-      cache: 'no-store' 
+      next: { revalidate: 300 } 
     });
 
     if (queryRes.ok) {
@@ -31,7 +31,7 @@ export async function getPostBySlugOrIdREST(identifier: string) {
       }
     }
 
-    const docRes = await fetch(`${baseUrl}/posts/${identifier}`, { cache: 'no-store' });
+    const docRes = await fetch(`${baseUrl}/posts/${identifier}`, { next: { revalidate: 300 } });
     if (docRes.ok) {
       const data = await docRes.json();
       return parseFirestoreDocument(data);
