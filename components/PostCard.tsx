@@ -8,7 +8,8 @@ import { useData } from '@/components/context/DataContext';
 
 function getPrimaryTool(post: Post) {
   const tools: Record<string, number> = {};
-  post.images.forEach(img => {
+  const images = post.images || [];
+  images.forEach(img => {
     tools[img.aiTool] = (tools[img.aiTool] || 0) + 1;
   });
   return Object.entries(tools).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
@@ -18,6 +19,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
   const { settings } = useData();
   const primaryTool = getPrimaryTool(post);
   const toolInfo = getToolInfo(primaryTool, settings?.toolDetails);
+  const images = post.images || [];
 
   return (
     <Link
@@ -26,7 +28,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
       style={{ animationDelay: `${(index || 0) * 80}ms` }}
     >
       <Image
-        src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+        src={images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
         alt={post.title}
         width={500}
         height={700}
@@ -53,7 +55,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
       {/* Bottom Left Prompt Count - Hidden on Hover */}
       <div className="absolute bottom-2.5 left-2.5 z-10 pointer-events-none transition-opacity duration-300 group-hover:opacity-0">
         <span className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[9px] font-bold bg-black/40 text-white backdrop-blur-md italic border border-white/10 shadow-sm">
-          {post.images.length} {post.images.length === 1 ? 'PROMPT' : 'PROMPTS'}
+          {images.length} {images.length === 1 ? 'PROMPT' : 'PROMPTS'}
         </span>
       </div>
 
