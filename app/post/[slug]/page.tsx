@@ -6,27 +6,13 @@ import { notFound } from 'next/navigation';
 import { getPostBySlugOrIdREST, getSettingsREST } from '@/lib/firebase-rest';
 import PostContent from './PostContent';
 import type { Post, SiteSettings } from '@/lib/types';
-import { getApps, initializeApp } from 'firebase/app';
-import firebaseConfig from '@/firebase-applet-config.json';
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-function ensureFirebaseInitialized() {
-  try {
-    if (!getApps().length) {
-      initializeApp(firebaseConfig);
-    }
-  } catch (e) {
-    console.error('Failed to initialize Firebase', e);
-  }
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  
-  ensureFirebaseInitialized();
 
   try {
     const post = await getPostBySlugOrIdREST(slug);
@@ -81,8 +67,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PostPage({ params }: Props) {
   const { slug } = await params;
-  
-  ensureFirebaseInitialized();
 
   let post = null;
   let settings = null;
