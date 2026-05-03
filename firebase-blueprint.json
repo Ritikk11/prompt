@@ -55,6 +55,20 @@
         "heroAutoPlay": { "type": "boolean" },
         "categories": { "type": "array", "items": { "type": "string" } }
       }
+    },
+    "SeoPage": {
+      "title": "SeoPage",
+      "description": "An SEO targeted page",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "categories": { "type": "array", "items": { "type": "string" } },
+        "aiTools": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string" }
+      }
     }
   },
   "firestore": {
@@ -69,6 +83,10 @@
     "/settings/global": {
       "schema": { "$ref": "#/entities/Settings" },
       "description": "Global configuration settings"
+    },
+    "/seoPages/{pageId}": {
+      "schema": { "$ref": "#/entities/SeoPage" },
+      "description": "Stores SEO pages"
     }
   }
 }

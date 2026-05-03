@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const decodedTag = decodeURIComponent(tag);
   
   return {
-    title: `${decodedTag} AI Prompts | PromptVault`,
+    title: `${decodedTag} AI Prompts | AI Prompt Matrix`,
     description: `Explore the best AI prompts and images for ${decodedTag}. Discover collections curated for ChatGPT, Midjourney, and more.`,
     keywords: [decodedTag, 'AI prompts', 'midjourney', 'dall-e'],
   };

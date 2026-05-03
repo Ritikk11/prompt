@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!post) {
     return {
-      title: 'Post Not Found | PromptVault',
+      title: 'Post Not Found | AI Prompt Matrix',
       description: 'The requested AI prompt could not be found.',
     };
   }
@@ -24,8 +24,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const firstImageUrl = post.images[0]?.url || '';
   const isBase64 = firstImageUrl.startsWith('data:');
 
-  const metaTitle = post.seoTitle || `${post.title} | AI Prompts - PromptVault`;
+  const metaTitle = post.seoTitle || `${post.title} | AI Prompts - AI Prompt Matrix`;
   const metaDescription = post.seoDescription || post.description;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
 
   return {
     title: metaTitle,
@@ -35,10 +36,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: metaTitle,
       description: metaDescription,
       type: 'article',
-      url: `https://promptvault.io/post/${slug}`,
+      url: `${siteUrl}/post/${slug}`,
       images: [
         {
-          url: isBase64 ? 'https://promptvault.io/placeholder-image.png' : firstImageUrl,
+          url: isBase64 ? `${siteUrl}/placeholder-image.png` : firstImageUrl,
           width: 1200,
           height: 630,
           alt: post.title,

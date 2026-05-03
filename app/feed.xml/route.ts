@@ -5,12 +5,12 @@ import { Post, SiteSettings } from '@/lib/types';
 export const runtime = 'edge';
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptgallery.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
 
   try {
     // 1. Fetch site settings for title and description
     const settings = await getSettingsREST() as SiteSettings | null;
-    const siteTitle = settings?.siteTitle || 'PromptVault';
+    const siteTitle = settings?.siteTitle || 'AI Prompt Matrix';
     const siteDescription = settings?.siteDescription || 'Curated AI Prompts';
 
     // 2. Fetch posts

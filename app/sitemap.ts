@@ -1,10 +1,10 @@
 import { MetadataRoute } from 'next';
-import { getAllPostsREST } from '@/lib/firebase-rest';
+import { getAllPostsREST, getAllSeoPagesREST } from '@/lib/firebase-rest';
 import { Post } from '@/lib/types';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Determine site URL dynamically or hardcode for now
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptgallery.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
 
   const sitemapEntries: MetadataRoute.Sitemap = [
     {
@@ -22,7 +22,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const posts = await getAllPostsREST() as Post[];
+    const [posts, seoPages] = await Promise.all([
+      getAllPostsREST() as Promise<Post[]>,
+      getAllSeoPagesREST() as Promise<any[]>
+    ]);
 
     // Add unique posts
     const publishedPosts = posts.filter(p => p.status === 'published' || !p.status);
@@ -32,6 +35,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: new Date(post.createdAt),
         changeFrequency: 'weekly',
         priority: 0.8,
+      });
+    });
+    
+    // Add SEO Pages
+    seoPages.forEach(page => {
+      sitemapEntries.push({
+        url: `${baseUrl}/page/${page.slug}`,
+        lastModified: page.createdAt ? new Date(page.createdAt) : new Date(),
+        changeFrequency: 'weekly',
+        priority: 0.9,
       });
     });
 

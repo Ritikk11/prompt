@@ -26,7 +26,7 @@ interface DataContextType {
 }
 
 const defaultSettings: SiteSettings = {
-  siteTitle: 'PromptVault',
+  siteTitle: 'AI Prompt Matrix',
   siteDescription: 'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.',
   siteLogo: '',
   heroEnabled: true,
@@ -130,7 +130,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      document.title = settings.siteTitle ? `${settings.siteTitle} - AI Prompts` : 'PromptVault - AI Prompts';
+      document.title = settings.siteTitle ? `${settings.siteTitle} - AI Prompts` : 'AI Prompt Matrix - AI Prompts';
       
       if (settings.siteLogo) {
         let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;

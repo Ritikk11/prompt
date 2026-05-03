@@ -44,5 +44,10 @@ service cloud.firestore {
       allow update: if isAdmin() || isBootstrapping();
       allow delete: if isAdmin();
     }
+
+    match /seoPages/{pageId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
   }
 }

@@ -11,21 +11,23 @@ import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User, signOut 
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
-  const { settings, sections } = useData();
+  const { settings, sections, posts } = useData();
   const headerSections = sections.filter(s => s.location === 'header' && s.visible).sort((a,b) => a.order - b.order);
   const navigate = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [showLiveResults, setShowLiveResults] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 64 && !menuOpen && !searchOpen) {
+      if (currentScrollY > lastScrollY && currentScrollY > 64 && !menuOpen && !searchOpen && !showLiveResults) {
         setIsVisible(false);
       } else {
         setIsVisible(true);
@@ -35,7 +37,7 @@ export default function Header() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY, menuOpen, searchOpen]);
+  }, [lastScrollY, menuOpen, searchOpen, showLiveResults]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, u => setUser(u));
@@ -44,13 +46,27 @@ export default function Header() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setSearchOpen(false);
+      if (searchRef.current && !searchRef.current.contains(e.target as Node) && mobileSearchRef.current && !mobileSearchRef.current.contains(e.target as Node)) {
+        setShowLiveResults(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const getLiveResults = () => {
+    if (!query.trim()) return [];
+    const q = query.toLowerCase();
+    return posts.filter(p => {
+      if (p.status && p.status !== 'published') return false;
+      return (
+        p.title.toLowerCase().includes(q) ||
+        (p.tags && p.tags.some(t => t.toLowerCase().includes(q))) ||
+        (p.category && p.category.toLowerCase().includes(q)) ||
+        (p.images && p.images.some(img => img.aiTool?.toLowerCase().includes(q)))
+      );
+    }).slice(0, 5);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +74,7 @@ export default function Header() {
       navigate.push(`/search?q=${encodeURIComponent(query.trim())}`);
       setQuery('');
       setSearchOpen(false);
+      setShowLiveResults(false);
       setMenuOpen(false);
     }
   };
@@ -69,6 +86,47 @@ export default function Header() {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const renderLiveResults = () => {
+    const results = getLiveResults();
+    if (!query.trim() || !showLiveResults) return null;
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl shadow-lg overflow-hidden fade-in max-h-[60vh] overflow-y-auto z-50">
+        {results.length > 0 ? (
+          <div className="flex flex-col">
+            {results.map(post => (
+              <Link
+                key={post.id}
+                href={`/post/${post.slug || post.id}`}
+                onClick={() => {
+                  setShowLiveResults(false);
+                  setSearchOpen(false);
+                  setQuery('');
+                }}
+                className="flex items-center gap-3 p-3 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors border-b border-surface-100 dark:border-surface-800 last:border-0"
+              >
+                <img src={post.images?.[0]?.url || ''} alt="" className="w-10 h-10 rounded-lg object-cover bg-surface-100 dark:bg-surface-800 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-medium truncate">{post.title}</h4>
+                  <div className="flex items-center mt-1">
+                    {post.images?.[0]?.aiTool && (
+                      <span className="text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded-md bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400">
+                        {post.images[0].aiTool}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="p-4 text-center text-sm text-surface-500">
+            No matches found for "{query}"
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -97,12 +155,17 @@ export default function Header() {
               <input
                 type="text"
                 value={query}
-                onChange={e => setQuery(e.target.value)}
+                onChange={e => {
+                  setQuery(e.target.value);
+                  setShowLiveResults(true);
+                }}
+                onFocus={() => setShowLiveResults(true)}
                 placeholder="Search prompts, categories, AI tools..."
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-100 dark:bg-surface-800 border border-transparent focus:border-primary-500 focus:bg-white dark:focus:bg-surface-900 focus:ring-4 focus:ring-primary-500/10 outline-none text-sm transition-all shadow-inner focus:shadow-sm"
               />
             </div>
           </form>
+          {renderLiveResults()}
         </div>
 
         {/* Desktop Nav */}
@@ -179,20 +242,25 @@ export default function Header() {
 
       {/* Mobile search bar */}
       {searchOpen && (
-        <div className="md:hidden px-4 pb-3 fade-in">
+        <div ref={mobileSearchRef} className="md:hidden px-4 pb-3 fade-in relative">
           <form onSubmit={handleSearch}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
               <input
                 type="text"
                 value={query}
-                onChange={e => setQuery(e.target.value)}
+                onChange={e => {
+                  setQuery(e.target.value);
+                  setShowLiveResults(true);
+                }}
+                onFocus={() => setShowLiveResults(true)}
                 placeholder="Search prompts..."
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-100 dark:bg-surface-800 border border-transparent focus:border-primary-500 outline-none text-sm"
                 autoFocus
               />
             </div>
           </form>
+          {renderLiveResults()}
         </div>
       )}
 

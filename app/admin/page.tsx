@@ -14,8 +14,9 @@ import {
 
 import Image from 'next/image';
 import { getToolInfo } from '@/lib/constants';
+import SeoPagesTab from '@/components/admin/SeoPagesTab';
 
-type AdminTab = 'posts' | 'sections' | 'settings' | 'features' | 'submissions';
+type AdminTab = 'posts' | 'sections' | 'settings' | 'features' | 'submissions' | 'seo-pages';
 
 function generateId() {
   return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
@@ -461,6 +462,7 @@ export default function Admin() {
     { key: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
     { key: 'features', label: 'Features', icon: <Star className="w-4 h-4" /> },
     { key: 'submissions', label: 'Submissions', icon: <Upload className="w-4 h-4" />, count: posts.filter(p => p.status === 'pending').length },
+    { key: 'seo-pages', label: 'SEO Pages', icon: <LayoutTemplate className="w-4 h-4" /> },
   ];
 
   if (authLoading) {
@@ -1220,7 +1222,7 @@ export default function Admin() {
                     value={siteTitle}
                     onChange={e => setSiteTitle(e.target.value)}
                     className="flex-1 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                    placeholder="PromptVault"
+                    placeholder="AI Prompt Matrix"
                   />
                   <button 
                     onClick={async () => {
@@ -1859,6 +1861,13 @@ export default function Admin() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ===== SEO PAGES TAB ===== */}
+      {tab === 'seo-pages' && (
+        <div className="max-w-4xl">
+          <SeoPagesTab />
         </div>
       )}
     </div>

@@ -13,10 +13,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in'),
   title: 'Prompt Matrix - AI Prompts',
   description: 'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.',
   other: {
-    'google-adsense-account': 'ca-pub-XXXXXXXXXXXXXXXX' // User needs to replace this
+    'google-adsense-account': 'ca-pub-7670949318287729' // User needs to replace this
   }
 };
 
