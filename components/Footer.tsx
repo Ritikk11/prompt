@@ -74,7 +74,7 @@ export default function Footer() {
               {(settings.aiTools || []).slice(0, 10).map(tool => (
                 <Link
                   key={tool}
-                  href={`/search?q=${encodeURIComponent(tool)}`}
+                  href={`/tool/${encodeURIComponent(tool)}`}
                   className="px-3 py-1 rounded-full text-xs font-medium bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
                 >
                   {tool}
