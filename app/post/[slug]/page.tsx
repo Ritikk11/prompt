@@ -2,6 +2,7 @@ export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { getPostBySlugOrIdREST, getSettingsREST } from '@/lib/firebase-rest';
 import PostContent from './PostContent';
 import type { Post, SiteSettings } from '@/lib/types';
@@ -12,7 +13,12 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPostBySlugOrIdREST(slug);
+  let post = null;
+  try {
+    post = await getPostBySlugOrIdREST(slug);
+  } catch (error) {
+    console.error('generateMetadata error:', error);
+  }
 
   if (!post) {
     return {
@@ -57,10 +63,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PostPage({ params }: Props) {
   const { slug } = await params;
-  const [post, settings] = await Promise.all([
-    getPostBySlugOrIdREST(slug),
-    getSettingsREST()
-  ]);
-
+  let post = null;
+  let settings = null;
+  try {
+    [post, settings] = await Promise.all([
+      getPostBySlugOrIdREST(slug),
+      getSettingsREST().catch(() => null)
+    ]);
+  } catch (error) {
+    console.error('PostPage error:', error);
+  }
+  if (!post) notFound();
   return <PostContent initialPost={post as Post | null} initialSettings={settings as SiteSettings | null} />;
 }
