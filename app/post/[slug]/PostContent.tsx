@@ -26,8 +26,7 @@ function formatDate(dateStr: string) {
 
 export default function PostContent({ initialPost, initialSettings }: { initialPost?: Post | null, initialSettings?: SiteSettings | null }) {
   const { slug } = useParams();
-  const { incrementViews, toggleLike, posts, loading, settings: contextSettings } = useData();
-  const viewIncrementedRef = useRef(false);
+  const { posts, loading, settings: contextSettings } = useData();
 
   const [lightboxImage, setLightboxImage] = useState<{ url: string; index: number; tool: string } | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -71,13 +70,6 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
 
   const heroToolInfo = post ? getToolInfo(postImages[0]?.aiTool || '', settings?.toolDetails) : { color: '', logo: '' };
 
-  useEffect(() => {
-    if (post && !viewIncrementedRef.current) {
-      incrementViews(post.id);
-      viewIncrementedRef.current = true;
-    }
-  }, [post, incrementViews]);
-
   if (loading && !post) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-20 flex flex-col items-center justify-center">
@@ -111,19 +103,6 @@ export default function PostContent({ initialPost, initialSettings }: { initialP
 
   const renderMetaInfo = () => (
     <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium text-surface-500 bg-surface-50 dark:bg-surface-900/50 py-3 px-6 rounded-full border border-surface-200 dark:border-surface-800 transition-colors ${postHeroStyle === 'v2' ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md' : ''}`}>
-      <span className="flex items-center gap-1.5">
-        <Eye className={`w-4.5 h-4.5 ${postHeroStyle === 'v2' ? 'text-white' : 'text-primary-500'}`} /> {post.views.toLocaleString()} <span className="hidden sm:inline">views</span>
-      </span>
-      <span className={`w-1 h-1 rounded-full ${postHeroStyle === 'v2' ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
-      <button
-        onClick={() => toggleLike(post.id)}
-        className={`flex items-center gap-1.5 transition-colors ${
-          post.likedByUser ? 'text-red-500' : 'hover:text-red-400'
-        }`}
-      >
-        <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop' : ''}`} /> {post.likes.toLocaleString()} <span className="hidden sm:inline">likes</span>
-      </button>
-      <span className={`w-1 h-1 rounded-full ${postHeroStyle === 'v2' ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
       <span className="flex items-center gap-1.5">
         <Clock className="w-4.5 h-4.5" /> {formatDate(post.createdAt)}
       </span>

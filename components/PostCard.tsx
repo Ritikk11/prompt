@@ -65,15 +65,6 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
           <h3 className="font-bold text-white text-[13px] sm:text-[14px] leading-tight line-clamp-3 drop-shadow-md">
             {post.title}
           </h3>
-          
-          <div className="flex items-center gap-3 mt-2">
-            <span className="flex items-center gap-1 font-bold text-[10px] sm:text-[11px] text-white/90 drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
-              <Eye className="w-3 h-3 opacity-90" /> {post.views}
-            </span>
-            <span className="flex items-center gap-1 font-bold text-[10px] sm:text-[11px] text-white/90 drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
-              <Heart className="w-3 h-3 opacity-90" /> {post.likes}
-            </span>
-          </div>
         </div>
       </div>
     </Link>
