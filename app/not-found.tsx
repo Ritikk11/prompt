@@ -16,7 +16,7 @@ export default function NotFound() {
         Page Not Found
       </h2>
       <p className="text-surface-600 dark:text-surface-400 max-w-md mb-8">
-        The page you are looking for doesn't exist or has been moved.
+        The page you are looking for doesn&apos;t exist or has been moved.
       </p>
 
       <form action="/search" className="w-full max-w-sm mb-8 relative">

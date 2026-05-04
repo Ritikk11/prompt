@@ -16,7 +16,7 @@ import Image from 'next/image';
 import { getToolInfo } from '@/lib/constants';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 
-type AdminTab = 'posts' | 'sections' | 'settings' | 'features' | 'submissions' | 'seo-pages';
+type AdminTab = 'dashboard' | 'posts' | 'sections' | 'settings' | 'features' | 'submissions' | 'seo-pages';
 
 function generateId() {
   return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);

@@ -2,6 +2,8 @@ import { MetadataRoute } from 'next';
 import { getAllPostsREST, getAllSeoPagesREST } from '@/lib/firebase-rest';
 import { Post } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Determine site URL dynamically or hardcode for now
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';

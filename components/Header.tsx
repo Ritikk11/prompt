@@ -122,7 +122,7 @@ export default function Header() {
           </div>
         ) : (
           <div className="p-4 text-center text-sm text-surface-500">
-            No matches found for "{query}"
+            No matches found for &quot;{query}&quot;
           </div>
         )}
       </div>

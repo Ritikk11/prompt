@@ -25,7 +25,7 @@ export default function PrivacyPolicy() {
         
         <h2 className="text-2xl font-bold mt-8 mb-4 text-surface-900 dark:text-white">3. Cookies, Tracking & Third-Party Ads (AdSense)</h2>
         <p className="mb-2">We use cookies and similar tracking technologies (like web beacons and pixels) to access or store information. Specific information about how we use such technologies and how you can refuse certain cookies is set out in our <Link href="/cookies" className="text-primary-500 hover:text-primary-600 underline">Cookies Policy</Link>.</p>
-        <p className="mb-4"><strong>Google AdSense:</strong> We use Google AdSense to display advertisements on our site. Google, as a third-party vendor, uses cookies to serve ads. Google's use of advertising cookies enables it and its partners to serve ads to our users based on their visit to our sites and/or other sites on the Internet. Users may opt out of personalized advertising by visiting Google Ads Settings.</p>
+        <p className="mb-4"><strong>Google AdSense:</strong> We use Google AdSense to display advertisements on our site. Google, as a third-party vendor, uses cookies to serve ads. Google&apos;s use of advertising cookies enables it and its partners to serve ads to our users based on their visit to our sites and/or other sites on the Internet. Users may opt out of personalized advertising by visiting Google Ads Settings.</p>
         
         <h2 className="text-2xl font-bold mt-8 mb-4 text-surface-900 dark:text-white">4. Your Rights</h2>
         <p className="mb-4">Depending on where you are located geographically, the applicable privacy law may mean you have certain rights regarding your personal information. These may include:</p>
@@ -42,7 +42,7 @@ export default function PrivacyPolicy() {
         <p className="mb-4">We will only keep your personal information for as long as it is necessary for the purposes set out in this privacy notice, unless a longer retention period is required or permitted by law (such as tax, accounting, or other legal requirements). When we have no ongoing legitimate business need to process your personal information, we will either delete or anonymize such information.</p>
 
         <h2 className="text-2xl font-bold mt-8 mb-4 text-surface-900 dark:text-white">6. Changes to this Privacy Policy</h2>
-        <p className="mb-4">We may update this privacy notice from time to time. The updated version will be indicated by an updated "Revised" date and the updated version will be effective as soon as it is accessible. If we make material changes to this privacy notice, we may notify you either by prominently posting a notice of such changes or by directly sending you a notification.</p>
+        <p className="mb-4">We may update this privacy notice from time to time. The updated version will be indicated by an updated &quot;Revised&quot; date and the updated version will be effective as soon as it is accessible. If we make material changes to this privacy notice, we may notify you either by prominently posting a notice of such changes or by directly sending you a notification.</p>
         
         <h2 className="text-2xl font-bold mt-8 mb-4 text-surface-900 dark:text-white">Contact Us</h2>
         <p className="mb-4">For more information about our privacy practices, if you have questions, or if you would like to make a complaint, please contact us by e-mail at <strong>contact@aipromptmatrix.in</strong>.</p>
