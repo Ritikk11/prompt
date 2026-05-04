@@ -31,9 +31,8 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
         width={500}
         height={700}
         sizes="(max-width: 768px) 50vw, 33vw"
-        unoptimized
         className={`w-full transition-transform duration-700 ease-in-out group-hover:scale-105 block ${aspect ? 'h-full object-cover' : 'h-auto'}`}
-      />
+       referrerPolicy="no-referrer" />
       
       {/* Overlay Gradient (appears on hover) */}
       <div className="absolute inset-x-0 bottom-0 top-1/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -43,7 +42,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
         <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[9px] sm:text-[10px] font-bold text-white shadow-sm backdrop-blur-md ${toolInfo.color}/80 border border-white/10 uppercase tracking-wider`}>
           {toolInfo.logo ? (
             <div className="relative w-3 h-3 shrink-0 bg-white/20 rounded-full overflow-hidden p-0.5 mt-[-1px]">
-              <Image src={toolInfo.logo} alt="" fill className="object-contain" unoptimized />
+              <Image src={toolInfo.logo} alt="" fill className="object-contain"  referrerPolicy="no-referrer" />
             </div>
           ) : null}
           {primaryTool}

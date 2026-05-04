@@ -34,7 +34,7 @@ export default function Footer() {
           <div>
             <Link href="/" className="flex items-center gap-2 mb-4">
               {settings.siteLogo ? (
-                <Image src={settings.siteLogo} alt={settings.siteTitle} width={36} height={36} unoptimized className="w-9 h-9 rounded-xl object-cover" />
+                <Image src={settings.siteLogo} alt={settings.siteTitle} width={36} height={36} className="w-9 h-9 rounded-xl object-cover"  referrerPolicy="no-referrer" />
               ) : (
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-white" />

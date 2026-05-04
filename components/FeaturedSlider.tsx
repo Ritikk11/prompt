@@ -111,13 +111,13 @@ export default function FeaturedSlider() {
               className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
             >
               <Image
-                src={p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill unoptimized
+                src={p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill
                 className="object-cover blur-xl scale-125 opacity-40 dark:opacity-30" sizes="100vw"
-              />
+               referrerPolicy="no-referrer" />
               <Image
-                src={p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={i === 0} unoptimized
+                src={p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={i === 0}
                 className="object-contain object-center" sizes="100vw"
-              />
+               referrerPolicy="no-referrer" />
             </div>
           ))}
           <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
@@ -170,13 +170,13 @@ export default function FeaturedSlider() {
                   className={`absolute inset-0 transition-all duration-700 ease-out ${i === current ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-105 z-0'}`}
                 >
                   <Image
-                    src={p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill unoptimized
+                    src={p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill
                     className="object-cover blur-3xl scale-125 opacity-30 dark:opacity-20" sizes="50vw"
-                  />
+                   referrerPolicy="no-referrer" />
                   <Image
-                    src={p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={i === 0} unoptimized
+                    src={p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={i === 0}
                     className="object-contain" sizes="50vw"
-                  />
+                   referrerPolicy="no-referrer" />
                 </div>
               ))}
           </div>
@@ -192,7 +192,7 @@ export default function FeaturedSlider() {
       <div className="relative w-full rounded-3xl overflow-hidden py-6 px-4 md:py-12 md:px-10 shadow-inner flex items-center justify-center min-h-[500px]" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
         {/* Blurred Background */}
         <div className="absolute inset-0 z-0">
-          <Image src={post.images[0]?.url || ''} alt="" fill unoptimized className="object-cover opacity-30 dark:opacity-20 blur-3xl scale-125" />
+          <Image src={post.images[0]?.url || ''} alt="" fill className="object-cover opacity-30 dark:opacity-20 blur-3xl scale-125"  referrerPolicy="no-referrer" />
           <div className="absolute inset-0 bg-surface-50/80 dark:bg-surface-950/80 backdrop-blur-md" />
         </div>
         
@@ -231,8 +231,8 @@ export default function FeaturedSlider() {
                      zIndex: relativeIdx === 0 ? 30 : 20,
                    }}
                  >
-                   <Image src={p.images[0]?.url || ''} alt={`bg-${p.title}`} fill unoptimized className="object-cover blur-xl scale-125 opacity-50" />
-                   <Image src={p.images[0]?.url || ''} alt={p.title} fill unoptimized className="object-contain" />
+                   <Image src={p.images[0]?.url || ''} alt={`bg-${p.title}`} fill className="object-cover blur-xl scale-125 opacity-50"  referrerPolicy="no-referrer" />
+                   <Image src={p.images[0]?.url || ''} alt={p.title} fill className="object-contain"  referrerPolicy="no-referrer" />
                  </div>
                );
              })}
@@ -251,8 +251,8 @@ export default function FeaturedSlider() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
           {/* Main Large Item */}
           <Link href={`/post/${topFeatured[0].slug || topFeatured[0].id}`} className="relative h-[400px] lg:h-[500px] lg:col-span-2 rounded-2xl overflow-hidden group">
-            <Image src={topFeatured[0].images[0]?.url || ''} alt={`bg-${topFeatured[0].title}`} fill unoptimized className="object-cover blur-2xl scale-125 opacity-40 dark:opacity-30" />
-            <Image src={topFeatured[0].images[0]?.url || ''} alt="" fill unoptimized priority className="object-contain transition-transform duration-700 group-hover:scale-105" />
+            <Image src={topFeatured[0].images[0]?.url || ''} alt={`bg-${topFeatured[0].title}`} fill className="object-cover blur-2xl scale-125 opacity-40 dark:opacity-30"  referrerPolicy="no-referrer" />
+            <Image src={topFeatured[0].images[0]?.url || ''} alt="" fill priority className="object-contain transition-transform duration-700 group-hover:scale-105"  referrerPolicy="no-referrer" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
             <div className="absolute inset-0 p-8 flex flex-col justify-end">
               <span className="px-3 py-1 w-max rounded-full text-xs font-bold bg-primary-500 text-white mb-3 shadow-lg">⭐ Main Feature</span>
@@ -264,8 +264,8 @@ export default function FeaturedSlider() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
             {topFeatured.slice(1).map((fPost) => (
               <Link key={fPost.id} href={`/post/${fPost.slug || fPost.id}`} className="relative h-[200px] sm:h-[250px] lg:h-[calc(250px-4px)] rounded-2xl overflow-hidden group">
-                <Image src={fPost.images[0]?.url || ''} alt={`bg-${fPost.title}`} fill unoptimized className="object-cover blur-xl scale-125 opacity-40 dark:opacity-30" />
-                <Image src={fPost.images[0]?.url || ''} alt="" fill unoptimized className="object-contain transition-transform duration-700 group-hover:scale-105" />
+                <Image src={fPost.images[0]?.url || ''} alt={`bg-${fPost.title}`} fill className="object-cover blur-xl scale-125 opacity-40 dark:opacity-30"  referrerPolicy="no-referrer" />
+                <Image src={fPost.images[0]?.url || ''} alt="" fill className="object-contain transition-transform duration-700 group-hover:scale-105"  referrerPolicy="no-referrer" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute inset-0 p-5 flex flex-col justify-end">
                   <h3 className="text-xl font-bold text-white mb-1 leading-tight">{fPost.title}</h3>
@@ -287,13 +287,13 @@ export default function FeaturedSlider() {
           {featured.map((p, i) => (
             <div key={p.id} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
               <Image
-                src={p.images[0]?.url || ''} alt={`bg-${p.title}`} fill unoptimized
+                src={p.images[0]?.url || ''} alt={`bg-${p.title}`} fill
                 className="object-cover object-center blur-2xl scale-125 opacity-30" sizes="100vw"
-              />
+               referrerPolicy="no-referrer" />
               <Image
-                src={p.images[0]?.url || ''} alt={p.title} fill priority={i === 0} unoptimized
+                src={p.images[0]?.url || ''} alt={p.title} fill priority={i === 0}
                 className="object-contain object-center opacity-80" sizes="100vw"
-              />
+               referrerPolicy="no-referrer" />
             </div>
           ))}
           <div className="absolute inset-0 z-20 bg-gradient-to-b from-surface-950/20 via-transparent to-surface-950/80 pointer-events-none" />

@@ -5,6 +5,7 @@ import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Upload, Plus, Trash2, X, Image as ImageIcon } from 'lucide-react';
+import Image from 'next/image';
 import { ImagePrompt } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
@@ -184,8 +185,7 @@ export default function SubmitPage() {
                   <X className="w-3 h-3" />
                 </button>
                 <div className="w-full sm:w-32 h-32 shrink-0 rounded-lg overflow-hidden relative bg-surface-100 dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.url} alt="" className="w-full h-full object-cover" />
+                  <Image src={img.url} alt="" fill sizes="128px" className="object-cover" referrerPolicy="no-referrer" />
                 </div>
                 <div className="flex-1 min-w-0 space-y-3">
                   <select

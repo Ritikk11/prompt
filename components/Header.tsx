@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { Search, Sun, Moon, Menu, X, Sparkles, Shield, User as UserIcon, LogOut, Plus } from 'lucide-react';
+import Image from 'next/image';
 import { useTheme } from '@/components/context/ThemeContext';
 import { useData } from '@/components/context/DataContext';
 import { auth } from '@/lib/firebase';
@@ -106,7 +107,9 @@ export default function Header() {
                 }}
                 className="flex items-center gap-3 p-3 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors border-b border-surface-100 dark:border-surface-800 last:border-0"
               >
-                <img src={post.images?.[0]?.url || ''} alt="" className="w-10 h-10 rounded-lg object-cover bg-surface-100 dark:bg-surface-800 shrink-0" />
+                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-surface-100 dark:bg-surface-800 relative">
+                  <Image src={post.images?.[0]?.url || ''} alt="" fill sizes="40px" className="object-cover" referrerPolicy="no-referrer" />
+                </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-medium truncate">{post.title}</h4>
                   <div className="flex items-center mt-1">
@@ -136,8 +139,9 @@ export default function Header() {
         <Link href="/" className="flex items-center gap-2 shrink-0" onClick={() => setMenuOpen(false)}>
           {settings.siteLogo ? (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={settings.siteLogo} alt={settings.siteTitle} className="w-9 h-9 rounded-xl object-cover" />
+              <div className="w-9 h-9 text-transparent rounded-xl overflow-hidden shrink-0 relative">
+                <Image src={settings.siteLogo} alt={settings.siteTitle} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" />
+              </div>
             </>
           ) : (
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center">

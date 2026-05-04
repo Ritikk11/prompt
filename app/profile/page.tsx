@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { LogOut, Heart, FileText } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import SkeletonPostCard from '@/components/SkeletonPostCard';
 import { getGridClasses } from '@/lib/utils';
 
@@ -61,9 +62,8 @@ export default function ProfilePage() {
         {/* Sidebar */}
         <div className="w-full md:w-64 shrink-0 bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl p-6 relative">
           <div className="flex flex-col items-center text-center">
-            <div className="w-20 h-20 bg-surface-200 dark:bg-surface-700 rounded-full mb-4 overflow-hidden shadow-sm">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {user.photoURL && <img src={user.photoURL} alt="" className="w-full h-full object-cover" />}
+            <div className="w-20 h-20 bg-surface-200 dark:bg-surface-700 rounded-full mb-4 overflow-hidden shadow-sm relative">
+              {user.photoURL && <Image src={user.photoURL} alt="" fill className="object-cover" referrerPolicy="no-referrer" />}
             </div>
             <h2 className="font-bold text-lg">{user.displayName || 'Anonymous User'}</h2>
             <p className="text-xs text-surface-500 truncate w-full" title={user.email || ''}>{user.email}</p>

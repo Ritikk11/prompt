@@ -2,25 +2,24 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: false,
   },
+  turbopack: {},
   // Allow access to remote image placeholder.
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'picsum.photos',
+        hostname: '**',
         port: '',
-        pathname: '/**', // This allows any path under the hostname
+        pathname: '/**',
       },
-      // Also allow common firebase storage hostname just in case
       {
-        protocol: 'https',
-        hostname: 'firebasestorage.googleapis.com',
+        protocol: 'http',
+        hostname: '**',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
