@@ -287,7 +287,10 @@ export default function PostContent() {
                     <div className="absolute top-4 left-4 z-20">
                       <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[9px] font-bold text-white shadow-xl backdrop-blur-md ${getToolInfo(img.aiTool, settings?.toolDetails).color}/80 border border-white/10 uppercase tracking-wider`}>
                         {getToolInfo(img.aiTool, settings?.toolDetails).logo && (
-                          <div className="relative w-3.5 h-3.5 shrink-0 bg-white/20 rounded-full p-0.5 overflow-hidden">
+                          <div 
+                            className="relative w-3.5 h-3.5 shrink-0 bg-white/20 rounded-full p-0.5 overflow-hidden"
+                            style={getToolInfo(img.aiTool, settings?.toolDetails).logoScale ? { transform: `scale(${getToolInfo(img.aiTool, settings?.toolDetails).logoScale})` } : undefined}
+                          >
                             <Image src={getToolInfo(img.aiTool, settings?.toolDetails).logo} alt="" fill className="object-contain"  referrerPolicy="no-referrer" />
                           </div>
                         )}
@@ -521,7 +524,10 @@ export default function PostContent() {
               <div className="absolute top-4 left-4 z-20 pointer-events-none">
                 <div className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold text-white shadow-xl backdrop-blur-md ${getToolInfo(lightboxImage.tool, settings?.toolDetails).color}/80 border border-white/10 uppercase tracking-wider`}>
                   {getToolInfo(lightboxImage.tool, settings?.toolDetails).logo && (
-                    <div className="relative w-4 h-4 shrink-0 bg-white/20 rounded-full p-0.5 overflow-hidden">
+                    <div 
+                      className="relative w-4 h-4 shrink-0 bg-white/20 rounded-full p-0.5 overflow-hidden"
+                      style={getToolInfo(lightboxImage.tool, settings?.toolDetails).logoScale ? { transform: `scale(${getToolInfo(lightboxImage.tool, settings?.toolDetails).logoScale})` } : undefined}
+                    >
                       <Image src={getToolInfo(lightboxImage.tool, settings?.toolDetails).logo} alt="" fill className="object-contain"  referrerPolicy="no-referrer" />
                     </div>
                   )}

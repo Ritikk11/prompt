@@ -25,9 +25,14 @@ export const fallbackToolInfo: Record<string, { color: string; logo: string }> =
   }
 };
 
-export function getToolInfo(tool: string, customDetails?: Record<string, {logo: string; color: string}>) {
+export function getToolInfo(tool: string, customDetails?: Record<string, {logo?: string; color?: string; logoScale?: number}>) {
   if (customDetails && customDetails[tool]) {
-    return customDetails[tool];
+    const custom = customDetails[tool];
+    return {
+      color: custom.color || fallbackToolInfo[tool]?.color || 'bg-surface-500',
+      logo: custom.logo || fallbackToolInfo[tool]?.logo || '',
+      logoScale: custom.logoScale
+    };
   }
   return fallbackToolInfo[tool] || { color: 'bg-surface-500', logo: '' };
 }

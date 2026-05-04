@@ -18,6 +18,14 @@ import SeoPagesTab from '@/components/admin/SeoPagesTab';
 
 type AdminTab = 'dashboard' | 'posts' | 'sections' | 'settings' | 'features' | 'submissions' | 'seo-pages';
 
+const TAILWIND_COLORS = [
+  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500',
+  'bg-lime-500', 'bg-green-500', 'bg-emerald-500', 'bg-teal-500',
+  'bg-cyan-500', 'bg-sky-500', 'bg-blue-500', 'bg-indigo-500',
+  'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500',
+  'bg-rose-500', 'bg-primary-500', 'bg-surface-800', 'bg-black', 'bg-white'
+];
+
 function generateId() {
   return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
 }
@@ -101,6 +109,7 @@ export default function Admin() {
   const [heroAutoPlay, setHeroAutoPlay] = useState(settings.heroAutoPlay);
   const [heroStyle, setHeroStyle] = useState(settings.heroStyle || 'v1');
   const [postHeroStyle, setPostHeroStyle] = useState(settings.postHeroStyle || 'v1');
+  const [cardStyle, setCardStyle] = useState(settings.cardStyle || 'v1');
   const [imgbbApiKey, setImgbbApiKey] = useState(settings.imgbbApiKey || '');
   const [adsConfig, setAdsConfig] = useState<AdSettings>(
     settings.ads || {
@@ -145,6 +154,7 @@ export default function Admin() {
     if (settings.heroAutoPlay !== undefined) setHeroAutoPlay(settings.heroAutoPlay);
     if (settings.heroStyle !== undefined) setHeroStyle(settings.heroStyle);
     if (settings.postHeroStyle !== undefined) setPostHeroStyle(settings.postHeroStyle);
+    if (settings.cardStyle !== undefined) setCardStyle(settings.cardStyle);
     if (settings.imgbbApiKey !== undefined) setImgbbApiKey(settings.imgbbApiKey);
     if (settings.ads) setAdsConfig(settings.ads);
     if (settings.features) setFeatures(settings.features);
@@ -371,6 +381,7 @@ export default function Admin() {
       heroAutoPlay,
       heroStyle,
       postHeroStyle,
+      cardStyle,
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
       ads: adsConfig,
       imgbbApiKey,
@@ -385,6 +396,7 @@ export default function Admin() {
   const [editAiToolValue, setEditAiToolValue] = useState('');
   const [editAiToolLogo, setEditAiToolLogo] = useState('');
   const [editAiToolColor, setEditAiToolColor] = useState('');
+  const [editAiToolLogoScale, setEditAiToolLogoScale] = useState(1);
 
   const addAiTool = () => {
     const toolList = settings.aiTools || [];
@@ -412,6 +424,8 @@ export default function Admin() {
     const existing = settings.toolDetails?.[tool] || getToolInfo(tool);
     setEditAiToolLogo(existing.logo || '');
     setEditAiToolColor(existing.color || 'bg-surface-500');
+    // @ts-ignore - logoScale might be missing from getting tool info
+    setEditAiToolLogoScale(existing.logoScale || 1);
   };
 
   const saveEditAiTool = (oldTool: string) => {
@@ -424,7 +438,7 @@ export default function Admin() {
     if (oldTool !== newToolName && newToolDetails[oldTool]) {
       delete newToolDetails[oldTool];
     }
-    newToolDetails[newToolName] = { logo: editAiToolLogo, color: editAiToolColor };
+    newToolDetails[newToolName] = { logo: editAiToolLogo, color: editAiToolColor, logoScale: editAiToolLogoScale };
 
     // Update posts using this tool
     posts.forEach(p => {
@@ -1405,6 +1419,18 @@ export default function Admin() {
                   <option value="v4">Version 4 (Minimalist Text)</option>
                 </select>
               </div>
+              <div className="mt-3">
+                <label className="block text-sm font-medium mb-1.5">Card Style</label>
+                <select
+                  value={cardStyle}
+                  onChange={e => setCardStyle(e.target.value as any)}
+                  className="w-full sm:w-1/2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                >
+                  <option value="v1">Version 1 (Standard with Hover Badge)</option>
+                  <option value="v2">Version 2 (Floating Image with Border)</option>
+                  <option value="v3">Version 3 (Compact List Style)</option>
+                </select>
+              </div>
               <button
                 onClick={handleSaveSettings}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-8"
@@ -1581,12 +1607,15 @@ export default function Admin() {
                              autoFocus
                              placeholder="Tool Name"
                            />
-                           <input
-                             value={editAiToolColor}
-                             onChange={e => setEditAiToolColor(e.target.value)}
-                             className="w-24 px-2 py-1.5 rounded bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
-                             placeholder="bg-color-500"
-                           />
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 p-1.5 rounded bg-surface-100 dark:bg-surface-800/50">
+                          {TAILWIND_COLORS.map(c => (
+                            <button
+                              key={c}
+                              onClick={() => setEditAiToolColor(c)}
+                              className={`w-5 h-5 rounded-full ${c} ${editAiToolColor === c ? 'ring-2 ring-white ring-offset-1 ring-offset-primary-500' : 'hover:scale-110 border border-black/10 dark:border-white/10'} transition-transform`}
+                            />
+                          ))}
                         </div>
                         <div className="flex items-center gap-2">
                           <input
@@ -1607,6 +1636,18 @@ export default function Admin() {
                               }}
                             />
                           </label>
+                          <div className="flex items-center gap-1 border border-surface-200 dark:border-surface-600 rounded bg-white dark:bg-surface-900 px-1">
+                            <span className="text-[10px] text-surface-500 font-medium ml-1">Scale</span>
+                            <input
+                              type="number"
+                              min="0"
+                              max="10"
+                              step="0.1"
+                              value={editAiToolLogoScale}
+                              onChange={e => setEditAiToolLogoScale(parseFloat(e.target.value) || 1)}
+                              className="w-12 px-1 py-1.5 bg-transparent outline-none focus:text-primary-500 text-xs text-center"
+                            />
+                          </div>
                           <button onClick={() => saveEditAiTool(tool)} className="p-1.5 rounded bg-primary-500 text-white hover:bg-primary-600 transition-colors">
                             <Check className="w-4 h-4" />
                           </button>
