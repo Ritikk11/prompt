@@ -24,9 +24,8 @@ service cloud.firestore {
 
     match /posts/{postId} {
       allow read: if true;
-      allow create: if (isAdmin() || isBootstrapping())
-                    && isValidId(postId)
-                    && incoming().keys().hasAll(['id', 'title', 'description', 'images', 'category', 'tags', 'featured', 'views', 'likes', 'createdAt']);
+      allow create: if (isAdmin() || isBootstrapping() || (isSignedIn() && incoming().authorId == request.auth.uid))
+                    && isValidId(postId);
       allow update: if true; // Open update for likes and views right now
       allow delete: if isAdmin();
     }
