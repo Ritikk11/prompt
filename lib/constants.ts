@@ -34,5 +34,5 @@ export function getToolInfo(tool: string, customDetails?: Record<string, {logo?:
       logoScale: custom.logoScale
     };
   }
-  return fallbackToolInfo[tool] || { color: 'bg-surface-500', logo: '' };
+  return { color: fallbackToolInfo[tool]?.color || 'bg-surface-500', logo: fallbackToolInfo[tool]?.logo || '', logoScale: undefined };
 }
