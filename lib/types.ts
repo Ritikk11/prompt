@@ -80,10 +80,9 @@ export interface SiteSettings {
   heroAutoPlay: boolean;
   heroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5';
   postHeroStyle?: 'v1' | 'v2' | 'v3' | 'v4';
-  cardStyle?: 'default' | 'glass' | 'border' | 'minimal';
-  cardBorderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  cardStyle?: 'v1' | 'v2' | 'v3';
   aiTools: string[];
-  toolDetails?: Record<string, { logo: string; color: string; logoScale?: number }>;
+  toolDetails?: Record<string, { logo?: string; color?: string; logoScale?: number }>;
   headerSections?: Section[];
   ads?: AdSettings;
   imgbbApiKey?: string;

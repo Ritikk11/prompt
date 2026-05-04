@@ -396,7 +396,7 @@ export default function Admin() {
   const [editAiToolValue, setEditAiToolValue] = useState('');
   const [editAiToolLogo, setEditAiToolLogo] = useState('');
   const [editAiToolColor, setEditAiToolColor] = useState('');
-  const [editAiToolLogoScale, setEditAiToolLogoScale] = useState(1);
+  const [editAiToolLogoScale, setEditAiToolLogoScale] = useState<number>(1);
 
   const addAiTool = () => {
     const toolList = settings.aiTools || [];
@@ -424,7 +424,6 @@ export default function Admin() {
     const existing = settings.toolDetails?.[tool] || getToolInfo(tool);
     setEditAiToolLogo(existing.logo || '');
     setEditAiToolColor(existing.color || 'bg-surface-500');
-    // @ts-ignore - logoScale might be missing from getting tool info
     setEditAiToolLogoScale(existing.logoScale || 1);
   };
 
@@ -1619,6 +1618,16 @@ export default function Admin() {
                         </div>
                         <div className="flex items-center gap-2">
                           <input
+                            type="number"
+                            min="0.5"
+                            max="3"
+                            step="0.1"
+                            value={editAiToolLogoScale}
+                            onChange={e => setEditAiToolLogoScale(parseFloat(e.target.value) || 1)}
+                            className="w-16 px-2 py-1.5 rounded bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
+                            title="Logo Scale (1 = normal)"
+                          />
+                          <input
                             value={editAiToolLogo}
                             onChange={e => setEditAiToolLogo(e.target.value)}
                             className="flex-1 px-2 py-1.5 rounded bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
@@ -1636,18 +1645,6 @@ export default function Admin() {
                               }}
                             />
                           </label>
-                          <div className="flex items-center gap-1 border border-surface-200 dark:border-surface-600 rounded bg-white dark:bg-surface-900 px-1">
-                            <span className="text-[10px] text-surface-500 font-medium ml-1">Scale</span>
-                            <input
-                              type="number"
-                              min="0"
-                              max="10"
-                              step="0.1"
-                              value={editAiToolLogoScale}
-                              onChange={e => setEditAiToolLogoScale(parseFloat(e.target.value) || 1)}
-                              className="w-12 px-1 py-1.5 bg-transparent outline-none focus:text-primary-500 text-xs text-center"
-                            />
-                          </div>
                           <button onClick={() => saveEditAiTool(tool)} className="p-1.5 rounded bg-primary-500 text-white hover:bg-primary-600 transition-colors">
                             <Check className="w-4 h-4" />
                           </button>
