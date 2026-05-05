@@ -16,7 +16,6 @@ function getPrimaryTool(post: Post) {
 
 export default function PostCard({ post, index, aspect }: { post: Post; index?: number; aspect?: string }) {
   const { settings } = useData();
-  const imageUrl = post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600';
   const primaryTool = getPrimaryTool(post);
   const toolInfo = getToolInfo(primaryTool, settings?.toolDetails);
   
@@ -31,7 +30,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
       >
         <div className="relative overflow-hidden">
           <Image
-            src={imageUrl}
+            src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
             alt={post.title}
             width={500}
             height={700}
@@ -78,7 +77,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
       >
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-lg overflow-hidden flex-none">
           <Image
-            src={imageUrl}
+            src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
             alt={post.title}
             fill
             sizes="100px"
@@ -111,7 +110,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
       style={{ animationDelay: `${(index || 0) * 80}ms` }}
     >
       <Image
-        src={imageUrl}
+        src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
         alt={post.title}
         width={500}
         height={700}

@@ -26,8 +26,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const [posts, seoPages] = await Promise.all([
-      getAllPostsREST(true) as Promise<Post[]>,
-      getAllSeoPagesREST(true) as Promise<any[]>
+      getAllPostsREST() as Promise<Post[]>,
+      getAllSeoPagesREST() as Promise<any[]>
     ]);
 
     // Add unique posts

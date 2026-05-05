@@ -42,14 +42,13 @@ export async function getPostBySlugOrIdREST(identifier: string) {
   return null;
 }
 
-export async function getAllPostsREST(noCache = false) {
+export async function getAllPostsREST() {
   const projectId = 'affable-framing-447209-s8';
   const databaseId = 'ai-studio-40c393d7-119e-4843-aa4a-5845e5f3b74a';
   const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/posts`;
 
   try {
-    const fetchOptions: RequestInit = noCache ? { cache: 'no-store' } : { next: { revalidate: 60 } };
-    const docRes = await fetch(baseUrl, fetchOptions);
+    const docRes = await fetch(baseUrl, { next: { revalidate: 60 } });
     if (docRes.ok) {
       const data = await docRes.json();
       if (!data.documents) return [];
@@ -154,14 +153,13 @@ export async function getSeoPageBySlugREST(identifier: string) {
   return null;
 }
 
-export async function getAllSeoPagesREST(noCache = false) {
+export async function getAllSeoPagesREST() {
   const projectId = 'affable-framing-447209-s8';
   const databaseId = 'ai-studio-40c393d7-119e-4843-aa4a-5845e5f3b74a';
   const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/seoPages`;
 
   try {
-    const fetchOptions: RequestInit = noCache ? { cache: 'no-store' } : { next: { revalidate: 60 } };
-    const docRes = await fetch(baseUrl, fetchOptions);
+    const docRes = await fetch(baseUrl, { next: { revalidate: 60 } });
     if (docRes.ok) {
       const data = await docRes.json();
       if (!data.documents) return [];

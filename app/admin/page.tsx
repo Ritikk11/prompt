@@ -78,7 +78,6 @@ export default function Admin() {
   const [extendedDescription, setExtendedDescription] = useState('');
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
-  const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [tagsStr, setTagsStr] = useState('');
   const [category, setCategory] = useState('');
   const [featured, setFeatured] = useState(false);
@@ -167,7 +166,7 @@ export default function Admin() {
   const customSections = sections.filter(s => s.type === 'custom');
 
   const resetForm = () => {
-    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setSeoTitle(''); setSeoDescription(''); setThumbnailUrl(''); setTagsStr(''); setCategory('');
+    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory('');
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
   };
@@ -180,7 +179,6 @@ export default function Admin() {
     setExtendedDescription(post.extendedDescription || '');
     setSeoTitle(post.seoTitle || '');
     setSeoDescription(post.seoDescription || '');
-    setThumbnailUrl(post.thumbnailUrl || '');
     setTagsStr(post.tags.join(', '));
     setCategory(post.category || '');
     setFeatured(post.featured);
@@ -283,7 +281,6 @@ export default function Admin() {
     };
     if (seoTitle) post.seoTitle = seoTitle;
     if (seoDescription) post.seoDescription = seoDescription;
-    if (thumbnailUrl) post.thumbnailUrl = thumbnailUrl;
 
     if (editingPost) {
       updatePost(post);
@@ -850,20 +847,6 @@ export default function Admin() {
                     </div>
                   </div>
                 )}
-
-                {/* Thumbnail */}
-                <div className="p-4 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-                   <label className="block text-sm font-medium mb-1.5 flex items-center gap-2">
-                      <ImageIcon className="w-4 h-4 text-surface-400" /> Post Thumbnail (Optional)
-                   </label>
-                   <p className="text-xs text-surface-400 mb-2">If provided, this image will be used in cards and the hero section instead of the first prompt image.</p>
-                   <input
-                      value={thumbnailUrl}
-                      onChange={e => setThumbnailUrl(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                      placeholder="https://..."
-                   />
-                </div>
 
                 {/* Images */}
                 <div>

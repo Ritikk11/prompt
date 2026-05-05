@@ -130,7 +130,7 @@ export default function PostContent() {
       case 'v2': // Immersive Blur Background
         return (
           <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-surface-900 shadow-2xl group min-h-[500px] flex items-end">
-            <Image src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="bg" fill className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
+            <Image src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="bg" fill className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
             <div className="relative z-20 p-8 md:p-12 w-full max-w-4xl mx-auto flex flex-col items-center text-center pb-12">
               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-md backdrop-blur-md mb-6 saturate-150 ${heroToolInfo.color}/90 border border-white/20 uppercase tracking-widest`}>
@@ -168,9 +168,9 @@ export default function PostContent() {
                    <div className="flex justify-start">{renderMetaInfo()}</div>
                 </div>
                 <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-surface-100 dark:bg-surface-800/30 flex items-center justify-center p-6 lg:p-10">
-                   <Image src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="" fill className="object-cover blur-3xl opacity-20 scale-125 z-0"  referrerPolicy="no-referrer" />
+                   <Image src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="" fill className="object-cover blur-3xl opacity-20 scale-125 z-0"  referrerPolicy="no-referrer" />
                    <div className="max-h-[400px] w-full max-w-[800px] h-full sm:w-[600px] rounded-[24px] shadow-2xl relative z-10 overflow-hidden">
-                     <Image src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt={post.title} fill className="object-contain" referrerPolicy="no-referrer" />
+                     <Image src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt={post.title} fill className="object-contain" referrerPolicy="no-referrer" />
                    </div>
                 </div>
              </div>
@@ -205,7 +205,7 @@ export default function PostContent() {
               <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-surface-100 dark:bg-surface-800/30 p-2 sm:p-4">
                 <div className="w-full h-full max-h-[75vh] min-h-[40vh] sm:min-h-[50vh] rounded-[24px] shadow-md relative overflow-hidden">
                   <Image
-                    src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+                    src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
                     alt={post.title}
                     fill
                     className="object-contain"
@@ -279,7 +279,7 @@ export default function PostContent() {
                         src={img.url || 'https://picsum.photos/seed/placeholder/800/600'}
                         alt={`Prompt ${index + 1}`}
                         fill
-                        className="object-contain shadow-inner"
+                        className="object-cover shadow-inner"
                         referrerPolicy="no-referrer"
                         sizes="(max-width: 768px) 100vw, 50vw"
                       />

@@ -2,36 +2,15 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
-export const size = { width: 32, height: 32 };
+// Image metadata
+export const size = {
+  width: 32,
+  height: 32,
+};
 export const contentType = 'image/png';
 
-export default async function Icon() {
-  try {
-    const firebaseUrl = `https://firestore.googleapis.com/v1/projects/affable-framing-447209-s8/databases/ai-studio-40c393d7-119e-4843-aa4a-5845e5f3b74a/documents/settings/global`;
-    const res = await fetch(firebaseUrl, { next: { revalidate: 60 } });
-    if (res.ok) {
-      const data = await res.json();
-      const siteLogo = data?.fields?.siteLogo?.stringValue;
-      if (siteLogo) {
-        // Fetch the actual image
-        const imgRes = await fetch(siteLogo);
-        if (imgRes.ok) {
-           const buffer = await imgRes.arrayBuffer();
-           // Instead of ImageResponse, return raw Response with the image content type
-           return new Response(buffer, {
-             headers: {
-               'Content-Type': imgRes.headers.get('Content-Type') || 'image/png',
-               'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
-             },
-           });
-        }
-      }
-    }
-  } catch (err) {
-    console.error('Error in icon generator:', err);
-  }
-
-  // Fallback
+// Image generation
+export default function Icon() {
   return new ImageResponse(
     (
       <div
@@ -41,11 +20,21 @@ export default async function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(to bottom right, #6366f1, #9333ea)',
+          background: 'linear-gradient(to bottom right, #6366f1, #9333ea)', // from-primary-500 to purple-600
           borderRadius: '8px', 
         }}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
           <path d="M20 3v4" />
           <path d="M22 5h-4" />
@@ -54,7 +43,8 @@ export default async function Icon() {
         </svg>
       </div>
     ),
-    { ...size }
+    {
+      ...size,
+    }
   );
 }
-
