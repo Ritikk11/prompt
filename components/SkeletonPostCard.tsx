@@ -2,7 +2,7 @@ export default function SkeletonPostCard() {
   return (
     <div className="rounded-[18px] overflow-hidden bg-surface-50 dark:bg-surface-800 border-2 border-surface-200 dark:border-surface-700 w-full animate-pulse">
       {/* Image Skeleton */}
-      <div className="w-full relative bg-surface-200 dark:bg-surface-700" style={{ paddingTop: '100%' }}>
+      <div className="w-full relative bg-surface-200 dark:bg-surface-700" style={{ paddingTop: '140%' }}>
         <div className="absolute top-3 left-3 w-8 h-8 rounded-lg bg-surface-300 dark:bg-surface-600" />
       </div>
 

@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <DataProvider>
             <Header />
             <AdSlot placement="header" className="max-w-7xl mx-auto w-full px-4" />
-            <main className="flex-1">
+            <main className="flex-1 w-full min-h-[80vh]">
               {children}
             </main>
             <Footer />

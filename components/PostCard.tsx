@@ -34,7 +34,8 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
             alt={post.title}
             width={500}
             height={700}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            priority={index != null && index < 4}
+            sizes="(max-width: 768px) 50vw, 33vw"
             className={`w-full transition-transform duration-700 ease-in-out group-hover:scale-105 block ${aspect ? 'h-full object-cover' : 'h-auto'}`}
            referrerPolicy="no-referrer" />
           <div className="absolute top-2 left-2 z-10">
@@ -80,6 +81,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
             alt={post.title}
             fill
             sizes="100px"
+            priority={index != null && index < 6}
             className="object-cover transition-transform duration-500 group-hover:scale-110"
            referrerPolicy="no-referrer" />
         </div>
@@ -112,7 +114,8 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
         alt={post.title}
         width={500}
         height={700}
-        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+        priority={index != null && index < 6}
+        sizes="(max-width: 768px) 50vw, 33vw"
         className={`w-full transition-transform duration-700 ease-in-out group-hover:scale-105 block ${aspect ? 'h-full object-cover' : 'h-auto'}`}
        referrerPolicy="no-referrer" />
       

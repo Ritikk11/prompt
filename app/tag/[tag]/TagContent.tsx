@@ -20,7 +20,7 @@ export default function TagContent() {
   const rawTag = params.tag as string;
   const tag = decodeURIComponent(rawTag || '');
   
-  const { posts, settings } = useData();
+  const { posts, settings, loading } = useData();
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'trending'>('latest');
   const [filterTool, setFilterTool] = useState('all');
 
@@ -105,26 +105,16 @@ export default function TagContent() {
       </div>
 
       {/* Grid */}
-      {loading ? (
-        <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-           {Array.from({ length: 8 }).map((_, i) => (
-             <div key={i} className="mb-1 inline-block w-full break-inside-avoid">
-               <SkeletonPostCard />
-             </div>
-           ))}
-        </div>
-      ) : (
-        <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-          {filtered.map((post, i) => (
-            <React.Fragment key={post.id}>
-              <div className="mb-1 inline-block w-full break-inside-avoid">
-                <PostCard post={post} index={i} />
-              </div>
-              <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
-            </React.Fragment>
-          ))}
-        </div>
-      )}
+      <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+        {filtered.map((post, i) => (
+          <React.Fragment key={post.id}>
+            <div className="mb-1 inline-block w-full break-inside-avoid">
+              <PostCard post={post} index={i} />
+            </div>
+            <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
+          </React.Fragment>
+        ))}
+      </div>
 
       {filtered.length === 0 && (
         <div className="text-center py-20">
