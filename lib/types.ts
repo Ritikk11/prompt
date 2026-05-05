@@ -14,6 +14,7 @@ export interface Post {
   extendedDescription?: string;
   seoTitle?: string;
   seoDescription?: string;
+  thumbnail?: string;
   images: ImagePrompt[];
   tags: string[];
   category?: string;

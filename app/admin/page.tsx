@@ -74,6 +74,7 @@ export default function Admin() {
   // Post form state
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
+  const [thumbnail, setThumbnail] = useState('');
   const [description, setDescription] = useState('');
   const [extendedDescription, setExtendedDescription] = useState('');
   const [seoTitle, setSeoTitle] = useState('');
@@ -166,7 +167,7 @@ export default function Admin() {
   const customSections = sections.filter(s => s.type === 'custom');
 
   const resetForm = () => {
-    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory('');
+    setTitle(''); setSlug(''); setThumbnail(''); setDescription(''); setExtendedDescription(''); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory('');
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
   };
@@ -175,6 +176,7 @@ export default function Admin() {
     setEditingPost(post);
     setTitle(post.title);
     setSlug(post.slug || '');
+    setThumbnail(post.thumbnail || '');
     setDescription(post.description);
     setExtendedDescription(post.extendedDescription || '');
     setSeoTitle(post.seoTitle || '');
@@ -244,6 +246,30 @@ export default function Admin() {
     reader.readAsDataURL(file);
   };
 
+  const handleThumbnailUpload = async (file: File) => {
+    if (file.size > 819200 && imgbbApiKey) {
+      const formData = new FormData();
+      formData.append('image', file);
+      setThumbnail('Uploading...');
+      try {
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) {
+          setThumbnail(data.data.url);
+        } else {
+          setThumbnail('');
+          alert('Upload failed: ' + data.error?.message);
+        }
+      } catch (err) {
+        setThumbnail('');
+      }
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => setThumbnail(e.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
   const toggleSectionAssignment = (sectionId: string) => {
     setAssignedSections(prev =>
       prev.includes(sectionId)
@@ -269,6 +295,7 @@ export default function Admin() {
       title: title || 'Untitled Post',
       description: description || '',
       extendedDescription: extendedDescription || '',
+      thumbnail: thumbnail || undefined,
       images: images.filter(i => i.url || i.prompt || i.aiTool),
       tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
       category: category || undefined,
@@ -767,6 +794,29 @@ export default function Admin() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
+                    <label className="block text-sm font-medium mb-1.5">Post Thumbnail (Optional)</label>
+                    <div className="flex gap-2">
+                       <input
+                         value={thumbnail}
+                         onChange={e => setThumbnail(e.target.value)}
+                         className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                         placeholder="Image URL..."
+                       />
+                       <label className="flex items-center justify-center p-2.5 px-4 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors">
+                         <Upload className="w-4 h-4 text-surface-400" />
+                         <input
+                           type="file"
+                           accept="image/*"
+                           className="hidden"
+                           onChange={e => {
+                             const file = e.target.files?.[0];
+                             if (file) handleThumbnailUpload(file);
+                           }}
+                         />
+                       </label>
+                    </div>
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium mb-1.5">Tags (comma separated)</label>
                     <input
                       value={tagsStr}
@@ -969,9 +1019,25 @@ export default function Admin() {
         <div className="max-w-3xl">
           {/* Add new section */}
           <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 mb-6">
-            <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-              <Plus className="w-4 h-4 text-primary-500" /> Add New Section
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <Plus className="w-4 h-4 text-primary-500" /> Add New Section
+              </h3>
+              <button
+                onClick={async () => {
+                  if (!sections.find(s => s.type === 'latest')) {
+                    await addSection({ id: generateId(), slug: 'latest', name: 'Latest Prompts', type: 'latest', location: 'homepage', order: 0, visible: true, limit: 12 });
+                  }
+                  if (!sections.find(s => s.type === 'popular')) {
+                    await addSection({ id: generateId(), slug: 'popular', name: 'Popular Posts', type: 'popular', location: 'homepage', order: 1, visible: true, limit: 12 });
+                  }
+                  alert('Default sections restored!');
+                }}
+                className="text-xs font-semibold text-primary-500 hover:text-primary-600 bg-primary-50 dark:bg-primary-900/20 px-3 py-1.5 rounded-lg transition-colors border border-primary-500/20"
+              >
+                Restore Latest / Popular
+              </button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
               <input
                 value={newSectionName}
@@ -1004,6 +1070,8 @@ export default function Admin() {
                 <option value="ai-tool">AI Tool (auto-filter by tool)</option>
                 <option value="tag">Tag (auto-filter by tag)</option>
                 <option value="category">Category (auto-filter by category)</option>
+                <option value="latest">Latest Prompts (Auto)</option>
+                <option value="popular">Popular Posts (Auto)</option>
                 <option value="custom">Custom (pick posts manually)</option>
               </select>
             </div>
