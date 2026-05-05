@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   turbopack: {},
   // Allow access to remote image placeholder.
   images: {
+    formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 31536000,
     remotePatterns: [
       {
