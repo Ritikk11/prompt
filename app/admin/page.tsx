@@ -75,6 +75,7 @@ export default function Admin() {
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [extendedDescription, setExtendedDescription] = useState('');
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
@@ -166,7 +167,7 @@ export default function Admin() {
   const customSections = sections.filter(s => s.type === 'custom');
 
   const resetForm = () => {
-    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory('');
+    setTitle(''); setSlug(''); setDescription(''); setThumbnailUrl(''); setExtendedDescription(''); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory('');
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
   };
@@ -176,6 +177,7 @@ export default function Admin() {
     setTitle(post.title);
     setSlug(post.slug || '');
     setDescription(post.description);
+    setThumbnailUrl(post.thumbnailUrl || '');
     setExtendedDescription(post.extendedDescription || '');
     setSeoTitle(post.seoTitle || '');
     setSeoDescription(post.seoDescription || '');
@@ -197,6 +199,46 @@ export default function Admin() {
 
   const updateImage = (idx: number, field: keyof ImagePrompt, value: string) => {
     setImages(prev => prev.map((img, i) => i === idx ? { ...img, [field]: value } : img));
+  };
+
+  const handleThumbnailUpload = async (file: File) => {
+    // Check if file is > 800KB (to prevent hitting Firebase 1MB document limit)
+    if (file.size > 819200) {
+      if (imgbbApiKey) {
+        const formData = new FormData();
+        formData.append('image', file);
+        try {
+          setThumbnailUrl('Uploading to ImgBB...'); 
+          const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+          if (data.success) {
+            setThumbnailUrl(data.data.url);
+            return;
+          } else {
+            alert('ImgBB upload failed: ' + (data.error?.message || 'Unknown error'));
+            setThumbnailUrl('');
+            return;
+          }
+        } catch (err) {
+           console.error(err);
+           alert('ImgBB upload failed.');
+           setThumbnailUrl('');
+           return;
+        }
+      } else {
+         alert('Image is too large to store directly in database (>800KB). Please either compress the image, or configure an ImgBB API Key in settings to store large images.');
+         return;
+      }
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setThumbnailUrl(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const removeImage = (idx: number) => {
@@ -268,6 +310,7 @@ export default function Admin() {
       slug: finalSlug,
       title: title || 'Untitled Post',
       description: description || '',
+      thumbnailUrl: thumbnailUrl || undefined,
       extendedDescription: extendedDescription || '',
       images: images.filter(i => i.url || i.prompt || i.aiTool),
       tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
@@ -734,13 +777,43 @@ export default function Admin() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">Extended Description / Content (Optional, useful for AdSense)</label>
+                  <label className="block text-sm font-medium mb-1.5 flex items-center justify-between">
+                    <span>Thumbnail URL (Optional)</span>
+                    <span className="text-xs font-normal text-surface-400">Falls back to the first image in prompt list</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      value={thumbnailUrl}
+                      onChange={e => setThumbnailUrl(e.target.value)}
+                      className="flex-1 w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      placeholder="https://..."
+                    />
+                    <label className="p-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors flex items-center justify-center">
+                      <Upload className="w-5 h-5 text-surface-400" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) handleThumbnailUpload(file);
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1.5 flex items-center justify-between">
+                    <span>Extended Description / Content</span>
+                    <span className="text-xs font-normal text-surface-400">Markdown supported, displays at bottom of post</span>
+                  </label>
                   <textarea
                     value={extendedDescription}
                     onChange={e => setExtendedDescription(e.target.value)}
                     rows={8}
                     className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-none font-mono"
-                    placeholder="Write a longer article or detailed description here to display at the bottom of the post page..."
+                    placeholder="Write a longer article or detailed description using Markdown..."
                   />
                 </div>
 
@@ -756,10 +829,11 @@ export default function Admin() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Custom Search Description (SEO)</label>
-                    <input
+                    <textarea
                       value={seoDescription}
                       onChange={e => setSeoDescription(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      rows={3}
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-none"
                       placeholder="Short snippet for search results..."
                     />
                   </div>

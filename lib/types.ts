@@ -11,6 +11,7 @@ export interface Post {
   slug: string;
   title: string;
   description: string;
+  thumbnailUrl?: string;
   extendedDescription?: string;
   seoTitle?: string;
   seoDescription?: string;

@@ -1,27 +1,10 @@
 'use client';
 import { useData } from '@/components/context/DataContext';
-import dynamic from 'next/dynamic';
+import HomeSection from '@/components/HomeSection';
+import FeaturedSlider from '@/components/FeaturedSlider';
 import SkeletonPostCard from '@/components/SkeletonPostCard';
 import { getGridClasses } from '@/lib/utils';
 
-const HomeSection = dynamic(() => import('@/components/HomeSection'), {
-  loading: () => (
-    <div className="py-6">
-      <div className="h-8 bg-surface-200 dark:bg-surface-800 rounded w-48 animate-pulse mb-5" />
-       <div className="flex gap-2 sm:gap-3 overflow-hidden pb-2">
-         {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex-none w-44 sm:w-48 md:w-52">
-              <SkeletonPostCard />
-            </div>
-         ))}
-       </div>
-    </div>
-  )
-});
-
-const FeaturedSlider = dynamic(() => import('@/components/FeaturedSlider'), {
-  loading: () => <div className="h-[400px] bg-surface-200 dark:bg-surface-800 rounded-2xl animate-pulse" />
-});
 
 export default function Home() {
   const { sections, loading, settings } = useData();
@@ -52,13 +35,15 @@ export default function Home() {
         </>
       ) : (
         <>
-          {homepageSections.map(section => (
-            <HomeSection key={section.id} section={section} />
-          ))}
-          {homepageSections.length === 0 && (
-            <div className="text-center py-12 text-surface-400">
-              No sections found. Create one in the admin panel.
-            </div>
+          {homepageSections.length > 0 ? (
+            homepageSections.map(section => (
+              <HomeSection key={section.id} section={section} />
+            ))
+          ) : (
+            <>
+              <HomeSection section={{ id: 'fallback-latest', name: 'Latest Prompts', type: 'latest', order: 1, limit: 10, visible: true }} />
+              <HomeSection section={{ id: 'fallback-popular', name: 'Popular Prompts', type: 'popular', order: 2, limit: 10, visible: true }} />
+            </>
           )}
         </>
       )}

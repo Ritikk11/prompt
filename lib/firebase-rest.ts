@@ -42,13 +42,17 @@ export async function getPostBySlugOrIdREST(identifier: string) {
   return null;
 }
 
-export async function getAllPostsREST() {
+export async function getAllPostsREST(noCache = false) {
   const projectId = 'affable-framing-447209-s8';
   const databaseId = 'ai-studio-40c393d7-119e-4843-aa4a-5845e5f3b74a';
-  const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/posts`;
+  const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/posts?pageSize=300`;
+
+  const fetchOptions: RequestInit = noCache 
+    ? { cache: 'no-store' } 
+    : { next: { revalidate: 60 } };
 
   try {
-    const docRes = await fetch(baseUrl, { next: { revalidate: 60 } });
+    const docRes = await fetch(baseUrl, fetchOptions);
     if (docRes.ok) {
       const data = await docRes.json();
       if (!data.documents) return [];
@@ -153,13 +157,17 @@ export async function getSeoPageBySlugREST(identifier: string) {
   return null;
 }
 
-export async function getAllSeoPagesREST() {
+export async function getAllSeoPagesREST(noCache = false) {
   const projectId = 'affable-framing-447209-s8';
   const databaseId = 'ai-studio-40c393d7-119e-4843-aa4a-5845e5f3b74a';
-  const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/seoPages`;
+  const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/seoPages?pageSize=100`;
+
+  const fetchOptions: RequestInit = noCache 
+    ? { cache: 'no-store' } 
+    : { next: { revalidate: 60 } };
 
   try {
-    const docRes = await fetch(baseUrl, { next: { revalidate: 60 } });
+    const docRes = await fetch(baseUrl, fetchOptions);
     if (docRes.ok) {
       const data = await docRes.json();
       if (!data.documents) return [];

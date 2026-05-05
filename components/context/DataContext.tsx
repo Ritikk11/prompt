@@ -55,11 +55,19 @@ const defaultSettings: SiteSettings = {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-export function DataProvider({ children }: { children: ReactNode }) {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [sections, setSections] = useState<Section[]>([]);
-  const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
-  const [loading, setLoading] = useState(true);
+interface DataProviderProps {
+  children: ReactNode;
+  initialSettings?: SiteSettings;
+  initialPosts?: Post[];
+  initialSections?: Section[];
+}
+
+export function DataProvider({ children, initialSettings, initialPosts, initialSections }: DataProviderProps) {
+  const [posts, setPosts] = useState<Post[]>(initialPosts || []);
+  const [sections, setSections] = useState<Section[]>(initialSections || []);
+  const [settings, setSettings] = useState<SiteSettings>(initialSettings || defaultSettings);
+  const [loading, setLoading] = useState(!initialSettings || !initialPosts);
+
   const [localLikes, setLocalLikes] = useState<string[]>([]);
 
   useEffect(() => {

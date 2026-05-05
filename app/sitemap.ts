@@ -4,6 +4,7 @@ import { Post } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
+export const revalidate = 0;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Determine site URL dynamically or hardcode for now
@@ -26,8 +27,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const [posts, seoPages] = await Promise.all([
-      getAllPostsREST() as Promise<Post[]>,
-      getAllSeoPagesREST() as Promise<any[]>
+      getAllPostsREST(true) as Promise<Post[]>,
+      getAllSeoPagesREST(true) as Promise<any[]>
     ]);
 
     // Add unique posts
