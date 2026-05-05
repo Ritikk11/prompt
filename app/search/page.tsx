@@ -15,7 +15,7 @@ const PostCard = dynamic(() => import('@/components/PostCard'), {
 
 function SearchContent() {
   const searchParams = useSearchParams();
-  const { searchPosts, settings } = useData();
+  const { searchPosts, settings, loading } = useData();
   const query = searchParams.get('q') || '';
   const results = searchPosts(query);
 
@@ -28,12 +28,20 @@ function SearchContent() {
         </div>
         {query && (
           <p className="text-surface-500 dark:text-surface-400">
-            {results.length} result{results.length !== 1 ? 's' : ''} for &quot;<span className="text-primary-500 font-medium">{query}</span>&quot;
+            {loading ? 'Searching...' : `${results.length} result${results.length !== 1 ? 's' : ''} for "${query}"`}
           </p>
         )}
       </div>
 
-      {results.length > 0 ? (
+      {loading ? (
+         <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="mb-1 inline-block w-full break-inside-avoid">
+                <SkeletonPostCard />
+              </div>
+            ))}
+         </div>
+      ) : results.length > 0 ? (
         <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
           {results.map((post, i) => (
              <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">

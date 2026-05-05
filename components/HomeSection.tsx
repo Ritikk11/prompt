@@ -52,7 +52,7 @@ export default function HomeSection({ section }: { section: Section }) {
     <section id={`section-${section.id}`} className="py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
-        <Link href={`/section/${section.slug || section.id}`} className="flex items-center gap-2">
+        <Link href={`/${section.slug || section.id}`} className="flex items-center gap-2">
           <h2 className="text-xl md:text-2xl font-bold hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
             {section.name}
           </h2>
@@ -63,7 +63,7 @@ export default function HomeSection({ section }: { section: Section }) {
           </span>
           {!isLatest && (
             <Link 
-              href={`/section/${section.slug || section.id}`} 
+              href={`/${section.slug || section.id}`} 
               className="group flex items-center gap-1 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors bg-primary-50 dark:bg-primary-900/20 px-3 py-1.5 rounded-full"
             >
               View All <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -75,7 +75,7 @@ export default function HomeSection({ section }: { section: Section }) {
       {isLatest ? (
         /* Latest — Masonry grid with Load More */
         <div>
-          {loading && settings.features?.skeletonLoaders ? (
+          {loading ? (
              <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
                {Array.from({ length: BATCH }).map((_, i) => (
                  <div key={i} className="mb-1 inline-block w-full break-inside-avoid">
@@ -128,7 +128,7 @@ export default function HomeSection({ section }: { section: Section }) {
             className="flex gap-2 sm:gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-thin"
             style={{ scrollbarWidth: 'thin' }}
           >
-            {loading && settings.features?.skeletonLoaders ? (
+            {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex-none w-44 sm:w-48 md:w-52">
                   <SkeletonPostCard />

@@ -104,7 +104,7 @@ export default function Explore() {
       </div>
 
       {/* Masonry layout like Pinterest */}
-      {loading && settings.features?.skeletonLoaders ? (
+      {loading ? (
          <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
            {Array.from({ length: 10 }).map((_, i) => (
              <div key={i} className="mb-1 inline-block w-full break-inside-avoid">

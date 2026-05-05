@@ -37,7 +37,7 @@ export default function ProfilePage() {
     return null;
   }
 
-  if (authLoading || loading) {
+  if (authLoading && !user) {
     return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div></div>;
   }
 
@@ -82,7 +82,15 @@ export default function ProfilePage() {
             <h2 className="text-xl md:text-2xl font-bold mb-6 flex items-center gap-2">
               <Heart className="w-6 h-6 text-red-500 fill-red-500" /> My Bookmarks
             </h2>
-            {likedPosts.length === 0 ? (
+            {loading ? (
+              <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="mb-1 inline-block w-full break-inside-avoid">
+                    <SkeletonPostCard />
+                  </div>
+                ))}
+              </div>
+            ) : likedPosts.length === 0 ? (
               <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
                 <Heart className="w-8 h-8 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
                 <p className="text-surface-500 font-medium">No bookmarks yet</p>
@@ -106,7 +114,15 @@ export default function ProfilePage() {
               <h2 className="text-xl md:text-2xl font-bold mb-6 flex items-center gap-2">
                 <FileText className="w-6 h-6 text-primary-500" /> My Submissions
               </h2>
-              {mySubmissions.length === 0 ? (
+              {loading ? (
+                <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="mb-1 inline-block w-full break-inside-avoid">
+                      <SkeletonPostCard />
+                    </div>
+                  ))}
+                </div>
+              ) : mySubmissions.length === 0 ? (
                 <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
                   <p className="text-surface-500 font-medium">You haven&apos;t submitted any prompts.</p>
                   <Link href="/submit" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">

@@ -37,7 +37,7 @@ export default function Home() {
       </section>
 
       {/* Main Content */}
-      {loading && settings.features?.skeletonLoaders ? (
+      {loading ? (
         <>
           <div className="py-6">
             <div className="h-8 bg-surface-200 dark:bg-surface-800 rounded w-48 animate-pulse mb-5" />
