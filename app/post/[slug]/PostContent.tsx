@@ -273,13 +273,15 @@ export default function PostContent() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
                 {/* Image — no cropping, natural display */}
                 <div className="relative bg-surface-50 dark:bg-surface-800 flex items-center justify-center p-3 sm:p-5">
-                  <div className="relative w-full rounded-2xl shadow-lg group-hover:scale-[1.01] transition-transform duration-500 group/img">
-                    <div className="w-full relative rounded-2xl overflow-hidden cursor-zoom-in" onClick={() => setLightboxImage({ url: img.url || '', index, tool: img.aiTool })}>
-                      <img
+                  <div className="relative w-full overflow-hidden rounded-2xl shadow-lg group-hover:scale-[1.01] transition-transform duration-500 group/img">
+                    <div className="w-full aspect-[4/3] relative rounded-2xl overflow-hidden cursor-zoom-in" onClick={() => setLightboxImage({ url: img.url || '', index, tool: img.aiTool })}>
+                      <Image
                         src={img.url || 'https://picsum.photos/seed/placeholder/800/600'}
                         alt={`Prompt ${index + 1}`}
-                        className="w-full h-auto object-contain shadow-inner"
+                        fill
+                        className="object-contain shadow-inner"
                         referrerPolicy="no-referrer"
+                        sizes="(max-width: 768px) 100vw, 50vw"
                       />
                     </div>
                     <div className="absolute top-4 left-4 z-20">

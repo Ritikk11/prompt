@@ -35,14 +35,12 @@ export default function Home() {
         </>
       ) : (
         <>
-          {homepageSections.length > 0 ? (
-            homepageSections.map(section => (
-              <HomeSection key={section.id} section={section} />
-            ))
-          ) : (
+          {homepageSections.length > 0 ? homepageSections.map(section => (
+            <HomeSection key={section.id} section={section} />
+          )) : (
             <>
-              <HomeSection section={{ id: 'fallback-latest', name: 'Latest Prompts', type: 'latest', order: 1, limit: 10, visible: true }} />
-              <HomeSection section={{ id: 'fallback-popular', name: 'Popular Prompts', type: 'popular', order: 2, limit: 10, visible: true }} />
+              <HomeSection section={{ id: 'default-latest', name: 'Latest Prompts', type: 'latest', order: 1, visible: true, limit: 12, location: 'homepage' }} />
+              <HomeSection section={{ id: 'default-popular', name: 'Popular Prompts', type: 'popular', order: 2, visible: true, limit: 12, location: 'homepage' }} />
             </>
           )}
         </>
