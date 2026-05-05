@@ -643,7 +643,7 @@ export default function Admin() {
                   <div key={post.id} className="flex items-center gap-4 p-4 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 hover:shadow-md transition-shadow">
                     <div className="relative w-20 h-16 rounded-lg overflow-hidden shrink-0 bg-surface-100 dark:bg-surface-800">
                       {post.images[0]?.url && (
-                        <Image src={post.images[0].url} alt="" fill unoptimized className="object-cover" sizes="80px" />
+                        <Image src={post.images[0].url} alt="" fill className="object-cover" sizes="80px" referrerPolicy="no-referrer" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -936,7 +936,7 @@ export default function Admin() {
 
                         {img.url && (
                           <div className="relative mt-3 h-32 rounded-lg overflow-hidden bg-surface-200 dark:bg-surface-700 flex items-center justify-center p-2">
-                            <Image src={img.url} alt="" fill unoptimized className="object-contain p-2" sizes="(max-width: 768px) 100vw, 33vw" />
+                            <Image src={img.url} alt="" fill className="object-contain p-2" sizes="(max-width: 768px) 100vw, 33vw" referrerPolicy="no-referrer" />
                           </div>
                         )}
                       </div>
@@ -1250,7 +1250,7 @@ export default function Admin() {
                                   className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
                                 />
                                 <div className="relative w-10 h-10 rounded overflow-hidden shrink-0 bg-surface-200 dark:bg-surface-700">
-                                  {p.images[0]?.url && <Image src={p.images[0].url} alt="" fill unoptimized className="object-cover" sizes="40px" />}
+                                  {p.images[0]?.url && <Image src={p.images[0].url} alt="" fill className="object-cover" sizes="40px" referrerPolicy="no-referrer" />}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs font-medium truncate">{p.title}</p>
@@ -1657,7 +1657,7 @@ export default function Admin() {
                       <div className="flex items-center gap-3">
                         <div className={`relative w-8 h-8 shrink-0 flex items-center justify-center rounded-md border border-white/20 shadow-sm ${info.color}`}>
                           {info.logo && (
-                            <Image src={info.logo} alt="" fill className="object-contain p-1.5" unoptimized />
+                            <Image src={info.logo} alt="" fill className="object-contain p-1.5" referrerPolicy="no-referrer" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
