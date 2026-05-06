@@ -188,11 +188,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [localLikes]);
 
   const addSection = useCallback(async (section: Section) => {
-    await setDoc(doc(db, 'sections', section.id), section);
+    const cleanSection = JSON.parse(JSON.stringify(section));
+    await setDoc(doc(db, 'sections', section.id), cleanSection);
   }, []);
 
   const updateSection = useCallback(async (section: Section) => {
-    await setDoc(doc(db, 'sections', section.id), section);
+    const cleanSection = JSON.parse(JSON.stringify(section));
+    await setDoc(doc(db, 'sections', section.id), cleanSection);
   }, []);
 
   const deleteSection = useCallback(async (id: string) => {

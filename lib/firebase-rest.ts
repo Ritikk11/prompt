@@ -21,7 +21,7 @@ export async function getPostBySlugOrIdREST(identifier: string) {
           limit: 1
         }
       }),
-      next: { revalidate: 0 } 
+      next: { revalidate: 60 } 
     });
 
     if (queryRes.ok) {
@@ -31,7 +31,7 @@ export async function getPostBySlugOrIdREST(identifier: string) {
       }
     }
 
-    const docRes = await fetch(`${baseUrl}/posts/${identifier}`, { next: { revalidate: 0 } });
+    const docRes = await fetch(`${baseUrl}/posts/${identifier}`, { next: { revalidate: 60 } });
     if (docRes.ok) {
       const data = await docRes.json();
       return parseFirestoreDocument(data);
@@ -45,14 +45,28 @@ export async function getPostBySlugOrIdREST(identifier: string) {
 export async function getAllPostsREST() {
   const projectId = 'affable-framing-447209-s8';
   const databaseId = 'ai-studio-40c393d7-119e-4843-aa4a-5845e5f3b74a';
-  const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/posts`;
+  const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents`;
 
   try {
-    const docRes = await fetch(baseUrl, { next: { revalidate: 0 } });
-    if (docRes.ok) {
-      const data = await docRes.json();
-      if (!data.documents) return [];
-      return data.documents.map(parseFirestoreDocument).filter(Boolean);
+    const queryUrl = `${baseUrl}:runQuery`;
+    const queryRes = await fetch(queryUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: 'posts' }],
+          limit: 1000
+        }
+      }),
+      cache: 'no-store'
+    });
+
+    if (queryRes.ok) {
+      const results = await queryRes.json();
+      return results
+        .filter((r: any) => r.document)
+        .map((r: any) => parseFirestoreDocument(r.document))
+        .filter(Boolean);
     }
   } catch (error) {
     console.error('Error fetching all posts via REST:', error);
@@ -66,7 +80,7 @@ export async function getSettingsREST() {
   const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents`;
 
   try {
-    const docRes = await fetch(`${baseUrl}/settings/global`, { next: { revalidate: 0 } });
+    const docRes = await fetch(`${baseUrl}/settings/global`, { cache: 'no-store' });
     if (docRes.ok) {
       const data = await docRes.json();
       return parseFirestoreDocument(data);
@@ -100,7 +114,7 @@ export async function getSectionBySlugREST(identifier: string) {
           limit: 1
         }
       }),
-      next: { revalidate: 0 }
+      next: { revalidate: 60 }
     });
 
     if (queryRes.ok) {
@@ -138,7 +152,7 @@ export async function getSeoPageBySlugREST(identifier: string) {
           limit: 1
         }
       }),
-      next: { revalidate: 0 }
+      next: { revalidate: 60 }
     });
 
     if (queryRes.ok) {
@@ -156,14 +170,28 @@ export async function getSeoPageBySlugREST(identifier: string) {
 export async function getAllSeoPagesREST() {
   const projectId = 'affable-framing-447209-s8';
   const databaseId = 'ai-studio-40c393d7-119e-4843-aa4a-5845e5f3b74a';
-  const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/seoPages`;
+  const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents`;
 
   try {
-    const docRes = await fetch(baseUrl, { next: { revalidate: 0 } });
-    if (docRes.ok) {
-      const data = await docRes.json();
-      if (!data.documents) return [];
-      return data.documents.map(parseFirestoreDocument).filter(Boolean);
+    const queryUrl = `${baseUrl}:runQuery`;
+    const queryRes = await fetch(queryUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: 'seoPages' }],
+          limit: 1000
+        }
+      }),
+      next: { revalidate: 60 }
+    });
+
+    if (queryRes.ok) {
+      const results = await queryRes.json();
+      return results
+        .filter((r: any) => r.document)
+        .map((r: any) => parseFirestoreDocument(r.document))
+        .filter(Boolean);
     }
   } catch (error) {
     console.error('Error fetching all seoPages via REST:', error);

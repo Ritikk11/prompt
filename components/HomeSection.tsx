@@ -29,11 +29,11 @@ export default function HomeSection({ section }: { section: Section }) {
 
   // For other sections: use filtered posts with limit
   const allSectionPosts = !isLatest ? getFilteredPosts(section) : [];
-  const sectionPosts = allSectionPosts.slice(0, 8);
+  const sectionPosts = allSectionPosts.slice(0, section.limit || 12);
 
   // Load more state for latest
-  const [showCount, setShowCount] = useState(8);
-  const BATCH = 8;
+  const [showCount, setShowCount] = useState(section.limit || 12);
+  const BATCH = section.limit || 12;
 
   const visibleLatest = allLatestPosts.slice(0, showCount);
   const hasMore = allLatestPosts.length > showCount;

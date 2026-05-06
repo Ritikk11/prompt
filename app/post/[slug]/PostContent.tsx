@@ -14,7 +14,7 @@ import TemplatePrompt from '@/components/TemplatePrompt';
 import { auth } from '@/lib/firebase';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
 
-import Markdown from 'react-markdown';
+import ReactMarkdown from 'react-markdown';
 import CopyButton from '@/components/CopyButton';
 
 const PostCard = dynamic(() => import('@/components/PostCard'));
@@ -131,7 +131,7 @@ export default function PostContent() {
       case 'v2': // Immersive Blur Background
         return (
           <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-surface-900 shadow-2xl group min-h-[500px] flex items-end">
-            <Image src={post.thumbnail || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="bg" fill className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
+            <Image src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="bg" fill className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
             <div className="relative z-20 p-8 md:p-12 w-full max-w-4xl mx-auto flex flex-col items-center text-center pb-12">
               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-md backdrop-blur-md mb-6 saturate-150 ${heroToolInfo.color}/90 border border-white/20 uppercase tracking-widest`}>
@@ -169,9 +169,9 @@ export default function PostContent() {
                    <div className="flex justify-start">{renderMetaInfo()}</div>
                 </div>
                 <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-surface-100 dark:bg-surface-800/30 flex items-center justify-center p-6 lg:p-10">
-                   <Image src={post.thumbnail || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="" fill className="object-cover blur-3xl opacity-20 scale-125 z-0"  referrerPolicy="no-referrer" />
+                   <Image src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="" fill className="object-cover blur-3xl opacity-20 scale-125 z-0"  referrerPolicy="no-referrer" />
                    <div className="max-h-[400px] w-full max-w-[800px] h-full sm:w-[600px] rounded-[24px] shadow-2xl relative z-10 overflow-hidden">
-                     <Image src={post.thumbnail || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt={post.title} fill className="object-contain" referrerPolicy="no-referrer" />
+                     <Image src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt={post.title} fill className="object-contain" referrerPolicy="no-referrer" />
                    </div>
                 </div>
              </div>
@@ -206,7 +206,7 @@ export default function PostContent() {
               <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-surface-100 dark:bg-surface-800/30 p-2 sm:p-4">
                 <div className="w-full h-full max-h-[75vh] min-h-[40vh] sm:min-h-[50vh] rounded-[24px] shadow-md relative overflow-hidden">
                   <Image
-                    src={post.thumbnail || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+                    src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
                     alt={post.title}
                     fill
                     className="object-contain"
@@ -275,11 +275,12 @@ export default function PostContent() {
                 {/* Image — no cropping, natural display */}
                 <div className="relative bg-surface-50 dark:bg-surface-800 flex items-center justify-center p-3 sm:p-5">
                   <div className="relative w-full overflow-hidden rounded-2xl shadow-lg group-hover:scale-[1.01] transition-transform duration-500 group/img">
-                    <div className="w-full relative rounded-2xl overflow-hidden cursor-zoom-in group/img" onClick={() => setLightboxImage({ url: img.url || '', index, tool: img.aiTool })}>
+                    <div className="w-full relative rounded-2xl overflow-hidden cursor-zoom-in flex items-center justify-center bg-surface-100 dark:bg-surface-900" onClick={() => setLightboxImage({ url: img.url || '', index, tool: img.aiTool })}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={img.url || 'https://picsum.photos/seed/placeholder/800/600'}
                         alt={`Prompt ${index + 1}`}
-                        className="w-full h-auto block rounded-2xl shadow-inner transition-transform duration-500 group-hover/img:scale-[1.01]"
+                        className="w-full h-auto block rounded-2xl"
                         referrerPolicy="no-referrer"
                       />
                     </div>
@@ -477,8 +478,25 @@ export default function PostContent() {
       {/* Extended HTML / Article Description */}
       {post.extendedDescription && (
         <div className="border-t border-surface-200 dark:border-surface-800 pt-16 mb-16">
-          <div className="max-w-4xl mx-auto prose dark:prose-invert prose-surface prose-img:rounded-2xl prose-a:text-primary-500">
-            <Markdown>{post.extendedDescription}</Markdown>
+          <div className="max-w-4xl mx-auto text-surface-900 dark:text-surface-100">
+            <ReactMarkdown
+              components={{
+                h1: (props) => <h1 className="text-4xl font-extrabold mt-8 mb-4 tracking-tight" {...props} />,
+                h2: (props) => <h2 className="text-3xl font-bold mt-10 mb-4 tracking-tight" {...props} />,
+                h3: (props) => <h3 className="text-2xl font-semibold mt-8 mb-3" {...props} />,
+                p: (props) => <p className="text-lg leading-relaxed mb-6 text-surface-700 dark:text-surface-300" {...props} />,
+                ol: (props) => <ol className="list-decimal list-outside ml-6 mb-6 space-y-2 text-surface-700 dark:text-surface-300" {...props} />,
+                ul: (props) => <ul className="list-disc list-outside ml-6 mb-6 space-y-2 text-surface-700 dark:text-surface-300" {...props} />,
+                li: (props) => <li className="pl-1" {...props} />,
+                a: (props) => <a className="text-primary-500 hover:underline font-medium" {...props} />,
+                strong: (props) => <strong className="font-bold text-surface-900 dark:text-white" {...props} />,
+                blockquote: (props) => <blockquote className="border-l-4 border-primary-500 pl-4 py-1 italic text-surface-600 dark:text-surface-400 my-6 bg-surface-50 dark:bg-surface-800/50 rounded-r-lg" {...props} />,
+                hr: (props) => <hr className="my-10 border-surface-200 dark:border-surface-800" {...props} />,
+                code: (props) => <code className="bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400 px-1.5 py-0.5 rounded text-sm font-mono" {...props} />,
+              }}
+            >
+              {post.extendedDescription}
+            </ReactMarkdown>
           </div>
         </div>
       )}
