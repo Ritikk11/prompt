@@ -105,26 +105,33 @@ export default function PostContent() {
 
   const postHeroStyle = settings.postHeroStyle || 'v1';
 
-  const renderMetaInfo = () => (
-    <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium text-surface-500 bg-surface-50 dark:bg-surface-900/50 py-3 px-6 rounded-full border border-surface-200 dark:border-surface-800 transition-colors ${postHeroStyle === 'v2' ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md' : ''}`}>
-      <span className="flex items-center gap-1.5">
-        <Eye className={`w-4.5 h-4.5 ${postHeroStyle === 'v2' ? 'text-white' : 'text-primary-500'}`} /> {(post.views || 0).toLocaleString()} <span className="hidden sm:inline">views</span>
-      </span>
-      <span className={`w-1 h-1 rounded-full ${postHeroStyle === 'v2' ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
-      <button
-        onClick={() => toggleLike(post.id)}
-        className={`flex items-center gap-1.5 transition-colors ${
-          post.likedByUser ? 'text-red-500' : 'hover:text-red-400'
-        }`}
-      >
-        <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop' : ''}`} /> {(post.likes || 0).toLocaleString()} <span className="hidden sm:inline">likes</span>
-      </button>
-      <span className={`w-1 h-1 rounded-full ${postHeroStyle === 'v2' ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
-      <span className="flex items-center gap-1.5">
-        <Clock className="w-4.5 h-4.5" /> {formatDate(post.createdAt)}
-      </span>
-    </div>
-  );
+  const renderMetaInfo = () => {
+    const isV2 = postHeroStyle === 'v2';
+    const containerClasses = isV2
+      ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md'
+      : 'text-surface-500 bg-surface-50 dark:bg-surface-900/50 border-surface-200 dark:border-surface-800';
+    
+    return (
+      <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium py-3 px-6 rounded-full border transition-colors ${containerClasses}`}>
+        <span className="flex items-center gap-1.5">
+          <Eye className={`w-4.5 h-4.5 ${isV2 ? 'text-white' : 'text-primary-500'}`} /> {(post.views || 0).toLocaleString()} <span className="hidden sm:inline">views</span>
+        </span>
+        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
+        <button
+          onClick={() => toggleLike(post.id)}
+          className={`flex items-center gap-1.5 transition-colors ${
+            post.likedByUser ? 'text-red-500' : isV2 ? 'hover:text-red-400' : 'hover:text-red-500'
+          }`}
+        >
+          <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop text-red-500' : ''}`} /> {(post.likes || 0).toLocaleString()} <span className="hidden sm:inline">likes</span>
+        </button>
+        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
+        <span className="flex items-center gap-1.5">
+          <Clock className="w-4.5 h-4.5" /> {formatDate(post.createdAt)}
+        </span>
+      </div>
+    );
+  };
 
   const renderHero = () => {
     switch (postHeroStyle) {
