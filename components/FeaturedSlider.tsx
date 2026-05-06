@@ -127,10 +127,19 @@ export default function FeaturedSlider() {
           <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
           <div className="absolute inset-0 z-20 flex flex-col justify-end p-6 md:p-10">
             <div className="max-w-2xl relative z-30">
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg ${toolInfo.color}`}>{toolName}</span>
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-sm">⭐ Featured</span>
-              </div>
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg ${toolInfo.color}`}>
+                    {toolInfo.logo && (
+                      <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                          <Image src={toolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                        </div>
+                      </div>
+                    )}
+                    {toolName}
+                  </span>
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-sm">⭐ Featured</span>
+                </div>
               <h2 className="text-2xl md:text-4xl font-bold text-white mb-2 leading-tight drop-shadow-lg">{post.title}</h2>
               <p className="text-white/70 text-sm md:text-base mb-4 line-clamp-2 drop-shadow">{post.description}</p>
               <Link href={`/post/${post.slug || post.id}`} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm transition-all hover:shadow-lg hover:shadow-primary-500/25">
@@ -154,7 +163,16 @@ export default function FeaturedSlider() {
           {/* Content Side */}
           <div className="flex flex-col justify-center p-8 md:p-12 order-2 md:order-1 relative z-20">
             <div className="flex flex-wrap items-center gap-2 mb-4">
-               <span className={`px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg ${toolInfo.color}`}>{toolName}</span>
+               <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg ${toolInfo.color}`}>
+                 {toolInfo.logo && (
+                   <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                     <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                       <Image src={toolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                     </div>
+                   </div>
+                 )}
+                 {toolName}
+               </span>
                <span className="px-3 py-1 rounded-full text-xs font-medium bg-surface-200 dark:bg-surface-800 text-surface-700 dark:text-surface-300">⭐ Featured</span>
             </div>
             {/* Animated Title/Desc Wrapper */}
@@ -203,7 +221,16 @@ export default function FeaturedSlider() {
         <div className="relative z-10 w-full max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-6 md:gap-16">
           {/* Text Content */}
           <div className="w-full md:w-1/2 flex flex-col text-center md:text-left animate-in slide-in-from-left-8 duration-700 order-2 md:order-1">
-            <span className={`inline-block self-center md:self-start mb-2 md:mb-4 px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-sm font-bold text-white shadow-lg ${toolInfo.color}`}>{toolName}</span>
+            <span className={`inline-flex self-center md:self-start items-center gap-2 mb-2 md:mb-4 px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-sm font-bold text-white shadow-lg ${toolInfo.color}`}>
+              {toolInfo.logo && (
+                <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
+                  <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                    <Image src={toolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                  </div>
+                </div>
+              )}
+              {toolName}
+            </span>
             <h2 className="text-xl md:text-5xl font-black text-surface-900 dark:text-white mb-2 md:mb-6 leading-[1.1]">{post.title}</h2>
             <p className="text-surface-700 dark:text-surface-300 text-xs md:text-lg mb-4 md:mb-8 line-clamp-2 md:line-clamp-3 font-medium">{post.description}</p>
             <div className="flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 w-full">
@@ -330,6 +357,167 @@ export default function FeaturedSlider() {
              </div>
              <button onClick={() => goTo(current + 1)} className="p-3 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors backdrop-blur"><ChevronRight className="w-6 h-6" /></button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // V6: Parallax Stack
+  if (heroStyle === 'v6') {
+    return (
+      <div className="relative w-full min-h-[500px] md:min-h-[600px] rounded-[3rem] overflow-hidden bg-surface-100 dark:bg-surface-800 flex items-center justify-center p-6 md:p-12 mb-10" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-purple-500/10 to-pink-500/10" />
+        <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="order-2 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left">
+            <div key={post.id} className="animate-in slide-in-from-left-12 duration-700">
+               <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black text-white ${toolInfo.color} mb-6 shadow-lg`}>
+                  {toolInfo.logo && (
+                    <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-0.5">
+                      <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                        <Image src={toolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                    </div>
+                  )}
+                  {toolName}
+               </div>
+               <h2 className="text-4xl md:text-7xl font-black text-surface-900 dark:text-white mb-6 uppercase tracking-tight leading-[0.9]">
+                 {post.title}
+               </h2>
+               <p className="text-surface-600 dark:text-surface-400 text-lg md:text-xl font-medium mb-10 max-w-lg leading-relaxed">
+                 {post.description}
+               </p>
+               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mb-4">
+                  <Link href={`/post/${post.slug || post.id}`} className="px-8 py-4 rounded-2xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-2xl">
+                    View Prompt
+                  </Link>
+                  <div className="flex gap-2">
+                    <button onClick={() => goTo(current - 1)} className="p-4 rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 shadow-sm hover:translate-y-[-2px] transition-all"><ChevronLeft className="w-5 h-5"/></button>
+                    <button onClick={() => goTo(current + 1)} className="p-4 rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 shadow-sm hover:translate-y-[-2px] transition-all"><ChevronRight className="w-5 h-5"/></button>
+                  </div>
+               </div>
+            </div>
+          </div>
+          <div className="relative order-1 lg:order-2 h-[350px] md:h-[500px] flex items-center justify-center">
+             {featured.map((p, i) => {
+               const idx = i - current;
+               const absIdx = Math.abs(idx);
+               if (absIdx > 2) return null;
+               return (
+                 <div 
+                   key={p.id}
+                   className="absolute inset-0 transition-all duration-700 ease-out"
+                   style={{
+                     transform: `translateX(${idx * 40}px) translateY(${absIdx * 20}px) scale(${1 - absIdx * 0.1}) skewY(${idx * 2}deg)`,
+                     opacity: 1 - absIdx * 0.4,
+                     zIndex: 10 - absIdx,
+                   }}
+                 >
+                   <div className="w-full h-full rounded-[40px] overflow-hidden shadow-2xl border-4 border-white dark:border-surface-700">
+                      <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                   </div>
+                 </div>
+               );
+             })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // V7: Carousel Hub
+  if (heroStyle === 'v7') {
+    return (
+      <div className="relative w-full py-12 mb-10 overflow-hidden" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+        <div className="max-w-7xl mx-auto px-4 lg:px-8">
+           <div className="flex items-end justify-between mb-8">
+             <div className="max-w-2xl">
+                <span className="text-primary-500 font-black uppercase tracking-[0.3em] text-xs mb-3 block">EDITOR&apos;S CHOICE</span>
+                <h2 className="text-3xl md:text-5xl font-black text-surface-900 dark:text-white tracking-tighter">FEATURED PROMPTS</h2>
+             </div>
+             <div className="flex gap-2">
+                <button onClick={() => goTo(current - 1)} className="p-3 rounded-full border border-surface-200 dark:border-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><ChevronLeft className="w-6 h-6"/></button>
+                <button onClick={() => goTo(current + 1)} className="p-3 rounded-full border border-surface-200 dark:border-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><ChevronRight className="w-6 h-6"/></button>
+             </div>
+           </div>
+           
+           <div className="flex gap-4 md:gap-8 overflow-visible">
+              {featured.map((p, i) => (
+                <div 
+                  key={p.id} 
+                  className={`relative flex-none transition-all duration-500 ${i === current ? 'w-full md:w-[70%] h-[400px] md:h-[550px]' : 'w-20 md:w-40 h-[400px] md:h-[550px] opacity-40 hover:opacity-100 cursor-pointer overflow-hidden'}`}
+                  onClick={() => i !== current && goTo(i)}
+                >
+                  <div className={`relative h-full w-full rounded-[2.5rem] overflow-hidden ${i === current ? 'shadow-2xl' : 'shadow-lg saturate-0 hover:saturate-100'}`}>
+                    <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill className="object-cover" referrerPolicy="no-referrer" />
+                    {i === current && (
+                      <>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent p-6 md:p-12 flex flex-col justify-end">
+                          <span className={`inline-flex items-center gap-2 px-3 py-1 w-max rounded-lg text-[10px] font-black text-white ${getToolInfo(p.images[0].aiTool).color} mb-4 uppercase tracking-widest shadow-lg`}>
+                            {getToolInfo(p.images[0].aiTool).logo && (
+                              <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                                <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                                  <Image src={getToolInfo(p.images[0].aiTool).logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                                </div>
+                              </div>
+                            )}
+                            {p.images[0].aiTool}
+                          </span>
+                          <h3 className="text-2xl md:text-4xl font-black text-white mb-4 line-clamp-2 uppercase tracking-wide">{p.title}</h3>
+                          <Link href={`/post/${p.slug || p.id}`} className="group inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white text-black font-black text-xs md:text-sm uppercase tracking-widest w-max hover:bg-primary-500 hover:text-white transition-all">
+                             View Details <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                          </Link>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // V8: Cinematic Edge
+  if (heroStyle === 'v8') {
+    return (
+      <div className="relative w-full h-[600px] md:h-[750px] mb-12 flex items-center justify-center p-4">
+        {featured.map((p, i) => (
+          <div key={p.id} className={`absolute inset-0 transition-all duration-1000 ease-in-out ${i === current ? 'opacity-100 z-10' : 'opacity-0 scale-105 blur-sm z-0'}`}>
+            <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt="" fill className="object-cover scale-105 blur-2xl opacity-20" referrerPolicy="no-referrer" />
+            <div className="relative h-full w-full max-w-6xl mx-auto rounded-[3rem] overflow-hidden shadow-2xl border border-white/10 mt-4 h-full md:h-[90%]">
+               <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill className="object-cover" referrerPolicy="no-referrer" priority={i === 0} />
+               <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent p-8 md:p-20 flex flex-col justify-end md:justify-center">
+                  <div className="max-w-2xl animate-in slide-in-from-bottom-8 duration-700">
+                    <div className="flex items-center gap-3 mb-6">
+                       <span className="w-12 h-[2px] bg-primary-500" />
+                       <span className="text-white text-xs font-black tracking-[0.4em] uppercase">{p.images[0].aiTool} MASTERPIECE</span>
+                    </div>
+                    <h2 className="text-4xl md:text-7xl font-black text-white mb-6 uppercase tracking-tight leading-none drop-shadow-2xl">
+                      {p.title}
+                    </h2>
+                    <p className="text-white/60 text-lg md:text-xl font-medium mb-12 line-clamp-3 md:line-clamp-none">
+                      {p.description}
+                    </p>
+                    <div className="flex flex-row items-center gap-6">
+                        <Link href={`/post/${p.slug || p.id}`} className="px-10 py-4 rounded-full bg-primary-500 text-white font-black text-sm uppercase tracking-widest hover:bg-primary-400 transition-all shadow-xl shadow-primary-500/30">
+                          PROMPT DETAILS
+                        </Link>
+                        <div className="flex gap-4">
+                           <button onClick={() => goTo(current - 1)} className="w-12 h-12 rounded-full border border-white/20 text-white flex items-center justify-center hover:bg-white hover:text-black transition-all"><ChevronLeft className="w-6 h-6"/></button>
+                           <button onClick={() => goTo(current + 1)} className="w-12 h-12 rounded-full border border-white/20 text-white flex items-center justify-center hover:bg-white hover:text-black transition-all"><ChevronRight className="w-6 h-6"/></button>
+                        </div>
+                    </div>
+                  </div>
+               </div>
+            </div>
+          </div>
+        ))}
+        {/* Play Progress Dot Bar */}
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl">
+           {featured.map((_, i) => (
+             <button key={i} onClick={() => goTo(i)} className={`h-2.5 rounded-full transition-all duration-500 ${i === current ? 'w-10 bg-primary-500' : 'w-2.5 bg-white/30 hover:bg-white/50'}`} />
+           ))}
         </div>
       </div>
     );

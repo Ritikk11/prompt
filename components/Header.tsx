@@ -28,7 +28,7 @@ export default function Header() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 64 && !menuOpen && !searchOpen && !showLiveResults) {
+      if (currentScrollY > lastScrollY && currentScrollY > 48 && !menuOpen && !searchOpen && !showLiveResults) {
         setIsVisible(false);
       } else {
         setIsVisible(true);
@@ -134,7 +134,7 @@ export default function Header() {
 
   return (
     <header className={`sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-surface-950/80 border-b border-surface-200 dark:border-surface-800 transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0" onClick={() => setMenuOpen(false)}>
           {settings.siteLogo ? (

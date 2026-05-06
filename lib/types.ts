@@ -79,9 +79,10 @@ export interface SiteSettings {
   siteLogo?: string;
   heroEnabled: boolean;
   heroAutoPlay: boolean;
-  heroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5';
-  postHeroStyle?: 'v1' | 'v2' | 'v3' | 'v4';
-  cardStyle?: 'v1' | 'v2' | 'v3';
+  heroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
+  postHeroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
+  cardStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
+  badgeStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10';
   aiTools: string[];
   toolDetails?: Record<string, { logo?: string; color?: string; logoScale?: number }>;
   headerSections?: Section[];

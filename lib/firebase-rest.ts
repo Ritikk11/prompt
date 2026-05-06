@@ -91,6 +91,38 @@ export async function getSettingsREST() {
   return null;
 }
 
+export async function getAllSectionsREST() {
+  const projectId = 'affable-framing-447209-s8';
+  const databaseId = 'ai-studio-40c393d7-119e-4843-aa4a-5845e5f3b74a';
+  const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents`;
+
+  try {
+    const queryUrl = `${baseUrl}:runQuery`;
+    const queryRes = await fetch(queryUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: 'sections' }],
+          limit: 100
+        }
+      }),
+      next: { revalidate: 60 }
+    });
+
+    if (queryRes.ok) {
+      const results = await queryRes.json();
+      return results
+        .filter((r: any) => r.document)
+        .map((r: any) => parseFirestoreDocument(r.document))
+        .filter(Boolean);
+    }
+  } catch (error) {
+    console.error('Error fetching all sections via REST:', error);
+  }
+  return [];
+}
+
 export async function getSectionBySlugREST(identifier: string) {
   const projectId = 'affable-framing-447209-s8';
   const databaseId = 'ai-studio-40c393d7-119e-4843-aa4a-5845e5f3b74a';

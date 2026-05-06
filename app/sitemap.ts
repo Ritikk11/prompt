@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
-import { getAllPostsREST, getAllSeoPagesREST } from '@/lib/firebase-rest';
-import { Post } from '@/lib/types';
+import { getAllPostsREST, getAllSeoPagesREST, getAllSectionsREST } from '@/lib/firebase-rest';
+import { Post, Section } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
@@ -25,9 +25,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const [posts, seoPages] = await Promise.all([
+    const [posts, seoPages, sections] = await Promise.all([
       getAllPostsREST() as Promise<Post[]>,
-      getAllSeoPagesREST() as Promise<any[]>
+      getAllSeoPagesREST() as Promise<any[]>,
+      getAllSectionsREST() as Promise<Section[]>
     ]);
 
     // Add unique posts
@@ -51,14 +52,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       });
     });
 
-    // Extract unique tags and add tag pages
-    const uniqueTags = Array.from(new Set(publishedPosts.flatMap(p => p.tags)));
-    uniqueTags.forEach(tag => {
+    // Add Homepage Sections (if they have slugs)
+    sections.filter(s => s.slug && s.visible).forEach(section => {
       sitemapEntries.push({
-        url: `${baseUrl}/tag/${encodeURIComponent(tag)}`,
-        lastModified: new Date(), // Tags change whenever new posts arrive
+        url: `${baseUrl}/section/${section.slug}`,
+        lastModified: new Date(),
         changeFrequency: 'daily',
-        priority: 0.6,
+        priority: 0.7,
       });
     });
 

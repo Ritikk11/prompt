@@ -131,13 +131,25 @@ export default function PostContent() {
       case 'v2': // Immersive Blur Background
         return (
           <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-surface-900 shadow-2xl group min-h-[500px] flex items-end">
-            <Image src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="bg" fill className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
+            <Image src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="bg" fill className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
             <div className="relative z-20 p-8 md:p-12 w-full max-w-4xl mx-auto flex flex-col items-center text-center pb-12">
+              <div className="relative w-full max-w-lg aspect-[4/3] mb-8 rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+                <Image 
+                  src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+                  alt={post.title} 
+                  fill 
+                  className="object-contain bg-black/20" 
+                  referrerPolicy="no-referrer"
+                  priority
+                />
+              </div>
               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-md backdrop-blur-md mb-6 saturate-150 ${heroToolInfo.color}/90 border border-white/20 uppercase tracking-widest`}>
                 {heroToolInfo.logo && (
-                  <div className="relative w-4 h-4 shrink-0 bg-black/10 rounded overflow-hidden p-[1px]">
-                    <Image src={heroToolInfo.logo} alt="" fill className="object-contain"  referrerPolicy="no-referrer" />
+                  <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
+                    <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                      <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                    </div>
                   </div>
                 )}
                 {post.images[0]?.aiTool}
@@ -156,8 +168,10 @@ export default function PostContent() {
                    <div className="flex flex-wrap items-center gap-2 mb-4">
                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white shadow-md ${heroToolInfo.color}/90 uppercase tracking-wider`}>
                        {heroToolInfo.logo && (
-                         <div className="relative w-3.5 h-3.5 shrink-0 bg-white/20 rounded-full p-[1px] overflow-hidden">
-                           <Image src={heroToolInfo.logo} alt="" fill className="object-contain"  referrerPolicy="no-referrer" />
+                         <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                           <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                             <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                           </div>
                          </div>
                        )}
                        {post.images[0]?.aiTool}
@@ -169,9 +183,9 @@ export default function PostContent() {
                    <div className="flex justify-start">{renderMetaInfo()}</div>
                 </div>
                 <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-surface-100 dark:bg-surface-800/30 flex items-center justify-center p-6 lg:p-10">
-                   <Image src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="" fill className="object-cover blur-3xl opacity-20 scale-125 z-0"  referrerPolicy="no-referrer" />
+                   <Image src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="" fill className="object-cover blur-3xl opacity-20 scale-125 z-0"  referrerPolicy="no-referrer" />
                    <div className="max-h-[400px] w-full max-w-[800px] h-full sm:w-[600px] rounded-[24px] shadow-2xl relative z-10 overflow-hidden">
-                     <Image src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt={post.title} fill className="object-contain" referrerPolicy="no-referrer" />
+                     <Image src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt={post.title} fill className="object-contain" referrerPolicy="no-referrer" />
                    </div>
                 </div>
              </div>
@@ -182,15 +196,180 @@ export default function PostContent() {
           <div className="mb-12 flex flex-col items-center text-center mt-6 md:mt-10">
             <span className={`mb-6 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest text-white shadow-lg ${heroToolInfo.color}/90 saturate-150`}>
                 {heroToolInfo.logo && (
-                  <div className="relative w-4 h-4 shrink-0 bg-black/10 rounded overflow-hidden p-[1px]">
-                    <Image src={heroToolInfo.logo} alt="" fill className="object-contain"  referrerPolicy="no-referrer" />
+                  <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
+                    <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                      <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                    </div>
                   </div>
                 )}
                 {post.images[0]?.aiTool}
             </span>
             <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 tracking-tight leading-tight max-w-4xl">{post.title}</h1>
-            <p className="text-surface-600 dark:text-surface-400 text-lg md:text-2xl max-w-3xl leading-relaxed mb-10 font-medium">{post.description}</p>
+            <p className="text-surface-600 dark:text-surface-400 text-lg md:text-2xl max-w-3xl leading-relaxed mb-8 font-medium">{post.description}</p>
+            <div className="relative w-full max-w-2xl aspect-video mb-10 rounded-3xl overflow-hidden shadow-xl bg-surface-100 dark:bg-surface-800/50 p-4">
+              <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-inner">
+                <Image 
+                  src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+                  alt={post.title} 
+                  fill 
+                  className="object-contain" 
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            </div>
             {renderMetaInfo()}
+          </div>
+        );
+      case 'v5': // Asymmetric Offset
+        return (
+          <div className="relative mb-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-8">
+            <div className="lg:col-span-7 order-2 lg:order-1">
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black text-white ${heroToolInfo.color}/90 mb-4 uppercase tracking-[0.2em] shadow-md`}>
+                {heroToolInfo.logo && (
+                  <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                    <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                      <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                    </div>
+                  </div>
+                )}
+                {post.images[0]?.aiTool}
+              </span>
+              <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 leading-[1.1] tracking-tight">
+                {post.title}
+              </h1>
+              <p className="text-surface-600 dark:text-surface-400 text-lg md:text-xl mb-10 leading-relaxed max-w-2xl border-l-4 border-primary-500 pl-6">
+                {post.description}
+              </p>
+              <div className="flex justify-start">{renderMetaInfo()}</div>
+            </div>
+            <div className="lg:col-span-5 order-1 lg:order-2 relative aspect-[3/4] lg:aspect-auto lg:h-[600px] rounded-[40px] overflow-hidden shadow-2xl skew-y-2 lg:skew-y-0 lg:-rotate-2 hover:rotate-0 transition-transform duration-700">
+               <Image 
+                src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+                alt={post.title} 
+                fill 
+                className="object-cover" 
+                referrerPolicy="no-referrer"
+                priority
+              />
+            </div>
+          </div>
+        );
+      case 'v6': // Cyberpunk Bordered
+        return (
+          <div className="relative mb-16 w-full p-1 bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 rounded-[32px] shadow-[0_20px_50px_rgba(var(--primary-500),0.3)]">
+            <div className="bg-white dark:bg-surface-950 rounded-[30px] p-8 md:p-12 overflow-hidden relative">
+               <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 blur-[100px] pointer-events-none" />
+               <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[100px] pointer-events-none" />
+               <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                  <div>
+                    <div className="flex gap-2 mb-6">
+                       <span className="px-2 py-1 bg-black text-white dark:bg-white dark:text-black text-[10px] font-black uppercase tracking-widest">AI GENERATED</span>
+                       <span className={`inline-flex items-center gap-1.5 px-2 py-1 text-white text-[10px] font-black uppercase tracking-widest ${heroToolInfo.color}/90 shadow-md`}>
+                        {heroToolInfo.logo && (
+                          <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                            <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                              <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                            </div>
+                          </div>
+                        )}
+                        {post.images[0]?.aiTool}
+                       </span>
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-black text-surface-900 dark:text-white mb-6 uppercase tracking-tighter italic">
+                      {post.title}
+                    </h1>
+                    <p className="text-surface-600 dark:text-surface-400 text-base md:text-lg mb-8 font-medium">
+                      {post.description}
+                    </p>
+                    <div className="flex justify-start">{renderMetaInfo()}</div>
+                  </div>
+                  <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-surface-900 shadow-2xl rotate-1">
+                    <Image 
+                      src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+                      alt={post.title} 
+                      fill 
+                      className="object-cover" 
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+               </div>
+            </div>
+          </div>
+        );
+      case 'v7': // Full Screen Hero
+        return (
+          <div className="relative w-full h-[80vh] min-h-[600px] mb-12 rounded-[48px] overflow-hidden group">
+             <Image 
+              src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+              alt={post.title} 
+              fill 
+              className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+              referrerPolicy="no-referrer"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+            <div className="absolute inset-0 flex flex-col items-center justify-end p-8 md:p-16 text-center">
+               <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black text-white ${heroToolInfo.color}/80 backdrop-blur-md mb-6 uppercase tracking-widest border border-white/20 shadow-xl`}>
+                 {heroToolInfo.logo && (
+                    <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
+                      <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                        <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                    </div>
+                  )}
+                 {post.images[0]?.aiTool}
+               </span>
+               <h1 className="text-4xl md:text-7xl font-black text-white mb-6 max-w-5xl leading-tight">
+                 {post.title}
+               </h1>
+               <div className="mb-10 scale-110">{renderMetaInfo()}</div>
+            </div>
+          </div>
+        );
+      case 'v8': // Floating Card
+        return (
+          <div className="relative mb-20 md:mb-32">
+             <div className="relative w-full h-64 md:h-96 rounded-[32px] overflow-hidden">
+                <Image 
+                  src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+                  alt={post.title} 
+                  fill 
+                  className="object-cover blur-2xl opacity-50 scale-110" 
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white dark:to-surface-950" />
+             </div>
+             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-0 md:-translate-y-1/2 w-[95%] max-w-5xl bg-white dark:bg-surface-900 rounded-[32px] shadow-2xl border border-surface-100 dark:border-surface-800 p-8 md:p-12 flex flex-col md:flex-row gap-10 items-center">
+                <div className="w-full md:w-1/2 aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shrink-0">
+                  <Image 
+                    src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+                    alt={post.title} 
+                    fill 
+                    className="object-cover" 
+                    referrerPolicy="no-referrer"
+                    priority
+                  />
+                </div>
+                <div className="w-full md:w-1/2">
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded text-[10px] font-black text-white ${heroToolInfo.color} mb-4 uppercase tracking-widest shadow-md`}>
+                    {heroToolInfo.logo && (
+                      <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                          <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                        </div>
+                      </div>
+                    )}
+                    {post.images[0]?.aiTool}
+                  </span>
+                  <h1 className="text-3xl md:text-5xl font-black text-surface-900 dark:text-white mb-4 tracking-tight leading-tight">
+                    {post.title}
+                  </h1>
+                  <p className="text-surface-500 dark:text-surface-400 mb-8 line-clamp-3 italic font-medium">
+                    &quot;{post.description}&quot;
+                  </p>
+                  <div className="scale-90 origin-left">{renderMetaInfo()}</div>
+                </div>
+             </div>
           </div>
         );
       case 'v1':
@@ -206,7 +385,7 @@ export default function PostContent() {
               <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-surface-100 dark:bg-surface-800/30 p-2 sm:p-4">
                 <div className="w-full h-full max-h-[75vh] min-h-[40vh] sm:min-h-[50vh] rounded-[24px] shadow-md relative overflow-hidden">
                   <Image
-                    src={post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+                    src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
                     alt={post.title}
                     fill
                     className="object-contain"
@@ -217,8 +396,10 @@ export default function PostContent() {
                 <div className="absolute top-6 left-6 z-20">
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white shadow-md backdrop-blur-md saturate-150 ${heroToolInfo.color}/90 border border-white/20 uppercase tracking-widest`}>
                     {heroToolInfo.logo && (
-                      <div className="relative w-4 h-4 shrink-0 bg-black/10 rounded overflow-hidden p-[1px]">
-                        <Image src={heroToolInfo.logo} alt="" fill className="object-contain"  referrerPolicy="no-referrer" />
+                      <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
+                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                          <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                        </div>
                       </div>
                     )}
                     {post.images[0]?.aiTool}
@@ -287,11 +468,14 @@ export default function PostContent() {
                     <div className="absolute top-4 left-4 z-20">
                       <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[9px] font-bold text-white shadow-xl backdrop-blur-md ${getToolInfo(img.aiTool, settings?.toolDetails).color}/80 border border-white/10 uppercase tracking-wider`}>
                         {getToolInfo(img.aiTool, settings?.toolDetails).logo && (
-                          <div 
-                            className="relative w-3.5 h-3.5 shrink-0 bg-white/20 rounded-full p-0.5 overflow-hidden"
-                            style={getToolInfo(img.aiTool, settings?.toolDetails).logoScale ? { transform: `scale(${getToolInfo(img.aiTool, settings?.toolDetails).logoScale})` } : undefined}
-                          >
-                            <Image src={getToolInfo(img.aiTool, settings?.toolDetails).logo} alt="" fill className="object-contain"  referrerPolicy="no-referrer" />
+                          <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                            <div 
+                              className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm flex items-center justify-center p-[1px]"
+                            >
+                              <div className="relative w-full h-full" style={getToolInfo(img.aiTool, settings?.toolDetails).logoScale ? { transform: `scale(${getToolInfo(img.aiTool, settings?.toolDetails).logoScale})` } : undefined}>
+                                <Image src={getToolInfo(img.aiTool, settings?.toolDetails).logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                              </div>
+                            </div>
                           </div>
                         )}
                         {img.aiTool}
@@ -539,11 +723,12 @@ export default function PostContent() {
               <div className="absolute top-4 left-4 z-20 pointer-events-none">
                 <div className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold text-white shadow-xl backdrop-blur-md ${getToolInfo(lightboxImage.tool, settings?.toolDetails).color}/80 border border-white/10 uppercase tracking-wider`}>
                   {getToolInfo(lightboxImage.tool, settings?.toolDetails).logo && (
-                    <div 
-                      className="relative w-4 h-4 shrink-0 bg-white/20 rounded-full p-0.5 overflow-hidden"
-                      style={getToolInfo(lightboxImage.tool, settings?.toolDetails).logoScale ? { transform: `scale(${getToolInfo(lightboxImage.tool, settings?.toolDetails).logoScale})` } : undefined}
-                    >
-                      <Image src={getToolInfo(lightboxImage.tool, settings?.toolDetails).logo} alt="" fill className="object-contain"  referrerPolicy="no-referrer" />
+                    <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
+                      <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm flex items-center justify-center p-[1px]">
+                        <div className="relative w-full h-full" style={getToolInfo(lightboxImage.tool, settings?.toolDetails).logoScale ? { transform: `scale(${getToolInfo(lightboxImage.tool, settings?.toolDetails).logoScale})` } : undefined}>
+                          <Image src={getToolInfo(lightboxImage.tool, settings?.toolDetails).logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                        </div>
+                      </div>
                     </div>
                   )}
                   {lightboxImage.tool}

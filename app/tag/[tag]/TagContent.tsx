@@ -81,14 +81,6 @@ export default function TagContent() {
             >
               Popular
             </button>
-            {settings.features?.trendingAlgorithm && (
-              <button
-                onClick={() => setSortBy('trending')}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === 'trending' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700'}`}
-              >
-                Trending
-              </button>
-            )}
           </div>
         </div>
 

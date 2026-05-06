@@ -112,6 +112,7 @@ export default function Admin() {
   const [heroStyle, setHeroStyle] = useState(settings.heroStyle || 'v1');
   const [postHeroStyle, setPostHeroStyle] = useState(settings.postHeroStyle || 'v1');
   const [cardStyle, setCardStyle] = useState(settings.cardStyle || 'v1');
+  const [badgeStyle, setBadgeStyle] = useState(settings.badgeStyle || 'v1');
   const [imgbbApiKey, setImgbbApiKey] = useState(settings.imgbbApiKey || '');
   const [adsConfig, setAdsConfig] = useState<AdSettings>(
     settings.ads || {
@@ -157,6 +158,7 @@ export default function Admin() {
     if (settings.heroStyle !== undefined) setHeroStyle(settings.heroStyle);
     if (settings.postHeroStyle !== undefined) setPostHeroStyle(settings.postHeroStyle);
     if (settings.cardStyle !== undefined) setCardStyle(settings.cardStyle);
+    if (settings.badgeStyle !== undefined) setBadgeStyle(settings.badgeStyle);
     if (settings.imgbbApiKey !== undefined) setImgbbApiKey(settings.imgbbApiKey);
     if (settings.ads) setAdsConfig(settings.ads);
     if (settings.features) setFeatures(settings.features);
@@ -391,6 +393,7 @@ export default function Admin() {
       heroStyle,
       postHeroStyle,
       cardStyle,
+      badgeStyle,
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
       ads: adsConfig,
       imgbbApiKey,
@@ -1467,6 +1470,9 @@ export default function Admin() {
                   <option value="v3">Version 3 (Diagonal Cards)</option>
                   <option value="v4">Version 4 (Masonry Feature)</option>
                   <option value="v5">Version 5 (Minimal & Large)</option>
+                  <option value="v6">Version 6 (parallax Stack)</option>
+                  <option value="v7">Version 7 (Carousel Hub)</option>
+                  <option value="v8">Version 8 (Cinematic Edge)</option>
                 </select>
               </div>
               <div className="mt-3">
@@ -1480,6 +1486,10 @@ export default function Admin() {
                   <option value="v2">Version 2 (Immersive Blur Background)</option>
                   <option value="v3">Version 3 (Diagonal Split)</option>
                   <option value="v4">Version 4 (Minimalist Text)</option>
+                  <option value="v5">Version 5 (Asymmetric Offset)</option>
+                  <option value="v6">Version 6 (Cyberpunk Bordered)</option>
+                  <option value="v7">Version 7 (Full Screen Hero)</option>
+                  <option value="v8">Version 8 (Floating Card)</option>
                 </select>
               </div>
               <div className="mt-3">
@@ -1492,6 +1502,30 @@ export default function Admin() {
                   <option value="v1">Version 1 (Standard with Hover Badge)</option>
                   <option value="v2">Version 2 (Floating Image with Border)</option>
                   <option value="v3">Version 3 (Compact List Style)</option>
+                  <option value="v4">Version 4 (Social Card Layout)</option>
+                  <option value="v5">Version 5 (Brutalist Outline)</option>
+                  <option value="v6">Version 6 (Gradient Overlay)</option>
+                  <option value="v7">Version 7 (Minimalist Polaroid)</option>
+                  <option value="v8">Version 8 (Glassmorphism Flat)</option>
+                </select>
+              </div>
+              <div className="mt-3">
+                <label className="block text-sm font-medium mb-1.5">Badge Style</label>
+                <select
+                  value={badgeStyle}
+                  onChange={e => setBadgeStyle(e.target.value as any)}
+                  className="w-full sm:w-1/2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                >
+                  <option value="v1">v1: Subtle & Clean</option>
+                  <option value="v2">v2: Glass Blur</option>
+                  <option value="v3">v3: Neon Border</option>
+                  <option value="v4">v4: 3D Embossed</option>
+                  <option value="v5">v5: Minimalist Tag</option>
+                  <option value="v6">v6: Gradient Flow</option>
+                  <option value="v7">v7: Bouncing Soft</option>
+                  <option value="v8">v8: Badge with Icon Only</option>
+                  <option value="v9">v9: Outline Pill</option>
+                  <option value="v10">v10: Cyberpunk Cut</option>
                 </select>
               </div>
               <button
