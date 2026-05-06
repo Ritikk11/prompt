@@ -154,14 +154,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const addPost = useCallback(async (post: Post) => {
     const { likedByUser, ...saveable } = post;
     const cleanPost = JSON.parse(JSON.stringify(saveable));
-    await setDoc(doc(db, 'posts', post.id), cleanPost);
+    try {
+      await setDoc(doc(db, 'posts', post.id), cleanPost);
+    } catch (error: any) {
+      console.error('Firebase save error:', error);
+      alert(`Failed to save post: ${error.message || 'Unknown error'}`);
+    }
   }, []);
 
   const updatePost = useCallback(async (post: Post) => {
     // Remove transient property before save
     const { likedByUser, ...saveable } = post;
     const cleanPost = JSON.parse(JSON.stringify(saveable));
-    await setDoc(doc(db, 'posts', post.id), cleanPost);
+    try {
+      await setDoc(doc(db, 'posts', post.id), cleanPost);
+    } catch (error: any) {
+      console.error('Firebase save error:', error);
+      alert(`Failed to save post: ${error.message || 'Unknown error'}`);
+    }
   }, []);
 
   const deletePost = useCallback(async (id: string) => {

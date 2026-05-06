@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
 import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures } from '@/lib/types';
-import { auth } from '@/lib/firebase';
+import { auth, storage } from '@/lib/firebase';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import {
   Plus, Trash2, Edit3, Eye, EyeOff, ChevronUp, ChevronDown,
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload,
@@ -38,6 +39,52 @@ function slugify(text: string) {
     .replace(/\s+/g, '-')     // Replace spaces with -
     .replace(/[^\w-]+/g, '')    // Remove all non-word chars
     .replace(/--+/g, '-');      // Replace multiple - with single -
+}
+
+function compressImage(file: File, maxSizeKB: number = 300): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.src = e.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1200;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round(height * (maxDim / width));
+            width = maxDim;
+          } else {
+            width = Math.round(width * (maxDim / height));
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            // Fill with white background in case of transparent png -> jpeg
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+        }
+        
+        let quality = 0.8;
+        let dataUrl = canvas.toDataURL('image/jpeg', quality);
+        
+        while (dataUrl.length > maxSizeKB * 1024 * 1.33 && quality > 0.2) {
+          quality -= 0.15;
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+        resolve(dataUrl);
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
 }
 
 export default function Admin() {
@@ -114,6 +161,9 @@ export default function Admin() {
   const [cardStyle, setCardStyle] = useState(settings.cardStyle || 'v1');
   const [badgeStyle, setBadgeStyle] = useState(settings.badgeStyle || 'v1');
   const [imgbbApiKey, setImgbbApiKey] = useState(settings.imgbbApiKey || '');
+  const [imageProvider, setImageProvider] = useState<'imgbb' | 'cloudinary' | 'firebase'>(settings.imageProvider || 'imgbb');
+  const [cloudinaryCloudName, setCloudinaryCloudName] = useState(settings.cloudinaryCloudName || '');
+  const [cloudinaryUploadPreset, setCloudinaryUploadPreset] = useState(settings.cloudinaryUploadPreset || '');
   const [adsConfig, setAdsConfig] = useState<AdSettings>(
     settings.ads || {
       header: { enabled: false, code: '' },
@@ -160,6 +210,9 @@ export default function Admin() {
     if (settings.cardStyle !== undefined) setCardStyle(settings.cardStyle);
     if (settings.badgeStyle !== undefined) setBadgeStyle(settings.badgeStyle);
     if (settings.imgbbApiKey !== undefined) setImgbbApiKey(settings.imgbbApiKey);
+    if (settings.imageProvider !== undefined) setImageProvider(settings.imageProvider);
+    if (settings.cloudinaryCloudName !== undefined) setCloudinaryCloudName(settings.cloudinaryCloudName);
+    if (settings.cloudinaryUploadPreset !== undefined) setCloudinaryUploadPreset(settings.cloudinaryUploadPreset);
     if (settings.ads) setAdsConfig(settings.ads);
     if (settings.features) setFeatures(settings.features);
   }, [settings]);
@@ -208,45 +261,41 @@ export default function Admin() {
     setImages(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const handleImageUpload = async (idx: number, file: File) => {
-    // Check if file is > 800KB (to prevent hitting Firebase 1MB document limit)
-    if (file.size > 819200) {
-      if (imgbbApiKey) {
-        const formData = new FormData();
-        formData.append('image', file);
-        try {
-          // Set to a loading indicator temporarily (optional)
-          updateImage(idx, 'url', 'Uploading to ImgBB...'); 
-          const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
-            method: 'POST',
-            body: formData
-          });
-          const data = await res.json();
-          if (data.success) {
-            updateImage(idx, 'url', data.data.url);
-            return;
-          } else {
-            alert('ImgBB upload failed: ' + (data.error?.message || 'Unknown error'));
-            updateImage(idx, 'url', '');
-            return;
-          }
-        } catch (err) {
-           console.error(err);
-           alert('ImgBB upload failed.');
-           updateImage(idx, 'url', '');
-           return;
-        }
-      } else {
-         alert('Image is too large to store directly in database (>800KB). Please either compress the image, or configure an ImgBB API Key in settings to store large images.');
-         return;
-      }
+  const uploadImageFile = async (file: File, fallbackCompression: number = 400): Promise<string> => {
+    if (imageProvider === 'cloudinary' && cloudinaryCloudName && cloudinaryUploadPreset) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', cloudinaryUploadPreset);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`, { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.secure_url) return data.secure_url;
+      throw new Error(data.error?.message || 'Cloudinary upload failed');
+    } else if (imageProvider === 'firebase') {
+      const imageRef = ref(storage, `images/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`);
+      await uploadBytes(imageRef, file);
+      return await getDownloadURL(imageRef);
+    } else if ((imageProvider === 'imgbb' || !imageProvider) && imgbbApiKey) {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) return data.data.url;
+      throw new Error(data.error?.message || 'ImgBB upload failed');
     }
+    
+    return await compressImage(file, fallbackCompression);
+  };
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      updateImage(idx, 'url', e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+  const handleImageUpload = async (idx: number, file: File) => {
+    try {
+      updateImage(idx, 'url', 'Uploading...');
+      const url = await uploadImageFile(file, 400);
+      updateImage(idx, 'url', url);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to process image');
+      updateImage(idx, 'url', '');
+    }
   };
 
   const toggleSectionAssignment = (sectionId: string) => {
@@ -397,6 +446,9 @@ export default function Admin() {
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
       ads: adsConfig,
       imgbbApiKey,
+      imageProvider,
+      cloudinaryCloudName,
+      cloudinaryUploadPreset,
       features,
     });
     alert('Settings saved!');
@@ -471,33 +523,15 @@ export default function Admin() {
   };
 
   const handleToolLogoUpload = async (file: File) => {
-    if (file.size > 819200) {
-      if (imgbbApiKey) {
-        const formData = new FormData();
-        formData.append('image', file);
-        setEditAiToolLogo('Uploading...');
-        try {
-          const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: 'POST', body: formData });
-          const data = await res.json();
-          if (data.success) {
-            setEditAiToolLogo(data.data.url);
-          } else {
-            alert('ImgBB upload failed: ' + (data.error?.message || 'Unknown error'));
-            setEditAiToolLogo('');
-          }
-        } catch (err) {
-          console.error(err);
-          alert('ImgBB upload failed.');
-          setEditAiToolLogo('');
-        }
-      } else {
-        alert('Image is too large directly (>800KB). Add ImgBB key or use compression.');
-      }
-      return;
+    try {
+      setEditAiToolLogo('Uploading...');
+      const url = await uploadImageFile(file, 50);
+      setEditAiToolLogo(url);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to process image');
+      setEditAiToolLogo('');
     }
-    const reader = new FileReader();
-    reader.onload = (e) => setEditAiToolLogo(e.target?.result as string);
-    reader.readAsDataURL(file);
   };
 
   // Custom Sections Management
@@ -764,27 +798,15 @@ export default function Admin() {
                         onChange={async e => {
                           const file = e.target.files?.[0];
                           if (file) {
-                             if (file.size > 819200) {
-                               if (imgbbApiKey) {
-                                 const formData = new FormData();
-                                 formData.append('image', file);
-                                 setThumbnailUrl('Uploading to ImgBB...');
-                                 const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: 'POST', body: formData });
-                                 const data = await res.json();
-                                 if (data.success) {
-                                   setThumbnailUrl(data.data.url);
-                                 } else {
-                                   alert('ImgBB upload failed: ' + (data.error?.message || 'Unknown error'));
-                                   setThumbnailUrl('');
-                                 }
-                               } else {
-                                 alert('Image is too large to store directly (>800KB).');
-                               }
-                               return;
+                             try {
+                               setThumbnailUrl('Uploading...');
+                               const url = await uploadImageFile(file, 250);
+                               setThumbnailUrl(url);
+                             } catch (err) {
+                               console.error(err);
+                               alert('Failed to process thumbnail');
+                               setThumbnailUrl('');
                              }
-                             const reader = new FileReader();
-                             reader.onload = (ev) => setThumbnailUrl(ev.target?.result as string);
-                             reader.readAsDataURL(file);
                           }
                         }}
                       />
@@ -1429,15 +1451,76 @@ export default function Admin() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-surface-400 mb-1">ImgBB API Key (For large images)</label>
-                <input
-                  value={imgbbApiKey}
-                  onChange={e => setImgbbApiKey(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                  placeholder="Paste ImgBB API key..."
-                />
-                <p className="mt-1 text-xs text-surface-500">Firebase has a 1MB limit. Set this to automatically offload images larger than 800KB.</p>
+                <label className="block text-xs font-medium text-surface-400 mb-2">Image Hosting Provider</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                  {[
+                    { id: 'imgbb', label: 'ImgBB', desc: 'Free, simple' },
+                    { id: 'cloudinary', label: 'Cloudinary', desc: 'Fast, secure' },
+                    { id: 'firebase', label: 'Firebase Storage', desc: 'Native' },
+                  ].map(provider => (
+                    <button
+                      key={provider.id}
+                      onClick={() => setImageProvider(provider.id as any)}
+                      className={`flex flex-col items-start p-3 rounded-xl border text-left transition-colors ${
+                        imageProvider === provider.id
+                          ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500'
+                          : 'bg-surface-50 dark:bg-surface-800 border-surface-200 dark:border-surface-700 hover:border-primary-300'
+                      }`}
+                    >
+                      <span className="font-medium text-sm text-surface-900 dark:text-white">{provider.label}</span>
+                      <span className="text-[10px] text-surface-500">{provider.desc}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
+              
+              {imageProvider === 'imgbb' && (
+                <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-800/50 border border-surface-200 dark:border-surface-700">
+                  <label className="block text-xs font-medium text-surface-400 mb-1">ImgBB API Key</label>
+                  <input
+                    value={imgbbApiKey}
+                    onChange={e => setImgbbApiKey(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    placeholder="Paste ImgBB API key..."
+                  />
+                  <p className="mt-2 text-[10px] text-surface-500">Firebase has a 1MB limit per document. Set this to offload images larger than 800KB.</p>
+                </div>
+              )}
+
+              {imageProvider === 'cloudinary' && (
+                <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-800/50 border border-surface-200 dark:border-surface-700 space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-surface-400 mb-1">Cloudinary Cloud Name</label>
+                    <input
+                      value={cloudinaryCloudName}
+                      onChange={e => setCloudinaryCloudName(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      placeholder="e.g. dxyz123ab"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-surface-400 mb-1">Upload Preset (Unsigned)</label>
+                    <input
+                      value={cloudinaryUploadPreset}
+                      onChange={e => setCloudinaryUploadPreset(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      placeholder="e.g. my_unsigned_preset"
+                    />
+                    <p className="mt-2 text-[10px] text-surface-500">You must create an <strong>unsigned</strong> upload preset in your Cloudinary settings to allow direct uploads from the browser.</p>
+                  </div>
+                </div>
+              )}
+
+              {imageProvider === 'firebase' && (
+                <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-800/50 border border-surface-200 dark:border-surface-700">
+                  <p className="text-xs text-surface-600 dark:text-surface-400 mb-2">
+                    Images will be uploaded to your Firebase Storage bucket.
+                  </p>
+                  <p className="text-[10px] text-surface-500 font-mono bg-surface-100 dark:bg-surface-900 p-2 rounded">
+                    Make sure your Firebase Storage security rules allow uploads.
+                  </p>
+                </div>
+              )}
               <div className="flex flex-wrap gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input

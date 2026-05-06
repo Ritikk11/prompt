@@ -88,6 +88,9 @@ export interface SiteSettings {
   headerSections?: Section[];
   ads?: AdSettings;
   imgbbApiKey?: string;
+  imageProvider?: 'imgbb' | 'cloudinary' | 'firebase';
+  cloudinaryCloudName?: string;
+  cloudinaryUploadPreset?: string;
   features?: SiteFeatures;
 }
 
