@@ -46,7 +46,7 @@ const defaultSettings: SiteSettings = {
     premiumPrompts: false,
     premiumPrice: 5,
     premiumPaymentUrl: '',
-    skeletonLoaders: true,
+    skeletonLoaders: false,
     trendingAlgorithm: false,
     trendingLikesWeight: 2,
     trendingViewsWeight: 1,

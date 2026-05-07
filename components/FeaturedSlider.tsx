@@ -3,25 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-function HeroImage({ src, alt, fill, className, priority, sizes, blur, opacityClass }: { src: string; alt: string; fill?: boolean; className?: string; priority?: boolean; sizes?: string; blur?: boolean; opacityClass?: string }) {
-  const [loaded, setLoaded] = useState(false);
-  return (
-    <div className={`relative w-full h-full`}>
-      {!loaded && <div className="absolute inset-0 bg-surface-200 dark:bg-surface-800 animate-pulse z-0" />}
-      <Image
-        src={src}
-        alt={alt}
-        fill={fill}
-        priority={priority}
-        sizes={sizes}
-        className={`${className} ${blur ? 'blur-xl scale-125' : ''} ${opacityClass || ''} transition-opacity duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-        onLoad={() => setLoaded(true)}
-        referrerPolicy="no-referrer"
-      />
-    </div>
-  );
-}
-
 import { ChevronLeft, ChevronRight, Play, Pause, Eye, Heart, ArrowRight } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import type { Post } from '@/lib/types';
@@ -128,24 +109,21 @@ export default function FeaturedSlider() {
           className="relative w-full min-h-[500px] md:min-h-[400px] md:max-h-[520px]"
           onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}
         >
-          {featured.map((p, i) => {
-            const isVisible = i === current;
-            if (!isVisible && Math.abs(i - current) > 1 && !(i === 0 && current === featured.length - 1) && !(i === featured.length - 1 && current === 0)) return null;
-            
-            return (
-              <div
-                key={p.id}
-                className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${isVisible ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-              >
-                <HeroImage
-                  src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill
-                  blur opacityClass="opacity-40 dark:opacity-30" sizes="100vw" />
-                <HeroImage
-                  src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={isVisible}
-                  className="object-contain object-center" sizes="100vw" />
-              </div>
-            );
-          })}
+          {featured.map((p, i) => (
+            <div
+              key={p.id}
+              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+            >
+              <Image
+                src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill
+                className="object-cover blur-xl scale-125 opacity-40 dark:opacity-30" sizes="100vw"
+               referrerPolicy="no-referrer" />
+              <Image
+                src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={i === 0}
+                className="object-contain object-center" sizes="100vw"
+               referrerPolicy="no-referrer" />
+            </div>
+          ))}
           <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
           <div className="absolute inset-0 z-20 flex flex-col justify-end p-6 md:p-10">
             <div className="max-w-2xl relative z-30">
@@ -208,24 +186,21 @@ export default function FeaturedSlider() {
           </div>
           {/* Image Side */}
           <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-64">
-              {featured.map((p, i) => {
-                 const isVisible = i === current;
-                 if (!isVisible && Math.abs(i - current) > 1 && !(i === 0 && current === featured.length - 1) && !(i === featured.length - 1 && current === 0)) return null;
-
-                 return (
-                    <div
-                      key={p.id}
-                      className={`absolute inset-0 transition-all duration-700 ease-out ${isVisible ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-105 z-0'}`}
-                    >
-                   <HeroImage
-                     src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill
-                     blur opacityClass="opacity-30 dark:opacity-20" sizes="50vw" />
-                   <HeroImage
-                     src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={isVisible}
-                     className="object-contain" sizes="50vw" />
-                    </div>
-                  );
-                })}
+             {featured.map((p, i) => (
+                <div
+                  key={p.id}
+                  className={`absolute inset-0 transition-all duration-700 ease-out ${i === current ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-105 z-0'}`}
+                >
+                  <Image
+                    src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill
+                    className="object-cover blur-3xl scale-125 opacity-30 dark:opacity-20" sizes="50vw"
+                   referrerPolicy="no-referrer" />
+                  <Image
+                    src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={i === 0}
+                    className="object-contain" sizes="50vw"
+                   referrerPolicy="no-referrer" />
+                </div>
+              ))}
           </div>
         </div>
         {renderProgress}
@@ -237,10 +212,11 @@ export default function FeaturedSlider() {
   if (heroStyle === 'v3') {
     return (
       <div className="relative w-full rounded-3xl overflow-hidden py-6 px-4 md:py-12 md:px-10 shadow-inner flex items-center justify-center min-h-[500px]" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-          <div className="absolute inset-0 z-0">
-            <HeroImage src={post.thumbnailUrl || post.images[0]?.url || ''} alt="" fill sizes="20vw" blur opacityClass="opacity-30 dark:opacity-20" />
-            <div className="absolute inset-0 bg-surface-50/80 dark:bg-surface-950/80 backdrop-blur-md" />
-          </div>
+        {/* Blurred Background */}
+        <div className="absolute inset-0 z-0">
+          <Image src={post.thumbnailUrl || post.images[0]?.url || ''} alt="" fill sizes="20vw" className="object-cover opacity-30 dark:opacity-20 blur-3xl scale-125"  referrerPolicy="no-referrer" />
+          <div className="absolute inset-0 bg-surface-50/80 dark:bg-surface-950/80 backdrop-blur-md" />
+        </div>
         
         <div className="relative z-10 w-full max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-6 md:gap-16">
           {/* Text Content */}
@@ -304,9 +280,10 @@ export default function FeaturedSlider() {
     return (
       <div className="relative w-full rounded-2xl overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+          {/* Main Large Item */}
           <Link href={`/post/${topFeatured[0].slug || topFeatured[0].id}`} className="relative h-[400px] lg:h-[500px] lg:col-span-2 rounded-2xl overflow-hidden group">
-            <HeroImage src={topFeatured[0].thumbnailUrl || topFeatured[0].images[0]?.url || ''} alt={`bg-${topFeatured[0].title}`} fill sizes="20vw" blur opacityClass="opacity-40 dark:opacity-30" />
-            <HeroImage src={topFeatured[0].thumbnailUrl || topFeatured[0].images[0]?.url || ''} alt="" fill priority sizes="(max-width: 1024px) 100vw, 66vw" className="object-contain transition-transform duration-700 group-hover:scale-105" />
+            <Image src={topFeatured[0].thumbnailUrl || topFeatured[0].images[0]?.url || ''} alt={`bg-${topFeatured[0].title}`} fill sizes="20vw" className="object-cover blur-2xl scale-125 opacity-40 dark:opacity-30"  referrerPolicy="no-referrer" />
+            <Image src={topFeatured[0].thumbnailUrl || topFeatured[0].images[0]?.url || ''} alt="" fill priority sizes="(max-width: 1024px) 100vw, 66vw" className="object-contain transition-transform duration-700 group-hover:scale-105"  referrerPolicy="no-referrer" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
             <div className="absolute inset-0 p-8 flex flex-col justify-end">
               <span className="px-3 py-1 w-max rounded-full text-xs font-bold bg-primary-500 text-white mb-3 shadow-lg">⭐ Main Feature</span>
@@ -318,8 +295,8 @@ export default function FeaturedSlider() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
             {topFeatured.slice(1).map((fPost) => (
               <Link key={fPost.id} href={`/post/${fPost.slug || fPost.id}`} className="relative h-[200px] sm:h-[250px] lg:h-[calc(250px-4px)] rounded-2xl overflow-hidden group">
-                <HeroImage src={fPost.thumbnailUrl || fPost.images[0]?.url || ''} alt={`bg-${fPost.title}`} fill sizes="20vw" blur opacityClass="opacity-40 dark:opacity-30" />
-                <HeroImage src={fPost.thumbnailUrl || fPost.images[0]?.url || ''} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-contain transition-transform duration-700 group-hover:scale-105" />
+                <Image src={fPost.thumbnailUrl || fPost.images[0]?.url || ''} alt={`bg-${fPost.title}`} fill sizes="20vw" className="object-cover blur-xl scale-125 opacity-40 dark:opacity-30"  referrerPolicy="no-referrer" />
+                <Image src={fPost.thumbnailUrl || fPost.images[0]?.url || ''} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-contain transition-transform duration-700 group-hover:scale-105"  referrerPolicy="no-referrer" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute inset-0 p-5 flex flex-col justify-end">
                   <h3 className="text-xl font-bold text-white mb-1 leading-tight">{fPost.title}</h3>
@@ -338,21 +315,18 @@ export default function FeaturedSlider() {
     return (
       <div className="relative w-full rounded-[2.5rem] overflow-hidden bg-surface-950 group" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
         <div className="relative w-full h-[600px]">
-          {featured.map((p, i) => {
-            const isVisible = i === current;
-            if (!isVisible && Math.abs(i - current) > 1 && !(i === 0 && current === featured.length - 1) && !(i === featured.length - 1 && current === 0)) return null;
-
-            return (
-              <div key={p.id} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${isVisible ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
-                <HeroImage
-                  src={p.thumbnailUrl || p.images[0]?.url || ''} alt={`bg-${p.title}`} fill
-                  blur opacityClass="opacity-30" sizes="100vw" />
-                <HeroImage
-                  src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill priority={isVisible}
-                  opacityClass="opacity-80" className="object-contain object-center" sizes="100vw" />
-              </div>
-            );
-          })}
+          {featured.map((p, i) => (
+            <div key={p.id} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+              <Image
+                src={p.thumbnailUrl || p.images[0]?.url || ''} alt={`bg-${p.title}`} fill
+                className="object-cover object-center blur-2xl scale-125 opacity-30" sizes="100vw"
+               referrerPolicy="no-referrer" />
+              <Image
+                src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill priority={i === 0}
+                className="object-contain object-center opacity-80" sizes="100vw"
+               referrerPolicy="no-referrer" />
+            </div>
+          ))}
           <div className="absolute inset-0 z-20 bg-gradient-to-b from-surface-950/20 via-transparent to-surface-950/80 pointer-events-none" />
           
           <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center">
@@ -439,7 +413,7 @@ export default function FeaturedSlider() {
                    }}
                  >
                    <div className="w-full h-full rounded-[40px] overflow-hidden shadow-2xl border-4 border-white dark:border-surface-700">
-                      <HeroImage src={p.thumbnailUrl || p.images[0]?.url || ''} alt="" fill className="object-cover" />
+                      <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
                    </div>
                  </div>
                );
@@ -474,7 +448,7 @@ export default function FeaturedSlider() {
                   onClick={() => i !== current && goTo(i)}
                 >
                   <div className={`relative h-full w-full rounded-[2.5rem] overflow-hidden ${i === current ? 'shadow-2xl' : 'shadow-lg saturate-0 hover:saturate-100'}`}>
-                    <HeroImage src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill className="object-cover" />
+                    <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill className="object-cover" referrerPolicy="no-referrer" />
                     {i === current && (
                       <>
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent p-6 md:p-12 flex flex-col justify-end">
@@ -508,42 +482,37 @@ export default function FeaturedSlider() {
   if (heroStyle === 'v8') {
     return (
       <div className="relative w-full h-[600px] md:h-[750px] mb-12 flex items-center justify-center p-4">
-        {featured.map((p, i) => {
-          const isVisible = i === current;
-          if (!isVisible && Math.abs(i - current) > 1 && !(i === 0 && current === featured.length - 1) && !(i === featured.length - 1 && current === 0)) return null;
-
-          return (
-            <div key={p.id} className={`absolute inset-0 transition-all duration-1000 ease-in-out ${isVisible ? 'opacity-100 z-10' : 'opacity-0 scale-105 blur-sm z-0'}`}>
-              <HeroImage src={p.thumbnailUrl || p.images[0]?.url || ''} alt="" fill blur opacityClass="opacity-20" />
-              <div className="relative h-full w-full max-w-6xl mx-auto rounded-[3rem] overflow-hidden shadow-2xl border border-white/10 mt-4 h-full md:h-[90%]">
-                 <HeroImage src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill className="object-cover" priority={isVisible} />
-                 <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent p-8 md:p-20 flex flex-col justify-end md:justify-center">
-                    <div className="max-w-2xl animate-in slide-in-from-bottom-8 duration-700">
-                      <div className="flex items-center gap-3 mb-6">
-                         <span className="w-12 h-[2px] bg-primary-500" />
-                         <span className="text-white text-xs font-black tracking-[0.4em] uppercase">{p.images[0].aiTool} MASTERPIECE</span>
-                      </div>
-                      <h2 className="text-4xl md:text-7xl font-black text-white mb-6 uppercase tracking-tight leading-none drop-shadow-2xl">
-                        {p.title}
-                      </h2>
-                      <p className="text-white/60 text-lg md:text-xl font-medium mb-12 line-clamp-3 md:line-clamp-none">
-                        {p.description}
-                      </p>
-                      <div className="flex flex-row items-center gap-6">
-                          <Link href={`/post/${p.slug || p.id}`} className="px-10 py-4 rounded-full bg-primary-500 text-white font-black text-sm uppercase tracking-widest hover:bg-primary-400 transition-all shadow-xl shadow-primary-500/30">
-                            PROMPT DETAILS
-                          </Link>
-                          <div className="flex gap-4">
-                             <button onClick={() => goTo(current - 1)} className="w-12 h-12 rounded-full border border-white/20 text-white flex items-center justify-center hover:bg-white hover:text-black transition-all"><ChevronLeft className="w-6 h-6"/></button>
-                             <button onClick={() => goTo(current + 1)} className="w-12 h-12 rounded-full border border-white/20 text-white flex items-center justify-center hover:bg-white hover:text-black transition-all"><ChevronRight className="w-6 h-6"/></button>
-                          </div>
-                      </div>
+        {featured.map((p, i) => (
+          <div key={p.id} className={`absolute inset-0 transition-all duration-1000 ease-in-out ${i === current ? 'opacity-100 z-10' : 'opacity-0 scale-105 blur-sm z-0'}`}>
+            <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt="" fill className="object-cover scale-105 blur-2xl opacity-20" referrerPolicy="no-referrer" />
+            <div className="relative h-full w-full max-w-6xl mx-auto rounded-[3rem] overflow-hidden shadow-2xl border border-white/10 mt-4 h-full md:h-[90%]">
+               <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill className="object-cover" referrerPolicy="no-referrer" priority={i === 0} />
+               <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent p-8 md:p-20 flex flex-col justify-end md:justify-center">
+                  <div className="max-w-2xl animate-in slide-in-from-bottom-8 duration-700">
+                    <div className="flex items-center gap-3 mb-6">
+                       <span className="w-12 h-[2px] bg-primary-500" />
+                       <span className="text-white text-xs font-black tracking-[0.4em] uppercase">{p.images[0].aiTool} MASTERPIECE</span>
                     </div>
-                 </div>
-              </div>
+                    <h2 className="text-4xl md:text-7xl font-black text-white mb-6 uppercase tracking-tight leading-none drop-shadow-2xl">
+                      {p.title}
+                    </h2>
+                    <p className="text-white/60 text-lg md:text-xl font-medium mb-12 line-clamp-3 md:line-clamp-none">
+                      {p.description}
+                    </p>
+                    <div className="flex flex-row items-center gap-6">
+                        <Link href={`/post/${p.slug || p.id}`} className="px-10 py-4 rounded-full bg-primary-500 text-white font-black text-sm uppercase tracking-widest hover:bg-primary-400 transition-all shadow-xl shadow-primary-500/30">
+                          PROMPT DETAILS
+                        </Link>
+                        <div className="flex gap-4">
+                           <button onClick={() => goTo(current - 1)} className="w-12 h-12 rounded-full border border-white/20 text-white flex items-center justify-center hover:bg-white hover:text-black transition-all"><ChevronLeft className="w-6 h-6"/></button>
+                           <button onClick={() => goTo(current + 1)} className="w-12 h-12 rounded-full border border-white/20 text-white flex items-center justify-center hover:bg-white hover:text-black transition-all"><ChevronRight className="w-6 h-6"/></button>
+                        </div>
+                    </div>
+                  </div>
+               </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
         {/* Play Progress Dot Bar */}
         <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl">
            {featured.map((_, i) => (

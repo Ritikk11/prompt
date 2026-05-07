@@ -42,9 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <DataProvider>
             <Header />
-            <div className="min-h-[100px] md:min-h-[120px] flex items-center justify-center">
-              <AdSlot placement="header" className="max-w-7xl mx-auto w-full px-4" />
-            </div>
+            <AdSlot placement="header" className="max-w-7xl mx-auto w-full px-4" />
             <main className="flex-1 w-full min-h-[80vh]">
               {children}
             </main>

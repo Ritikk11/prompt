@@ -17,7 +17,7 @@ export default function Home() {
     .sort((a, b) => a.order - b.order);
 
   return (
-    <div className="max-w-7xl mx-auto px-1 py-4 sm:py-6 space-y-4">
+    <div className="max-w-7xl mx-auto px-1 py-0 sm:py-2 space-y-4">
       {/* Featured Slider */}
       <section>
         <FeaturedSlider />

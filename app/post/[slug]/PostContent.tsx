@@ -11,24 +11,6 @@ import dynamic from 'next/dynamic';
 import { getToolInfo } from '@/lib/constants';
 import { useState } from 'react';
 import TemplatePrompt from '@/components/TemplatePrompt';
-
-function PostImage({ src, alt, className, width, height }: { src: string; alt: string; className?: string; width?: number; height?: number }) {
-  const [loaded, setLoaded] = useState(false);
-  return (
-    <div className="relative w-full h-full">
-      {!loaded && <div className="absolute inset-0 bg-surface-200 dark:bg-surface-800 animate-pulse rounded-2xl" />}
-      <Image
-        src={src}
-        alt={alt}
-        width={width || 800}
-        height={height || 600}
-        className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
-        onLoad={() => setLoaded(true)}
-        referrerPolicy="no-referrer"
-      />
-    </div>
-  );
-}
 import { auth } from '@/lib/firebase';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
 
@@ -482,12 +464,12 @@ export default function PostContent() {
                 <div className="relative bg-surface-50 dark:bg-surface-800 flex items-center justify-center p-3 sm:p-5">
                   <div className="relative w-full overflow-hidden rounded-2xl shadow-lg group-hover:scale-[1.01] transition-transform duration-500 group/img">
                     <div className="w-full relative rounded-2xl overflow-hidden cursor-zoom-in flex items-center justify-center bg-surface-100 dark:bg-surface-900" onClick={() => setLightboxImage({ url: img.url || '', index, tool: img.aiTool })}>
-                      <PostImage
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
                         src={img.url || 'https://picsum.photos/seed/placeholder/800/600'}
                         alt={`Prompt ${index + 1}`}
                         className="w-full h-auto block rounded-2xl"
-                        width={1200}
-                        height={1200}
+                        referrerPolicy="no-referrer"
                       />
                     </div>
                     <div className="absolute top-4 left-4 z-20">
