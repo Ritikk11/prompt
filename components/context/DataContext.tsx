@@ -27,7 +27,7 @@ interface DataContextType {
 }
 
 const defaultSettings: SiteSettings = {
-  siteTitle: 'AI Prompt Matrix',
+  siteTitle: 'Ai PromptMatrix',
   siteDescription: 'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.',
   siteLogo: '',
   heroEnabled: true,
@@ -46,7 +46,7 @@ const defaultSettings: SiteSettings = {
     premiumPrompts: false,
     premiumPrice: 5,
     premiumPaymentUrl: '',
-    skeletonLoaders: false,
+    skeletonLoaders: true,
     trendingAlgorithm: false,
     trendingLikesWeight: 2,
     trendingViewsWeight: 1,
@@ -102,30 +102,45 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    let settingsLoaded = false;
+    let sectionsLoaded = false;
+    let postsLoaded = false;
+
     const unsubPosts = onSnapshot(collection(db, 'posts'), (snap) => {
       const data = snap.docs.map(doc => doc.data() as Post);
       setPosts(data);
+      postsLoaded = true;
+      if (settingsLoaded && sectionsLoaded) setLoading(false);
     }, (error: any) => {
       if (error?.name === 'AbortError' || error?.message?.includes('aborted') || String(error).includes('aborted')) return;
       console.error('Firebase posts snapshot error:', error);
+      postsLoaded = true; // Still mark as loaded to unblock UI
+      if (settingsLoaded && sectionsLoaded) setLoading(false);
     });
 
     const unsubSections = onSnapshot(collection(db, 'sections'), (snap) => {
       const data = snap.docs.map(doc => doc.data() as Section);
       setSections(data);
+      sectionsLoaded = true;
+      if (settingsLoaded && postsLoaded) setLoading(false);
     }, (error: any) => {
       if (error?.name === 'AbortError' || error?.message?.includes('aborted') || String(error).includes('aborted')) return;
       console.error('Firebase sections snapshot error:', error);
+      sectionsLoaded = true;
+      if (settingsLoaded && postsLoaded) setLoading(false);
     });
 
     const unsubSettings = onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
       if (docSnap.exists()) {
         setSettings(docSnap.data() as SiteSettings);
       }
-      setLoading(false);
+      settingsLoaded = true;
+      if (sectionsLoaded && postsLoaded) setLoading(false);
     }, (error: any) => {
       if (error?.name === 'AbortError' || error?.message?.includes('aborted') || String(error).includes('aborted')) return;
       console.error('Firebase settings snapshot error:', error);
+      settingsLoaded = true;
+      if (sectionsLoaded && postsLoaded) setLoading(false);
     });
 
     return () => {

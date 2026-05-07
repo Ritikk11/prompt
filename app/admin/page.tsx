@@ -46,7 +46,7 @@ function compressImage(file: File, maxSizeKB: number = 300): Promise<string> {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (e) => {
-      const img = new Image();
+      const img = new window.Image();
       img.src = e.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
@@ -813,8 +813,8 @@ export default function Admin() {
                     </label>
                   </div>
                   {thumbnailUrl && !thumbnailUrl.startsWith('Uploading') && (
-                    <div className="mt-2 w-32 h-32 relative rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700">
-                      <img src={thumbnailUrl} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                    <div className="mt-2 w-32 h-32 relative rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700 bg-surface-50">
+                      <Image src={thumbnailUrl} alt="Thumbnail preview" fill className="object-cover" unoptimized referrerPolicy="no-referrer" />
                     </div>
                   )}
                 </div>
