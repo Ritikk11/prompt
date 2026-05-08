@@ -60,16 +60,18 @@ export default async function SeoPublicPage({ params }: Props) {
     // Assuming post has a single 'category', but the prompt says 'categories array' for SEO page. 
     // This could mean we treat post.category as a single item or an array, let's just check if post.category is inside or matches
     const hasAllCategories = categories.every((c: string) => {
-      // if post has a category string, just match that string
       if (post.category && post.category.toLowerCase() === c.toLowerCase()) return true;
-      // if post has multiple categories in future
+      if (post.categories?.some(cat => cat.toLowerCase() === c.toLowerCase())) return true;
       return false;
     });
     if (categories.length > 0 && !hasAllCategories) return false;
 
     // Check aiTools: post.images must contain an image that uses the specific aiTool
     // Or post itself must have an aiTool matching.
-    const postAiTools = Array.from(new Set(post.images?.map(img => img.aiTool?.toLowerCase() || '')));
+    const postAiTools = Array.from(new Set([
+      ...(post.images?.map(img => img.aiTool?.toLowerCase() || '') || []),
+      ...(post.aiTools?.map(tool => tool.toLowerCase() || '') || [])
+    ]));
     const hasAllAiTools = aiTools.every((tool: string) => 
       postAiTools.includes(tool.toLowerCase().trim())
     );

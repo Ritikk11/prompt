@@ -128,6 +128,8 @@ export default function Admin() {
   const [seoDescription, setSeoDescription] = useState('');
   const [tagsStr, setTagsStr] = useState('');
   const [category, setCategory] = useState('');
+  const [categoriesStr, setCategoriesStr] = useState('');
+  const [selectedAiTools, setSelectedAiTools] = useState<string[]>([]);
   const [featured, setFeatured] = useState(false);
   const [images, setImages] = useState<ImagePrompt[]>([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
   const [assignedSections, setAssignedSections] = useState<string[]>([]);
@@ -223,7 +225,7 @@ export default function Admin() {
   const customSections = sections.filter(s => s.type === 'custom');
 
   const resetForm = () => {
-    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory('');
+    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
   };
@@ -239,6 +241,8 @@ export default function Admin() {
     setSeoDescription(post.seoDescription || '');
     setTagsStr(post.tags.join(', '));
     setCategory(post.category || '');
+    setCategoriesStr(post.categories?.join(', ') || '');
+    setSelectedAiTools(post.aiTools || []);
     setFeatured(post.featured);
     setImages(post.images.length > 0 ? post.images : [{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
     // Find which custom sections contain this post
@@ -337,6 +341,8 @@ export default function Admin() {
       images: images.filter(i => i.url || i.prompt || i.aiTool),
       tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
       category: category || undefined,
+      categories: categoriesStr.split(',').map(c => c.trim()).filter(Boolean),
+      aiTools: selectedAiTools,
       featured,
       views: editingPost?.views || 0,
       likes: editingPost?.likes || 0,
@@ -867,23 +873,33 @@ export default function Admin() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Category</label>
+                    <label className="block text-sm font-medium mb-1.5">Categories (comma separated)</label>
                     <input
-                      value={category}
-                      onChange={e => setCategory(e.target.value)}
+                      value={categoriesStr}
+                      onChange={e => setCategoriesStr(e.target.value)}
                       className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                      placeholder="e.g. UI, Text, Images"
+                      placeholder="e.g. UI, Characters"
                     />
                   </div>
-                  <div className="flex items-center gap-3 bg-surface-50 dark:bg-surface-800/50 p-3 rounded-xl border border-surface-200 dark:border-surface-700">
-                    <input
-                      type="checkbox"
-                      checked={featured}
-                      onChange={e => setFeatured(e.target.checked)}
-                      className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                      id="featured-checkbox"
-                    />
-                    <label htmlFor="featured-checkbox" className="text-sm font-medium cursor-pointer">Featured Post (Hero Slider)</label>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">AI Tools</label>
+                  <div className="flex flex-wrap gap-3">
+                    {(settings.aiTools || []).map(tool => (
+                      <label key={tool} className="flex items-center gap-2 cursor-pointer bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 px-3 py-2 rounded-xl text-sm">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedAiTools.includes(tool)}
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedAiTools(prev => [...prev, tool]);
+                            else setSelectedAiTools(prev => prev.filter(t => t !== tool));
+                          }}
+                          className="w-4 h-4 rounded text-primary-500 focus:ring-primary-500"
+                        />
+                        {tool}
+                      </label>
+                    ))}
                   </div>
                 </div>
 

@@ -18,6 +18,8 @@ export interface Post {
   images: ImagePrompt[];
   tags: string[];
   category?: string;
+  categories?: string[];
+  aiTools?: string[];
   featured: boolean;
   views: number;
   likes: number;

@@ -54,7 +54,11 @@ export default async function SectionPage({ params }: Props) {
       case 'tag':
         return allPosts.filter(p => p.tags.some(t => t.toLowerCase() === section.tag?.toLowerCase()));
       case 'category':
-        return allPosts.filter(p => p.category?.toLowerCase() === section.category?.toLowerCase());
+        return allPosts.filter(p => {
+          const matchSingle = p.category?.toLowerCase() === section.category?.toLowerCase();
+          const matchArray = p.categories?.some(c => c.toLowerCase() === section.category?.toLowerCase());
+          return matchSingle || matchArray;
+        });
       case 'custom':
         return allPosts.filter(p => section.postIds?.includes(p.id));
       default:
