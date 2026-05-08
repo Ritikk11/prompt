@@ -262,6 +262,11 @@ export default function Admin() {
   };
 
   const uploadImageFile = async (file: File, fallbackCompression: number = 400): Promise<string> => {
+    // If file is below safe Firebase Firestore limit (~800KB), keep it as base64 to save Cloudinary/ImgBB quota
+    if (file.size < 800000) {
+      return await compressImage(file, fallbackCompression);
+    }
+
     if (imageProvider === 'cloudinary' && cloudinaryCloudName && cloudinaryUploadPreset) {
       const formData = new FormData();
       formData.append('file', file);
