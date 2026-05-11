@@ -43,6 +43,8 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
 export default function PostCard({ post, index, aspect }: { post: Post; index?: number; aspect?: string }) {
   const { settings } = useData();
   const allTools = getAllTools(post);
+  const primaryTool = allTools.length > 0 ? allTools[0] : (post.images[0]?.aiTool || '');
+  const toolInfo = getToolInfo(primaryTool, settings?.toolDetails);
   
   const cardStyle = settings?.cardStyle || 'v1';
   const badgeStyle = settings?.badgeStyle || 'v1';
