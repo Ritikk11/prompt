@@ -66,7 +66,7 @@ export default function PostContent() {
 
   const post = posts.find((p) => p.slug === slug || p.id === slug);
   const heroTools = post ? getAllTools(post) : [];
-  const primaryHeroToolInfo = heroTools.length > 0 ? getToolInfo(heroTools[0], settings?.toolDetails) : { color: '', logo: '' };
+  const primaryHeroToolInfo = heroTools.length > 0 ? getToolInfo(heroTools[0], settings?.toolDetails) : { color: '', logo: '', logoScale: undefined };
   const heroToolInfo = primaryHeroToolInfo;
   const heroToolName = heroTools.join(' + ');
 
