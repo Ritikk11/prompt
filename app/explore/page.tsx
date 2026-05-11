@@ -27,7 +27,7 @@ export default function Explore() {
 
   let filtered = [...publicPosts];
   if (filterTool !== 'all') {
-    filtered = filtered.filter(p => p.images.some(i => i.aiTool === filterTool));
+    filtered = filtered.filter(p => p.aiTools?.includes(filterTool) || p.images.some(i => i.aiTools ? i.aiTools.includes(filterTool) : i.aiTool === filterTool));
   }
   if (sortBy === 'latest') {
     filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

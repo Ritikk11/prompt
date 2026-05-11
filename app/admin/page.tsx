@@ -257,8 +257,14 @@ export default function Admin() {
     setImages(prev => [...prev, { id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
   };
 
-  const updateImage = (idx: number, field: keyof ImagePrompt, value: string) => {
-    setImages(prev => prev.map((img, i) => i === idx ? { ...img, [field]: value } : img));
+  const updateImage = (idx: number, field: keyof ImagePrompt | Partial<ImagePrompt>, value?: any) => {
+    setImages(prev => prev.map((img, i) => {
+      if (i !== idx) return img;
+      if (typeof field === 'string') {
+        return { ...img, [field]: value };
+      }
+      return { ...img, ...field };
+    }));
   };
 
   const removeImage = (idx: number) => {
@@ -485,7 +491,7 @@ export default function Admin() {
   };
 
   const removeAiTool = (tool: string) => {
-    const inUse = posts.some(p => p.images.some(img => img.aiTool === tool));
+    const inUse = posts.some(p => p.aiTools?.includes(tool) || p.images.some(img => img.aiTools ? img.aiTools.includes(tool) : img.aiTool === tool));
     if (inUse) {
       alert(`Cannot delete "${tool}" — it's used by existing posts. Remove or reassign those images first.`);
       return;
@@ -571,7 +577,9 @@ export default function Admin() {
         p.title.toLowerCase().includes(postSearch.toLowerCase()) ||
         p.tags.some(t => t.toLowerCase().includes(postSearch.toLowerCase()))
       )
-    : posts;
+    : [...posts];
+    
+  filteredPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const tabs: { key: AdminTab; label: string; icon: React.ReactNode; count?: number }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: <BarChart2 className="w-4 h-4" /> },
@@ -1008,17 +1016,31 @@ export default function Admin() {
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="block text-xs text-surface-400 mb-1">AI Tool</label>
-                              <select
-                                value={img.aiTool}
-                                onChange={e => updateImage(idx, 'aiTool', e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
-                              >
-                                {(settings.aiTools || []).map(t => <option key={t} value={t}>{t}</option>)}
-                              </select>
+                            <div className="col-span-2">
+                              <label className="block text-xs text-surface-400 mb-1">AI Tools</label>
+                              <div className="flex flex-wrap gap-2">
+                                {(settings.aiTools || []).map(tool => {
+                                  const isSelected = img.aiTools ? img.aiTools.includes(tool) : img.aiTool === tool;
+                                  return (
+                                    <label key={tool} className="flex items-center gap-1.5 cursor-pointer bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 px-2 py-1.5 rounded text-xs">
+                                      <input 
+                                        type="checkbox" 
+                                        checked={isSelected}
+                                        onChange={(e) => {
+                                          let newTools = img.aiTools ? [...img.aiTools] : [img.aiTool].filter(Boolean);
+                                          if (e.target.checked && !newTools.includes(tool)) newTools.push(tool);
+                                          else newTools = newTools.filter(t => t !== tool);
+                                          updateImage(idx, { aiTools: newTools, aiTool: newTools[0] || '' });
+                                        }}
+                                        className="w-3.5 h-3.5 rounded text-primary-500 focus:ring-primary-500"
+                                      />
+                                      {tool}
+                                    </label>
+                                  );
+                                })}
+                              </div>
                             </div>
-                            <div>
+                            <div className="col-span-2">
                               <label className="block text-xs text-surface-400 mb-1">Model (Optional)</label>
                               <input
                                 value={img.model || ''}
@@ -1794,7 +1816,7 @@ export default function Admin() {
             {/* AI Tools list */}
             <div className="grid grid-cols-1 gap-3">
               {(settings.aiTools || []).map(tool => {
-                const imgCount = posts.reduce((acc, p) => acc + p.images.filter(img => img.aiTool === tool).length, 0);
+                const imgCount = posts.reduce((acc, p) => acc + (p.aiTools?.includes(tool) ? 1 : 0) + p.images.filter(img => img.aiTools ? img.aiTools.includes(tool) : img.aiTool === tool).length, 0);
                 const info = getToolInfo(tool, settings.toolDetails);
                 return (
                   <div key={tool} className="flex flex-col gap-2 p-3 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50">

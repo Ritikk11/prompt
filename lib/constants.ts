@@ -1,11 +1,12 @@
-export const fallbackToolInfo: Record<string, { color: string; logo: string }> = {
+export const fallbackToolInfo: Record<string, { color: string; logo: string; logoScale?: number }> = {
   'ChatGPT': {
     color: 'bg-[#74aa9c]',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg'
   },
   'Gemini': {
     color: 'bg-[#4285f4]',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg'
+    logo: 'https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg',
+    logoScale: 1.5
   },
   'Midjourney': {
     color: 'bg-surface-900',
@@ -25,14 +26,31 @@ export const fallbackToolInfo: Record<string, { color: string; logo: string }> =
   }
 };
 
+export function getAllTools(post: any): string[] {
+  const toolsSet = new Set<string>();
+  if (post.aiTools && post.aiTools.length > 0) {
+    post.aiTools.forEach((t: string) => toolsSet.add(t));
+  }
+  if (post.images) {
+    post.images.forEach((img: any) => {
+      if (img.aiTools && img.aiTools.length > 0) {
+        img.aiTools.forEach((t: string) => toolsSet.add(t));
+      } else if (img.aiTool) {
+        toolsSet.add(img.aiTool);
+      }
+    });
+  }
+  return Array.from(toolsSet);
+}
+
 export function getToolInfo(tool: string, customDetails?: Record<string, {logo?: string; color?: string; logoScale?: number}>) {
   if (customDetails && customDetails[tool]) {
     const custom = customDetails[tool];
     return {
       color: custom.color || fallbackToolInfo[tool]?.color || 'bg-surface-500',
       logo: custom.logo || fallbackToolInfo[tool]?.logo || '',
-      logoScale: custom.logoScale
+      logoScale: custom.logoScale !== undefined ? custom.logoScale : fallbackToolInfo[tool]?.logoScale
     };
   }
-  return { color: fallbackToolInfo[tool]?.color || 'bg-surface-500', logo: fallbackToolInfo[tool]?.logo || '', logoScale: undefined };
+  return { color: fallbackToolInfo[tool]?.color || 'bg-surface-500', logo: fallbackToolInfo[tool]?.logo || '', logoScale: fallbackToolInfo[tool]?.logoScale };
 }

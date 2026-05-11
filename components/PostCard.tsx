@@ -3,16 +3,8 @@ import Image from 'next/image';
 
 import { Eye, Heart } from 'lucide-react';
 import type { Post } from '@/lib/types';
-import { getToolInfo } from '@/lib/constants';
+import { getToolInfo, getAllTools } from '@/lib/constants';
 import { useData } from '@/components/context/DataContext';
-
-function getPrimaryTool(post: Post) {
-  const tools: Record<string, number> = {};
-  post.images.forEach(img => {
-    tools[img.aiTool] = (tools[img.aiTool] || 0) + 1;
-  });
-  return Object.entries(tools).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
-}
 
 const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; toolName: string; toolInfo: any; className?: string }) => {
   const isIconOnly = style === 'v8';
@@ -50,14 +42,22 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
 
 export default function PostCard({ post, index, aspect }: { post: Post; index?: number; aspect?: string }) {
   const { settings } = useData();
-  const primaryTool = getPrimaryTool(post);
-  const toolInfo = getToolInfo(primaryTool, settings?.toolDetails);
+  const allTools = getAllTools(post);
   
   const cardStyle = settings?.cardStyle || 'v1';
   const badgeStyle = settings?.badgeStyle || 'v1';
 
-  const renderBadge = (className = "") => (
-    <Badge style={badgeStyle} toolName={primaryTool} toolInfo={toolInfo} className={className} />
+  const renderBadges = (className = "") => (
+    <div className="flex flex-wrap gap-1">
+      {allTools.slice(0, 3).map(tool => (
+        <Badge key={tool} style={badgeStyle} toolName={tool} toolInfo={getToolInfo(tool, settings?.toolDetails)} className={className} />
+      ))}
+      {allTools.length > 3 && (
+        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase bg-black/50 backdrop-blur text-white shadow-md ${className}`}>
+          +{allTools.length - 3}
+        </div>
+      )}
+    </div>
   );
 
   if (cardStyle === 'v4') { // Social Card Layout
@@ -83,7 +83,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             referrerPolicy="no-referrer" />
-           <div className="absolute top-3 right-3">{renderBadge()}</div>
+           <div className="absolute top-3 right-3">{renderBadges()}</div>
         </div>
         <div className="p-4">
           <h3 className="font-bold text-surface-900 dark:text-white text-base leading-snug line-clamp-2 mb-3">
@@ -112,7 +112,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
             fill
             className="object-cover"
             referrerPolicy="no-referrer" />
-           <div className="absolute top-0 right-0 p-2">{renderBadge()}</div>
+           <div className="absolute top-0 right-0 p-2">{renderBadges()}</div>
         </div>
         <div className="p-4">
           <h3 className="font-black text-black dark:text-white text-lg uppercase tracking-tighter mb-4 leading-none">
@@ -145,7 +145,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
           referrerPolicy="no-referrer" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
         <div className="absolute inset-0 p-6 flex flex-col justify-between">
-           <div className="flex justify-end">{renderBadge()}</div>
+           <div className="flex justify-end">{renderBadges()}</div>
            <div>
              <h3 className="font-bold text-white text-xl mb-4 leading-tight drop-shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform">
                {post.title}
@@ -175,7 +175,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
               fill
               className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
               referrerPolicy="no-referrer" />
-             <div className="absolute top-2 left-2">{renderBadge("scale-75 origin-top-left")}</div>
+             <div className="absolute top-2 left-2">{renderBadges("scale-75 origin-top-left")}</div>
           </div>
           <div className="px-2 pb-2">
             <h3 className="font-serif italic text-lg text-surface-900 dark:text-white leading-tight mb-3">
@@ -210,7 +210,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
              <h3 className="font-bold text-surface-900 dark:text-white text-sm line-clamp-1 truncate flex-1">
                {post.title}
              </h3>
-             {renderBadge("scale-90")}
+             {renderBadges("scale-90")}
            </div>
            <div className="flex items-center gap-3 mt-2">
               <div className="flex -space-x-2">
@@ -241,7 +241,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
             className={`w-full transition-transform duration-700 ease-in-out group-hover:scale-105 block ${aspect ? 'h-full object-cover' : 'h-auto'}`}
            referrerPolicy="no-referrer" />
           <div className="absolute top-2.5 left-2.5 z-10">
-             {renderBadge()}
+             {renderBadges()}
           </div>
         </div>
         <div className="p-3 sm:p-4">
@@ -316,7 +316,7 @@ export default function PostCard({ post, index, aspect }: { post: Post; index?: 
 
       {/* Top Left AI Tool Badge - Hidden on Hover */}
       <div className="absolute top-3 left-3 z-10 pointer-events-none transition-opacity duration-300 group-hover:opacity-0">
-        {renderBadge()}
+        {renderBadges()}
       </div>
 
       {/* Bottom Left Prompt Count - Hidden on Hover */}

@@ -3,6 +3,7 @@ export interface ImagePrompt {
   url: string;
   prompt: string;
   aiTool: string;
+  aiTools?: string[];
   model?: string;
 }
 

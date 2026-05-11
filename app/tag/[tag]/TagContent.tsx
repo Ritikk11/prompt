@@ -33,7 +33,7 @@ export default function TagContent() {
   const tools = ['all', ...Array.from(new Set(filtered.flatMap(p => p.images.map(i => i.aiTool))))];
 
   if (filterTool !== 'all') {
-    filtered = filtered.filter(p => p.images.some(i => i.aiTool === filterTool));
+    filtered = filtered.filter(p => p.aiTools?.includes(filterTool) || p.images.some(i => i.aiTools ? i.aiTools.includes(filterTool) : i.aiTool === filterTool));
   }
   
   if (sortBy === 'latest') {

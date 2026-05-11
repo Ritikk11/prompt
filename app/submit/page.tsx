@@ -188,13 +188,27 @@ export default function SubmitPage() {
                   <Image src={img.url} alt="" fill sizes="128px" className="object-cover" referrerPolicy="no-referrer" />
                 </div>
                 <div className="flex-1 min-w-0 space-y-3">
-                  <select
-                    value={img.aiTool}
-                    onChange={e => updateImage(idx, { aiTool: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg text-sm border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900 outline-none focus:border-primary-500"
-                  >
-                    {settings.aiTools.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
+                  <div className="flex flex-wrap gap-2">
+                    {settings.aiTools.map(tool => {
+                      const isSelected = img.aiTools ? img.aiTools.includes(tool) : img.aiTool === tool;
+                      return (
+                        <label key={tool} className="flex items-center gap-1.5 cursor-pointer bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 px-2 py-1.5 rounded text-xs">
+                          <input 
+                            type="checkbox" 
+                            checked={isSelected}
+                            onChange={(e) => {
+                              let newTools = img.aiTools ? [...img.aiTools] : [img.aiTool].filter(Boolean);
+                              if (e.target.checked && !newTools.includes(tool)) newTools.push(tool);
+                              else newTools = newTools.filter(t => t !== tool);
+                              updateImage(idx, { aiTools: newTools, aiTool: newTools[0] || '' });
+                            }}
+                            className="w-3.5 h-3.5 rounded text-primary-500 focus:ring-primary-500"
+                          />
+                          {tool}
+                        </label>
+                      );
+                    })}
+                  </div>
                   <textarea
                     required
                     value={img.prompt}

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Play, Pause, Eye, Heart, ArrowRight } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import type { Post } from '@/lib/types';
-import { getToolInfo } from '@/lib/constants';
+import { getToolInfo, getAllTools } from '@/lib/constants';
 
 export default function FeaturedSlider() {
   const { posts, settings, loading } = useData();
@@ -65,8 +65,10 @@ export default function FeaturedSlider() {
   if (featured.length === 0) return null;
 
   const post: Post = featured[current];
-  const toolName = post?.images[0]?.aiTool || '';
-  const toolInfo = getToolInfo(toolName);
+  const allTools = post ? getAllTools(post) : [];
+  const primaryToolName = allTools[0] || post?.images[0]?.aiTool || '';
+  const primaryToolInfo = getToolInfo(primaryToolName, settings?.toolDetails);
+  const toolInfo = primaryToolInfo;
 
   // Common Nav & Progress Controls
   const renderProgress = (
@@ -128,16 +130,21 @@ export default function FeaturedSlider() {
           <div className="absolute inset-0 z-20 flex flex-col justify-end p-6 md:p-10">
             <div className="max-w-2xl relative z-30">
                 <div className="flex flex-wrap items-center gap-2 mb-3">
-                  <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg ${toolInfo.color}`}>
-                    {toolInfo.logo && (
-                      <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
-                          <Image src={toolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-                        </div>
-                      </div>
-                    )}
-                    {toolName}
-                  </span>
+                  {allTools.map(tool => {
+                    const info = getToolInfo(tool, settings?.toolDetails);
+                    return (
+                      <span key={tool} className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg ${info.color}`}>
+                        {info.logo && (
+                          <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                            <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                              <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                            </div>
+                          </div>
+                        )}
+                        {tool}
+                      </span>
+                    );
+                  })}
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-sm">⭐ Featured</span>
                 </div>
               <h2 className="text-2xl md:text-4xl font-bold text-white mb-2 leading-tight drop-shadow-lg">{post.title}</h2>
@@ -163,17 +170,22 @@ export default function FeaturedSlider() {
           {/* Content Side */}
           <div className="flex flex-col justify-center p-8 md:p-12 order-2 md:order-1 relative z-20">
             <div className="flex flex-wrap items-center gap-2 mb-4">
-               <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg ${toolInfo.color}`}>
-                 {toolInfo.logo && (
-                   <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                     <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
-                       <Image src={toolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-                     </div>
-                   </div>
-                 )}
-                 {toolName}
-               </span>
-               <span className="px-3 py-1 rounded-full text-xs font-medium bg-surface-200 dark:bg-surface-800 text-surface-700 dark:text-surface-300">⭐ Featured</span>
+              {allTools.map(tool => {
+                const info = getToolInfo(tool, settings?.toolDetails);
+                return (
+                  <span key={tool} className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg ${info.color}`}>
+                    {info.logo && (
+                      <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                          <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                        </div>
+                      </div>
+                    )}
+                    {tool}
+                  </span>
+                );
+              })}
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-surface-200 dark:bg-surface-800 text-surface-700 dark:text-surface-300">⭐ Featured</span>
             </div>
             {/* Animated Title/Desc Wrapper */}
             <div key={post.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -221,16 +233,23 @@ export default function FeaturedSlider() {
         <div className="relative z-10 w-full max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-6 md:gap-16">
           {/* Text Content */}
           <div className="w-full md:w-1/2 flex flex-col text-center md:text-left animate-in slide-in-from-left-8 duration-700 order-2 md:order-1">
-            <span className={`inline-flex self-center md:self-start items-center gap-2 mb-2 md:mb-4 px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-sm font-bold text-white shadow-lg ${toolInfo.color}`}>
-              {toolInfo.logo && (
-                <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                  <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
-                    <Image src={toolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-                  </div>
-                </div>
-              )}
-              {toolName}
-            </span>
+            <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-2 md:mb-4">
+              {allTools.map(tool => {
+                const info = getToolInfo(tool, settings?.toolDetails);
+                return (
+                  <span key={tool} className={`inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-sm font-bold text-white shadow-lg ${info.color}`}>
+                    {info.logo && (
+                      <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
+                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                          <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                        </div>
+                      </div>
+                    )}
+                    {tool}
+                  </span>
+                );
+              })}
+            </div>
             <h2 className="text-xl md:text-5xl font-black text-surface-900 dark:text-white mb-2 md:mb-6 leading-[1.1]">{post.title}</h2>
             <p className="text-surface-700 dark:text-surface-300 text-xs md:text-lg mb-4 md:mb-8 line-clamp-2 md:line-clamp-3 font-medium">{post.description}</p>
             <div className="flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 w-full">
@@ -331,7 +350,16 @@ export default function FeaturedSlider() {
           
           <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center">
             <div className="max-w-4xl mx-auto flex flex-col items-center animate-in fade-in zoom-in-95 duration-700" key={post.id}>
-               <span className={`mb-6 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider text-surface-950 shadow-xl ${toolInfo.color}`}>{toolName}</span>
+               <div className="flex flex-wrap gap-2 mb-6 justify-center">
+                 {allTools.map(tool => {
+                   const info = getToolInfo(tool, settings?.toolDetails);
+                   return (
+                     <span key={tool} className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider text-surface-950 shadow-xl ${info.color}`}>
+                       {tool}
+                     </span>
+                   );
+                 })}
+               </div>
                <h2 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight tracking-tight drop-shadow-2xl font-serif">
                  {post.title}
                </h2>
@@ -370,15 +398,22 @@ export default function FeaturedSlider() {
         <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="order-2 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left">
             <div key={post.id} className="animate-in slide-in-from-left-12 duration-700">
-               <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black text-white ${toolInfo.color} mb-6 shadow-lg`}>
-                  {toolInfo.logo && (
-                    <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-0.5">
-                      <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
-                        <Image src={toolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-                      </div>
-                    </div>
-                  )}
-                  {toolName}
+               <div className="flex flex-wrap gap-2 justify-center lg:justify-start mb-6">
+                 {allTools.map(tool => {
+                   const info = getToolInfo(tool, settings?.toolDetails);
+                   return (
+                     <div key={tool} className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black text-white ${info.color} shadow-lg`}>
+                        {info.logo && (
+                          <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-0.5">
+                            <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                              <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                            </div>
+                          </div>
+                        )}
+                        {tool}
+                     </div>
+                   );
+                 })}
                </div>
                <h2 className="text-4xl md:text-7xl font-black text-surface-900 dark:text-white mb-6 uppercase tracking-tight leading-[0.9]">
                  {post.title}
@@ -452,16 +487,21 @@ export default function FeaturedSlider() {
                     {i === current && (
                       <>
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent p-6 md:p-12 flex flex-col justify-end">
-                          <span className={`inline-flex items-center gap-2 px-3 py-1 w-max rounded-lg text-[10px] font-black text-white ${getToolInfo(p.images[0].aiTool).color} mb-4 uppercase tracking-widest shadow-lg`}>
-                            {getToolInfo(p.images[0].aiTool).logo && (
-                              <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                                <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
-                                  <Image src={getToolInfo(p.images[0].aiTool).logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-                                </div>
-                              </div>
-                            )}
-                            {p.images[0].aiTool}
-                          </span>
+                          {(() => {
+                            const slideToolInfo = getToolInfo(p.images[0].aiTool, settings?.toolDetails);
+                            return (
+                              <span className={`inline-flex items-center gap-2 px-3 py-1 w-max rounded-lg text-[10px] font-black text-white ${slideToolInfo.color} mb-4 uppercase tracking-widest shadow-lg`}>
+                                {slideToolInfo.logo && (
+                                  <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                                    <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={slideToolInfo.logoScale ? { transform: `scale(${slideToolInfo.logoScale})` } : undefined}>
+                                      <Image src={slideToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                                    </div>
+                                  </div>
+                                )}
+                                {p.images[0].aiTool}
+                              </span>
+                            );
+                          })()}
                           <h3 className="text-2xl md:text-4xl font-black text-white mb-4 line-clamp-2 uppercase tracking-wide">{p.title}</h3>
                           <Link href={`/post/${p.slug || p.id}`} className="group inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white text-black font-black text-xs md:text-sm uppercase tracking-widest w-max hover:bg-primary-500 hover:text-white transition-all">
                              View Details <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />

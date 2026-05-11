@@ -8,7 +8,7 @@ import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight,
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
 import dynamic from 'next/dynamic';
-import { getToolInfo } from '@/lib/constants';
+import { getToolInfo, getAllTools } from '@/lib/constants';
 import { useState } from 'react';
 import TemplatePrompt from '@/components/TemplatePrompt';
 import { auth } from '@/lib/firebase';
@@ -29,7 +29,7 @@ export default function PostContent() {
   const { incrementViews, toggleLike, posts, loading, settings } = useData();
   const viewIncrementedRef = useRef(false);
 
-  const [lightboxImage, setLightboxImage] = useState<{ url: string; index: number; tool: string } | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; index: number; tools: string[] } | null>(null);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -65,7 +65,10 @@ export default function PostContent() {
   };
 
   const post = posts.find((p) => p.slug === slug || p.id === slug);
-  const heroToolInfo = post ? getToolInfo(post.images[0]?.aiTool || '', settings?.toolDetails) : { color: '', logo: '' };
+  const heroTools = post ? getAllTools(post) : [];
+  const primaryHeroToolInfo = heroTools.length > 0 ? getToolInfo(heroTools[0], settings?.toolDetails) : { color: '', logo: '' };
+  const heroToolInfo = primaryHeroToolInfo;
+  const heroToolName = heroTools.join(' + ');
 
   useEffect(() => {
     if (post && !viewIncrementedRef.current) {
@@ -151,16 +154,23 @@ export default function PostContent() {
                   priority
                 />
               </div>
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-md backdrop-blur-md mb-6 saturate-150 ${heroToolInfo.color}/90 border border-white/20 uppercase tracking-widest`}>
-                {heroToolInfo.logo && (
-                  <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                    <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
-                      <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-                    </div>
-                  </div>
-                )}
-                {post.images[0]?.aiTool}
-              </span>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {heroTools.map(tool => {
+                  const info = getToolInfo(tool, settings?.toolDetails);
+                  return (
+                    <span key={tool} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-md backdrop-blur-md saturate-150 ${info.color}/90 border border-white/20 uppercase tracking-widest`}>
+                      {info.logo && (
+                        <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
+                          <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                            <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                          </div>
+                        </div>
+                      )}
+                      {tool}
+                    </span>
+                  );
+                })}
+              </div>
               <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight drop-shadow-lg">{post.title}</h1>
               <p className="text-white/80 text-lg md:text-xl max-w-2xl leading-relaxed mb-8 drop-shadow">{post.description}</p>
               {renderMetaInfo()}
@@ -173,16 +183,23 @@ export default function PostContent() {
              <div className="grid grid-cols-1 md:grid-cols-2 min-h-[400px]">
                 <div className="flex flex-col justify-center p-8 md:p-12 order-2 md:order-1">
                    <div className="flex flex-wrap items-center gap-2 mb-4">
-                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white shadow-md ${heroToolInfo.color}/90 uppercase tracking-wider`}>
-                       {heroToolInfo.logo && (
-                         <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                           <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
-                             <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-                           </div>
-                         </div>
-                       )}
-                       {post.images[0]?.aiTool}
-                     </span>
+                   <div className="flex flex-wrap gap-2">
+                     {heroTools.map(tool => {
+                       const info = getToolInfo(tool, settings?.toolDetails);
+                       return (
+                         <span key={tool} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white shadow-md ${info.color}/90 uppercase tracking-wider`}>
+                           {info.logo && (
+                             <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                               <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                                 <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                               </div>
+                             </div>
+                           )}
+                           {tool}
+                         </span>
+                       );
+                     })}
+                   </div>
                      {post.featured && <span className="px-3 py-1 rounded-full text-xs font-medium bg-surface-200 dark:bg-surface-800 text-surface-700 dark:text-surface-300">⭐ Featured</span>}
                    </div>
                    <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 leading-tight">{post.title}</h1>
@@ -204,12 +221,12 @@ export default function PostContent() {
             <span className={`mb-6 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest text-white shadow-lg ${heroToolInfo.color}/90 saturate-150`}>
                 {heroToolInfo.logo && (
                   <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                    <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                    <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={heroToolInfo.logoScale ? { transform: `scale(${heroToolInfo.logoScale})` } : undefined}>
                       <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
                     </div>
                   </div>
                 )}
-                {post.images[0]?.aiTool}
+                {heroToolName}
             </span>
             <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 tracking-tight leading-tight max-w-4xl">{post.title}</h1>
             <p className="text-surface-600 dark:text-surface-400 text-lg md:text-2xl max-w-3xl leading-relaxed mb-8 font-medium">{post.description}</p>
@@ -231,16 +248,23 @@ export default function PostContent() {
         return (
           <div className="relative mb-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-8">
             <div className="lg:col-span-7 order-2 lg:order-1">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black text-white ${heroToolInfo.color}/90 mb-4 uppercase tracking-[0.2em] shadow-md`}>
-                {heroToolInfo.logo && (
-                  <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                    <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
-                      <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-                    </div>
-                  </div>
-                )}
-                {post.images[0]?.aiTool}
-              </span>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {heroTools.map(tool => {
+                const info = getToolInfo(tool, settings?.toolDetails);
+                return (
+                  <span key={tool} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black text-white ${info.color}/90 uppercase tracking-[0.2em] shadow-md`}>
+                    {info.logo && (
+                      <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                          <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                        </div>
+                      </div>
+                    )}
+                    {tool}
+                  </span>
+                );
+              })}
+            </div>
               <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 leading-[1.1] tracking-tight">
                 {post.title}
               </h1>
@@ -274,12 +298,12 @@ export default function PostContent() {
                        <span className={`inline-flex items-center gap-1.5 px-2 py-1 text-white text-[10px] font-black uppercase tracking-widest ${heroToolInfo.color}/90 shadow-md`}>
                         {heroToolInfo.logo && (
                           <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                            <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                            <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={heroToolInfo.logoScale ? { transform: `scale(${heroToolInfo.logoScale})` } : undefined}>
                               <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
                             </div>
                           </div>
                         )}
-                        {post.images[0]?.aiTool}
+                        {heroToolName}
                        </span>
                     </div>
                     <h1 className="text-4xl md:text-5xl font-black text-surface-900 dark:text-white mb-6 uppercase tracking-tighter italic">
@@ -316,16 +340,23 @@ export default function PostContent() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
             <div className="absolute inset-0 flex flex-col items-center justify-end p-8 md:p-16 text-center">
-               <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black text-white ${heroToolInfo.color}/80 backdrop-blur-md mb-6 uppercase tracking-widest border border-white/20 shadow-xl`}>
-                 {heroToolInfo.logo && (
-                    <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                      <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
-                        <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-                      </div>
-                    </div>
-                  )}
-                 {post.images[0]?.aiTool}
-               </span>
+               <div className="flex flex-wrap gap-2 mb-6 justify-center">
+                 {heroTools.map(tool => {
+                   const info = getToolInfo(tool, settings?.toolDetails);
+                   return (
+                     <span key={tool} className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black text-white ${info.color}/80 backdrop-blur-md uppercase tracking-widest border border-white/20 shadow-xl`}>
+                       {info.logo && (
+                          <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
+                            <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                              <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                            </div>
+                          </div>
+                        )}
+                       {tool}
+                     </span>
+                   );
+                 })}
+               </div>
                <h1 className="text-4xl md:text-7xl font-black text-white mb-6 max-w-5xl leading-tight">
                  {post.title}
                </h1>
@@ -358,16 +389,23 @@ export default function PostContent() {
                   />
                 </div>
                 <div className="w-full md:w-1/2">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded text-[10px] font-black text-white ${heroToolInfo.color} mb-4 uppercase tracking-widest shadow-md`}>
-                    {heroToolInfo.logo && (
-                      <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
-                          <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-                        </div>
-                      </div>
-                    )}
-                    {post.images[0]?.aiTool}
-                  </span>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {heroTools.map(tool => {
+                      const info = getToolInfo(tool, settings?.toolDetails);
+                      return (
+                        <span key={tool} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded text-[10px] font-black text-white ${info.color} uppercase tracking-widest shadow-md`}>
+                          {info.logo && (
+                            <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                              <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                                <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                              </div>
+                            </div>
+                          )}
+                          {tool}
+                        </span>
+                      );
+                    })}
+                  </div>
                   <h1 className="text-3xl md:text-5xl font-black text-surface-900 dark:text-white mb-4 tracking-tight leading-tight">
                     {post.title}
                   </h1>
@@ -404,12 +442,12 @@ export default function PostContent() {
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white shadow-md backdrop-blur-md saturate-150 ${heroToolInfo.color}/90 border border-white/20 uppercase tracking-widest`}>
                     {heroToolInfo.logo && (
                       <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
+                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={heroToolInfo.logoScale ? { transform: `scale(${heroToolInfo.logoScale})` } : undefined}>
                           <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
                         </div>
                       </div>
                     )}
-                    {post.images[0]?.aiTool}
+                    {heroToolName}
                   </span>
                 </div>
                 {post.featured && (
@@ -463,7 +501,7 @@ export default function PostContent() {
                 {/* Image — no cropping, natural display */}
                 <div className="relative bg-surface-50 dark:bg-surface-800 flex items-center justify-center p-3 sm:p-5">
                   <div className="relative w-full overflow-hidden rounded-2xl shadow-lg group-hover:scale-[1.01] transition-transform duration-500 group/img">
-                    <div className="w-full relative rounded-2xl overflow-hidden cursor-zoom-in flex items-center justify-center bg-surface-100 dark:bg-surface-900" onClick={() => setLightboxImage({ url: img.url || '', index, tool: img.aiTool })}>
+                    <div className="w-full relative rounded-2xl overflow-hidden cursor-zoom-in flex items-center justify-center bg-surface-100 dark:bg-surface-900" onClick={() => setLightboxImage({ url: img.url || '', index, tools: img.aiTools || [img.aiTool].filter(Boolean) })}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={img.url || 'https://picsum.photos/seed/placeholder/800/600'}
@@ -472,21 +510,26 @@ export default function PostContent() {
                         referrerPolicy="no-referrer"
                       />
                     </div>
-                    <div className="absolute top-4 left-4 z-20">
-                      <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[9px] font-bold text-white shadow-xl backdrop-blur-md ${getToolInfo(img.aiTool, settings?.toolDetails).color}/80 border border-white/10 uppercase tracking-wider`}>
-                        {getToolInfo(img.aiTool, settings?.toolDetails).logo && (
-                          <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                            <div 
-                              className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm flex items-center justify-center p-[1px]"
-                            >
-                              <div className="relative w-full h-full" style={getToolInfo(img.aiTool, settings?.toolDetails).logoScale ? { transform: `scale(${getToolInfo(img.aiTool, settings?.toolDetails).logoScale})` } : undefined}>
-                                <Image src={getToolInfo(img.aiTool, settings?.toolDetails).logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                    <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-2">
+                      {(img.aiTools || [img.aiTool].filter(Boolean)).map((tool) => {
+                        const info = getToolInfo(tool, settings?.toolDetails);
+                        return (
+                          <div key={tool} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[9px] font-bold text-white shadow-xl backdrop-blur-md ${info.color}/80 border border-white/10 uppercase tracking-wider`}>
+                            {info.logo && (
+                              <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
+                                <div 
+                                  className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm flex items-center justify-center p-[1px]"
+                                >
+                                  <div className="relative w-full h-full" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                                    <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                                  </div>
+                                </div>
                               </div>
-                            </div>
+                            )}
+                            {tool}
                           </div>
-                        )}
-                        {img.aiTool}
-                      </div>
+                        );
+                      })}
                     </div>
                     <div className="absolute top-4 right-4 z-20">
                       <span className="px-2.5 py-1.5 rounded-full text-[9px] font-bold bg-black/40 text-white backdrop-blur-md border border-white/10 uppercase tracking-widest shadow-xl">
@@ -511,7 +554,7 @@ export default function PostContent() {
                         title="View Fullscreen"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setLightboxImage({ url: img.url || '', index, tool: img.aiTool });
+                          setLightboxImage({ url: img.url || '', index, tools: img.aiTools || [img.aiTool].filter(Boolean) });
                         }}
                         className="p-2.5 rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/80 hover:scale-110 transition-all shadow-xl"
                       >
@@ -727,19 +770,24 @@ export default function PostContent() {
               className="relative w-full h-full max-h-[90vh] flex items-center justify-center cursor-default"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold text-white shadow-xl backdrop-blur-md ${getToolInfo(lightboxImage.tool, settings?.toolDetails).color}/80 border border-white/10 uppercase tracking-wider`}>
-                  {getToolInfo(lightboxImage.tool, settings?.toolDetails).logo && (
-                    <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                      <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm flex items-center justify-center p-[1px]">
-                        <div className="relative w-full h-full" style={getToolInfo(lightboxImage.tool, settings?.toolDetails).logoScale ? { transform: `scale(${getToolInfo(lightboxImage.tool, settings?.toolDetails).logoScale})` } : undefined}>
-                          <Image src={getToolInfo(lightboxImage.tool, settings?.toolDetails).logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+              <div className="absolute top-4 left-4 z-20 pointer-events-none flex flex-wrap gap-2">
+                {lightboxImage.tools.map(tool => {
+                  const info = getToolInfo(tool, settings?.toolDetails);
+                  return (
+                    <div key={tool} className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold text-white shadow-xl backdrop-blur-md ${info.color}/80 border border-white/10 uppercase tracking-wider`}>
+                      {info.logo && (
+                        <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
+                          <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm flex items-center justify-center p-[1px]">
+                            <div className="relative w-full h-full" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                              <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      )}
+                      {tool}
                     </div>
-                  )}
-                  {lightboxImage.tool}
-                </div>
+                  );
+                })}
               </div>
               <div className="absolute top-4 right-4 z-20 hidden md:block pointer-events-none">
                  <span className="px-3 py-2 rounded-full text-xs font-bold bg-black/40 text-white backdrop-blur-md border border-white/10 uppercase tracking-widest shadow-xl">
