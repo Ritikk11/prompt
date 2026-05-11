@@ -833,7 +833,7 @@ export default function Admin() {
                   </div>
                   {thumbnailUrl && !thumbnailUrl.startsWith('Uploading') && (
                     <div className="mt-2 w-32 h-32 relative rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700">
-                      <img src={thumbnailUrl} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                      <Image src={thumbnailUrl} alt="Thumbnail preview" fill className="object-cover" unoptimized />
                     </div>
                   )}
                 </div>
