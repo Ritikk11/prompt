@@ -1,8 +1,8 @@
 export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 import { Metadata } from 'next';
-import { getSeoPageBySlugREST, getAllPostsREST } from '@/lib/firebase-rest';
+import { getSeoPageBySlug, fetchPosts } from '@/lib/data';
 import PostCard from '@/components/PostCard';
 import type { Post } from '@/lib/types';
 
@@ -12,7 +12,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const seoPage = await getSeoPageBySlugREST(slug);
+  const seoPage = await getSeoPageBySlug(slug);
 
   if (!seoPage) {
     return {
@@ -33,8 +33,8 @@ export default async function SeoPublicPage({ params }: Props) {
   const { slug } = await params;
   
   const [seoPage, allPosts] = await Promise.all([
-    getSeoPageBySlugREST(slug),
-    getAllPostsREST(),
+    getSeoPageBySlug(slug),
+    fetchPosts(),
   ]);
 
   if (!seoPage) {

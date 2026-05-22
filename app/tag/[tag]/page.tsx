@@ -1,8 +1,9 @@
 export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 import { Metadata } from 'next';
 import TagContent from './TagContent';
+import { fetchPosts, fetchSettings } from '@/lib/data';
 
 interface Props {
   params: Promise<{ tag: string }>;
@@ -19,6 +20,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function TagPage() {
-  return <TagContent />;
+export default async function TagPage({ params }: Props) {
+  const posts = await fetchPosts();
+  const settings = await fetchSettings();
+  
+  return <TagContent posts={posts} settings={settings} />;
 }

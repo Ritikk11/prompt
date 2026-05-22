@@ -16,6 +16,7 @@ export interface Post {
   seoTitle?: string;
   seoDescription?: string;
   thumbnailUrl?: string;
+  referenceImages?: string[];
   images: ImagePrompt[];
   tags: string[];
   category?: string;
@@ -30,6 +31,7 @@ export interface Post {
   templateVariables?: string[];
   authorId?: string;
   status?: 'published' | 'pending' | 'draft';
+  visibility?: 'public' | 'private';
   createdAt: string;
 }
 
@@ -80,9 +82,11 @@ export interface SiteSettings {
   siteTitle: string;
   siteDescription: string;
   siteLogo?: string;
+  heroTitle?: string;
+  heroSubtitle?: string;
   heroEnabled: boolean;
   heroAutoPlay: boolean;
-  heroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
+  heroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'custom';
   postHeroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
   cardStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
   badgeStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10';
@@ -91,7 +95,7 @@ export interface SiteSettings {
   headerSections?: Section[];
   ads?: AdSettings;
   imgbbApiKey?: string;
-  imageProvider?: 'imgbb' | 'cloudinary' | 'firebase';
+  imageProvider?: 'imgbb' | 'cloudinary' | 'supabase';
   cloudinaryCloudName?: string;
   cloudinaryUploadPreset?: string;
   features?: SiteFeatures;

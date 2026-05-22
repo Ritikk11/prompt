@@ -3,9 +3,8 @@ import { useState, useEffect } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
 import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures } from '@/lib/types';
-import { auth, storage } from '@/lib/firebase';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { createClient as createSupabaseClient } from '@/lib/supabase-client';
+import type { User } from '@supabase/supabase-js';
 import {
   Plus, Trash2, Edit3, Eye, EyeOff, ChevronUp, ChevronDown,
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload,
@@ -95,21 +94,141 @@ export default function Admin() {
 
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
+    const supabase = createSupabaseClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       setAuthLoading(false);
+      
+      // Check if we just completed a password reset
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('reset') === 'true') {
+          const newPassword = prompt('Enter your new password:');
+          if (newPassword) {
+            supabase.auth.updateUser({ password: newPassword }).then(({ error }) => {
+              if (error) alert('Error updating password: ' + error.message);
+              else {
+                alert('Password updated successfully!');
+                window.history.replaceState({}, '', '/admin');
+              }
+            });
+          }
+        } else if (params.get('error')) {
+          setAuthError(params.get('error') as string);
+          window.history.replaceState({}, '', '/admin');
+        }
+      }
     });
-    return () => unsub();
+
+    const handleOauthMessage = (event: MessageEvent) => {
+      const origin = event.origin;
+      if (!origin.endsWith('.run.app') && !origin.includes('localhost')) {
+        return;
+      }
+      
+      if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+        const { access_token, refresh_token } = event.data;
+        if (access_token && refresh_token) {
+          supabase.auth.setSession({ access_token, refresh_token }).then(({ data, error }) => {
+            if (error) {
+              setAuthError('Failed to establish session: ' + error.message);
+            } else {
+              setUser(data.user);
+            }
+          });
+        } else {
+          supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null);
+          });
+        }
+      } else if (event.data?.type === 'OAUTH_AUTH_ERROR') {
+        const err = event.data.error || 'Google login failed';
+        setAuthError(decodeURIComponent(err));
+      }
+    };
+    window.addEventListener('message', handleOauthMessage);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+      
+      if (event === 'PASSWORD_RECOVERY') {
+        const newPassword = prompt('Enter your new password:');
+        if (newPassword) {
+          supabase.auth.updateUser({ password: newPassword }).then(({ error }) => {
+            if (error) alert('Error updating password: ' + error.message);
+            else alert('Password updated successfully!');
+          });
+        }
+      }
+    });
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('message', handleOauthMessage);
+    };
   }, []);
 
-  const handleLogin = async () => {
+  const handleGoogleLogin = () => {
+    setAuthError('');
+    const popupUrl = `${window.location.origin}/auth/login-popup`;
+    const authWindow = window.open(
+      popupUrl,
+      'oauth_popup',
+      'width=600,height=700'
+    );
+    if (!authWindow) {
+      alert('Please allow popups for this site to sign in with Google.');
+    }
+  };
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    if (!email || !password) {
+      setAuthError('Email and password are required.');
+      return;
+    }
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (e) {
-      alert('Login failed');
+      const supabase = createSupabaseClient();
+      let error = null;
+      if (authMode === 'login') {
+        const res = await supabase.auth.signInWithPassword({ email, password });
+        error = res.error;
+      } else {
+        const res = await supabase.auth.signUp({ email, password });
+        error = res.error;
+        if (!error && res.data.user && !res.data.session) {
+          alert("Signup successful! Please check your email to confirm your account.");
+        }
+      }
+      if (error) throw error;
+    } catch (e: any) {
+      setAuthError(e.message || 'Authentication failed');
+    }
+  };
+
+  const handleResetPassword = async () => {
+    setAuthError('');
+    if (!email) {
+      setAuthError('Email is required to reset password.');
+      return;
+    }
+    try {
+      const supabase = createSupabaseClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin?reset=true`,
+      });
+      if (error) throw error;
+      alert('Password reset email sent! Check your inbox.');
+    } catch (e: any) {
+      setAuthError(e.message || 'Password reset failed');
     }
   };
 
@@ -124,6 +243,7 @@ export default function Admin() {
   const [description, setDescription] = useState('');
   const [extendedDescription, setExtendedDescription] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
+  const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
   const [tagsStr, setTagsStr] = useState('');
@@ -131,6 +251,8 @@ export default function Admin() {
   const [categoriesStr, setCategoriesStr] = useState('');
   const [selectedAiTools, setSelectedAiTools] = useState<string[]>([]);
   const [featured, setFeatured] = useState(false);
+  const [status, setStatus] = useState<'published' | 'pending' | 'draft'>('published');
+  const [visibility, setVisibility] = useState<'public' | 'private'>('public');
   const [images, setImages] = useState<ImagePrompt[]>([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
   const [assignedSections, setAssignedSections] = useState<string[]>([]);
 
@@ -152,7 +274,9 @@ export default function Admin() {
   const [pickingPostsForSection, setPickingPostsForSection] = useState<string | null>(null);
   const [postPickerSearch, setPostPickerSearch] = useState('');
 
-  // Settings form
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [aiPromptInstruction, setAiPromptInstruction] = useState('');
+
   const [siteTitle, setSiteTitle] = useState(settings.siteTitle);
   const [siteLogo, setSiteLogo] = useState(settings.siteLogo || '');
   const [siteDescription, setSiteDescription] = useState(settings.siteDescription);
@@ -163,7 +287,7 @@ export default function Admin() {
   const [cardStyle, setCardStyle] = useState(settings.cardStyle || 'v1');
   const [badgeStyle, setBadgeStyle] = useState(settings.badgeStyle || 'v1');
   const [imgbbApiKey, setImgbbApiKey] = useState(settings.imgbbApiKey || '');
-  const [imageProvider, setImageProvider] = useState<'imgbb' | 'cloudinary' | 'firebase'>(settings.imageProvider || 'imgbb');
+  const [imageProvider, setImageProvider] = useState<'imgbb' | 'cloudinary' | 'supabase'>(settings.imageProvider || 'imgbb');
   const [cloudinaryCloudName, setCloudinaryCloudName] = useState(settings.cloudinaryCloudName || '');
   const [cloudinaryUploadPreset, setCloudinaryUploadPreset] = useState(settings.cloudinaryUploadPreset || '');
   const [adsConfig, setAdsConfig] = useState<AdSettings>(
@@ -225,8 +349,9 @@ export default function Admin() {
   const customSections = sections.filter(s => s.type === 'custom');
 
   const resetForm = () => {
-    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
+    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
+    setStatus('published'); setVisibility('public');
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
   };
 
@@ -237,6 +362,7 @@ export default function Admin() {
     setDescription(post.description);
     setExtendedDescription(post.extendedDescription || '');
     setThumbnailUrl(post.thumbnailUrl || '');
+    setReferenceImages(post.referenceImages || []);
     setSeoTitle(post.seoTitle || '');
     setSeoDescription(post.seoDescription || '');
     setTagsStr(post.tags.join(', '));
@@ -244,6 +370,8 @@ export default function Admin() {
     setCategoriesStr(post.categories?.join(', ') || '');
     setSelectedAiTools(post.aiTools || []);
     setFeatured(post.featured);
+    setStatus(post.status || 'published');
+    setVisibility(post.visibility || 'public');
     setImages(post.images.length > 0 ? post.images : [{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
     // Find which custom sections contain this post
     const inSections = sections
@@ -285,10 +413,14 @@ export default function Admin() {
       const data = await res.json();
       if (data.secure_url) return data.secure_url;
       throw new Error(data.error?.message || 'Cloudinary upload failed');
-    } else if (imageProvider === 'firebase') {
-      const imageRef = ref(storage, `images/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`);
-      await uploadBytes(imageRef, file);
-      return await getDownloadURL(imageRef);
+    } else if (imageProvider === 'supabase') {
+      const supabase = createSupabaseClient();
+      const ext = file.name.split('.').pop() || 'jpg';
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+      const { data, error } = await supabase.storage.from('images').upload(fileName, file);
+      if (error) throw new Error(error.message);
+      const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName);
+      return publicUrl;
     } else if ((imageProvider === 'imgbb' || !imageProvider) && imgbbApiKey) {
       const formData = new FormData();
       formData.append('image', file);
@@ -321,6 +453,53 @@ export default function Admin() {
     );
   };
 
+  const handleGenerateAiDetails = async () => {
+    // Collect the images that have prompts
+    const usedImages = images.filter(i => i.prompt);
+    if (usedImages.length === 0) {
+      alert("Please add at least one image with a prompt first before generating details.");
+      return;
+    }
+
+    setIsGeneratingAi(true);
+    try {
+      // Get last 5 posts for style context
+      const existingPostsContext = posts.slice(0, 5).map(p => ({ title: p.title, description: p.description }));
+      
+      const res = await fetch('/api/generate-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          images: usedImages,
+          existingPosts: existingPostsContext,
+          promptInstruction: aiPromptInstruction
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+
+      const data = await res.json();
+      
+      if (data.title) setTitle(data.title);
+      if (data.title && !editingPost) setSlug(slugify(data.title));
+      if (data.seoTitle) setSeoTitle(data.seoTitle);
+      if (data.description) setDescription(data.description);
+      if (data.seoDescription) setSeoDescription(data.seoDescription);
+      if (data.extendedDescription) setExtendedDescription(data.extendedDescription);
+      if (data.category && !category) setCategory(data.category);
+      if (data.tags && Array.isArray(data.tags)) setTagsStr(data.tags.join(', '));
+      
+      alert("Generated details successfully!");
+    } catch (err: any) {
+      console.error(err);
+      alert("Failed to generate details. " + err.message);
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
+
   const handleSavePost = () => {
     if (!thumbnailUrl) {
       alert('Thumbnail URL is required');
@@ -337,6 +516,12 @@ export default function Admin() {
     }
 
     const postId = editingPost?.id || generateId();
+    const isFinished = title.trim() !== '' && description.trim() !== '' && images.length > 0 && images.some(i => i.url || i.prompt);
+    let finalStatus = status;
+    if (!isFinished && status === 'published') {
+      finalStatus = 'draft';
+    }
+
     const post: any = {
       id: postId,
       slug: finalSlug,
@@ -344,6 +529,7 @@ export default function Admin() {
       description: description || '',
       extendedDescription: extendedDescription || '',
       thumbnailUrl,
+      referenceImages: referenceImages.filter(Boolean),
       images: images.filter(i => i.url || i.prompt || i.aiTool),
       tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
       category: category || undefined,
@@ -354,7 +540,8 @@ export default function Admin() {
       likes: editingPost?.likes || 0,
       likedByUser: editingPost?.likedByUser,
       createdAt: editingPost?.createdAt || new Date().toISOString(),
-      status: editingPost?.status || 'published',
+      status: finalStatus,
+      visibility,
     };
     if (seoTitle) post.seoTitle = seoTitle;
     if (seoDescription) post.seoDescription = seoDescription;
@@ -363,6 +550,10 @@ export default function Admin() {
       updatePost(post);
     } else {
       addPost(post);
+    }
+
+    if (!isFinished && status === 'published') {
+      alert('Post saved as draft because some required fields (title, description, or images) are missing.');
     }
 
     // Update custom sections — add/remove post from sections
@@ -596,20 +787,89 @@ export default function Admin() {
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] max-w-md mx-auto px-4 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mb-6">
-          <Settings className="w-8 h-8 text-primary-500" />
+      <div className="flex flex-col justify-center min-h-[70vh] max-w-sm mx-auto px-4">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mx-auto mb-6">
+            <Settings className="w-8 h-8 text-primary-500" />
+          </div>
+          <h1 className="text-2xl font-bold mb-2">Admin Panel</h1>
+          <p className="text-surface-500 dark:text-surface-400">
+            Sign in securely to manage your site
+          </p>
         </div>
-        <h1 className="text-2xl font-bold mb-2">Admin Login</h1>
-        <p className="text-surface-500 dark:text-surface-400 mb-8">
-          Sign in securely to manage posts, sections, and global settings.
-        </p>
+
+        {authError && (
+          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-lg mb-6 text-sm border border-red-200 dark:border-red-800">
+            {authError}
+          </div>
+        )}
+
+        <form onSubmit={handleEmailAuth} className="space-y-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium mb-1">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50 focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+              placeholder="admin@example.com"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="w-full px-4 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50 focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+              placeholder="••••••••"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+          >
+            {authMode === 'login' ? 'Sign in with Email' : 'Sign up with Email'}
+          </button>
+        </form>
+
+        <div className="text-center mb-6">
+          <button
+            onClick={handleResetPassword}
+            type="button"
+            className="text-sm text-primary-600 hover:text-primary-500 dark:text-primary-400"
+          >
+            Forgot password?
+          </button>
+        </div>
+
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-surface-200 dark:border-surface-700" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white dark:bg-surface-900 text-surface-500">Or continue with</span>
+          </div>
+        </div>
+
         <button
-          onClick={handleLogin}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+          onClick={handleGoogleLogin}
+          className="w-full flex justify-center py-3 px-4 border border-surface-200 dark:border-surface-700 rounded-xl shadow-sm text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors mb-6"
         >
-          Sign in with Google
+          Google
         </button>
+
+        <div className="text-center">
+          <button
+            onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
+            className="text-sm text-primary-600 hover:text-primary-500 dark:text-primary-400"
+          >
+            {authMode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+          </button>
+        </div>
       </div>
     );
   }
@@ -717,6 +977,8 @@ export default function Admin() {
                         <span>{post.images.length} images</span>
                         <span>{post.views.toLocaleString()} views</span>
                         {post.featured && <span className="text-yellow-500 font-semibold">⭐ Featured</span>}
+                        {post.status === 'draft' && <span className="text-orange-500 font-semibold">🖋️ Draft</span>}
+                        {post.visibility === 'private' && <span className="text-red-500 font-semibold">🔒 Private</span>}
                         {sections.filter(s => s.type === 'custom' && s.postIds?.includes(post.id)).length > 0 && (
                           <span className="text-primary-500 font-semibold">
                             📂 {sections.filter(s => s.type === 'custom' && s.postIds?.includes(post.id)).length} sections
@@ -762,7 +1024,57 @@ export default function Admin() {
                 </button>
               </div>
 
+              <div className="mb-8 p-5 bg-primary-50 dark:bg-primary-900/10 border border-primary-200 dark:border-primary-800/30 rounded-xl space-y-4">
+                <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400 font-medium">
+                  <Zap className="w-5 h-5" />
+                  <h3>Auto-Generate Post Details with AI</h3>
+                </div>
+                <p className="text-sm text-surface-600 dark:text-surface-400">
+                  Upload images below and add prompts to them first. Then, instruct the AI on how you want the title, tags, and descriptions generated. The AI uses your existing posts to learn your writing style.
+                </p>
+                <textarea
+                  value={aiPromptInstruction}
+                  onChange={e => setAiPromptInstruction(e.target.value)}
+                  placeholder="(Optional) E.g., 'Make the title sound very poetic', 'Keep descriptions under 100 words', etc."
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-none h-20"
+                />
+                <button 
+                  onClick={handleGenerateAiDetails}
+                  disabled={isGeneratingAi}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+                >
+                  {isGeneratingAi ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Zap className="w-4 h-4" />}
+                  {isGeneratingAi ? 'Generating Details...' : 'Generate Details'}
+                </button>
+              </div>
+
               <div className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Status</label>
+                    <select
+                      value={status}
+                      onChange={e => setStatus(e.target.value as any)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    >
+                      <option value="published">Published</option>
+                      <option value="draft">Draft</option>
+                      <option value="pending">Pending</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Visibility</label>
+                    <select
+                      value={visibility}
+                      onChange={e => setVisibility(e.target.value as any)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    >
+                      <option value="public">Public</option>
+                      <option value="private">Private</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Title *</label>
@@ -834,6 +1146,66 @@ export default function Admin() {
                   {thumbnailUrl && !thumbnailUrl.startsWith('Uploading') && (
                     <div className="mt-2 w-32 h-32 relative rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700">
                       <Image src={thumbnailUrl} alt="Thumbnail preview" fill className="object-cover" unoptimized />
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Reference Images (Optional)</label>
+                  <div className="flex gap-2">
+                    <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0">
+                      <Upload className="w-4 h-4 text-surface-400" />
+                      <span className="text-sm">Upload Reference Images</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={async e => {
+                          const files = Array.from(e.target.files || []);
+                          if (files.length > 0) {
+                             const uploadingLabels = files.map(() => 'Uploading...');
+                             setReferenceImages(prev => [...prev, ...uploadingLabels]);
+                             try {
+                               const urls = await Promise.all(
+                                 files.map(file => uploadImageFile(file, 800))
+                               );
+                               setReferenceImages(prev => [
+                                 ...prev.filter(url => url !== 'Uploading...'),
+                                 ...urls
+                               ]);
+                             } catch (err) {
+                               console.error(err);
+                               alert('Failed to process some reference images');
+                               setReferenceImages(prev => prev.filter(url => url !== 'Uploading...'));
+                             }
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                  {referenceImages.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {referenceImages.map((url, idx) => (
+                        <div key={idx} className="w-32 h-32 relative rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700 group">
+                          {url === 'Uploading...' ? (
+                            <div className="w-full h-full flex items-center justify-center bg-surface-100 dark:bg-surface-800 text-xs">Uploading...</div>
+                          ) : (
+                            <>
+                              <Image src={url} alt={`Reference ${idx + 1}`} fill className="object-cover" unoptimized />
+                              <button 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setReferenceImages(prev => prev.filter((_, i) => i !== idx));
+                                }}
+                                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -1499,7 +1871,7 @@ export default function Admin() {
                   {[
                     { id: 'imgbb', label: 'ImgBB', desc: 'Free, simple' },
                     { id: 'cloudinary', label: 'Cloudinary', desc: 'Fast, secure' },
-                    { id: 'firebase', label: 'Firebase Storage', desc: 'Native' },
+                    { id: 'supabase', label: 'Supabase Storage', desc: 'Native' },
                   ].map(provider => (
                     <button
                       key={provider.id}
@@ -1554,13 +1926,13 @@ export default function Admin() {
                 </div>
               )}
 
-              {imageProvider === 'firebase' && (
+              {imageProvider === 'supabase' && (
                 <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-800/50 border border-surface-200 dark:border-surface-700">
                   <p className="text-xs text-surface-600 dark:text-surface-400 mb-2">
-                    Images will be uploaded to your Firebase Storage bucket.
+                    Images will be uploaded to your Supabase Storage images bucket.
                   </p>
                   <p className="text-[10px] text-surface-500 font-mono bg-surface-100 dark:bg-surface-900 p-2 rounded">
-                    Make sure your Firebase Storage security rules allow uploads.
+                    Make sure your Supabase Storage bucket is public.
                   </p>
                 </div>
               )}

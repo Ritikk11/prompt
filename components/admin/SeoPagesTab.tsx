@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { globalSupabase as supabase } from '@/components/context/DataContext';
 import { Plus, Trash2, Edit3, X, Save } from 'lucide-react';
 
 export default function SeoPagesTab() {
@@ -16,14 +15,24 @@ export default function SeoPagesTab() {
   const [aiToolsStr, setAiToolsStr] = useState('');
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'seoPages'), (snap) => {
-      const pages: any[] = [];
-      snap.forEach(d => {
-        pages.push({ id: d.id, ...d.data() });
-      });
-      setSeoPages(pages);
-    });
-    return () => unsub();
+    const fetchPages = async () => {
+      const { data, error } = await supabase.from('seoPages').select('data');
+      if (error) {
+        console.error('Supabase seoPages fetch error:', error);
+      } else {
+        setSeoPages((data || []).map(d => d.data));
+      }
+    };
+
+    fetchPages();
+
+    const sub = supabase.channel('seoPages_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'seoPages' }, fetchPages)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(sub);
+    };
   }, []);
 
   const resetForm = () => {
@@ -57,7 +66,7 @@ export default function SeoPagesTab() {
     };
 
     try {
-      await setDoc(doc(db, 'seoPages', id), data);
+      await supabase.from('seoPages').upsert({ id, data });
       resetForm();
     } catch (e) {
       console.error(e);
@@ -68,7 +77,7 @@ export default function SeoPagesTab() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this SEO page?')) return;
     try {
-      await deleteDoc(doc(db, 'seoPages', id));
+      await supabase.from('seoPages').delete().eq('id', id);
     } catch (e) {
       console.error(e);
       alert('Error deleting');

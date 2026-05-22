@@ -1,8 +1,8 @@
 import { MetadataRoute } from 'next';
-import { getAllPostsREST, getAllSeoPagesREST, getAllSectionsREST } from '@/lib/firebase-rest';
+import { fetchPosts, fetchSeoPages, fetchSections } from '@/lib/data';
 import { Post, Section } from '@/lib/types';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 export const runtime = 'edge';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -26,13 +26,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const [posts, seoPages, sections] = await Promise.all([
-      getAllPostsREST() as Promise<Post[]>,
-      getAllSeoPagesREST() as Promise<any[]>,
-      getAllSectionsREST() as Promise<Section[]>
+      fetchPosts() as Promise<Post[]>,
+      fetchSeoPages() as Promise<any[]>,
+      fetchSections() as Promise<Section[]>
     ]);
 
     // Add unique posts
-    const publishedPosts = posts.filter(p => p.status === 'published' || !p.status);
+    const publishedPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
     publishedPosts.forEach(post => {
       sitemapEntries.push({
         url: `${baseUrl}/post/${post.slug || post.id}`,

@@ -6,6 +6,7 @@ import { DataProvider } from '@/components/context/DataContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AdSlot from '@/components/AdSlot';
+import { fetchPosts, fetchSections, fetchSettings } from '@/lib/data';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -29,6 +30,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     alternateName: ['AI Prompt Matrix', 'Prompt Matrix'],
     url: 'https://aipromptmatrix.in',
   };
+
+  const initialPosts = await fetchPosts();
+  const initialSections = await fetchSections();
+  const initialSettings = await fetchSettings();
 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
@@ -40,7 +45,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen flex flex-col font-sans transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100 bg-white text-gray-900" suppressHydrationWarning>
         <ThemeProvider>
-          <DataProvider>
+          <DataProvider 
+            initialPosts={initialPosts}
+            initialSections={initialSections}
+            initialSettings={initialSettings}
+          >
             <Header />
             <AdSlot placement="header" className="max-w-7xl mx-auto w-full px-4" />
             <main className="flex-1 w-full min-h-[80vh]">

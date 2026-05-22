@@ -4,13 +4,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 import { ChevronLeft, ChevronRight, Play, Pause, Eye, Heart, ArrowRight } from 'lucide-react';
-import { useData } from '@/components/context/DataContext';
-import type { Post } from '@/lib/types';
+import type { Post, SiteSettings } from '@/lib/types';
 import { getToolInfo, getAllTools } from '@/lib/constants';
 
-export default function FeaturedSlider() {
-  const { posts, settings, loading } = useData();
-  const featured = posts.filter(p => p.featured);
+export default function FeaturedSlider({ featuredPosts, settings }: { featuredPosts: Post[], settings: SiteSettings }) {
+  const featured = featuredPosts;
   const [current, setCurrent] = useState(0);
   const [playing, setPlaying] = useState(settings.heroAutoPlay ?? true);
   const [progress, setProgress] = useState(0);
@@ -51,18 +49,11 @@ export default function FeaturedSlider() {
     setTouchEnd(0);
   };
 
-  if (loading && settings.features?.skeletonLoaders) {
-    return (
-      <div className="relative w-full overflow-hidden rounded-2xl bg-surface-200 dark:bg-surface-800 animate-pulse min-h-[500px] md:min-h-[400px] shadow-2xl">
-      </div>
-    );
+  if (!settings.heroEnabled) return null;
+  if (featured.length === 0) {
+    return null;
   }
 
-  if (!settings.heroEnabled) return null;
-  if (loading && featured.length === 0) {
-    return <div className="w-full h-[400px] lg:h-[500px] bg-surface-200 dark:bg-surface-800 rounded-2xl animate-pulse" />;
-  }
-  if (featured.length === 0) return null;
 
   const post: Post = featured[current];
   const allTools = post ? getAllTools(post) : [];

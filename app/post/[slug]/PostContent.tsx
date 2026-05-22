@@ -1,40 +1,46 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 
 import Image from 'next/image';
-import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud } from 'lucide-react';
+import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 import { getToolInfo, getAllTools } from '@/lib/constants';
-import { useState } from 'react';
 import TemplatePrompt from '@/components/TemplatePrompt';
-import { auth } from '@/lib/firebase';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
+import { createClient } from '@/lib/supabase-client';
+import type { User } from '@supabase/supabase-js';
+import type { Post } from '@/lib/types';
 
 import ReactMarkdown from 'react-markdown';
 import CopyButton from '@/components/CopyButton';
 
-const PostCard = dynamic(() => import('@/components/PostCard'));
+import PostCard from '@/components/PostCard';
 const AdSlot = dynamic(() => import('@/components/AdSlot'), { ssr: false });
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-export default function PostContent() {
-  const { slug } = useParams();
-  const { incrementViews, toggleLike, posts, loading, settings } = useData();
+export default function PostContent({ post: initialPost, relatedPosts }: { post: Post; relatedPosts: Post[] }) {
+  const { incrementViews, toggleLike, settings, posts } = useData();
+  const post = posts.find(p => p.id === initialPost?.id) || initialPost;
+  
   const viewIncrementedRef = useRef(false);
 
   const [lightboxImage, setLightboxImage] = useState<{ url: string; index: number; tools: string[] } | null>(null);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, u => setUser(u));
-    return () => unsub();
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleDownload = async (url: string, filename: string) => {
@@ -57,14 +63,18 @@ export default function PostContent() {
 
   const handleLogin = async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const supabase = createClient();
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
     } catch (e) {
       console.error(e);
     }
   };
 
-  const post = posts.find((p) => p.slug === slug || p.id === slug);
   const heroTools = post ? getAllTools(post) : [];
   const primaryHeroToolInfo = heroTools.length > 0 ? getToolInfo(heroTools[0], settings?.toolDetails) : { color: '', logo: '', logoScale: undefined };
   const heroToolInfo = primaryHeroToolInfo;
@@ -77,15 +87,6 @@ export default function PostContent() {
     }
   }, [post, incrementViews]);
 
-  if (loading) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-20 flex flex-col items-center justify-center">
-        <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mb-4" />
-        <p className="text-surface-500 font-medium animate-pulse">Loading prompt details...</p>
-      </div>
-    );
-  }
-
   if (!post) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
@@ -97,10 +98,6 @@ export default function PostContent() {
       </div>
     );
   }
-
-  const relatedPosts = posts
-    .filter(p => p.id !== post.id && p.tags.some(t => post.tags.includes(t)))
-    .slice(0, 4);
 
   const allPromptsText = settings.features?.premiumPrompts && post.isPremium && !user 
     ? "Premium Collection - Please sign in to view full prompts." 
@@ -478,6 +475,43 @@ export default function PostContent() {
 
       <AdSlot placement="postTop" />
 
+      {/* Reference Images */}
+      {post.referenceImages && post.referenceImages.length > 0 && (
+        <div className="mb-16">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+              <ImageIcon className="w-5 h-5 text-primary-500" />
+            </div>
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight">
+              Reference Images <span className="text-surface-400 font-medium ml-1">({post.referenceImages.length})</span>
+            </h2>
+          </div>
+          
+          <div className="flex flex-wrap gap-4">
+             {post.referenceImages.map((url, idx) => (
+               <div key={idx} className="relative group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 flex flex-col w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.67rem)] lg:w-[calc(25%-0.75rem)]">
+                 <div className="relative w-full h-auto flex items-center justify-center p-3 sm:p-4 bg-surface-50 dark:bg-surface-800">
+                    <div className="w-full relative rounded-xl overflow-hidden cursor-zoom-in" onClick={() => setLightboxImage({ url, index: idx, tools: [] })}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt={`Reference ${idx + 1}`} className="w-full h-auto block rounded-xl group-hover:scale-[1.01] transition-transform duration-500" referrerPolicy="no-referrer" />
+                    </div>
+                 </div>
+                 <div className="p-3 sm:p-4 border-t border-surface-100 dark:border-surface-800 flex justify-between items-center bg-white dark:bg-surface-900 mt-auto">
+                    <span className="text-sm font-semibold tracking-wide text-surface-600 dark:text-surface-400">Ref {idx + 1}</span>
+                    <button
+                      onClick={() => handleDownload(url, `reference_${post.id}_${idx + 1}.png`)}
+                      className="p-2 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-lg transition-colors text-surface-600 dark:text-surface-400"
+                      title="Download image"
+                    >
+                      <DownloadCloud className="w-5 h-5" />
+                    </button>
+                 </div>
+               </div>
+             ))}
+          </div>
+        </div>
+      )}
+
       {/* Images with Prompts — NO cropping, natural display */}
       <div className="mb-16">
         <div className="flex items-center gap-3 mb-8">
@@ -711,26 +745,30 @@ export default function PostContent() {
 
       {/* Extended HTML / Article Description */}
       {post.extendedDescription && (
-        <div className="border-t border-surface-200 dark:border-surface-800 pt-16 mb-16">
-          <div className="max-w-4xl mx-auto text-surface-900 dark:text-surface-100">
-            <ReactMarkdown
-              components={{
-                h1: (props) => <h1 className="text-4xl font-extrabold mt-8 mb-4 tracking-tight" {...props} />,
-                h2: (props) => <h2 className="text-3xl font-bold mt-10 mb-4 tracking-tight" {...props} />,
-                h3: (props) => <h3 className="text-2xl font-semibold mt-8 mb-3" {...props} />,
-                p: (props) => <p className="text-lg leading-relaxed mb-6 text-surface-700 dark:text-surface-300" {...props} />,
-                ol: (props) => <ol className="list-decimal list-outside ml-6 mb-6 space-y-2 text-surface-700 dark:text-surface-300" {...props} />,
-                ul: (props) => <ul className="list-disc list-outside ml-6 mb-6 space-y-2 text-surface-700 dark:text-surface-300" {...props} />,
-                li: (props) => <li className="pl-1" {...props} />,
-                a: (props) => <a className="text-primary-500 hover:underline font-medium" {...props} />,
-                strong: (props) => <strong className="font-bold text-surface-900 dark:text-white" {...props} />,
-                blockquote: (props) => <blockquote className="border-l-4 border-primary-500 pl-4 py-1 italic text-surface-600 dark:text-surface-400 my-6 bg-surface-50 dark:bg-surface-800/50 rounded-r-lg" {...props} />,
-                hr: (props) => <hr className="my-10 border-surface-200 dark:border-surface-800" {...props} />,
-                code: (props) => <code className="bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400 px-1.5 py-0.5 rounded text-sm font-mono" {...props} />,
-              }}
-            >
-              {post.extendedDescription}
-            </ReactMarkdown>
+        <div className="mt-20 pt-16 border-t border-surface-200 dark:border-surface-800">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-3 mb-10">
+              <div className="w-1.5 h-8 bg-primary-500 rounded-full" />
+              <h2 className="text-3xl font-bold font-sans tracking-tight text-surface-900 dark:text-white">Detailed Insights</h2>
+            </div>
+            
+            <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-8 md:p-12 shadow-sm">
+              <div className="prose prose-lg dark:prose-invert prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary-500 hover:prose-a:text-primary-600 prose-img:rounded-xl prose-img:shadow-md max-w-none prose-p:text-surface-600 dark:prose-p:text-surface-300 prose-li:text-surface-600 dark:prose-li:text-surface-300">
+                <ReactMarkdown
+                  components={{
+                    h2: (props) => <h2 className="text-3xl font-bold mt-10 mb-6 text-surface-900 dark:text-white border-b border-surface-100 dark:border-surface-800 pb-2" {...props} />,
+                    h3: (props) => <h3 className="text-xl font-semibold mt-8 mb-4 text-surface-900 dark:text-white flex items-center gap-2"><span className="text-primary-500">❖</span>{props.children}</h3>,
+                    blockquote: (props) => (
+                      <blockquote className="border-l-4 border-primary-500 pl-6 py-4 italic text-surface-700 dark:text-surface-300 my-8 bg-surface-50 dark:bg-surface-800/50 rounded-r-2xl font-serif text-xl" {...props} />
+                    ),
+                    code: (props) => <code className="bg-surface-100 dark:bg-surface-800/80 text-primary-600 dark:text-primary-400 px-2 py-1 rounded-md text-[0.9em] font-mono border border-surface-200 dark:border-surface-700" {...props} />,
+                    pre: (props) => <pre className="bg-surface-900 text-surface-100 p-6 rounded-2xl overflow-x-auto shadow-inner my-6 border border-surface-800" {...props} />
+                  }}
+                >
+                  {post.extendedDescription}
+                </ReactMarkdown>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -1,9 +1,9 @@
 'use client';
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode, useMemo } from 'react';
 import type { Post, Section, SiteSettings } from '@/lib/types';
 import { seedPosts, seedSections } from '@/lib/data/seedData';
-import { db } from '@/lib/firebase';
-import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, increment } from 'firebase/firestore';
+import { createClient } from '@/lib/supabase-client';
+import { adminRevalidateAll } from '@/app/actions';
 
 interface DataContextType {
   posts: Post[];
@@ -30,6 +30,8 @@ const defaultSettings: SiteSettings = {
   siteTitle: 'Ai PromptMatrix',
   siteDescription: 'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.',
   siteLogo: '',
+  heroTitle: 'Discover AI Prompt Masterpieces',
+  heroSubtitle: 'Explore a curated collection of breathtaking AI-generated imagery and their full prompts. Learn, inspire, and create.',
   heroEnabled: true,
   heroAutoPlay: true,
   aiTools: ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
@@ -55,19 +57,35 @@ const defaultSettings: SiteSettings = {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-export function DataProvider({ children }: { children: ReactNode }) {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [sections, setSections] = useState<Section[]>([]);
-  const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
-  const [loading, setLoading] = useState(true);
+// Local supabase client reference for components that need it outside hooks
+export let globalSupabase: any = null;
+
+export function DataProvider({ children, initialPosts, initialSections, initialSettings }: { children: ReactNode, initialPosts: Post[], initialSections: Section[], initialSettings: SiteSettings }) {
+  const [posts, setPosts] = useState<Post[]>(initialPosts);
+  const [sections, setSections] = useState<Section[]>(initialSections);
+  const [settings, setSettings] = useState<SiteSettings>(initialSettings);
+  const [loading, setLoading] = useState(false);
   const [localLikes, setLocalLikes] = useState<string[]>([]);
+  
+  const supabase = useMemo(() => {
+    return createClient();
+  }, []);
+
+  useEffect(() => {
+    globalSupabase = supabase;
+  }, [supabase]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('pv-liked');
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        if (stored) setLocalLikes(JSON.parse(stored));
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            // eslint-disable-next-line
+            setLocalLikes(parsed);
+          }
+        }
       } catch { /* */ }
     }
   }, []);
@@ -79,76 +97,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [localLikes]);
 
   const resetData = useCallback(async () => {
-    const seed = async () => {
+    try {
       for (const section of seedSections) {
-        await setDoc(doc(db, 'sections', section.id), section);
+        await supabase.from('sections').upsert({ id: section.id, data: section });
       }
       for (const post of seedPosts) {
-        await setDoc(doc(db, 'posts', post.id), post);
+        await supabase.from('posts').upsert({ id: post.id, data: post });
       }
-      await setDoc(doc(db, 'settings', 'global'), defaultSettings);
-      await setDoc(doc(db, 'settings', 'seeded'), { completedAt: new Date().toISOString() });
-    };
-    seed().catch(console.error);
-  }, []);
+      await supabase.from('settings').upsert({ id: 'global', data: defaultSettings });
+      await supabase.from('settings').upsert({ id: 'seeded', data: { completedAt: new Date().toISOString() } });
+      await adminRevalidateAll();
+    } catch (e) {
+      console.error(e);
+    }
+  }, [supabase]);
 
   const deleteMockData = useCallback(async () => {
     for (const post of seedPosts) {
-      await deleteDoc(doc(db, 'posts', post.id));
+      await supabase.from('posts').delete().eq('id', post.id);
     }
     for (const section of seedSections) {
-      await deleteDoc(doc(db, 'sections', section.id));
+      await supabase.from('sections').delete().eq('id', section.id);
     }
-  }, []);
+    await adminRevalidateAll();
+  }, [supabase]);
 
-  useEffect(() => {
-    let settingsLoaded = false;
-    let sectionsLoaded = false;
-    let postsLoaded = false;
 
-    const unsubPosts = onSnapshot(collection(db, 'posts'), (snap) => {
-      const data = snap.docs.map(doc => doc.data() as Post);
-      setPosts(data);
-      postsLoaded = true;
-      if (settingsLoaded && sectionsLoaded) setLoading(false);
-    }, (error: any) => {
-      if (error?.name === 'AbortError' || error?.message?.includes('aborted') || String(error).includes('aborted')) return;
-      console.error('Firebase posts snapshot error:', error);
-      postsLoaded = true; // Still mark as loaded to unblock UI
-      if (settingsLoaded && sectionsLoaded) setLoading(false);
-    });
-
-    const unsubSections = onSnapshot(collection(db, 'sections'), (snap) => {
-      const data = snap.docs.map(doc => doc.data() as Section);
-      setSections(data);
-      sectionsLoaded = true;
-      if (settingsLoaded && postsLoaded) setLoading(false);
-    }, (error: any) => {
-      if (error?.name === 'AbortError' || error?.message?.includes('aborted') || String(error).includes('aborted')) return;
-      console.error('Firebase sections snapshot error:', error);
-      sectionsLoaded = true;
-      if (settingsLoaded && postsLoaded) setLoading(false);
-    });
-
-    const unsubSettings = onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
-      if (docSnap.exists()) {
-        setSettings(docSnap.data() as SiteSettings);
-      }
-      settingsLoaded = true;
-      if (sectionsLoaded && postsLoaded) setLoading(false);
-    }, (error: any) => {
-      if (error?.name === 'AbortError' || error?.message?.includes('aborted') || String(error).includes('aborted')) return;
-      console.error('Firebase settings snapshot error:', error);
-      settingsLoaded = true;
-      if (sectionsLoaded && postsLoaded) setLoading(false);
-    });
-
-    return () => {
-      unsubPosts();
-      unsubSections();
-      unsubSettings();
-    };
-  }, [resetData]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -169,66 +143,97 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const addPost = useCallback(async (post: Post) => {
     const { likedByUser, ...saveable } = post;
     const cleanPost = JSON.parse(JSON.stringify(saveable));
+    setPosts(prev => [...prev, post]);
     try {
-      await setDoc(doc(db, 'posts', post.id), cleanPost);
+      await supabase.from('posts').upsert({ id: post.id, data: cleanPost });
+      await adminRevalidateAll();
     } catch (error: any) {
-      console.error('Firebase save error:', error);
+      setPosts(prev => prev.filter(p => p.id !== post.id));
+      console.error('Supabase save error:', error);
       alert(`Failed to save post: ${error.message || 'Unknown error'}`);
     }
-  }, []);
+  }, [supabase]);
 
   const updatePost = useCallback(async (post: Post) => {
     // Remove transient property before save
     const { likedByUser, ...saveable } = post;
     const cleanPost = JSON.parse(JSON.stringify(saveable));
+    setPosts(prev => prev.map(p => p.id === post.id ? post : p));
     try {
-      await setDoc(doc(db, 'posts', post.id), cleanPost);
+      await supabase.from('posts').upsert({ id: post.id, data: cleanPost });
+      await adminRevalidateAll();
     } catch (error: any) {
-      console.error('Firebase save error:', error);
+      console.error('Supabase save error:', error);
       alert(`Failed to save post: ${error.message || 'Unknown error'}`);
     }
-  }, []);
+  }, [supabase]);
 
   const deletePost = useCallback(async (id: string) => {
-    await deleteDoc(doc(db, 'posts', id));
-  }, []);
+    setPosts(prev => prev.filter(p => p.id !== id));
+    await supabase.from('posts').delete().eq('id', id);
+    await adminRevalidateAll();
+  }, [supabase]);
 
   const incrementViews = useCallback(async (id: string) => {
     try {
-      await updateDoc(doc(db, 'posts', id), { views: increment(1) });
+      // Find post to increment
+      const post = posts.find(p => p.id === id);
+      if (post) {
+        setPosts(prev => prev.map(p => p.id === id ? { ...p, views: (p.views || 0) + 1 } : p));
+        const updated = { ...post, views: (post.views || 0) + 1 };
+        const { likedByUser, ...saveable } = updated;
+        await supabase.from('posts').update({ data: saveable }).eq('id', id);
+      }
     } catch {}
-  }, []);
+  }, [posts, supabase]);
 
   const toggleLike = useCallback(async (id: string) => {
     const liked = localLikes.includes(id);
+    const post = posts.find(p => p.id === id);
+    if (!post) return;
+
     try {
       if (liked) {
         setLocalLikes(prev => prev.filter(l => l !== id));
-        await updateDoc(doc(db, 'posts', id), { likes: increment(-1) });
+        setPosts(prev => prev.map(p => p.id === id ? { ...p, likes: Math.max(0, (p.likes || 0) - 1) } : p));
+        const updated = { ...post, likes: Math.max(0, (post.likes || 0) - 1) };
+        const { likedByUser, ...saveable } = updated;
+        await supabase.from('posts').update({ data: saveable }).eq('id', id);
       } else {
         setLocalLikes(prev => [...prev, id]);
-        await updateDoc(doc(db, 'posts', id), { likes: increment(1) });
+        setPosts(prev => prev.map(p => p.id === id ? { ...p, likes: (p.likes || 0) + 1 } : p));
+        const updated = { ...post, likes: (post.likes || 0) + 1 };
+        const { likedByUser, ...saveable } = updated;
+        await supabase.from('posts').update({ data: saveable }).eq('id', id);
       }
     } catch {}
-  }, [localLikes]);
+  }, [localLikes, posts, supabase]);
 
   const addSection = useCallback(async (section: Section) => {
     const cleanSection = JSON.parse(JSON.stringify(section));
-    await setDoc(doc(db, 'sections', section.id), cleanSection);
-  }, []);
+    setSections(prev => [...prev, section]);
+    await supabase.from('sections').upsert({ id: section.id, data: cleanSection });
+    await adminRevalidateAll();
+  }, [supabase]);
 
   const updateSection = useCallback(async (section: Section) => {
     const cleanSection = JSON.parse(JSON.stringify(section));
-    await setDoc(doc(db, 'sections', section.id), cleanSection);
-  }, []);
+    setSections(prev => prev.map(s => s.id === section.id ? section : s));
+    await supabase.from('sections').upsert({ id: section.id, data: cleanSection });
+    await adminRevalidateAll();
+  }, [supabase]);
 
   const deleteSection = useCallback(async (id: string) => {
-    await deleteDoc(doc(db, 'sections', id));
-  }, []);
+    setSections(prev => prev.filter(s => s.id !== id));
+    await supabase.from('sections').delete().eq('id', id);
+    await adminRevalidateAll();
+  }, [supabase]);
 
   const updateSettings = useCallback(async (s: SiteSettings) => {
-    await setDoc(doc(db, 'settings', 'global'), s);
-  }, []);
+    setSettings(s);
+    await supabase.from('settings').upsert({ id: 'global', data: s });
+    await adminRevalidateAll();
+  }, [supabase]);
 
   // Map localLikes onto posts efficiently
   const enrichedPosts: Post[] = posts.map(p => ({ ...p, likedByUser: localLikes.includes(p.id) }));
@@ -236,7 +241,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const getPostById = useCallback((id: string) => enrichedPosts.find(p => p.id === id), [enrichedPosts]);
 
   const getFilteredPosts = useCallback((section: Section): Post[] => {
-    let filtered = [...enrichedPosts].filter(p => p.status === 'published' || !p.status);
+    let filtered = [...enrichedPosts].filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
     switch (section.type) {
       case 'ai-tool':
         filtered = filtered.filter(p => p.images.some(img => img.aiTool === section.aiTool));
@@ -262,7 +267,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         if (section.postIds && section.postIds.length > 0) {
           filtered = section.postIds
             .map(pid => enrichedPosts.find(p => p.id === pid))
-            .filter((p): p is Post => p !== undefined && (p.status === 'published' || !p.status));
+            .filter((p): p is Post => p !== undefined && (p.status === 'published' || !p.status) && p.visibility !== 'private');
         }
         break;
     }
@@ -272,7 +277,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const searchPosts = useCallback((query: string): Post[] => {
     const q = query.toLowerCase();
     return enrichedPosts.filter(p => 
-      (p.status === 'published' || !p.status) &&
+      (p.status === 'published' || !p.status) && p.visibility !== 'private' &&
       (p.title.toLowerCase().includes(q) ||
        p.description.toLowerCase().includes(q) ||
        p.tags.some(t => t.toLowerCase().includes(q)) ||

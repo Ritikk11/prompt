@@ -1,14 +1,13 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { useData } from '@/components/context/DataContext';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, User, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { createClient } from '@/lib/supabase-client';
+import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { Upload, Plus, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { ImagePrompt } from '@/lib/types';
-import { db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase';
 
 export default function SubmitPage() {
   const { settings, loading } = useData();
@@ -23,14 +22,21 @@ export default function SubmitPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, u => {
-      setUser(u);
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       setAuthLoading(false);
       if (!settings.features?.userSubmissions) {
          navigate.push('/');
       }
     });
-    return () => unsub();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate, settings]);
 
   if (!settings.features?.userSubmissions) return null;
@@ -41,9 +47,14 @@ export default function SubmitPage() {
       <div className="max-w-md mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold mb-4">Please Sign In</h1>
         <p className="text-surface-500 mb-8">Sign in to submit your prompt collection.</p>
-        <button onClick={() => {
-           const provider = new GoogleAuthProvider();
-           signInWithPopup(auth, provider);
+        <button onClick={async () => {
+           const supabase = createClient();
+           await supabase.auth.signInWithOAuth({
+             provider: 'google',
+             options: {
+               redirectTo: `${window.location.origin}/auth/callback`,
+             },
+           });
         }} className="px-6 py-3 rounded-xl font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors">
           Sign In
         </button>
@@ -52,25 +63,52 @@ export default function SubmitPage() {
   }
 
   const handleImageUpload = async (file: File) => {
-    if (!settings.imgbbApiKey) {
+    const isConfigured = 
+      (settings.imageProvider === 'cloudinary' && settings.cloudinaryCloudName && settings.cloudinaryUploadPreset) ||
+      (settings.imageProvider === 'supabase') ||
+      ((settings.imageProvider === 'imgbb' || !settings.imageProvider) && settings.imgbbApiKey);
+
+    if (!isConfigured) {
       alert("Image uploads are not configured by the admin yet.");
       return;
     }
-    const formData = new FormData();
-    formData.append('image', file);
     try {
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${settings.imgbbApiKey}`, {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.success) {
-        setImages(prev => [...prev, { id: generateId(), url: data.data.url, prompt: '', aiTool: settings.aiTools[0] }]);
+      let url = '';
+      if (settings.imageProvider === 'cloudinary' && settings.cloudinaryCloudName && settings.cloudinaryUploadPreset) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', settings.cloudinaryUploadPreset);
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${settings.cloudinaryCloudName}/image/upload`, { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.secure_url) url = data.secure_url;
+        else throw new Error(data.error?.message || 'Cloudinary upload failed');
+      } else if (settings.imageProvider === 'supabase') {
+        const { createClient: createSupabaseClient } = await import('@/lib/supabase-client');
+        const supabase = createSupabaseClient();
+        const ext = file.name.split('.').pop() || 'jpg';
+        const { generateId } = await import('@/lib/utils');
+        const fileName = `${generateId()}.${ext}`;
+        const { data, error } = await supabase.storage.from('images').upload(fileName, file);
+        if (error) throw new Error(error.message);
+        const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName);
+        url = publicUrl;
+      } else if ((settings.imageProvider === 'imgbb' || !settings.imageProvider) && settings.imgbbApiKey) {
+        const formData = new FormData();
+        formData.append('image', file);
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${settings.imgbbApiKey}`, {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.success) url = data.data.url;
+        else throw new Error("Upload failed: " + data.error?.message);
       } else {
-        alert("Upload failed: " + data.error.message);
+        throw new Error("No image provider configured");
       }
-    } catch (e) {
-      alert("Error uploading image");
+      
+      setImages(prev => [...prev, { id: generateId(), url, prompt: '', aiTool: settings.aiTools[0] }]);
+    } catch (e: any) {
+      alert(e.message || "Error uploading image");
     }
   };
 
@@ -106,7 +144,7 @@ export default function SubmitPage() {
 
     try {
       const isAutoApprove = settings.features?.userSubmissionsAutoApprove;
-      await setDoc(doc(db, 'posts', id), {
+      await addPost({
         id,
         slug,
         title,
@@ -117,7 +155,7 @@ export default function SubmitPage() {
         views: 0,
         likes: 0,
         featured: false,
-        authorId: user.uid,
+        authorId: user.id,
         status: isAutoApprove ? 'published' : 'pending'
       });
       alert(isAutoApprove ? 'Prompt collection published successfully!' : 'Prompt collection submitted successfully! It is pending admin approval.');

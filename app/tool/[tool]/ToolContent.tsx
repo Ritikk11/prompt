@@ -1,31 +1,28 @@
 'use client';
 import React, { useState } from 'react';
-import { useData } from '@/components/context/DataContext';
 import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import SkeletonPostCard from '@/components/SkeletonPostCard';
 import { getGridClasses } from '@/lib/utils';
 import { Sparkles } from 'lucide-react';
+import type { Post, SiteSettings } from '@/lib/types';
 
-const PostCard = dynamic(() => import('@/components/PostCard'), {
-  loading: () => <SkeletonPostCard />
-});
+import PostCard from '@/components/PostCard';
 
 const AdSlot = dynamic(() => import('@/components/AdSlot'), {
   ssr: false
 });
 
-export default function ToolContent() {
+export default function ToolContent({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
   const params = useParams();
   const rawTool = params.tool as string;
   const tool = decodeURIComponent(rawTool || '');
   
-  const { posts, settings, loading } = useData();
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'trending'>('latest');
 
   // Filter public posts that include the aiTool (case insensitive)
-  const publicPosts = posts.filter(p => p.status === 'published' || !p.status);
+  const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
   let filtered = publicPosts.filter(p => 
     p.images && p.images.some(img => img.aiTool?.toLowerCase() === tool.toLowerCase())
   );

@@ -1,24 +1,54 @@
 'use client';
-import React, { useState, useRef } from 'react';
-import { useData } from '@/components/context/DataContext';
+import React, { useState, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import SkeletonPostCard from './SkeletonPostCard';
-import type { Section } from '@/lib/types';
+import type { Section, Post, SiteSettings } from '@/lib/types';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { getGridClasses } from '@/lib/utils';
 
-const PostCard = dynamic(() => import('./PostCard'), {
-  loading: () => <SkeletonPostCard />
-});
+import PostCard from './PostCard';
 
 const AdSlot = dynamic(() => import('@/components/AdSlot'), {
   ssr: false
 });
 
-export default function HomeSection({ section }: { section: Section }) {
-  const { posts, getFilteredPosts, loading, settings } = useData();
+export default function HomeSection({ section, posts, settings }: { section: Section, posts: Post[], settings: SiteSettings }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const getFilteredPosts = useCallback((section: Section): Post[] => {
+    let filtered = [...posts].filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
+    switch (section.type) {
+      case 'ai-tool':
+        filtered = filtered.filter(p => p.images.some(img => img.aiTool === section.aiTool));
+        break;
+      case 'tag':
+        filtered = filtered.filter(p => p.tags.some(t => t.toLowerCase() === section.tag?.toLowerCase()));
+        break;
+      case 'category':
+        filtered = filtered.filter(p => p.category?.toLowerCase() === section.category?.toLowerCase());
+        break;
+      case 'latest':
+        filtered = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        break;
+      case 'popular':
+        filtered = filtered.sort((a, b) => b.views - a.views);
+        break;
+      case 'trending':
+        const viewsW = settings.features?.trendingViewsWeight ?? 1;
+        const likesW = settings.features?.trendingLikesWeight ?? 2;
+        filtered = filtered.sort((a, b) => (b.views * viewsW + b.likes * likesW) - (a.views * viewsW + a.likes * likesW));
+        break;
+      case 'custom':
+        if (section.postIds && section.postIds.length > 0) {
+          filtered = section.postIds
+            .map(pid => posts.find(p => p.id === pid))
+            .filter((p): p is Post => p !== undefined && (p.status === 'published' || !p.status) && p.visibility !== 'private');
+        }
+        break;
+    }
+    return filtered;
+  }, [posts, settings.features?.trendingViewsWeight, settings.features?.trendingLikesWeight]);
 
   const isLatest = section.type === 'latest';
 
@@ -39,8 +69,8 @@ export default function HomeSection({ section }: { section: Section }) {
   const hasMore = allLatestPosts.length > showCount;
 
   // Don't render empty sections
-  if (!loading && !isLatest && sectionPosts.length === 0) return null;
-  if (!loading && isLatest && allLatestPosts.length === 0) return null;
+  if (!isLatest && sectionPosts.length === 0) return null;
+  if (isLatest && allLatestPosts.length === 0) return null;
 
   const scroll = (dir: 'left' | 'right') => {
     if (!scrollRef.current) return;
@@ -75,15 +105,6 @@ export default function HomeSection({ section }: { section: Section }) {
       {isLatest ? (
         /* Latest — Masonry grid with Load More */
         <div>
-          {loading ? (
-             <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-               {Array.from({ length: BATCH }).map((_, i) => (
-                 <div key={i} className="mb-1 inline-block w-full break-inside-avoid">
-                   <SkeletonPostCard />
-                 </div>
-               ))}
-             </div>
-          ) : (
             <>
               <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
                 {visibleLatest.map((post, i) => (
@@ -109,7 +130,6 @@ export default function HomeSection({ section }: { section: Section }) {
                 </div>
               )}
             </>
-          )}
         </div>
       ) : (
         /* Other sections — Horizontal scroll */
@@ -128,22 +148,14 @@ export default function HomeSection({ section }: { section: Section }) {
             className="flex gap-2 sm:gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-thin"
             style={{ scrollbarWidth: 'thin' }}
           >
-            {loading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex-none w-56 sm:w-72 md:w-80 lg:w-96">
-                  <SkeletonPostCard />
-                </div>
-              ))
-            ) : (
-              sectionPosts.map((post, i) => (
+              {sectionPosts.map((post, i) => (
                 <React.Fragment key={post.id}>
                   <div className="flex-none w-56 sm:w-72 md:w-80 lg:w-96">
                     <PostCard post={post} index={i} aspect="aspect-[3/4]" />
                   </div>
                   <AdSlot placement="inFeed" inFeedIndex={i} className="flex-none w-56 sm:w-72 md:w-80 lg:w-96 bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
                 </React.Fragment>
-              ))
-            )}
+              ))}
           </div>
 
           {/* Right arrow */}

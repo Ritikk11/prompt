@@ -1,8 +1,8 @@
 export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 import { Metadata } from 'next';
-import { getPostBySlugOrIdREST } from '@/lib/firebase-rest';
+import { getPostBySlugOrId, fetchPosts } from '@/lib/data';
 import PostContent from './PostContent';
 import type { Post } from '@/lib/types';
 
@@ -12,7 +12,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPostBySlugOrIdREST(slug);
+  const post = await getPostBySlugOrId(slug);
 
   if (!post) {
     return {
@@ -56,5 +56,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PostPage({ params }: Props) {
-  return <PostContent />;
+  const { slug } = await params;
+  const post = await getPostBySlugOrId(slug);
+  let relatedPosts: Post[] = [];
+  if (post) {
+    const allPosts = await fetchPosts();
+    relatedPosts = allPosts
+      .filter(p => p.id !== post.id && p.tags.some(t => post.tags.includes(t)))
+      .slice(0, 4);
+  }
+  return <PostContent post={post!} relatedPosts={relatedPosts} />;
 }

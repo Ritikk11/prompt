@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { getSettingsREST } from '@/lib/firebase-rest';
+import { fetchSettings } from '@/lib/data';
 
 export const runtime = 'edge';
 
@@ -9,7 +9,7 @@ export const contentType = 'image/png';
 export default async function Icon() {
   let siteLogo = '';
   try {
-    const settings = await getSettingsREST();
+    const settings = await fetchSettings();
     if (settings && settings.siteLogo) {
       siteLogo = settings.siteLogo;
     }

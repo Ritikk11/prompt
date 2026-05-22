@@ -1,8 +1,8 @@
 export const runtime = 'edge';
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 import { Metadata } from 'next';
-import { getSectionBySlugREST, getAllPostsREST } from '@/lib/firebase-rest';
+import { getSectionBySlug, fetchPosts } from '@/lib/data';
 import PostCard from '@/components/PostCard';
 import type { Post, Section } from '@/lib/types';
 import { notFound } from 'next/navigation';
@@ -15,7 +15,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const section = await getSectionBySlugREST(slug);
+  const section = await getSectionBySlug(slug);
 
   if (!section) {
     return {
@@ -32,8 +32,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SectionPage({ params }: Props) {
   const { slug } = await params;
   const [section, allPosts] = await Promise.all([
-    getSectionBySlugREST(slug) as Promise<Section | null>,
-    getAllPostsREST() as Promise<Post[]>,
+    getSectionBySlug(slug) as Promise<Section | null>,
+    fetchPosts() as Promise<Post[]>,
   ]);
 
   if (!section) {

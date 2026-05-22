@@ -1,3 +1,4 @@
+'use client';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -40,8 +41,10 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
   );
 };
 
-export default function PostCard({ post, index, aspect }: { post: Post; index?: number; aspect?: string }) {
-  const { settings } = useData();
+export default function PostCard({ post: initialPost, index, aspect }: { post: Post; index?: number; aspect?: string }) {
+  const { settings, posts } = useData();
+  const post = posts.find(p => p.id === initialPost.id) || initialPost;
+  
   const allTools = getAllTools(post);
   const primaryTool = allTools.length > 0 ? allTools[0] : (post.images[0]?.aiTool || '');
   const toolInfo = getToolInfo(primaryTool, settings?.toolDetails);

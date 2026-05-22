@@ -7,8 +7,8 @@ import { Search, Sun, Moon, Menu, X, Sparkles, Shield, User as UserIcon, LogOut,
 import Image from 'next/image';
 import { useTheme } from '@/components/context/ThemeContext';
 import { useData } from '@/components/context/DataContext';
-import { auth } from '@/lib/firebase';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User, signOut } from 'firebase/auth';
+import { createClient } from '@/lib/supabase-client';
+import type { User } from '@supabase/supabase-js';
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
@@ -41,8 +41,14 @@ export default function Header() {
   }, [lastScrollY, menuOpen, searchOpen, showLiveResults]);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, u => setUser(u));
-    return () => unsub();
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -59,7 +65,7 @@ export default function Header() {
     if (!query.trim()) return [];
     const q = query.toLowerCase();
     return posts.filter(p => {
-      if (p.status && p.status !== 'published') return false;
+      if ((p.status && p.status !== 'published') || p.visibility === 'private') return false;
       return (
         p.title.toLowerCase().includes(q) ||
         (p.tags && p.tags.some(t => t.toLowerCase().includes(q))) ||
@@ -82,8 +88,22 @@ export default function Header() {
 
   const handleLogin = async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const supabase = createClient();
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
     } catch (e) {
       console.error(e);
     }
@@ -199,7 +219,7 @@ export default function Header() {
                   <Link href="/profile" className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
                     <UserIcon className="w-4 h-4" /> Profile
                   </Link>
-                  <button onClick={() => signOut(auth)} className="p-2 rounded-lg text-surface-400 hover:text-red-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors" title="Logout">
+                  <button onClick={handleLogout} className="p-2 rounded-lg text-surface-400 hover:text-red-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors" title="Logout">
                     <LogOut className="w-4 h-4" />
                   </button>
                 </>
@@ -296,7 +316,7 @@ export default function Header() {
                     <Link href="/profile" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800">
                       <UserIcon className="w-4 h-4" /> Profile
                     </Link>
-                    <button onClick={() => { signOut(auth); setMenuOpen(false); }} className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <button onClick={() => { handleLogout(); setMenuOpen(false); }} className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                       Sign Out
                     </button>
                    </>

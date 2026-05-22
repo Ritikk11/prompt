@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAllPostsREST, getSettingsREST } from '@/lib/firebase-rest';
+import { fetchPosts, fetchSettings } from '@/lib/data';
 import { Post, SiteSettings } from '@/lib/types';
 
 export const runtime = 'edge';
@@ -9,13 +9,13 @@ export async function GET() {
 
   try {
     // 1. Fetch site settings for title and description
-    const settings = await getSettingsREST() as SiteSettings | null;
+    const settings = await fetchSettings() as SiteSettings;
     const siteTitle = settings?.siteTitle || 'AI Prompt Matrix';
     const siteDescription = settings?.siteDescription || 'Curated AI Prompts';
 
     // 2. Fetch posts
-    const posts = await getAllPostsREST() as Post[];
-    const publishedPosts = posts.filter(p => p.status === 'published' || !p.status)
+    const posts = await fetchPosts() as Post[];
+    const publishedPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private')
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 50); // only last 50 for RSS
 
