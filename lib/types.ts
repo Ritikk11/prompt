@@ -99,6 +99,12 @@ export interface SiteSettings {
   cloudinaryCloudName?: string;
   cloudinaryUploadPreset?: string;
   features?: SiteFeatures;
+  pageAbout?: string;
+  pagePrivacy?: string;
+  pageTerms?: string;
+  pageDmca?: string;
+  pageDisclaimer?: string;
+  pageContact?: string;
 }
 
 export type Theme = 'light' | 'dark';

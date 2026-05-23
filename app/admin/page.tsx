@@ -15,8 +15,11 @@ import {
 import Image from 'next/image';
 import { getToolInfo } from '@/lib/constants';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
+import StaticPagesTab from '@/components/admin/StaticPagesTab';
 
-type AdminTab = 'dashboard' | 'posts' | 'sections' | 'settings' | 'features' | 'submissions' | 'seo-pages';
+export const runtime = 'edge';
+
+type AdminTab = 'dashboard' | 'posts' | 'sections' | 'settings' | 'features' | 'submissions' | 'seo-pages' | 'static-pages';
 
 const TAILWIND_COLORS = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500',
@@ -400,11 +403,6 @@ export default function Admin() {
   };
 
   const uploadImageFile = async (file: File, fallbackCompression: number = 400): Promise<string> => {
-    // If file is below safe Firebase Firestore limit (~800KB), keep it as base64 to save Cloudinary/ImgBB quota
-    if (file.size < 800000) {
-      return await compressImage(file, fallbackCompression);
-    }
-
     if (imageProvider === 'cloudinary' && cloudinaryCloudName && cloudinaryUploadPreset) {
       const formData = new FormData();
       formData.append('file', file);
@@ -779,6 +777,7 @@ export default function Admin() {
     { key: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
     { key: 'submissions', label: 'Submissions', icon: <Upload className="w-4 h-4" />, count: posts.filter(p => p.status === 'pending').length },
     { key: 'seo-pages', label: 'SEO Pages', icon: <LayoutTemplate className="w-4 h-4" /> },
+    { key: 'static-pages', label: 'Static Pages', icon: <FileText className="w-4 h-4" /> },
   ];
 
   if (authLoading) {
@@ -987,6 +986,24 @@ export default function Admin() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => {
+                          const url = `${window.location.origin}/post/${post.slug || post.id}`;
+                          navigator.clipboard.writeText(url);
+                          alert('Link copied to clipboard!');
+                        }}
+                        className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                        title="Copy Post Link"
+                      >
+                        <svg className="w-4 h-4 text-surface-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                      </button>
+                      <button
+                        onClick={() => updatePost({ ...post, visibility: post.visibility === 'private' ? 'public' : 'private' })}
+                        className={`p-2 rounded-lg transition-colors ${post.visibility === 'private' ? 'bg-red-50 dark:bg-red-900/20' : 'hover:bg-surface-100 dark:hover:bg-surface-800'}`}
+                        title={post.visibility === 'private' ? 'Make Public' : 'Make Private'}
+                      >
+                        {post.visibility === 'private' ? <EyeOff className="w-4 h-4 text-red-500" /> : <Eye className="w-4 h-4 text-surface-400" />}
+                      </button>
                       <button
                         onClick={() => updatePost({ ...post, featured: !post.featured })}
                         className={`p-2 rounded-lg transition-colors ${post.featured ? 'bg-yellow-50 dark:bg-yellow-900/20' : 'hover:bg-surface-100 dark:hover:bg-surface-800'}`}
@@ -2603,6 +2620,13 @@ export default function Admin() {
       {tab === 'seo-pages' && (
         <div className="max-w-4xl">
           <SeoPagesTab />
+        </div>
+      )}
+
+      {/* ===== STATIC PAGES TAB ===== */}
+      {tab === 'static-pages' && (
+        <div className="max-w-4xl">
+          <StaticPagesTab settings={settings} updateSettings={updateSettings} />
         </div>
       )}
     </div>

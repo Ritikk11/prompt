@@ -1,51 +1,55 @@
 export const runtime = 'edge';
-import Link from 'next/link';
+import { fetchSettings } from '@/lib/data';
+import Markdown from '@/components/MarkdownRenderer';
 
-export default function PrivacyPolicy() {
+export default async function PrivacyPolicy() {
+  const settings = await fetchSettings();
+  
+  const defaultContent = `
+# Privacy Policy
+
+Last updated: May 23, 2026
+
+This Privacy Policy explains how ${settings.siteTitle || 'Our Site'} ("we", "us", "our") collects, uses, and shares your information when you use our website.
+
+## 1. Information We Collect
+
+We collect information you provide directly to us, such as when you create an account, submit a prompt, or contact us for support.
+
+### Log Data
+
+Like many website operators, we collect information that your browser sends whenever you visit our site ("Log Data"). This Log Data may include information such as your computer's Internet Protocol ("IP") address, browser type, browser version, the pages of our site that you visit, the time and date of your visit, the time spent on those pages and other statistics.
+
+## 2. Use of Information
+
+We use the information we collect to:
+- Provide, maintain, and improve our services
+- Communicate with you about your account and the site
+- Monitor and analyze trends and usage
+- Detect, investigate, and prevent fraudulent transactions and other illegal activities
+
+## 3. Cookies
+
+We use "cookies" to collect information and improve our services. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you do not accept cookies, you may not be able to use some portions of our site.
+
+## 4. Contact Us
+
+If you have any questions about this Privacy Policy, please contact us.
+`;
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 md:py-20 fade-in">
-      <h1 className="text-3xl md:text-5xl font-black mb-8 text-surface-900 dark:text-white">Privacy Policy</h1>
-      <div className="prose dark:prose-invert max-w-none text-surface-700 dark:text-surface-300">
-        <p className="mb-4">Last updated: {new Date().toLocaleDateString()}</p>
-        <p className="mb-4">Welcome to our Prompt Gallery. We are committed to protecting your personal information and your right to privacy. This privacy notice describes how and why we might collect, store, use, and/or share your information when you use our services.</p>
-        
-        <h2 className="text-2xl font-bold mt-8 mb-4 text-surface-900 dark:text-white">1. Information We Collect</h2>
-        <p className="mb-4">We collect personal information that you voluntarily provide to us when you register on the Services, express an interest in obtaining information about us or our products and Services, when you participate in activities on the Services, or otherwise when you contact us.</p>
-        <p className="mb-4"><strong>Data Collected Automatically:</strong> We automatically collect certain information when you visit, use, or navigate the Services. This information does not reveal your specific identity (like your name or contact information) but may include device and usage information, such as your IP address, browser and device characteristics, operating system, language preferences, referring URLs, device name, country, location, and information about how and when you use our Services.</p>
-
-        <h2 className="text-2xl font-bold mt-8 mb-4 text-surface-900 dark:text-white">2. Use of Information</h2>
-        <p className="mb-4">We process your information for purposes based on legitimate business interests, the fulfillment of our contract with you, compliance with our legal obligations, and/or your consent. This includes:</p>
-        <ul className="list-disc pl-5 mb-4 space-y-2">
-          <li><strong>To facilitate account creation and logon process.</strong></li>
-          <li><strong>To post testimonials.</strong> We post testimonials on our Services that may contain personal information.</li>
-          <li><strong>Request feedback.</strong> We may use your information to request feedback and to contact you about your use of our Services.</li>
-          <li><strong>To deliver and facilitate delivery of services to the user.</strong></li>
-          <li><strong>To respond to user inquiries/offer support to users.</strong></li>
-        </ul>
-        
-        <h2 className="text-2xl font-bold mt-8 mb-4 text-surface-900 dark:text-white">3. Cookies, Tracking & Third-Party Ads (AdSense)</h2>
-        <p className="mb-2">We use cookies and similar tracking technologies (like web beacons and pixels) to access or store information. Specific information about how we use such technologies and how you can refuse certain cookies is set out in our <Link href="/cookies" className="text-primary-500 hover:text-primary-600 underline">Cookies Policy</Link>.</p>
-        <p className="mb-4"><strong>Google AdSense:</strong> We use Google AdSense to display advertisements on our site. Google, as a third-party vendor, uses cookies to serve ads. Google&apos;s use of advertising cookies enables it and its partners to serve ads to our users based on their visit to our sites and/or other sites on the Internet. Users may opt out of personalized advertising by visiting Google Ads Settings.</p>
-        
-        <h2 className="text-2xl font-bold mt-8 mb-4 text-surface-900 dark:text-white">4. Your Rights</h2>
-        <p className="mb-4">Depending on where you are located geographically, the applicable privacy law may mean you have certain rights regarding your personal information. These may include:</p>
-        <ul className="list-disc pl-5 mb-4 space-y-2">
-          <li><strong>Right to access:</strong> You can request copies of your personal information.</li>
-          <li><strong>Right to rectification:</strong> You can request that we correct any information you believe is inaccurate.</li>
-          <li><strong>Right to erasure:</strong> You can request that we erase your personal information, under certain conditions.</li>
-          <li><strong>Right to restrict processing:</strong> You can request that we restrict the processing of your personal data.</li>
-          <li><strong>Right to object to processing:</strong> You can object to our processing of your personal data.</li>
-          <li><strong>Right to data portability:</strong> You can request that we transfer the data that we have collected to another organization, or directly to you.</li>
-        </ul>
-        
-        <h2 className="text-2xl font-bold mt-8 mb-4 text-surface-900 dark:text-white">5. Data Retention</h2>
-        <p className="mb-4">We will only keep your personal information for as long as it is necessary for the purposes set out in this privacy notice, unless a longer retention period is required or permitted by law (such as tax, accounting, or other legal requirements). When we have no ongoing legitimate business need to process your personal information, we will either delete or anonymize such information.</p>
-
-        <h2 className="text-2xl font-bold mt-8 mb-4 text-surface-900 dark:text-white">6. Changes to this Privacy Policy</h2>
-        <p className="mb-4">We may update this privacy notice from time to time. The updated version will be indicated by an updated &quot;Revised&quot; date and the updated version will be effective as soon as it is accessible. If we make material changes to this privacy notice, we may notify you either by prominently posting a notice of such changes or by directly sending you a notification.</p>
-        
-        <h2 className="text-2xl font-bold mt-8 mb-4 text-surface-900 dark:text-white">Contact Us</h2>
-        <p className="mb-4">For more information about our privacy practices, if you have questions, or if you would like to make a complaint, please contact us by e-mail at <strong>contact@aipromptmatrix.in</strong>.</p>
+      <div className="text-center mb-12">
+        <h1 className="text-4xl md:text-5xl font-black mb-4 text-surface-900 dark:text-white">Privacy Policy</h1>
+        <p className="text-lg text-surface-600 dark:text-surface-300 max-w-2xl mx-auto">
+          Learn how we collect, use, and protect your personal information.
+        </p>
+      </div>
+      <div className="bg-white dark:bg-surface-900 shadow-xl shadow-surface-200/20 dark:shadow-none border border-surface-200 dark:border-surface-800 rounded-3xl p-8 md:p-12 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary-500 hover:prose-a:text-primary-600 prose-img:rounded-2xl relative z-10">
+          <Markdown>{settings.pagePrivacy || defaultContent}</Markdown>
+        </div>
       </div>
     </div>
   );

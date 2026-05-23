@@ -54,7 +54,7 @@ export default function HomeSection({ section, posts, settings }: { section: Sec
 
   // For latest: show ALL posts sorted by date with load more
   const allLatestPosts = isLatest
-    ? [...posts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    ? [...posts].filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private').sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     : [];
 
   // For other sections: use filtered posts with limit

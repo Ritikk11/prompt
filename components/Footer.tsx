@@ -54,7 +54,8 @@ export default function Footer() {
               <div className="space-y-2">
                 <Link href="/privacy" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Privacy Policy</Link>
                 <Link href="/terms" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Terms of Service</Link>
-                <Link href="/cookies" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Cookies Policy</Link>
+                <Link href="/dmca" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">DMCA Notice</Link>
+                <Link href="/disclaimer" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Disclaimer</Link>
               </div>
             </div>
             <div>
