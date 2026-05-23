@@ -289,6 +289,7 @@ export default function Admin() {
   const [postHeroStyle, setPostHeroStyle] = useState(settings.postHeroStyle || 'v1');
   const [cardStyle, setCardStyle] = useState(settings.cardStyle || 'v1');
   const [badgeStyle, setBadgeStyle] = useState(settings.badgeStyle || 'v1');
+  const [adminEmailsStr, setAdminEmailsStr] = useState((settings.adminEmails || []).join(', '));
   const [imgbbApiKey, setImgbbApiKey] = useState(settings.imgbbApiKey || '');
   const [imageProvider, setImageProvider] = useState<'imgbb' | 'cloudinary' | 'supabase'>(settings.imageProvider || 'imgbb');
   const [cloudinaryCloudName, setCloudinaryCloudName] = useState(settings.cloudinaryCloudName || '');
@@ -325,7 +326,7 @@ export default function Admin() {
     }
   );
 
-  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'features' | 'ads' | 'ai-tools' | 'danger'>('general');
+  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'features' | 'ads' | 'ai-tools'>('general');
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -338,6 +339,7 @@ export default function Admin() {
     if (settings.postHeroStyle !== undefined) setPostHeroStyle(settings.postHeroStyle);
     if (settings.cardStyle !== undefined) setCardStyle(settings.cardStyle);
     if (settings.badgeStyle !== undefined) setBadgeStyle(settings.badgeStyle);
+    if (settings.adminEmails !== undefined) setAdminEmailsStr((settings.adminEmails || []).join(', '));
     if (settings.imgbbApiKey !== undefined) setImgbbApiKey(settings.imgbbApiKey);
     if (settings.imageProvider !== undefined) setImageProvider(settings.imageProvider);
     if (settings.cloudinaryCloudName !== undefined) setCloudinaryCloudName(settings.cloudinaryCloudName);
@@ -649,6 +651,7 @@ export default function Admin() {
       postHeroStyle,
       cardStyle,
       badgeStyle,
+      adminEmails: adminEmailsStr.split(',').map(e => e.trim()).filter(Boolean),
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
       ads: adsConfig,
       imgbbApiKey,
@@ -784,6 +787,8 @@ export default function Admin() {
     return <div className="flex h-[50vh] items-center justify-center text-surface-400">Loading admin...</div>;
   }
 
+  const isAdmin = !settings.adminEmails || settings.adminEmails.length === 0 || (user && user.email && settings.adminEmails.includes(user.email));
+
   if (!user) {
     return (
       <div className="flex flex-col justify-center min-h-[70vh] max-w-sm mx-auto px-4">
@@ -873,6 +878,30 @@ export default function Admin() {
     );
   }
 
+  if (user && !isAdmin) {
+    return (
+      <div className="flex flex-col justify-center min-h-[70vh] max-w-sm mx-auto px-4 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-6">
+          <Settings className="w-8 h-8 text-red-500" />
+        </div>
+        <h1 className="text-2xl font-bold mb-2 text-red-500">Access Denied</h1>
+        <p className="text-surface-600 dark:text-surface-300 mb-8">
+          Your email address ({user.email}) is not authorized to access the admin panel.
+        </p>
+        <button
+          onClick={async () => {
+            const supabase = createSupabaseClient();
+            await supabase.auth.signOut();
+            setUser(null);
+          }}
+          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+        >
+          Sign Out
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 fade-in">
       {/* Header */}
@@ -884,21 +913,13 @@ export default function Admin() {
         <div className="flex gap-2">
           <button
             onClick={async () => {
-              if (confirm('This will delete all mock posts and sections. Are you sure?')) {
-                await deleteMockData();
-                alert('Mock data deleted successfully.');
-                window.location.reload();
-              }
+              const supabase = createSupabaseClient();
+              await supabase.auth.signOut();
+              setUser(null);
             }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 border border-orange-200 dark:border-orange-800 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-surface-500 hover:bg-surface-50 dark:hover:bg-surface-800 border border-surface-200 dark:border-surface-700 transition-colors"
           >
-            <Trash2 className="w-4 h-4" /> Delete Mock Data
-          </button>
-          <button
-            onClick={handleResetData}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 border border-red-200 dark:border-red-800 transition-colors"
-          >
-            <RotateCcw className="w-4 h-4" /> Reset All
+            Sign Out
           </button>
         </div>
       </div>
@@ -1810,7 +1831,6 @@ export default function Admin() {
               { id: 'features', label: 'Features' },
               { id: 'ads', label: 'Ads' },
               { id: 'ai-tools', label: 'AI Tools' },
-              { id: 'danger', label: 'Danger Zone' },
             ].map(t => (
               <button
                 key={t.id}
@@ -1833,6 +1853,15 @@ export default function Admin() {
                   <Settings className="w-4 h-4 text-primary-500" /> Site Settings
                 </h3>
                 <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-surface-400 mb-1">Admin Emails (Comma separated. Leave blank to allow any logged in user)</label>
+                    <input
+                      value={adminEmailsStr}
+                      onChange={e => setAdminEmailsStr(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      placeholder="admin@example.com, owner@example.com"
+                    />
+                  </div>
                   <div>
                 <label className="block text-xs font-medium text-surface-400 mb-1">Site Title</label>
                 <div className="flex gap-2">
@@ -2545,19 +2574,7 @@ export default function Admin() {
           </div>
           )}
 
-          {/* Danger Zone */}
-          {settingsSubTab === 'danger' && (
-          <div className="p-5 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10">
-            <h3 className="font-semibold text-sm mb-2 text-red-600 dark:text-red-400">⚠️ Danger Zone</h3>
-            <p className="text-xs text-red-500/70 mb-4">This will permanently reset all data to defaults.</p>
-            <button
-              onClick={handleResetData}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors"
-            >
-              <RotateCcw className="w-4 h-4" /> Reset All Data
-            </button>
-          </div>
-          )}
+          {/* Danger Zone Removed */}
         </div>
       </div>
       )}

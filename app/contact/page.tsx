@@ -35,7 +35,7 @@ For press and media partnerships, please prefix your email subject with **[PRESS
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-black mb-4 text-surface-900 dark:text-white">Contact Us</h1>
         <p className="text-lg text-surface-600 dark:text-surface-300 max-w-2xl mx-auto">
-          Have a question or want to work together? We'd love to hear from you.
+          Have a question or want to work together? We&apos;d love to hear from you.
         </p>
       </div>
       <div className="bg-white dark:bg-surface-900 shadow-xl shadow-surface-200/20 dark:shadow-none border border-surface-200 dark:border-surface-800 rounded-3xl p-8 md:p-12 relative overflow-hidden">

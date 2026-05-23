@@ -99,6 +99,7 @@ export interface SiteSettings {
   cloudinaryCloudName?: string;
   cloudinaryUploadPreset?: string;
   features?: SiteFeatures;
+  adminEmails?: string[];
   pageAbout?: string;
   pagePrivacy?: string;
   pageTerms?: string;
