@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
-import dynamic from 'next/dynamic';
 import { getToolInfo, getAllTools } from '@/lib/constants';
 import TemplatePrompt from '@/components/TemplatePrompt';
 import { createClient } from '@/lib/supabase-client';
@@ -17,7 +16,7 @@ import ReactMarkdown from 'react-markdown';
 import CopyButton from '@/components/CopyButton';
 
 import PostCard from '@/components/PostCard';
-const AdSlot = dynamic(() => import('@/components/AdSlot'), { ssr: false });
+import AdSlot from '@/components/AdSlot';
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });

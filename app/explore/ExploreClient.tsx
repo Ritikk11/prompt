@@ -1,13 +1,9 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { getGridClasses } from '@/lib/utils';
 import type { Post, SiteSettings } from '@/lib/types';
+import AdSlot from '@/components/AdSlot';
 import PostCard from '@/components/PostCard';
-
-const AdSlot = dynamic(() => import('@/components/AdSlot'), {
-  ssr: false
-});
 
 export default function ExploreClient({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'trending'>('latest');

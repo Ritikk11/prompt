@@ -1,17 +1,12 @@
 'use client';
-import React, { useState, useRef, useCallback } from 'react';
-import dynamic from 'next/dynamic';
-import SkeletonPostCard from './SkeletonPostCard';
+import React, { useState, useRef } from 'react';
 import type { Section, Post, SiteSettings } from '@/lib/types';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { getGridClasses } from '@/lib/utils';
+import AdSlot from '@/components/AdSlot';
 
 import PostCard from './PostCard';
-
-const AdSlot = dynamic(() => import('@/components/AdSlot'), {
-  ssr: false
-});
 
 export default function HomeSection({ section, initialPosts, settings }: { section: Section, initialPosts: Post[], settings: SiteSettings }) {
   const scrollRef = useRef<HTMLDivElement>(null);

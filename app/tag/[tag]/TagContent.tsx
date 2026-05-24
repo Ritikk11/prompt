@@ -1,17 +1,13 @@
 'use client';
 import React, { useState } from 'react';
-import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import SkeletonPostCard from '@/components/SkeletonPostCard';
 import { getGridClasses } from '@/lib/utils';
 import type { Post, SiteSettings } from '@/lib/types';
+import AdSlot from '@/components/AdSlot';
 
 import PostCard from '@/components/PostCard';
-
-const AdSlot = dynamic(() => import('@/components/AdSlot'), {
-  ssr: false
-});
 
 export default function TagContent({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
   const params = useParams();

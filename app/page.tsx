@@ -1,8 +1,6 @@
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 import { fetchSections, fetchSettings, fetchPosts, getPostsForSection } from '@/lib/data';
-import dynamicImport from 'next/dynamic';
-import { getGridClasses } from '@/lib/utils';
 import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
 

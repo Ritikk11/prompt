@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import { LogOut, Heart, FileText } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';

@@ -2,7 +2,6 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import dynamic from 'next/dynamic';
 
 import { Search as SearchIcon } from 'lucide-react';
 import SkeletonPostCard from '@/components/SkeletonPostCard';
