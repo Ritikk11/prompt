@@ -62,7 +62,12 @@ export default async function PostPage({ params }: Props) {
   if (post) {
     const allPosts = await fetchPostSummaries();
     relatedPosts = allPosts
-      .filter(p => p.id !== post.id && p.tags.some(t => post.tags.includes(t)))
+      .filter(p =>
+        p.id !== post.id &&
+        (p.status === 'published' || !p.status) &&
+        p.visibility !== 'private' &&
+        p.tags.some(t => post.tags.includes(t))
+      )
       .slice(0, 4);
   }
   return <PostContent post={post!} relatedPosts={relatedPosts} />;
