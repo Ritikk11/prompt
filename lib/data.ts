@@ -1,6 +1,6 @@
-import { unstable_cache } from 'next/cache';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from './supabase-server';
 import type { Post, Section, SiteSettings } from './types';
+import { seedPosts, seedSections } from './data/seedData';
 
 const defaultSettings: SiteSettings = {
   siteTitle: 'Ai PromptMatrix',
@@ -31,46 +31,28 @@ const defaultSettings: SiteSettings = {
   }
 };
 
-function createPublicSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    console.warn('Supabase URL or Key is missing. Check your environment variables.');
-    return null;
-  }
-
-  return createClient(supabaseUrl, supabaseKey);
-}
-
-const cachedPosts = unstable_cache(async () => {
-  const supabase = createPublicSupabaseClient();
-  if (!supabase) return [];
-
+export async function fetchPosts() {
+  const supabase = await createClient();
   const { data, error } = await supabase.from('posts').select('data');
   if (error) {
     console.error('Supabase posts fetch error:', error);
     return [];
   }
   return (data || []).map(d => d.data as Post);
-}, ['posts'], { tags: ['posts', 'content'] });
+}
 
-const cachedSections = unstable_cache(async () => {
-  const supabase = createPublicSupabaseClient();
-  if (!supabase) return [];
-
+export async function fetchSections() {
+  const supabase = await createClient();
   const { data, error } = await supabase.from('sections').select('data');
   if (error) {
     console.error('Supabase sections fetch error:', error);
     return [];
   }
   return (data || []).map(d => d.data as Section);
-}, ['sections'], { tags: ['sections', 'content'] });
+}
 
-const cachedSettings = unstable_cache(async () => {
-  const supabase = createPublicSupabaseClient();
-  if (!supabase) return defaultSettings;
-
+export async function fetchSettings() {
+  const supabase = await createClient();
   const { data, error } = await supabase.from('settings').select('data').eq('id', 'global').maybeSingle();
   if (error) {
     console.error('Supabase settings fetch error:', error);
@@ -80,18 +62,6 @@ const cachedSettings = unstable_cache(async () => {
     return { ...defaultSettings, ...(data.data as Partial<SiteSettings>) };
   }
   return defaultSettings;
-}, ['settings'], { tags: ['settings', 'content'] });
-
-export async function fetchPosts() {
-  return cachedPosts();
-}
-
-export async function fetchSections() {
-  return cachedSections();
-}
-
-export async function fetchSettings() {
-  return cachedSettings();
 }
 
 export async function getPostBySlugOrId(idOrSlug: string) {
@@ -146,20 +116,14 @@ export async function getPostsForSection(section: Section, settings: SiteSetting
   return section.type === 'latest' ? filtered : filtered.slice(0, limit);
 }
 
-const cachedSeoPages = unstable_cache(async () => {
-  const supabase = createPublicSupabaseClient();
-  if (!supabase) return [];
-
+export async function fetchSeoPages() {
+  const supabase = await createClient();
   const { data, error } = await supabase.from('seopages').select('data');
   if (error) {
     console.error('Supabase seo pages fetch error:', error);
     return [];
   }
   return (data || []).map(d => d.data);
-}, ['seo-pages'], { tags: ['seo-pages', 'content'] });
-
-export async function fetchSeoPages() {
-  return cachedSeoPages();
 }
 
 export async function getSeoPageBySlug(slug: string) {
