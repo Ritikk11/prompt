@@ -74,10 +74,10 @@ export async function getSectionBySlug(slug: string) {
   return sections.find((s) => s.slug === slug || s.id === slug) || null;
 }
 
-export async function getPostsForSection(section: Section, settings: SiteSettings) {
-  // Fetch all posts - doing the filtering on the edge server side to avoid sending all to client
+export async function getPostsForSection(section: Section, settings: SiteSettings, allPosts?: Post[]) {
+  // Fetch all posts if not provided - doing the filtering on the edge server side to avoid sending all to client
   // The posts are fetched directly from the database but filtered here before sending to <HomeSection>
-  const posts = await fetchPosts();
+  const posts = allPosts || await fetchPosts();
   let filtered = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
   
   // Apply section specific filtering

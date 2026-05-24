@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next';
 import { fetchPosts, fetchSeoPages, fetchSections } from '@/lib/data';
 import { Post, Section } from '@/lib/types';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

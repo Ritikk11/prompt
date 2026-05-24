@@ -1,12 +1,11 @@
 export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 import { fetchSections, fetchSettings, fetchPosts, getPostsForSection } from '@/lib/data';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 import { getGridClasses } from '@/lib/utils';
 import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
 
-
-export const revalidate = 3600;
 
 export default async function Home() {
   const sections = await fetchSections();
@@ -20,7 +19,7 @@ export default async function Home() {
 
   // Pre-fetch posts for each section on the server
   const sectionPostsData = await Promise.all(
-    homepageSections.map(section => getPostsForSection(section, settings))
+    homepageSections.map(section => getPostsForSection(section, settings, allPosts))
   );
 
   return (

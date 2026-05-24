@@ -1,6 +1,6 @@
 export const runtime = 'edge';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
 import ToolContent from './ToolContent';

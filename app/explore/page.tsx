@@ -3,7 +3,7 @@ import { fetchPosts, fetchSettings } from '@/lib/data';
 import ExploreClient from './ExploreClient';
 
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 export default async function ExplorePage() {
   const posts = await fetchPosts();
