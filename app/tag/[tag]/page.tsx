@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
 import TagContent from './TagContent';
-import { fetchPosts, fetchSettings } from '@/lib/data';
+import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 
 interface Props {
   params: Promise<{ tag: string }>;
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function TagPage({ params }: Props) {
-  const posts = await fetchPosts();
+  const posts = await fetchPostSummaries();
   const settings = await fetchSettings();
   
   return <TagContent posts={posts} settings={settings} />;

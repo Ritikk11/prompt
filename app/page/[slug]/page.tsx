@@ -3,7 +3,7 @@ export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
-import { getSeoPageBySlug, fetchPosts } from '@/lib/data';
+import { getSeoPageBySlug, fetchPostSummaries } from '@/lib/data';
 import PostCard from '@/components/PostCard';
 import type { Post } from '@/lib/types';
 
@@ -35,7 +35,7 @@ export default async function SeoPublicPage({ params }: Props) {
   
   const [seoPage, allPosts] = await Promise.all([
     getSeoPageBySlug(slug),
-    fetchPosts(),
+    fetchPostSummaries(),
   ]);
 
   if (!seoPage) {

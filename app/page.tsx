@@ -1,6 +1,6 @@
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
-import { fetchSections, fetchSettings, fetchPosts, getPostsForSection } from '@/lib/data';
+import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } from '@/lib/data';
 import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
 
@@ -8,7 +8,7 @@ import HomeSection from '@/components/HomeSection';
 export default async function Home() {
   const sections = await fetchSections();
   const settings = await fetchSettings();
-  const allPosts = await fetchPosts();
+  const allPosts = await fetchPostSummaries();
   const featuredPosts = allPosts.filter(p => p.featured && (p.status === 'published' || !p.status) && p.visibility !== 'private');
   
   const homepageSections = sections

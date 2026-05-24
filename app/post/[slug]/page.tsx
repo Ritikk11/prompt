@@ -2,7 +2,7 @@ export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
-import { getPostBySlugOrId, fetchPosts } from '@/lib/data';
+import { getPostBySlugOrId, fetchPostSummaries } from '@/lib/data';
 import PostContent from './PostContent';
 import type { Post } from '@/lib/types';
 
@@ -60,7 +60,7 @@ export default async function PostPage({ params }: Props) {
   const post = await getPostBySlugOrId(slug);
   let relatedPosts: Post[] = [];
   if (post) {
-    const allPosts = await fetchPosts();
+    const allPosts = await fetchPostSummaries();
     relatedPosts = allPosts
       .filter(p => p.id !== post.id && p.tags.some(t => post.tags.includes(t)))
       .slice(0, 4);

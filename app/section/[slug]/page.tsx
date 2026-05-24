@@ -3,7 +3,7 @@ export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
-import { getSectionBySlug, fetchPosts } from '@/lib/data';
+import { getSectionBySlug, fetchPostSummaries } from '@/lib/data';
 import PostCard from '@/components/PostCard';
 import type { Post, Section } from '@/lib/types';
 import { notFound } from 'next/navigation';
@@ -34,7 +34,7 @@ export default async function SectionPage({ params }: Props) {
   const { slug } = await params;
   const [section, allPosts] = await Promise.all([
     getSectionBySlug(slug) as Promise<Section | null>,
-    fetchPosts() as Promise<Post[]>,
+    fetchPostSummaries() as Promise<Post[]>,
   ]);
 
   if (!section) {

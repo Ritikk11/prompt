@@ -41,6 +41,80 @@ export async function fetchPosts() {
   return (data || []).map(d => d.data as Post);
 }
 
+function isInlineImage(url?: string) {
+  return !!url && url.startsWith('data:image');
+}
+
+function sanitizeSettings(settings: SiteSettings): SiteSettings {
+  const toolDetails = settings.toolDetails
+    ? Object.fromEntries(
+        Object.entries(settings.toolDetails).map(([tool, details]) => [
+          tool,
+          {
+            ...details,
+            logo: isInlineImage(details.logo) ? undefined : details.logo,
+          },
+        ])
+      )
+    : undefined;
+
+  return {
+    ...settings,
+    siteLogo: isInlineImage(settings.siteLogo) ? '' : settings.siteLogo,
+    toolDetails,
+  };
+}
+
+function publicImageUrl(post: Post) {
+  if (post.thumbnailUrl && !isInlineImage(post.thumbnailUrl)) return post.thumbnailUrl;
+  const remoteImage = post.images?.find((image) => image.url && !isInlineImage(image.url));
+  if (remoteImage?.url) return remoteImage.url;
+  if (isInlineImage(post.thumbnailUrl) || post.images?.some((image) => isInlineImage(image.url))) {
+    return `/api/image/${post.id}`;
+  }
+  return '';
+}
+
+export function toPostSummary(post: Post): Post {
+  const imageUrl = publicImageUrl(post);
+  const primaryImage = post.images?.[0];
+
+  return {
+    id: post.id,
+    slug: post.slug,
+    title: post.title,
+    description: post.description,
+    thumbnailUrl: imageUrl,
+    images: [
+      {
+        id: primaryImage?.id || post.id,
+        url: imageUrl,
+        prompt: '',
+        aiTool: primaryImage?.aiTool || post.aiTools?.[0] || '',
+        aiTools: primaryImage?.aiTools || post.aiTools,
+        model: primaryImage?.model,
+      },
+    ],
+    tags: post.tags || [],
+    category: post.category,
+    categories: post.categories,
+    aiTools: post.aiTools,
+    featured: post.featured,
+    views: post.views,
+    likes: post.likes,
+    isPremium: post.isPremium,
+    isTemplate: post.isTemplate,
+    status: post.status,
+    visibility: post.visibility,
+    createdAt: post.createdAt,
+  };
+}
+
+export async function fetchPostSummaries() {
+  const posts = await fetchPosts();
+  return posts.map(toPostSummary);
+}
+
 export async function fetchSections() {
   const supabase = await createClient();
   const { data, error } = await supabase.from('sections').select('data');
@@ -59,7 +133,7 @@ export async function fetchSettings() {
     return defaultSettings;
   }
   if (data && data.data) {
-    return { ...defaultSettings, ...(data.data as Partial<SiteSettings>) };
+    return sanitizeSettings({ ...defaultSettings, ...(data.data as Partial<SiteSettings>) });
   }
   return defaultSettings;
 }
