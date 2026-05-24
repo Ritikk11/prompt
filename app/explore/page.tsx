@@ -1,7 +1,8 @@
+export const runtime = 'edge';
 import { fetchPosts, fetchSettings } from '@/lib/data';
 import ExploreClient from './ExploreClient';
 
-export const runtime = 'edge';
+
 export const revalidate = 3600;
 
 export default async function ExplorePage() {

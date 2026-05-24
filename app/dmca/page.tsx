@@ -1,4 +1,5 @@
 export const runtime = 'edge';
+
 import { fetchSettings } from '@/lib/data';
 import Markdown from '@/components/MarkdownRenderer';
 

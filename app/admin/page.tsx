@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+export const runtime = 'edge';
+import { useState, useEffect, useRef } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
 import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures } from '@/lib/types';
@@ -17,7 +18,7 @@ import { getToolInfo } from '@/lib/constants';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
 
-export const runtime = 'edge';
+
 
 type AdminTab = 'dashboard' | 'posts' | 'sections' | 'settings' | 'features' | 'submissions' | 'seo-pages' | 'static-pages';
 
@@ -92,7 +93,7 @@ function compressImage(file: File, maxSizeKB: number = 300): Promise<string> {
 export default function Admin() {
   const {
     posts, sections, settings, addPost, updatePost, deletePost,
-    addSection, updateSection, deleteSection, updateSettings, resetData, deleteMockData, loading
+    addSection, updateSection, deleteSection, updateSettings, resetData, deleteMockData, loading, loadAdminData
   } = useData();
 
   const [user, setUser] = useState<User | null>(null);
@@ -102,6 +103,17 @@ export default function Admin() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  
+  const isAdmin = !settings.adminEmails || settings.adminEmails.length === 0 || (user && user.email && settings.adminEmails.includes(user.email));
+
+  const initialDataLoaded = useRef(false);
+
+  useEffect(() => {
+    if (user && isAdmin && !initialDataLoaded.current) {
+      loadAdminData();
+      initialDataLoaded.current = true;
+    }
+  }, [user, isAdmin, loadAdminData]);
 
   useEffect(() => {
     const supabase = createSupabaseClient();
@@ -786,8 +798,6 @@ export default function Admin() {
   if (authLoading) {
     return <div className="flex h-[50vh] items-center justify-center text-surface-400">Loading admin...</div>;
   }
-
-  const isAdmin = !settings.adminEmails || settings.adminEmails.length === 0 || (user && user.email && settings.adminEmails.includes(user.email));
 
   if (!user) {
     return (

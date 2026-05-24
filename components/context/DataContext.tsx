@@ -12,17 +12,19 @@ interface DataContextType {
   addPost: (post: Post) => void;
   updatePost: (post: Post) => void;
   deletePost: (id: string) => void;
-  incrementViews: (id: string) => void;
-  toggleLike: (id: string) => void;
+  incrementViews: (id: string, fallbackPost?: Post) => void;
+  toggleLike: (id: string, fallbackPost?: Post) => void;
   addSection: (section: Section) => void;
   updateSection: (section: Section) => void;
   deleteSection: (id: string) => void;
   updateSettings: (settings: SiteSettings) => void;
   getPostById: (id: string) => Post | undefined;
-  getFilteredPosts: (section: Section) => Post[];
   searchPosts: (query: string) => Post[];
   resetData: () => void;
   deleteMockData: () => void;
+  loadAdminData: () => Promise<void>;
+  setPosts: (posts: Post[]) => void;
+  setSections: (sections: Section[]) => void;
   loading: boolean;
 }
 
@@ -60,7 +62,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 // Local supabase client reference for components that need it outside hooks
 export let globalSupabase: any = null;
 
-export function DataProvider({ children, initialPosts, initialSections, initialSettings }: { children: ReactNode, initialPosts: Post[], initialSections: Section[], initialSettings: SiteSettings }) {
+export function DataProvider({ children, initialPosts = [], initialSections = [], initialSettings }: { children: ReactNode, initialPosts?: Post[], initialSections?: Section[], initialSettings: SiteSettings }) {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [sections, setSections] = useState<Section[]>(initialSections);
   const [settings, setSettings] = useState<SiteSettings>(initialSettings);
@@ -122,7 +124,20 @@ export function DataProvider({ children, initialPosts, initialSections, initialS
     await adminRevalidateAll();
   }, [supabase]);
 
-
+  const loadAdminData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: postsData } = await supabase.from('posts').select('data');
+      if (postsData) setPosts(postsData.map((p: any) => p.data));
+      
+      const { data: sectionsData } = await supabase.from('sections').select('data');
+      if (sectionsData) setSections(sectionsData.map((s: any) => s.data));
+    } catch (e) {
+      console.error('Error loading admin data', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -174,36 +189,59 @@ export function DataProvider({ children, initialPosts, initialSections, initialS
     await adminRevalidateAll();
   }, [supabase]);
 
-  const incrementViews = useCallback(async (id: string) => {
+  const incrementViews = useCallback(async (id: string, fallbackPost?: Post) => {
     try {
-      // Find post to increment
-      const post = posts.find(p => p.id === id);
-      if (post) {
-        setPosts(prev => prev.map(p => p.id === id ? { ...p, views: (p.views || 0) + 1 } : p));
-        const updated = { ...post, views: (post.views || 0) + 1 };
-        const { likedByUser, ...saveable } = updated;
-        await supabase.from('posts').update({ data: saveable }).eq('id', id);
+      let post = posts.find(p => p.id === id);
+      if (!post && fallbackPost) {
+         post = fallbackPost;
+         setPosts(prev => [...prev.filter(p => p.id !== id), { ...post!, views: (post!.views || 0) + 1 }]);
+      } else if (post) {
+         setPosts(prev => prev.map(p => p.id === id ? { ...p, views: (p.views || 0) + 1 } : p));
+      } else {
+         // Load from DB
+         const { data: dbData } = await supabase.from('posts').select('data').eq('id', id).single();
+         if (dbData) post = dbData.data;
+         if (!post) return;
       }
+      
+      const updated = { ...post, views: (post.views || 0) + 1 };
+      const { likedByUser, ...saveable } = updated as any;
+      await supabase.from('posts').update({ data: saveable }).eq('id', id);
     } catch {}
   }, [posts, supabase]);
 
-  const toggleLike = useCallback(async (id: string) => {
+  const toggleLike = useCallback(async (id: string, fallbackPost?: Post) => {
     const liked = localLikes.includes(id);
-    const post = posts.find(p => p.id === id);
-    if (!post) return;
-
+    let post = posts.find(p => p.id === id);
+    
     try {
+      if (!post) {
+         if (fallbackPost) {
+             post = fallbackPost;
+         } else {
+             const { data: dbData } = await supabase.from('posts').select('data').eq('id', id).single();
+             if (dbData) post = dbData.data;
+         }
+         if (!post) return;
+      }
+
       if (liked) {
         setLocalLikes(prev => prev.filter(l => l !== id));
-        setPosts(prev => prev.map(p => p.id === id ? { ...p, likes: Math.max(0, (p.likes || 0) - 1) } : p));
+        setPosts(prev => {
+            if (!prev.find(p => p.id === id)) return [...prev, { ...post!, likes: Math.max(0, (post!.likes || 0) - 1) }];
+            return prev.map(p => p.id === id ? { ...p, likes: Math.max(0, (p.likes || 0) - 1) } : p);
+        });
         const updated = { ...post, likes: Math.max(0, (post.likes || 0) - 1) };
-        const { likedByUser, ...saveable } = updated;
+        const { likedByUser, ...saveable } = updated as any;
         await supabase.from('posts').update({ data: saveable }).eq('id', id);
       } else {
         setLocalLikes(prev => [...prev, id]);
-        setPosts(prev => prev.map(p => p.id === id ? { ...p, likes: (p.likes || 0) + 1 } : p));
+        setPosts(prev => {
+            if (!prev.find(p => p.id === id)) return [...prev, { ...post!, likes: (post!.likes || 0) + 1 }];
+            return prev.map(p => p.id === id ? { ...p, likes: (p.likes || 0) + 1 } : p);
+        });
         const updated = { ...post, likes: (post.likes || 0) + 1 };
-        const { likedByUser, ...saveable } = updated;
+        const { likedByUser, ...saveable } = updated as any;
         await supabase.from('posts').update({ data: saveable }).eq('id', id);
       }
     } catch {}
@@ -240,40 +278,6 @@ export function DataProvider({ children, initialPosts, initialSections, initialS
 
   const getPostById = useCallback((id: string) => enrichedPosts.find(p => p.id === id), [enrichedPosts]);
 
-  const getFilteredPosts = useCallback((section: Section): Post[] => {
-    let filtered = [...enrichedPosts].filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
-    switch (section.type) {
-      case 'ai-tool':
-        filtered = filtered.filter(p => p.images.some(img => img.aiTool === section.aiTool));
-        break;
-      case 'tag':
-        filtered = filtered.filter(p => p.tags.some(t => t.toLowerCase() === section.tag?.toLowerCase()));
-        break;
-      case 'category':
-        filtered = filtered.filter(p => p.category?.toLowerCase() === section.category?.toLowerCase());
-        break;
-      case 'latest':
-        filtered = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        break;
-      case 'popular':
-        filtered = filtered.sort((a, b) => b.views - a.views);
-        break;
-      case 'trending':
-        const viewsW = settings.features?.trendingViewsWeight ?? 1;
-        const likesW = settings.features?.trendingLikesWeight ?? 2;
-        filtered = filtered.sort((a, b) => (b.views * viewsW + b.likes * likesW) - (a.views * viewsW + a.likes * likesW));
-        break;
-      case 'custom':
-        if (section.postIds && section.postIds.length > 0) {
-          filtered = section.postIds
-            .map(pid => enrichedPosts.find(p => p.id === pid))
-            .filter((p): p is Post => p !== undefined && (p.status === 'published' || !p.status) && p.visibility !== 'private');
-        }
-        break;
-    }
-    return filtered;
-  }, [enrichedPosts, settings.features?.trendingViewsWeight, settings.features?.trendingLikesWeight]);
-  
   const searchPosts = useCallback((query: string): Post[] => {
     const q = query.toLowerCase();
     return enrichedPosts.filter(p => 
@@ -289,7 +293,8 @@ export function DataProvider({ children, initialPosts, initialSections, initialS
     <DataContext.Provider value={{
       posts: enrichedPosts, sections, settings, addPost, updatePost, deletePost,
       incrementViews, toggleLike, addSection, updateSection, deleteSection,
-      updateSettings, getPostById, getFilteredPosts, searchPosts, resetData, deleteMockData, loading
+      updateSettings, getPostById, searchPosts, resetData, deleteMockData, 
+      loadAdminData, setPosts, setSections, loading
     }}>
       {children}
     </DataContext.Provider>

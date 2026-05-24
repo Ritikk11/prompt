@@ -1,31 +1,38 @@
-import { fetchSections, fetchSettings, fetchPosts } from '@/lib/data';
+export const runtime = 'edge';
+import { fetchSections, fetchSettings, fetchPosts, getPostsForSection } from '@/lib/data';
 import dynamic from 'next/dynamic';
 import { getGridClasses } from '@/lib/utils';
 import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
 
-export const runtime = 'edge';
+
 export const revalidate = 3600;
 
 export default async function Home() {
   const sections = await fetchSections();
-  const posts = await fetchPosts();
   const settings = await fetchSettings();
+  const allPosts = await fetchPosts();
+  const featuredPosts = allPosts.filter(p => p.featured && (p.status === 'published' || !p.status) && p.visibility !== 'private');
   
   const homepageSections = sections
     .filter(s => s.visible && (s.location || 'homepage') === 'homepage')
     .sort((a, b) => a.order - b.order);
 
+  // Pre-fetch posts for each section on the server
+  const sectionPostsData = await Promise.all(
+    homepageSections.map(section => getPostsForSection(section, settings))
+  );
+
   return (
     <div className="max-w-7xl mx-auto px-1 py-0 sm:py-2 space-y-4">
       {/* Featured Slider */}
       <section>
-        <FeaturedSlider featuredPosts={posts.filter(p => p.featured && (p.status === 'published' || !p.status) && p.visibility !== 'private')} settings={settings} />
+        <FeaturedSlider featuredPosts={featuredPosts} settings={settings} />
       </section>
 
       {/* Main Content */}
-      {homepageSections.map(section => (
-        <HomeSection key={section.id} section={section} posts={posts} settings={settings} />
+      {homepageSections.map((section, idx) => (
+        <HomeSection key={section.id} section={section} initialPosts={sectionPostsData[idx]} settings={settings} />
       ))}
       
       {homepageSections.length === 0 && (

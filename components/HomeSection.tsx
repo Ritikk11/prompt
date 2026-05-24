@@ -13,53 +13,16 @@ const AdSlot = dynamic(() => import('@/components/AdSlot'), {
   ssr: false
 });
 
-export default function HomeSection({ section, posts, settings }: { section: Section, posts: Post[], settings: SiteSettings }) {
+export default function HomeSection({ section, initialPosts, settings }: { section: Section, initialPosts: Post[], settings: SiteSettings }) {
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  const getFilteredPosts = useCallback((section: Section): Post[] => {
-    let filtered = [...posts].filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
-    switch (section.type) {
-      case 'ai-tool':
-        filtered = filtered.filter(p => p.images.some(img => img.aiTool === section.aiTool));
-        break;
-      case 'tag':
-        filtered = filtered.filter(p => p.tags.some(t => t.toLowerCase() === section.tag?.toLowerCase()));
-        break;
-      case 'category':
-        filtered = filtered.filter(p => p.category?.toLowerCase() === section.category?.toLowerCase());
-        break;
-      case 'latest':
-        filtered = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        break;
-      case 'popular':
-        filtered = filtered.sort((a, b) => b.views - a.views);
-        break;
-      case 'trending':
-        const viewsW = settings.features?.trendingViewsWeight ?? 1;
-        const likesW = settings.features?.trendingLikesWeight ?? 2;
-        filtered = filtered.sort((a, b) => (b.views * viewsW + b.likes * likesW) - (a.views * viewsW + a.likes * likesW));
-        break;
-      case 'custom':
-        if (section.postIds && section.postIds.length > 0) {
-          filtered = section.postIds
-            .map(pid => posts.find(p => p.id === pid))
-            .filter((p): p is Post => p !== undefined && (p.status === 'published' || !p.status) && p.visibility !== 'private');
-        }
-        break;
-    }
-    return filtered;
-  }, [posts, settings.features?.trendingViewsWeight, settings.features?.trendingLikesWeight]);
 
   const isLatest = section.type === 'latest';
 
-  // For latest: show ALL posts sorted by date with load more
-  const allLatestPosts = isLatest
-    ? [...posts].filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private').sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    : [];
+  // For latest: show ALL posts passed down
+  const allLatestPosts = isLatest ? initialPosts : [];
 
-  // For other sections: use filtered posts with limit
-  const allSectionPosts = !isLatest ? getFilteredPosts(section) : [];
-  const sectionPosts = allSectionPosts.slice(0, section.limit || 12);
+  // For other sections: use passed posts
+  const sectionPosts = !isLatest ? initialPosts : [];
 
   // Load more state for latest
   const [showCount, setShowCount] = useState(section.limit || 12);
@@ -89,7 +52,7 @@ export default function HomeSection({ section, posts, settings }: { section: Sec
         </Link>
         <div className="flex items-center gap-3">
           <span className="text-xs font-medium text-surface-400 hidden sm:inline-block">
-            {isLatest ? `${allLatestPosts.length} posts` : `${allSectionPosts.length} posts`}
+            {isLatest ? `${allLatestPosts.length} posts` : `${sectionPosts.length} posts`}
           </span>
           {!isLatest && (
             <Link 

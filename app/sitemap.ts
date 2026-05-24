@@ -1,9 +1,10 @@
+export const runtime = 'edge';
 import { MetadataRoute } from 'next';
 import { fetchPosts, fetchSeoPages, fetchSections } from '@/lib/data';
 import { Post, Section } from '@/lib/types';
 
 export const revalidate = 3600;
-export const runtime = 'edge';
+
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Determine site URL dynamically or hardcode for now

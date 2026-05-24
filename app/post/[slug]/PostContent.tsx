@@ -82,10 +82,10 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
   useEffect(() => {
     if (post && !viewIncrementedRef.current) {
-      incrementViews(post.id);
+      incrementViews(post.id, initialPost);
       viewIncrementedRef.current = true;
     }
-  }, [post, incrementViews]);
+  }, [post, initialPost, incrementViews]);
 
   if (!post) {
     return (
@@ -118,7 +118,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         </span>
         <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
         <button
-          onClick={() => toggleLike(post.id)}
+          onClick={() => toggleLike(post.id, initialPost)}
           className={`flex items-center gap-1.5 transition-colors ${
             post.likedByUser ? 'text-red-500' : isV2 ? 'hover:text-red-400' : 'hover:text-red-500'
           }`}

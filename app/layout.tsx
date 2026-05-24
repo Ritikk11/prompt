@@ -7,7 +7,7 @@ import { DataProvider } from '@/components/context/DataContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AdSlot from '@/components/AdSlot';
-import { fetchPosts, fetchSections, fetchSettings } from '@/lib/data';
+import { fetchSettings } from '@/lib/data';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -32,8 +32,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     url: 'https://aipromptmatrix.in',
   };
 
-  const initialPosts = await fetchPosts();
-  const initialSections = await fetchSections();
   const initialSettings = await fetchSettings();
 
   return (
@@ -47,8 +45,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen flex flex-col font-sans transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100 bg-white text-gray-900" suppressHydrationWarning>
         <ThemeProvider>
           <DataProvider 
-            initialPosts={initialPosts}
-            initialSections={initialSections}
             initialSettings={initialSettings}
           >
             <Header />

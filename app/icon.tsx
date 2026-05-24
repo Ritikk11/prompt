@@ -1,7 +1,8 @@
+export const runtime = 'edge';
 import { ImageResponse } from 'next/og';
 import { fetchSettings } from '@/lib/data';
 
-export const runtime = 'edge';
+
 
 export const size = { width: 32, height: 32 };
 export const contentType = 'image/png';

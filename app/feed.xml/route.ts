@@ -1,8 +1,9 @@
+export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import { fetchPosts, fetchSettings } from '@/lib/data';
 import { Post, SiteSettings } from '@/lib/types';
 
-export const runtime = 'edge';
+
 
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';

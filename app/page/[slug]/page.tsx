@@ -1,4 +1,5 @@
 export const runtime = 'edge';
+
 export const revalidate = 3600;
 
 import { Metadata } from 'next';
