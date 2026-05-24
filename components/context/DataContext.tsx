@@ -3,7 +3,6 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import type { Post, Section, SiteSettings } from '@/lib/types';
 import { seedPosts, seedSections } from '@/lib/data/seedData';
 import { createClient } from '@/lib/supabase-client';
-import { adminRevalidateAll } from '@/app/actions';
 
 interface DataContextType {
   posts: Post[];
@@ -108,7 +107,6 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
       }
       await supabase.from('settings').upsert({ id: 'global', data: defaultSettings });
       await supabase.from('settings').upsert({ id: 'seeded', data: { completedAt: new Date().toISOString() } });
-      await adminRevalidateAll();
     } catch (e) {
       console.error(e);
     }
@@ -121,7 +119,6 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     for (const section of seedSections) {
       await supabase.from('sections').delete().eq('id', section.id);
     }
-    await adminRevalidateAll();
   }, [supabase]);
 
   const loadAdminData = useCallback(async () => {
@@ -161,7 +158,6 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     setPosts(prev => [...prev, post]);
     try {
       await supabase.from('posts').upsert({ id: post.id, data: cleanPost });
-      await adminRevalidateAll();
     } catch (error: any) {
       setPosts(prev => prev.filter(p => p.id !== post.id));
       console.error('Supabase save error:', error);
@@ -176,7 +172,6 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     setPosts(prev => prev.map(p => p.id === post.id ? post : p));
     try {
       await supabase.from('posts').upsert({ id: post.id, data: cleanPost });
-      await adminRevalidateAll();
     } catch (error: any) {
       console.error('Supabase save error:', error);
       alert(`Failed to save post: ${error.message || 'Unknown error'}`);
@@ -186,7 +181,6 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
   const deletePost = useCallback(async (id: string) => {
     setPosts(prev => prev.filter(p => p.id !== id));
     await supabase.from('posts').delete().eq('id', id);
-    await adminRevalidateAll();
   }, [supabase]);
 
   const incrementViews = useCallback(async (id: string, fallbackPost?: Post) => {
@@ -251,26 +245,22 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     const cleanSection = JSON.parse(JSON.stringify(section));
     setSections(prev => [...prev, section]);
     await supabase.from('sections').upsert({ id: section.id, data: cleanSection });
-    await adminRevalidateAll();
   }, [supabase]);
 
   const updateSection = useCallback(async (section: Section) => {
     const cleanSection = JSON.parse(JSON.stringify(section));
     setSections(prev => prev.map(s => s.id === section.id ? section : s));
     await supabase.from('sections').upsert({ id: section.id, data: cleanSection });
-    await adminRevalidateAll();
   }, [supabase]);
 
   const deleteSection = useCallback(async (id: string) => {
     setSections(prev => prev.filter(s => s.id !== id));
     await supabase.from('sections').delete().eq('id', id);
-    await adminRevalidateAll();
   }, [supabase]);
 
   const updateSettings = useCallback(async (s: SiteSettings) => {
     setSettings(s);
     await supabase.from('settings').upsert({ id: 'global', data: s });
-    await adminRevalidateAll();
   }, [supabase]);
 
   // Map localLikes onto posts efficiently
