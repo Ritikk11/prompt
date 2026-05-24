@@ -1,4 +1,4 @@
-import { createClient } from './supabase-server';
+import { supabase } from './supabase';
 import type { Post, Section, SiteSettings } from './types';
 import { seedPosts, seedSections } from './data/seedData';
 
@@ -32,7 +32,6 @@ const defaultSettings: SiteSettings = {
 };
 
 export async function fetchPosts() {
-  const supabase = await createClient();
   const { data, error } = await supabase.from('posts').select('data');
   if (error) {
     console.error('Supabase posts fetch error:', error);
@@ -42,7 +41,6 @@ export async function fetchPosts() {
 }
 
 export async function fetchSections() {
-  const supabase = await createClient();
   const { data, error } = await supabase.from('sections').select('data');
   if (error) {
     console.error('Supabase sections fetch error:', error);
@@ -52,7 +50,6 @@ export async function fetchSections() {
 }
 
 export async function fetchSettings() {
-  const supabase = await createClient();
   const { data, error } = await supabase.from('settings').select('data').eq('id', 'global').maybeSingle();
   if (error) {
     console.error('Supabase settings fetch error:', error);
@@ -75,7 +72,6 @@ export async function getSectionBySlug(slug: string) {
 }
 
 export async function fetchSeoPages() {
-  const supabase = await createClient();
   const { data, error } = await supabase.from('seopages').select('data');
   if (error) {
     console.error('Supabase seo pages fetch error:', error);
