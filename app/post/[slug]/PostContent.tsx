@@ -325,7 +325,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         );
       case 'v7': // Full Screen Hero
         return (
-          <div className="relative w-full max-w-5xl mx-auto h-[clamp(520px,68vh,760px)] sm:h-[clamp(560px,70vh,780px)] mb-12 rounded-[32px] sm:rounded-[40px] overflow-hidden group">
+          <div className="relative w-full h-[80vh] min-h-[600px] mb-12 rounded-[48px] overflow-hidden group">
              <Image 
               src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
               alt={post.title} 
@@ -335,8 +335,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-            <div className="absolute inset-0 flex flex-col items-center justify-end p-6 sm:p-8 md:p-12 text-center">
-               <div className="flex flex-wrap gap-2 mb-4 sm:mb-5 justify-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-end p-8 md:p-16 text-center">
+               <div className="flex flex-wrap gap-2 mb-6 justify-center">
                  {heroTools.map(tool => {
                    const info = getToolInfo(tool, settings?.toolDetails);
                    return (
@@ -353,10 +353,10 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                    );
                  })}
                </div>
-               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-5 max-w-4xl leading-tight">
+               <h1 className="text-4xl md:text-7xl font-black text-white mb-6 max-w-5xl leading-tight">
                  {post.title}
                </h1>
-               <div className="mb-5 sm:mb-7">{renderMetaInfo()}</div>
+               <div className="mb-10 scale-110">{renderMetaInfo()}</div>
             </div>
           </div>
         );
