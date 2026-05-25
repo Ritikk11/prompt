@@ -2653,7 +2653,18 @@ export default function Admin() {
       {/* ===== STATIC PAGES TAB ===== */}
       {tab === 'static-pages' && (
         <div className="max-w-4xl">
-          <StaticPagesTab settings={settings} updateSettings={updateSettings} />
+          <StaticPagesTab
+            key={[
+              settings.pageAbout,
+              settings.pagePrivacy,
+              settings.pageTerms,
+              settings.pageDmca,
+              settings.pageDisclaimer,
+              settings.pageContact,
+            ].join('|')}
+            settings={settings}
+            updateSettings={updateSettings}
+          />
         </div>
       )}
     </div>

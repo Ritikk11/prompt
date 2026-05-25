@@ -3,7 +3,7 @@ export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
-import { getSectionBySlug, fetchPostSummaries } from '@/lib/data';
+import { getSectionBySlug, fetchPostSummaries, isPublicPost } from '@/lib/data';
 import PostCard from '@/components/PostCard';
 import type { Post, Section } from '@/lib/types';
 import { notFound } from 'next/navigation';
@@ -67,7 +67,7 @@ export default async function SectionPage({ params }: Props) {
     }
   };
 
-  const filteredPosts = getFilteredPosts();
+  const filteredPosts = getFilteredPosts().filter(isPublicPost);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
@@ -94,7 +94,7 @@ export default async function SectionPage({ params }: Props) {
           </Link>
         </div>
       ) : (
-        <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
           {filteredPosts.map((post, i) => (
             <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
               <PostCard post={post} index={i} />

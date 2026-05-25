@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -6,6 +7,29 @@ import { Eye, Heart } from 'lucide-react';
 import type { Post } from '@/lib/types';
 import { getToolInfo, getAllTools } from '@/lib/constants';
 import { useData } from '@/components/context/DataContext';
+
+const LoadingImage = ({ className = '', skeleton = true, onLoad, alt = '', ...props }: any) => {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <>
+      {skeleton && !loaded && (
+        <div className="absolute inset-0 z-0 overflow-hidden bg-surface-200 dark:bg-surface-800">
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.25s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent dark:via-white/10" />
+        </div>
+      )}
+      <Image
+        {...props}
+        alt={alt}
+        className={`${className} transition-opacity duration-300 ${skeleton && !loaded ? 'opacity-0' : 'opacity-100'}`}
+        onLoad={(event) => {
+          setLoaded(true);
+          onLoad?.(event);
+        }}
+      />
+    </>
+  );
+};
 
 const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; toolName: string; toolInfo: any; className?: string }) => {
   const isIconOnly = style === 'v8';
@@ -32,7 +56,7 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
           className={`relative shrink-0 ${isIconOnly ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-3.5 h-3.5 sm:w-4 sm:h-4'} bg-white rounded-full overflow-hidden p-[2px] shadow-sm`}
         >
           <div className="relative w-full h-full rounded-full overflow-hidden" style={toolInfo.logoScale ? { transform: `scale(${toolInfo.logoScale})` } : undefined}>
-            <Image src={toolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+            <LoadingImage src={toolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" skeleton={false} />
           </div>
         </div>
       ) : null}
@@ -51,6 +75,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
   
   const cardStyle = settings?.cardStyle || 'v1';
   const badgeStyle = settings?.badgeStyle || 'v1';
+  const showSkeleton = settings.features?.skeletonLoaders ?? true;
 
   const renderBadges = (className = "") => (
     <div className="flex flex-wrap gap-1">
@@ -82,12 +107,12 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
           </div>
         </div>
         <div className="relative aspect-square">
-           <Image
+           <LoadingImage
             src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
             alt={post.title}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
-            referrerPolicy="no-referrer" />
+            referrerPolicy="no-referrer" skeleton={showSkeleton} />
            <div className="absolute top-3 right-3">{renderBadges()}</div>
         </div>
         <div className="p-4">
@@ -111,12 +136,12 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
         <div className="relative h-48 sm:h-64 border-b-4 border-black dark:border-white">
-           <Image
+           <LoadingImage
             src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
             alt={post.title}
             fill
             className="object-cover"
-            referrerPolicy="no-referrer" />
+            referrerPolicy="no-referrer" skeleton={showSkeleton} />
            <div className="absolute top-0 right-0 p-2">{renderBadges()}</div>
         </div>
         <div className="p-4">
@@ -142,12 +167,12 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
         className={`group block relative aspect-[4/5] rounded-[2rem] overflow-hidden transition-all duration-500 hover:scale-[1.02] break-inside-avoid mb-6 ${aspect ? aspect : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
-        <Image
+        <LoadingImage
           src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
           alt={post.title}
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-110"
-          referrerPolicy="no-referrer" />
+          referrerPolicy="no-referrer" skeleton={showSkeleton} />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
         <div className="absolute inset-0 p-6 flex flex-col justify-between">
            <div className="flex justify-end">{renderBadges()}</div>
@@ -174,12 +199,12 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
           style={{ animationDelay: `${(index || 0) * 80}ms` }}
         >
           <div className="relative aspect-square rounded-sm overflow-hidden mb-4 bg-surface-100 dark:bg-surface-900">
-             <Image
+             <LoadingImage
               src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
               alt={post.title}
               fill
               className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-              referrerPolicy="no-referrer" />
+              referrerPolicy="no-referrer" skeleton={showSkeleton} />
              <div className="absolute top-2 left-2">{renderBadges("scale-75 origin-top-left")}</div>
           </div>
           <div className="px-2 pb-2">
@@ -203,12 +228,12 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
         className={`group block relative aspect-video rounded-[24px] overflow-hidden border border-white/20 dark:border-white/10 break-inside-avoid mb-6 ${aspect ? aspect : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
-        <Image
+        <LoadingImage
           src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
           alt={post.title}
           fill
           className="object-cover blur-[2px] group-hover:blur-0 transition-all duration-500"
-          referrerPolicy="no-referrer" />
+          referrerPolicy="no-referrer" skeleton={showSkeleton} />
         <div className="absolute inset-0 bg-white/10 dark:bg-black/20 backdrop-blur-[2px] group-hover:backdrop-blur-none transition-all" />
         <div className="absolute inset-x-0 bottom-0 p-4 bg-white/40 dark:bg-black/60 backdrop-blur-xl border-t border-white/20">
            <div className="flex justify-between items-start gap-3">
@@ -236,7 +261,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
         <div className="relative overflow-hidden">
-          <Image
+          <LoadingImage
             src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
             alt={post.title}
             width={500}
@@ -244,7 +269,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
             priority={index != null && index < 3}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className={`w-full transition-transform duration-700 ease-in-out group-hover:scale-105 block ${aspect ? 'h-full object-cover' : 'h-auto'}`}
-           referrerPolicy="no-referrer" />
+           referrerPolicy="no-referrer" skeleton={showSkeleton} />
           <div className="absolute top-2.5 left-2.5 z-10">
              {renderBadges()}
           </div>
@@ -273,14 +298,14 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-lg overflow-hidden flex-none">
-          <Image
+          <LoadingImage
             src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
             alt={post.title}
             fill
             sizes="100px"
             priority={index != null && index < 6}
             className="object-cover transition-transform duration-500 group-hover:scale-110"
-           referrerPolicy="no-referrer" />
+           referrerPolicy="no-referrer" skeleton={showSkeleton} />
         </div>
         <div className="flex flex-col min-w-0 py-1">
           <div className="flex items-center gap-1 mb-1">
@@ -306,7 +331,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
       className={`group block relative rounded-2xl overflow-hidden bg-surface-100 dark:bg-surface-800 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 break-inside-avoid ${aspect ? aspect : ''}`}
       style={{ animationDelay: `${(index || 0) * 80}ms` }}
     >
-      <Image
+      <LoadingImage
         src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
         alt={post.title}
         width={500}
@@ -314,7 +339,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
         priority={index != null && index < 3}
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         className={`w-full transition-transform duration-700 ease-in-out group-hover:scale-105 block ${aspect ? 'h-full object-cover' : 'h-auto'}`}
-       referrerPolicy="no-referrer" />
+       referrerPolicy="no-referrer" skeleton={showSkeleton} />
       
       {/* Overlay Gradient (appears on hover) */}
       <div className="absolute inset-x-0 bottom-0 top-1/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />

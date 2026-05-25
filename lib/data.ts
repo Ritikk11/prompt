@@ -41,6 +41,10 @@ export async function fetchPosts() {
   return (data || []).map(d => d.data as Post);
 }
 
+export function isPublicPost(post: Pick<Post, 'status' | 'visibility'>) {
+  return (post.status === 'published' || !post.status) && post.visibility !== 'private';
+}
+
 function isInlineImage(url?: string) {
   return !!url && url.startsWith('data:image');
 }
@@ -112,7 +116,7 @@ export function toPostSummary(post: Post): Post {
 
 export async function fetchPostSummaries() {
   const posts = await fetchPosts();
-  return posts.map(toPostSummary);
+  return posts.filter(isPublicPost).map(toPostSummary);
 }
 
 export async function fetchSections() {
