@@ -257,10 +257,10 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
     return (
       <Link
         href={`/post/${post.slug || post.id}`}
-        className={`group block relative rounded-lg overflow-hidden bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 transition-all duration-300 hover:border-primary-500 break-inside-avoid shadow-sm hover:shadow-lg ${aspect ? aspect : ''}`}
+        className={`group block relative rounded-lg overflow-hidden bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 transition-all duration-300 hover:border-primary-500 break-inside-avoid shadow-sm hover:shadow-lg ${aspect ? `${aspect} h-full` : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
-        <div className="relative overflow-hidden">
+        <div className={`relative overflow-hidden ${aspect ? 'h-full' : ''}`}>
           <LoadingImage
             src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
             alt={post.title}
@@ -273,8 +273,15 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
           <div className="absolute top-2.5 left-2.5 z-10">
              {renderBadges()}
           </div>
+          {aspect && (
+            <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/85 via-black/35 to-transparent">
+              <h3 className="font-bold text-white text-[13px] sm:text-[15px] leading-snug line-clamp-2 drop-shadow">
+                {post.title}
+              </h3>
+            </div>
+          )}
         </div>
-        <div className="p-3 sm:p-4">
+        <div className={`p-3 sm:p-4 ${aspect ? 'hidden' : ''}`}>
           <h3 className="font-bold text-surface-900 dark:text-white text-[13px] sm:text-[15px] leading-snug line-clamp-2 mb-2 group-hover:text-primary-500 transition-colors">
             {post.title}
           </h3>
