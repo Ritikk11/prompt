@@ -16,6 +16,8 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
   
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'trending'>('latest');
   const [filterTool, setFilterTool] = useState('all');
+  const showAdvancedFilters = settings.features?.advancedFiltering;
+  const showTrending = settings.features?.trendingAlgorithm;
 
   // Filter public posts that include the tag (case insensitive)
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
@@ -25,7 +27,7 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
 
   const tools = ['all', ...Array.from(new Set(filtered.flatMap(p => p.images.map(i => i.aiTool))))];
 
-  if (filterTool !== 'all') {
+  if (showAdvancedFilters && filterTool !== 'all') {
     filtered = filtered.filter(p => p.aiTools?.includes(filterTool) || p.images.some(i => i.aiTools ? i.aiTools.includes(filterTool) : i.aiTool === filterTool));
   }
   
@@ -33,8 +35,10 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
     filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } else if (sortBy === 'popular') {
     filtered.sort((a, b) => b.views - a.views);
-  } else if (sortBy === 'trending') {
-    filtered.sort((a, b) => (b.views + b.likes * 2) - (a.views + a.likes * 2));
+  } else if (showTrending && sortBy === 'trending') {
+    const viewsW = settings.features?.trendingViewsWeight ?? 1;
+    const likesW = settings.features?.trendingLikesWeight ?? 2;
+    filtered.sort((a, b) => (b.views * viewsW + b.likes * likesW) - (a.views * viewsW + a.likes * likesW));
   }
 
   return (
@@ -74,19 +78,29 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
             >
               Popular
             </button>
+            {showTrending && (
+              <button
+                onClick={() => setSortBy('trending')}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === 'trending' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700'}`}
+              >
+                Trending
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-surface-400 uppercase tracking-wide">Tool:</span>
-          <select
-            value={filterTool}
-            onChange={e => setFilterTool(e.target.value)}
-            className="px-3 py-1.5 rounded-lg text-xs bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none"
-          >
-            {tools.map(t => <option key={t} value={t}>{t === 'all' ? 'All Tools' : t}</option>)}
-          </select>
-        </div>
+        {showAdvancedFilters && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-surface-400 uppercase tracking-wide">Tool:</span>
+            <select
+              value={filterTool}
+              onChange={e => setFilterTool(e.target.value)}
+              className="px-3 py-1.5 rounded-lg text-xs bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none"
+            >
+              {tools.map(t => <option key={t} value={t}>{t === 'all' ? 'All Tools' : t}</option>)}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Grid */}
