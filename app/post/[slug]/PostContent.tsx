@@ -325,12 +325,20 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         );
       case 'v7': // Full Screen Hero
         return (
-          <div className="relative w-full max-w-5xl mx-auto h-[clamp(520px,68vh,760px)] sm:h-[clamp(560px,70vh,780px)] mb-12 rounded-[32px] sm:rounded-[40px] overflow-hidden group">
+          <div className="relative w-full max-w-5xl mx-auto h-[clamp(520px,68vh,760px)] sm:h-[clamp(560px,70vh,780px)] mb-12 rounded-[32px] sm:rounded-[40px] overflow-hidden group bg-black">
+             <Image
+              src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+              alt=""
+              fill
+              className="object-cover blur-2xl scale-110 opacity-60"
+              referrerPolicy="no-referrer"
+              aria-hidden="true"
+            />
              <Image 
               src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
               alt={post.title} 
               fill 
-              className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+              className="object-contain transition-transform duration-1000 group-hover:scale-[1.01]" 
               referrerPolicy="no-referrer"
               priority
             />
