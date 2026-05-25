@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
-import { getSeoPageBySlug, fetchPostSummaries } from '@/lib/data';
+import { getSeoPageBySlug, fetchPostSummaries, isPublicPost } from '@/lib/data';
 import PostCard from '@/components/PostCard';
 import type { Post } from '@/lib/types';
 
@@ -49,6 +49,8 @@ export default async function SeoPublicPage({ params }: Props) {
 
   // Filter ONLY show posts that match ALL of the selected tags AND ALL of the selected categories AND ALL of the selected aiTools
   const filteredPosts = (allPosts as Post[]).filter(post => {
+    if (!isPublicPost(post)) return false;
+
     // Check tags: post.tags must contain all seoPage.tags
     const hasAllTags = tags.every((t: string) => 
       post.tags?.some(postTag => postTag.toLowerCase() === t.toLowerCase())
@@ -88,7 +90,7 @@ export default async function SeoPublicPage({ params }: Props) {
           <p className="text-surface-500">No posts found matching the criteria.</p>
         </div>
       ) : (
-        <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4 pt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start pt-8">
           {filteredPosts.map((post, index) => (
             <PostCard key={post.id} post={post} index={index} />
           ))}
