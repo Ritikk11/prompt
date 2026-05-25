@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import ExploreClient from './ExploreClient';
 

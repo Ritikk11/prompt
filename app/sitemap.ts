@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 import { MetadataRoute } from 'next';
 import { fetchPosts, fetchSeoPages, fetchSections } from '@/lib/data';
 import { Post, Section } from '@/lib/types';

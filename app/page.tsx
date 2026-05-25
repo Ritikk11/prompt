@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } from '@/lib/data';
 import FeaturedSlider from '@/components/FeaturedSlider';
