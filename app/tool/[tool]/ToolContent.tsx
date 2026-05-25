@@ -16,6 +16,7 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
   const tool = decodeURIComponent(rawTool || '');
   
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'trending'>('latest');
+  const showTrending = settings.features?.trendingAlgorithm;
 
   // Filter public posts that include the aiTool (case insensitive)
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
@@ -27,8 +28,10 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
     filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } else if (sortBy === 'popular') {
     filtered.sort((a, b) => b.views - a.views);
-  } else if (sortBy === 'trending') {
-    filtered.sort((a, b) => (b.views + b.likes * 2) - (a.views + a.likes * 2));
+  } else if (showTrending && sortBy === 'trending') {
+    const viewsW = settings.features?.trendingViewsWeight ?? 1;
+    const likesW = settings.features?.trendingLikesWeight ?? 2;
+    filtered.sort((a, b) => (b.views * viewsW + b.likes * likesW) - (a.views * viewsW + a.likes * likesW));
   }
 
   return (
@@ -71,7 +74,7 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
             >
               Popular
             </button>
-            {settings.features?.trendingAlgorithm && (
+            {showTrending && (
               <button
                 onClick={() => setSortBy('trending')}
                 className={`px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === 'trending' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700'}`}

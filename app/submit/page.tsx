@@ -12,7 +12,7 @@ import { ImagePrompt } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 
 export default function SubmitPage() {
-  const { settings, loading } = useData();
+  const { settings, loading, addPost } = useData();
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const navigate = useRouter();

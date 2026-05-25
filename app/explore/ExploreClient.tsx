@@ -15,16 +15,18 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
 
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
   const tools = ['all', ...Array.from(new Set(publicPosts.flatMap(p => p.images.map(i => i.aiTool))))];
+  const showAdvancedFilters = settings.features?.advancedFiltering;
+  const showTrending = settings.features?.trendingAlgorithm;
 
   let filtered = [...publicPosts];
-  if (filterTool !== 'all') {
+  if (showAdvancedFilters && filterTool !== 'all') {
     filtered = filtered.filter(p => p.aiTools?.includes(filterTool) || p.images.some(i => i.aiTools ? i.aiTools.includes(filterTool) : i.aiTool === filterTool));
   }
   if (sortBy === 'latest') {
     filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } else if (sortBy === 'popular') {
     filtered.sort((a, b) => b.views - a.views);
-  } else if (sortBy === 'trending') {
+  } else if (showTrending && sortBy === 'trending') {
     const viewsW = settings.features?.trendingViewsWeight ?? 1;
     const likesW = settings.features?.trendingLikesWeight ?? 2;
     filtered.sort((a, b) => (b.views * viewsW + b.likes * likesW) - (a.views * viewsW + a.likes * likesW));
@@ -70,7 +72,7 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
             >
               Popular
             </button>
-            {settings.features?.trendingAlgorithm && (
+            {showTrending && (
               <button
                 onClick={() => setSortBy('trending')}
                 className={`px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === 'trending' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700'}`}
@@ -82,16 +84,18 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
         </div>
 
         {/* AI Tool filter */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-surface-400 uppercase tracking-wide">Tool:</span>
-          <select
-            value={filterTool}
-            onChange={e => setFilterTool(e.target.value)}
-            className="px-3 py-1.5 rounded-lg text-xs bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none"
-          >
-            {tools.map(t => <option key={t} value={t}>{t === 'all' ? 'All Tools' : t}</option>)}
-          </select>
-        </div>
+        {showAdvancedFilters && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-surface-400 uppercase tracking-wide">Tool:</span>
+            <select
+              value={filterTool}
+              onChange={e => setFilterTool(e.target.value)}
+              className="px-3 py-1.5 rounded-lg text-xs bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none"
+            >
+              {tools.map(t => <option key={t} value={t}>{t === 'all' ? 'All Tools' : t}</option>)}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Masonry layout like Pinterest */}
