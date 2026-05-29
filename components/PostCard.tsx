@@ -1,5 +1,4 @@
 'use client';
-import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -7,29 +6,7 @@ import { Eye, Heart } from 'lucide-react';
 import type { Post } from '@/lib/types';
 import { getToolInfo, getAllTools } from '@/lib/constants';
 import { useData } from '@/components/context/DataContext';
-
-const LoadingImage = ({ className = '', skeleton = true, onLoad, alt = '', ...props }: any) => {
-  const [loaded, setLoaded] = useState(false);
-
-  return (
-    <>
-      {skeleton && !loaded && (
-        <div className="absolute inset-0 z-0 overflow-hidden bg-surface-200 dark:bg-surface-800">
-          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.25s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent dark:via-white/10" />
-        </div>
-      )}
-      <Image
-        {...props}
-        alt={alt}
-        className={`${className} transition-opacity duration-300 ${skeleton && !loaded ? 'opacity-0' : 'opacity-100'}`}
-        onLoad={(event) => {
-          setLoaded(true);
-          onLoad?.(event);
-        }}
-      />
-    </>
-  );
-};
+import LoadingImage from '@/components/LoadingImage';
 
 const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; toolName: string; toolInfo: any; className?: string }) => {
   const isIconOnly = style === 'v8';
@@ -111,6 +88,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
             src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
             alt={post.title}
             fill
+            showSkeleton={showSkeleton}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             referrerPolicy="no-referrer" skeleton={showSkeleton} />
            <div className="absolute top-3 right-3">{renderBadges()}</div>
@@ -140,6 +118,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
             src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
             alt={post.title}
             fill
+            showSkeleton={showSkeleton}
             className="object-cover"
             referrerPolicy="no-referrer" skeleton={showSkeleton} />
            <div className="absolute top-0 right-0 p-2">{renderBadges()}</div>
@@ -171,6 +150,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
           src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
           alt={post.title}
           fill
+          showSkeleton={showSkeleton}
           className="object-cover transition-transform duration-700 group-hover:scale-110"
           referrerPolicy="no-referrer" skeleton={showSkeleton} />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
@@ -203,6 +183,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
               src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
               alt={post.title}
               fill
+              showSkeleton={showSkeleton}
               className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
               referrerPolicy="no-referrer" skeleton={showSkeleton} />
              <div className="absolute top-2 left-2">{renderBadges("scale-75 origin-top-left")}</div>
@@ -232,6 +213,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
           src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
           alt={post.title}
           fill
+          showSkeleton={showSkeleton}
           className="object-cover blur-[2px] group-hover:blur-0 transition-all duration-500"
           referrerPolicy="no-referrer" skeleton={showSkeleton} />
         <div className="absolute inset-0 bg-white/10 dark:bg-black/20 backdrop-blur-[2px] group-hover:backdrop-blur-none transition-all" />
@@ -268,6 +250,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
             height={700}
             priority={index != null && index < 3}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            showSkeleton={showSkeleton}
             className={`w-full transition-transform duration-700 ease-in-out group-hover:scale-105 block ${aspect ? 'h-full object-cover' : 'h-auto'}`}
            referrerPolicy="no-referrer" skeleton={showSkeleton} />
           <div className="absolute top-2.5 left-2.5 z-10">
@@ -311,6 +294,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
             fill
             sizes="100px"
             priority={index != null && index < 6}
+            showSkeleton={showSkeleton}
             className="object-cover transition-transform duration-500 group-hover:scale-110"
            referrerPolicy="no-referrer" skeleton={showSkeleton} />
         </div>
@@ -345,6 +329,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
         height={700}
         priority={index != null && index < 3}
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        showSkeleton={showSkeleton}
         className={`w-full transition-transform duration-700 ease-in-out group-hover:scale-105 block ${aspect ? 'h-full object-cover' : 'h-auto'}`}
        referrerPolicy="no-referrer" skeleton={showSkeleton} />
       
