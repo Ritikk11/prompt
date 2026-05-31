@@ -10,6 +10,7 @@ import { Upload, Plus, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { ImagePrompt } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
+import { getImageModelForTools } from '@/lib/constants';
 
 export default function SubmitPage() {
   const { settings, loading, addPost } = useData();
@@ -108,7 +109,8 @@ export default function SubmitPage() {
         throw new Error("No image provider configured");
       }
       
-      setImages(prev => [...prev, { id: generateId(), url, prompt: '', aiTool: settings.aiTools[0] }]);
+      const defaultTool = settings.aiTools[0] || 'ChatGPT';
+      setImages(prev => [...prev, { id: generateId(), url, prompt: '', aiTool: defaultTool, model: getImageModelForTools([defaultTool]) }]);
     } catch (e: any) {
       alert(e.message || "Error uploading image");
     }
@@ -240,7 +242,11 @@ export default function SubmitPage() {
                               let newTools = img.aiTools ? [...img.aiTools] : [img.aiTool].filter(Boolean);
                               if (e.target.checked && !newTools.includes(tool)) newTools.push(tool);
                               else newTools = newTools.filter(t => t !== tool);
-                              updateImage(idx, { aiTools: newTools, aiTool: newTools[0] || '' });
+                              updateImage(idx, {
+                                aiTools: newTools,
+                                aiTool: newTools[0] || '',
+                                model: getImageModelForTools(newTools, img.model)
+                              });
                             }}
                             className="w-3.5 h-3.5 rounded text-primary-500 focus:ring-primary-500"
                           />
