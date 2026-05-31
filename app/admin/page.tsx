@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 
 import Image from 'next/image';
-import { getDefaultImageModel, getImageModelForTools, getToolInfo } from '@/lib/constants';
+import { defaultImageModels, getDefaultImageModel, getImageModelForTools, getToolInfo } from '@/lib/constants';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
 
@@ -28,6 +29,28 @@ const TAILWIND_COLORS = [
   'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500',
   'bg-rose-500', 'bg-primary-500', 'bg-surface-800', 'bg-black', 'bg-white'
 ];
+
+const DEFAULT_MODEL_OPTIONS = Object.values(defaultImageModels);
+const CUSTOM_MODEL_VALUE = '__custom';
+const AUTO_MODEL_VALUE = '__auto';
+
+const MARKDOWN_HELP_EXAMPLE = `## Main section
+### Question style heading
+#### Small subpoint
+
+:::tip
+Add reference images for more accurate outputs.
+:::
+
+:::creative
+Use cinematic lighting, a clear subject, and one strong visual style.
+:::
+
+:::prompt
+Ultra detailed poster art, dramatic lighting, sharp composition
+:::
+
+Use {mark:highlights}, {primary:primary notes}, {green:recommended}, {red:avoid}, and {kbd:Ctrl+C}.`;
 
 function generateId() {
   return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
@@ -338,6 +361,9 @@ export default function Admin() {
   );
 
   const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'features' | 'ads' | 'ai-tools'>('general');
+  const [markdownMode, setMarkdownMode] = useState<'edit' | 'preview'>('edit');
+  const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
+  const [isBackfillingModels, setIsBackfillingModels] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -412,6 +438,63 @@ export default function Admin() {
       }
       return { ...img, ...field };
     }));
+  };
+
+  const getModelSelectValue = (model?: string) => {
+    if (!model?.trim()) return AUTO_MODEL_VALUE;
+    return DEFAULT_MODEL_OPTIONS.includes(model) ? model : CUSTOM_MODEL_VALUE;
+  };
+
+  const handleModelSelect = (idx: number, img: ImagePrompt, value: string) => {
+    const selectedTools = img.aiTools || [img.aiTool].filter(Boolean);
+    if (value === AUTO_MODEL_VALUE) {
+      updateImage(idx, 'model', getImageModelForTools(selectedTools));
+      return;
+    }
+    if (value === CUSTOM_MODEL_VALUE) {
+      updateImage(idx, 'model', DEFAULT_MODEL_OPTIONS.includes(img.model || '') ? '' : img.model || '');
+      return;
+    }
+    updateImage(idx, 'model', value);
+  };
+
+  const normalizeImageModel = (image: ImagePrompt) => {
+    const tools = image.aiTools || [image.aiTool].filter(Boolean);
+    const model = getImageModelForTools(tools, image.model);
+    return model && model !== image.model ? { ...image, model } : image;
+  };
+
+  const handleBackfillModels = async () => {
+    const postsToUpdate = posts
+      .map(post => {
+        let changed = false;
+        const updatedImages = post.images.map(image => {
+          const updated = normalizeImageModel(image);
+          if (updated !== image) changed = true;
+          return updated;
+        });
+        return changed ? { ...post, images: updatedImages } : null;
+      })
+      .filter((post): post is Post => Boolean(post));
+
+    if (postsToUpdate.length === 0) {
+      alert('All image model labels are already filled.');
+      return;
+    }
+
+    setIsBackfillingModels(true);
+    try {
+      for (const post of postsToUpdate) {
+        await updatePost(post);
+      }
+      await loadAdminData();
+      alert(`Filled model labels for ${postsToUpdate.length} posts.`);
+    } catch (error: any) {
+      console.error('Failed to backfill models:', error);
+      alert(`Failed to fill model labels: ${error?.message || 'Unknown error'}`);
+    } finally {
+      setIsBackfillingModels(false);
+    }
   };
 
   const removeImage = (idx: number) => {
@@ -1263,15 +1346,65 @@ export default function Admin() {
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1.5">Extended Description / Content (Optional, useful for AdSense)</label>
-                  <textarea
-                    value={extendedDescription}
-                    onChange={e => setExtendedDescription(e.target.value)}
-                    rows={8}
-                    className="w-full min-h-[220px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y font-mono"
-                    placeholder="Write a longer article or detailed description here to display at the bottom of the post page..."
-                  />
+                <div className="rounded-2xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900 sm:p-4">
+                  <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <label className="text-sm font-medium">Extended Description / Content (Optional, useful for AdSense)</label>
+                    <div className="flex flex-wrap gap-2">
+                      <div className="grid grid-cols-2 rounded-xl bg-surface-100 p-1 text-xs font-semibold dark:bg-surface-800">
+                        <button
+                          type="button"
+                          onClick={() => setMarkdownMode('edit')}
+                          className={`rounded-lg px-3 py-1.5 transition-colors ${markdownMode === 'edit' ? 'bg-white text-surface-900 shadow-sm dark:bg-surface-950 dark:text-white' : 'text-surface-500'}`}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setMarkdownMode('preview')}
+                          className={`rounded-lg px-3 py-1.5 transition-colors ${markdownMode === 'preview' ? 'bg-white text-surface-900 shadow-sm dark:bg-surface-950 dark:text-white' : 'text-surface-500'}`}
+                        >
+                          Preview
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowMarkdownHelp(prev => !prev)}
+                        className="inline-flex items-center gap-2 rounded-xl border border-surface-200 px-3 py-2 text-xs font-bold text-surface-600 transition-colors hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:text-surface-300"
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                        Formatting
+                      </button>
+                    </div>
+                  </div>
+
+                  {showMarkdownHelp && (
+                    <div className="mb-3 grid gap-3 rounded-xl border border-primary-200 bg-primary-50/60 p-3 text-xs dark:border-primary-800/40 dark:bg-primary-950/20 md:grid-cols-2">
+                      <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg bg-surface-950 p-3 font-mono text-[11px] leading-relaxed text-surface-50">{MARKDOWN_HELP_EXAMPLE}</pre>
+                      <div className="prose prose-sm max-w-none dark:prose-invert">
+                        <MarkdownRenderer>{MARKDOWN_HELP_EXAMPLE}</MarkdownRenderer>
+                      </div>
+                    </div>
+                  )}
+
+                  {markdownMode === 'edit' ? (
+                    <textarea
+                      value={extendedDescription}
+                      onChange={e => setExtendedDescription(e.target.value)}
+                      rows={8}
+                      className="w-full min-h-[240px] resize-y rounded-xl border border-surface-200 bg-surface-50 px-4 py-3 font-mono text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                      placeholder="Write a longer article or detailed description here to display at the bottom of the post page..."
+                    />
+                  ) : (
+                    <div className="min-h-[240px] rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-950 sm:p-6">
+                      {extendedDescription.trim() ? (
+                        <div className="prose prose-sm max-w-none dark:prose-invert sm:prose-base prose-p:text-surface-600 dark:prose-p:text-surface-300 prose-li:text-surface-600 dark:prose-li:text-surface-300">
+                          <MarkdownRenderer>{extendedDescription}</MarkdownRenderer>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-surface-400">Preview will appear here as you write.</p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1474,13 +1607,28 @@ export default function Admin() {
                               </div>
                             </div>
                             <div className="col-span-2">
-                              <label className="block text-xs text-surface-400 mb-1">Model (Optional)</label>
-                              <input
-                                value={img.model || ''}
-                                onChange={e => updateImage(idx, 'model', e.target.value)}
-                                placeholder="e.g. GPT-4, v6.0"
-                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
-                              />
+                              <label className="block text-xs text-surface-400 mb-1">Model</label>
+                              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                                <select
+                                  value={getModelSelectValue(img.model)}
+                                  onChange={e => handleModelSelect(idx, img, e.target.value)}
+                                  className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-600 dark:bg-surface-900"
+                                >
+                                  <option value={AUTO_MODEL_VALUE}>Auto default</option>
+                                  {DEFAULT_MODEL_OPTIONS.map(model => (
+                                    <option key={model} value={model}>{model}</option>
+                                  ))}
+                                  <option value={CUSTOM_MODEL_VALUE}>Custom</option>
+                                </select>
+                                {getModelSelectValue(img.model) === CUSTOM_MODEL_VALUE && (
+                                  <input
+                                    value={img.model || ''}
+                                    onChange={e => updateImage(idx, 'model', e.target.value)}
+                                    placeholder="Custom model"
+                                    className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-600 dark:bg-surface-900"
+                                  />
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -2217,6 +2365,21 @@ export default function Admin() {
             <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
               <Star className="w-4 h-4 text-primary-500" /> AI Tools ({(settings.aiTools || []).length})
             </h3>
+            <div className="mb-4 flex flex-col gap-3 rounded-xl border border-primary-200 bg-primary-50/60 p-4 dark:border-primary-800/40 dark:bg-primary-950/20 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-surface-900 dark:text-white">Image model labels</p>
+                <p className="mt-1 text-xs text-surface-500 dark:text-surface-400">Fill empty/defaultable model fields with GPT Image 2, Nano Banana 2, Grok Imagine Image Quality, and Qwen-Image.</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleBackfillModels}
+                disabled={isBackfillingModels}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              >
+                <RotateCcw className={`h-4 w-4 ${isBackfillingModels ? 'animate-spin' : ''}`} />
+                {isBackfillingModels ? 'Filling...' : 'Fill missing models'}
+              </button>
+            </div>
 
             {/* Add AI Tool */}
             <div className="flex gap-2 mb-4">

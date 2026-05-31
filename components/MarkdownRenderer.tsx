@@ -1,6 +1,6 @@
 'use client';
-import { Children, type ReactNode } from 'react';
-import { AlertTriangle, CheckCircle2, Flame, Info, Lightbulb, Palette, Quote, Sparkles, Target, Wand2, XCircle } from 'lucide-react';
+import { Children, type ReactNode, useState } from 'react';
+import { AlertTriangle, Check, CheckCircle2, Copy, Flame, Info, Lightbulb, Palette, Quote, Sparkles, Target, Wand2, XCircle } from 'lucide-react';
 import Markdown from 'react-markdown';
 
 type CalloutType = 'tip' | 'warning' | 'info' | 'note' | 'success' | 'danger' | 'highlight' | 'quote' | 'prompt' | 'example' | 'creative' | 'model' | 'important';
@@ -242,15 +242,40 @@ function renderMarkdown(content: string) {
 
 function Callout({ block }: { block: Extract<MarkdownBlock, { type: 'callout' }> }) {
   const style = calloutStyles[block.calloutType];
+  const [copied, setCopied] = useState(false);
+  const canCopy = block.calloutType === 'prompt';
+
+  const copyContent = async () => {
+    try {
+      await navigator.clipboard.writeText(block.content);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1400);
+    } catch {
+      setCopied(false);
+    }
+  };
+
   return (
     <div className={`my-7 rounded-2xl border p-5 shadow-sm ${style.className}`}>
-      <div className="mb-3 flex items-center gap-3">
-        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl shadow-sm ${style.iconClassName}`}>
-          {style.icon}
-        </span>
-        <p className="m-0 text-sm font-black uppercase tracking-[0.14em]">
-          {block.title || style.title}
-        </p>
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl shadow-sm ${style.iconClassName}`}>
+            {style.icon}
+          </span>
+          <p className="m-0 text-sm font-black uppercase tracking-[0.14em]">
+            {block.title || style.title}
+          </p>
+        </div>
+        {canCopy && (
+          <button
+            type="button"
+            onClick={copyContent}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-current/20 px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors hover:bg-white/40 dark:hover:bg-white/10 sm:w-auto"
+          >
+            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        )}
       </div>
       <div className="callout-content prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ol:my-2 prose-li:my-1">
         <MarkdownRenderer>{block.content}</MarkdownRenderer>

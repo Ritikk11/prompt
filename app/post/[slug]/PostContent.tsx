@@ -753,15 +753,22 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
       {/* Extended HTML / Article Description */}
       {post.extendedDescription && (
-        <div className="mt-20 pt-16 border-t border-surface-200 dark:border-surface-800">
+        <div className="mt-16 border-t border-surface-200 pt-10 dark:border-surface-800 sm:mt-20 sm:pt-16">
           <div className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-3 mb-10">
-              <div className="w-1.5 h-8 bg-primary-500 rounded-full" />
-              <h2 className="text-3xl font-bold font-sans tracking-tight text-surface-900 dark:text-white">Detailed Insights</h2>
+            <div className="mb-8 flex flex-col gap-3 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-1.5 rounded-full bg-primary-500" />
+                <div>
+                  <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-500">Guide</p>
+                  <h2 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">Detailed Insights</h2>
+                </div>
+              </div>
+              <div className="h-px flex-1 bg-surface-200 dark:bg-surface-800 sm:max-w-48" />
             </div>
             
-            <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-8 md:p-12 shadow-sm">
-              <div className="prose prose-lg dark:prose-invert prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary-500 hover:prose-a:text-primary-600 prose-img:rounded-xl prose-img:shadow-md max-w-none prose-p:text-surface-600 dark:prose-p:text-surface-300 prose-li:text-surface-600 dark:prose-li:text-surface-300">
+            <div className="relative overflow-hidden rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 sm:rounded-3xl sm:p-8 md:p-12">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-fuchsia-500 to-emerald-500" />
+              <div className="prose prose-sm max-w-none dark:prose-invert sm:prose-base lg:prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary-500 hover:prose-a:text-primary-600 prose-img:rounded-xl prose-img:shadow-md prose-p:text-surface-600 dark:prose-p:text-surface-300 prose-li:text-surface-600 dark:prose-li:text-surface-300">
                 <MarkdownRenderer>{post.extendedDescription}</MarkdownRenderer>
               </div>
             </div>
