@@ -40,7 +40,14 @@ Please generate the following fields in JSON format:
 2. "seoTitle": An SEO-optimized title (different from main title, max 60 chars).
 3. "description": A short, engaging summary (1-2 sentences).
 4. "seoDescription": An SEO-optimized meta description (max 160 chars).
-5. "extendedDescription": A longer, detailed Markdown-formatted article about these prompts, the style they create, the vibe, and tips for using them. Make it conversational and engaging, using paragraphs and bullet points if needed. Do not use H1 (#) as the main title is already displayed. Use H2 (##) or H3 (###) if you need headers.
+5. "extendedDescription": A longer, detailed Markdown-formatted article about these prompts, the style they create, the vibe, and tips for using them. Make it conversational and engaging, using paragraphs and bullet points if needed. Do not use H1 (#) as the main title is already displayed. Prefer H2 (##), H3 (###), H4 (####), and occasional H5 (#####) headings. Use the site's custom markdown styles when useful:
+- :::tip ... ::: for practical advice.
+- :::creative ... ::: for art direction and visual style notes.
+- :::model ... ::: for model-specific behavior.
+- :::prompt ... ::: for reusable prompt snippets.
+- :::warning ... ::: only for real cautions.
+- Inline highlights like {mark:important phrase}, {primary:key style}, {green:recommended}, or {red:avoid this} sparingly.
+Keep custom blocks concise and mobile-friendly.
 6. "tags": An array of 5-8 relevant comma-separated tags (strings).
 7. "category": A single, broad category for these images.
 
