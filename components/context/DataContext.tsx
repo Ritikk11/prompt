@@ -8,15 +8,15 @@ interface DataContextType {
   posts: Post[];
   sections: Section[];
   settings: SiteSettings;
-  addPost: (post: Post) => void;
-  updatePost: (post: Post) => void;
-  deletePost: (id: string) => void;
+  addPost: (post: Post) => Promise<void>;
+  updatePost: (post: Post) => Promise<void>;
+  deletePost: (id: string) => Promise<void>;
   incrementViews: (id: string, fallbackPost?: Post) => void;
   toggleLike: (id: string, fallbackPost?: Post) => void;
-  addSection: (section: Section) => void;
-  updateSection: (section: Section) => void;
-  deleteSection: (id: string) => void;
-  updateSettings: (settings: SiteSettings) => void;
+  addSection: (section: Section) => Promise<void>;
+  updateSection: (section: Section) => Promise<void>;
+  deleteSection: (id: string) => Promise<void>;
+  updateSettings: (settings: SiteSettings) => Promise<void>;
   getPostById: (id: string) => Post | undefined;
   searchPosts: (query: string) => Post[];
   resetData: () => void;
@@ -157,11 +157,12 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     const cleanPost = JSON.parse(JSON.stringify(saveable));
     setPosts(prev => [...prev, post]);
     try {
-      await supabase.from('posts').upsert({ id: post.id, data: cleanPost });
+      const { error } = await supabase.from('posts').upsert({ id: post.id, data: cleanPost });
+      if (error) throw error;
     } catch (error: any) {
       setPosts(prev => prev.filter(p => p.id !== post.id));
       console.error('Supabase save error:', error);
-      alert(`Failed to save post: ${error.message || 'Unknown error'}`);
+      throw error;
     }
   }, [supabase]);
 
@@ -169,14 +170,17 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     // Remove transient property before save
     const { likedByUser, ...saveable } = post;
     const cleanPost = JSON.parse(JSON.stringify(saveable));
+    const previousPost = posts.find(p => p.id === post.id);
     setPosts(prev => prev.map(p => p.id === post.id ? post : p));
     try {
-      await supabase.from('posts').upsert({ id: post.id, data: cleanPost });
+      const { error } = await supabase.from('posts').upsert({ id: post.id, data: cleanPost });
+      if (error) throw error;
     } catch (error: any) {
+      if (previousPost) setPosts(prev => prev.map(p => p.id === post.id ? previousPost : p));
       console.error('Supabase save error:', error);
-      alert(`Failed to save post: ${error.message || 'Unknown error'}`);
+      throw error;
     }
-  }, [supabase]);
+  }, [posts, supabase]);
 
   const deletePost = useCallback(async (id: string) => {
     setPosts(prev => prev.filter(p => p.id !== id));
@@ -244,14 +248,23 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
   const addSection = useCallback(async (section: Section) => {
     const cleanSection = JSON.parse(JSON.stringify(section));
     setSections(prev => [...prev, section]);
-    await supabase.from('sections').upsert({ id: section.id, data: cleanSection });
+    const { error } = await supabase.from('sections').upsert({ id: section.id, data: cleanSection });
+    if (error) {
+      setSections(prev => prev.filter(s => s.id !== section.id));
+      throw error;
+    }
   }, [supabase]);
 
   const updateSection = useCallback(async (section: Section) => {
     const cleanSection = JSON.parse(JSON.stringify(section));
+    const previousSection = sections.find(s => s.id === section.id);
     setSections(prev => prev.map(s => s.id === section.id ? section : s));
-    await supabase.from('sections').upsert({ id: section.id, data: cleanSection });
-  }, [supabase]);
+    const { error } = await supabase.from('sections').upsert({ id: section.id, data: cleanSection });
+    if (error) {
+      if (previousSection) setSections(prev => prev.map(s => s.id === section.id ? previousSection : s));
+      throw error;
+    }
+  }, [sections, supabase]);
 
   const deleteSection = useCallback(async (id: string) => {
     setSections(prev => prev.filter(s => s.id !== id));
@@ -259,9 +272,14 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
   }, [supabase]);
 
   const updateSettings = useCallback(async (s: SiteSettings) => {
+    const previousSettings = settings;
     setSettings(s);
-    await supabase.from('settings').upsert({ id: 'global', data: s });
-  }, [supabase]);
+    const { error } = await supabase.from('settings').upsert({ id: 'global', data: s });
+    if (error) {
+      setSettings(previousSettings);
+      throw error;
+    }
+  }, [settings, supabase]);
 
   // Map localLikes onto posts efficiently
   const enrichedPosts: Post[] = posts.map(p => ({ ...p, likedByUser: localLikes.includes(p.id) }));
