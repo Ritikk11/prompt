@@ -12,9 +12,9 @@ import { createClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import type { Post } from '@/lib/types';
 
-import ReactMarkdown from 'react-markdown';
 import CopyButton from '@/components/CopyButton';
 import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 import PostCard from '@/components/PostCard';
 import AdSlot from '@/components/AdSlot';
@@ -762,19 +762,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             
             <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-8 md:p-12 shadow-sm">
               <div className="prose prose-lg dark:prose-invert prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary-500 hover:prose-a:text-primary-600 prose-img:rounded-xl prose-img:shadow-md max-w-none prose-p:text-surface-600 dark:prose-p:text-surface-300 prose-li:text-surface-600 dark:prose-li:text-surface-300">
-                <ReactMarkdown
-                  components={{
-                    h2: (props) => <h2 className="text-3xl font-bold mt-10 mb-6 text-surface-900 dark:text-white border-b border-surface-100 dark:border-surface-800 pb-2" {...props} />,
-                    h3: (props) => <h3 className="text-xl font-semibold mt-8 mb-4 text-surface-900 dark:text-white flex items-center gap-2"><span className="text-primary-500">❖</span>{props.children}</h3>,
-                    blockquote: (props) => (
-                      <blockquote className="border-l-4 border-primary-500 pl-6 py-4 italic text-surface-700 dark:text-surface-300 my-8 bg-surface-50 dark:bg-surface-800/50 rounded-r-2xl font-serif text-xl" {...props} />
-                    ),
-                    code: (props) => <code className="bg-surface-100 dark:bg-surface-800/80 text-primary-600 dark:text-primary-400 px-2 py-1 rounded-md text-[0.9em] font-mono border border-surface-200 dark:border-surface-700" {...props} />,
-                    pre: (props) => <pre className="bg-surface-900 text-surface-100 p-6 rounded-2xl overflow-x-auto shadow-inner my-6 border border-surface-800" {...props} />
-                  }}
-                >
-                  {post.extendedDescription}
-                </ReactMarkdown>
+                <MarkdownRenderer>{post.extendedDescription}</MarkdownRenderer>
               </div>
             </div>
           </div>
