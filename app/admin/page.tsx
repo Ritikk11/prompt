@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 import Image from 'next/image';
-import { getToolInfo } from '@/lib/constants';
+import { getDefaultImageModel, getImageModelForTools, getToolInfo } from '@/lib/constants';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
 
@@ -267,7 +267,7 @@ export default function Admin() {
   const [featured, setFeatured] = useState(false);
   const [status, setStatus] = useState<'published' | 'pending' | 'draft'>('published');
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
-  const [images, setImages] = useState<ImagePrompt[]>([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
+  const [images, setImages] = useState<ImagePrompt[]>([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
   const [assignedSections, setAssignedSections] = useState<string[]>([]);
 
 
@@ -366,7 +366,7 @@ export default function Admin() {
 
   const resetForm = () => {
     setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
-    setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
+    setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
     setStatus('published'); setVisibility('public');
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
   };
@@ -388,7 +388,10 @@ export default function Admin() {
     setFeatured(post.featured);
     setStatus(post.status || 'published');
     setVisibility(post.visibility || 'public');
-    setImages(post.images.length > 0 ? post.images : [{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
+    setImages(post.images.length > 0 ? post.images.map(image => ({
+      ...image,
+      model: image.model || getImageModelForTools(image.aiTools || [image.aiTool].filter(Boolean))
+    })) : [{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
     // Find which custom sections contain this post
     const inSections = sections
       .filter(s => s.type === 'custom' && s.postIds?.includes(post.id))
@@ -398,7 +401,7 @@ export default function Admin() {
   };
 
   const addImageField = () => {
-    setImages(prev => [...prev, { id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: '' }]);
+    setImages(prev => [...prev, { id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
   };
 
   const updateImage = (idx: number, field: keyof ImagePrompt | Partial<ImagePrompt>, value?: any) => {
@@ -1456,7 +1459,11 @@ export default function Admin() {
                                           let newTools = img.aiTools ? [...img.aiTools] : [img.aiTool].filter(Boolean);
                                           if (e.target.checked && !newTools.includes(tool)) newTools.push(tool);
                                           else newTools = newTools.filter(t => t !== tool);
-                                          updateImage(idx, { aiTools: newTools, aiTool: newTools[0] || '' });
+                                          updateImage(idx, {
+                                            aiTools: newTools,
+                                            aiTool: newTools[0] || '',
+                                            model: getImageModelForTools(newTools, img.model)
+                                          });
                                         }}
                                         className="w-3.5 h-3.5 rounded text-primary-500 focus:ring-primary-500"
                                       />

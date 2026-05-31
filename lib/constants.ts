@@ -26,6 +26,34 @@ export const fallbackToolInfo: Record<string, { color: string; logo: string; log
   }
 };
 
+export const defaultImageModels: Record<string, string> = {
+  ChatGPT: 'GPT Image 2',
+  Gemini: 'Nano Banana 2',
+  Grok: 'Grok Imagine Image Quality',
+  Qwen: 'Qwen-Image'
+};
+
+const defaultImageModelLookup = new Map(
+  Object.entries(defaultImageModels).map(([tool, model]) => [tool.toLowerCase(), model])
+);
+
+export function getDefaultImageModel(tool?: string) {
+  if (!tool) return '';
+  return defaultImageModelLookup.get(tool.trim().toLowerCase()) || '';
+}
+
+export function isDefaultImageModel(model?: string) {
+  if (!model) return false;
+  const normalizedModel = model.trim().toLowerCase();
+  return Object.values(defaultImageModels).some(defaultModel => defaultModel.toLowerCase() === normalizedModel);
+}
+
+export function getImageModelForTools(tools: string[], currentModel?: string) {
+  const defaultModel = getDefaultImageModel(tools[0]);
+  if (!defaultModel) return currentModel || '';
+  return !currentModel?.trim() || isDefaultImageModel(currentModel) ? defaultModel : currentModel;
+}
+
 export function getAllTools(post: any): string[] {
   const toolsSet = new Set<string>();
   if (post.aiTools && post.aiTools.length > 0) {

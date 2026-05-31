@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
-import { getToolInfo, getAllTools } from '@/lib/constants';
+import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
 import TemplatePrompt from '@/components/TemplatePrompt';
 import { createClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
@@ -652,7 +652,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   </div>
                   <div className="flex items-center gap-2 text-xs font-bold text-surface-400 uppercase tracking-widest">
                     <Clock className="w-4 h-4 text-primary-500/50" />
-                    Model: <span className="text-surface-600 dark:text-surface-200">{img.model || img.aiTool}</span>
+                    Model: <span className="text-surface-600 dark:text-surface-200">{img.model || getDefaultImageModel(img.aiTool) || img.aiTool}</span>
                   </div>
                 </div>
               </div>
