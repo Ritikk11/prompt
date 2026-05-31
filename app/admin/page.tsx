@@ -511,7 +511,7 @@ export default function Admin() {
     }
   };
 
-  const handleSavePost = () => {
+  const handleSavePost = async () => {
     if (!thumbnailUrl) {
       alert('Thumbnail URL is required');
       return;
@@ -557,30 +557,33 @@ export default function Admin() {
     if (seoTitle) post.seoTitle = seoTitle;
     if (seoDescription) post.seoDescription = seoDescription;
 
-    if (editingPost) {
-      updatePost(post);
-    } else {
-      addPost(post);
-    }
-
-    if (!isFinished && status === 'published') {
-      alert('Post saved as draft because some required fields (title, description, or images) are missing.');
-    }
+    try {
+      if (editingPost) {
+        await updatePost(post);
+      } else {
+        await addPost(post);
+      }
 
     // Update custom sections — add/remove post from sections
-    customSections.forEach(section => {
-      const wasAssigned = section.postIds?.includes(postId) || false;
-      const isAssigned = assignedSections.includes(section.id);
-      if (wasAssigned && !isAssigned) {
-        // Remove from section
-        updateSection({ ...section, postIds: (section.postIds || []).filter(id => id !== postId) });
-      } else if (!wasAssigned && isAssigned) {
-        // Add to section
-        updateSection({ ...section, postIds: [...(section.postIds || []), postId] });
+      for (const section of customSections) {
+        const wasAssigned = section.postIds?.includes(postId) || false;
+        const isAssigned = assignedSections.includes(section.id);
+        if (wasAssigned && !isAssigned) {
+          await updateSection({ ...section, postIds: (section.postIds || []).filter(id => id !== postId) });
+        } else if (!wasAssigned && isAssigned) {
+          await updateSection({ ...section, postIds: [...(section.postIds || []), postId] });
+        }
       }
-    });
 
-    resetForm();
+      await loadAdminData();
+      resetForm();
+      alert(!isFinished && status === 'published'
+        ? 'Post saved as draft because some required fields (title, description, or images) are missing.'
+        : 'Post saved successfully.');
+    } catch (error: any) {
+      console.error('Failed to save post:', error);
+      alert(`Failed to save post: ${error?.message || 'Unknown error'}`);
+    }
   };
 
   const handleAddSection = () => {
@@ -1083,7 +1086,7 @@ export default function Admin() {
                   value={aiPromptInstruction}
                   onChange={e => setAiPromptInstruction(e.target.value)}
                   placeholder="(Optional) E.g., 'Make the title sound very poetic', 'Keep descriptions under 100 words', etc."
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-none h-20"
+                  className="w-full min-h-20 px-4 py-2.5 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
                 />
                 <button 
                   onClick={handleGenerateAiDetails}
@@ -1152,7 +1155,7 @@ export default function Admin() {
                     value={description}
                     onChange={e => setDescription(e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-none"
+                    className="w-full min-h-[96px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
                     placeholder="Describe this prompt collection..."
                   />
                 </div>
@@ -1263,7 +1266,7 @@ export default function Admin() {
                     value={extendedDescription}
                     onChange={e => setExtendedDescription(e.target.value)}
                     rows={8}
-                    className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-none font-mono"
+                    className="w-full min-h-[220px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y font-mono"
                     placeholder="Write a longer article or detailed description here to display at the bottom of the post page..."
                   />
                 </div>
@@ -1271,19 +1274,21 @@ export default function Admin() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Custom Search Title (SEO)</label>
-                    <input
+                    <textarea
                       value={seoTitle}
                       onChange={e => setSeoTitle(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      rows={2}
+                      className="w-full min-h-[72px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
                       placeholder="Title for Google search..."
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Custom Search Description (SEO)</label>
-                    <input
+                    <textarea
                       value={seoDescription}
                       onChange={e => setSeoDescription(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      rows={3}
+                      className="w-full min-h-[96px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
                       placeholder="Short snippet for search results..."
                     />
                   </div>
@@ -1292,19 +1297,21 @@ export default function Admin() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Tags (comma separated)</label>
-                    <input
+                    <textarea
                       value={tagsStr}
                       onChange={e => setTagsStr(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      rows={2}
+                      className="w-full min-h-[72px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
                       placeholder="fantasy, landscape, magical"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Categories (comma separated)</label>
-                    <input
+                    <textarea
                       value={categoriesStr}
                       onChange={e => setCategoriesStr(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      rows={2}
+                      className="w-full min-h-[72px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
                       placeholder="e.g. UI, Characters"
                     />
                   </div>
@@ -1477,7 +1484,7 @@ export default function Admin() {
                             value={img.prompt}
                             onChange={e => updateImage(idx, 'prompt', e.target.value)}
                             rows={2}
-                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs resize-none"
+                            className="w-full min-h-[80px] px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs resize-y"
                             placeholder="Enter the AI prompt..."
                           />
                         </div>
@@ -1917,7 +1924,7 @@ export default function Admin() {
                   value={siteDescription}
                   onChange={e => setSiteDescription(e.target.value)}
                   rows={2}
-                  className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-none"
+                  className="w-full min-h-[80px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
                 />
               </div>
               <div>
@@ -2100,7 +2107,7 @@ export default function Admin() {
                      onChange={(e) => setAdsConfig(prev => ({ ...prev, header: { ...prev.header, code: e.target.value } }))}
                      rows={3}
                      placeholder="Paste Ad HTML/JS code here (e.g., Google AdSense)"
-                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-none"
+                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-y"
                    />
                 </div>
 
@@ -2137,7 +2144,7 @@ export default function Admin() {
                      onChange={(e) => setAdsConfig(prev => ({ ...prev, inFeed: { ...prev.inFeed, code: e.target.value } }))}
                      rows={3}
                      placeholder="Paste Ad HTML/JS code here"
-                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-none"
+                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-y"
                    />
                 </div>
 
@@ -2160,7 +2167,7 @@ export default function Admin() {
                      onChange={(e) => setAdsConfig(prev => ({ ...prev, postTop: { ...prev.postTop, code: e.target.value } }))}
                      rows={3}
                      placeholder="Paste Ad HTML/JS code here"
-                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-none"
+                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-y"
                    />
                 </div>
 
@@ -2183,7 +2190,7 @@ export default function Admin() {
                      onChange={(e) => setAdsConfig(prev => ({ ...prev, postBottom: { ...prev.postBottom, code: e.target.value } }))}
                      rows={3}
                      placeholder="Paste Ad HTML/JS code here"
-                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-none"
+                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-y"
                    />
                 </div>
 
