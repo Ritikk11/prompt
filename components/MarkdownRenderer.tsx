@@ -1,14 +1,14 @@
 'use client';
 import { Children, type ReactNode } from 'react';
-import { AlertTriangle, CheckCircle2, Info, Lightbulb, Quote, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Flame, Info, Lightbulb, Palette, Quote, Sparkles, Target, Wand2, XCircle } from 'lucide-react';
 import Markdown from 'react-markdown';
 
-type CalloutType = 'tip' | 'warning' | 'info' | 'note' | 'success' | 'danger' | 'highlight' | 'quote';
+type CalloutType = 'tip' | 'warning' | 'info' | 'note' | 'success' | 'danger' | 'highlight' | 'quote' | 'prompt' | 'example' | 'creative' | 'model' | 'important';
 type MarkdownBlock =
   | { type: 'markdown'; content: string }
   | { type: 'callout'; calloutType: CalloutType; title?: string; content: string };
 
-const calloutTypes: CalloutType[] = ['tip', 'warning', 'info', 'note', 'success', 'danger', 'highlight', 'quote'];
+const calloutTypes: CalloutType[] = ['tip', 'warning', 'info', 'note', 'success', 'danger', 'highlight', 'quote', 'prompt', 'example', 'creative', 'model', 'important'];
 const calloutTypeSet = new Set<string>(calloutTypes);
 
 const calloutStyles: Record<CalloutType, {
@@ -64,6 +64,36 @@ const calloutStyles: Record<CalloutType, {
     icon: <Quote className="h-4 w-4" />,
     className: 'border-surface-200 bg-surface-50/90 text-surface-800 dark:border-surface-700 dark:bg-surface-800/60 dark:text-surface-100',
     iconClassName: 'bg-surface-900 text-white dark:bg-white dark:text-surface-900'
+  },
+  prompt: {
+    title: 'Prompt',
+    icon: <Wand2 className="h-4 w-4" />,
+    className: 'border-indigo-200 bg-indigo-50/90 text-indigo-950 dark:border-indigo-700/40 dark:bg-indigo-950/30 dark:text-indigo-100',
+    iconClassName: 'bg-indigo-500 text-white'
+  },
+  example: {
+    title: 'Example',
+    icon: <Target className="h-4 w-4" />,
+    className: 'border-teal-200 bg-teal-50/90 text-teal-950 dark:border-teal-700/40 dark:bg-teal-950/30 dark:text-teal-100',
+    iconClassName: 'bg-teal-500 text-white'
+  },
+  creative: {
+    title: 'Creative Direction',
+    icon: <Palette className="h-4 w-4" />,
+    className: 'border-pink-200 bg-pink-50/90 text-pink-950 dark:border-pink-700/40 dark:bg-pink-950/30 dark:text-pink-100',
+    iconClassName: 'bg-pink-500 text-white'
+  },
+  model: {
+    title: 'Model Note',
+    icon: <Sparkles className="h-4 w-4" />,
+    className: 'border-cyan-200 bg-cyan-50/90 text-cyan-950 dark:border-cyan-700/40 dark:bg-cyan-950/30 dark:text-cyan-100',
+    iconClassName: 'bg-cyan-500 text-white'
+  },
+  important: {
+    title: 'Important',
+    icon: <Flame className="h-4 w-4" />,
+    className: 'border-orange-200 bg-orange-50/90 text-orange-950 dark:border-orange-700/40 dark:bg-orange-950/30 dark:text-orange-100',
+    iconClassName: 'bg-orange-500 text-white'
   }
 };
 
@@ -73,7 +103,12 @@ const inlineStyles: Record<string, string> = {
   blue: 'rounded-md bg-sky-100 px-1.5 py-0.5 font-semibold text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
   green: 'rounded-md bg-emerald-100 px-1.5 py-0.5 font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
   red: 'rounded-md bg-rose-100 px-1.5 py-0.5 font-semibold text-rose-700 dark:bg-rose-500/15 dark:text-rose-300',
-  purple: 'rounded-md bg-violet-100 px-1.5 py-0.5 font-semibold text-violet-700 dark:bg-violet-500/15 dark:text-violet-300'
+  purple: 'rounded-md bg-violet-100 px-1.5 py-0.5 font-semibold text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
+  orange: 'rounded-md bg-orange-100 px-1.5 py-0.5 font-semibold text-orange-700 dark:bg-orange-500/15 dark:text-orange-300',
+  pink: 'rounded-md bg-pink-100 px-1.5 py-0.5 font-semibold text-pink-700 dark:bg-pink-500/15 dark:text-pink-300',
+  gray: 'rounded-md bg-surface-100 px-1.5 py-0.5 font-medium text-surface-700 dark:bg-surface-800 dark:text-surface-200',
+  outline: 'rounded-md border border-current px-1.5 py-0.5 font-semibold',
+  kbd: 'rounded-md border border-surface-300 bg-white px-1.5 py-0.5 font-mono text-[0.85em] font-semibold text-surface-700 shadow-sm dark:border-surface-600 dark:bg-surface-900 dark:text-surface-200'
 };
 
 function parseMarkdownBlocks(content: string): MarkdownBlock[] {
@@ -127,7 +162,7 @@ function parseMarkdownBlocks(content: string): MarkdownBlock[] {
 
 function renderStyledText(value: string) {
   const parts: ReactNode[] = [];
-  const pattern = /\{(mark|primary|blue|green|red|purple):([^{}]+)\}/g;
+  const pattern = /\{(mark|primary|blue|green|red|purple|orange|pink|gray|outline|kbd):([^{}]+)\}/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -173,8 +208,24 @@ function renderMarkdown(content: string) {
             {renderInline(props.children)}
           </h4>
         ),
+        h5: (props) => (
+          <h5 className="mt-6 mb-2 flex items-center gap-2 text-sm font-black uppercase tracking-[0.16em] text-primary-600 dark:text-primary-300">
+            <span className="h-px w-8 bg-primary-500" />
+            {renderInline(props.children)}
+          </h5>
+        ),
         p: (props) => <p>{renderInline(props.children)}</p>,
-        li: (props) => <li>{renderInline(props.children)}</li>,
+        strong: (props) => <strong className="font-extrabold text-surface-950 dark:text-white">{renderInline(props.children)}</strong>,
+        em: (props) => <em className="text-surface-700 dark:text-surface-200">{renderInline(props.children)}</em>,
+        a: (props) => <a className="font-semibold text-primary-600 underline decoration-primary-300 decoration-2 underline-offset-4 hover:text-primary-700 dark:text-primary-300 dark:decoration-primary-700" {...props} />,
+        ul: (props) => <ul className="my-5 list-disc space-y-2 pl-6 marker:text-primary-500" {...props} />,
+        ol: (props) => <ol className="my-5 list-decimal space-y-2 pl-6 marker:font-bold marker:text-primary-500" {...props} />,
+        li: (props) => (
+          <li className="pl-1">
+            {renderInline(props.children)}
+          </li>
+        ),
+        hr: () => <hr className="my-10 border-0 border-t border-surface-200 dark:border-surface-800" />,
         blockquote: (props) => (
           <blockquote className="my-8 rounded-r-2xl border-l-4 border-primary-500 bg-surface-50 py-4 pl-6 font-serif text-xl italic text-surface-700 dark:bg-surface-800/50 dark:text-surface-300">
             {props.children}
