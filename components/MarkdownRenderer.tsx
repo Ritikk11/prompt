@@ -20,79 +20,79 @@ const calloutStyles: Record<CalloutType, {
   tip: {
     title: 'Tip',
     icon: <Lightbulb className="h-4 w-4" />,
-    className: 'border-primary-200 bg-primary-50/80 text-surface-800 dark:border-primary-800/40 dark:bg-primary-950/30 dark:text-surface-100',
+    className: 'border-primary-200 bg-primary-50 text-surface-800 dark:border-primary-500/40 dark:bg-primary-500/15 dark:text-primary-50',
     iconClassName: 'bg-primary-500 text-white'
   },
   warning: {
     title: 'Warning',
     icon: <AlertTriangle className="h-4 w-4" />,
-    className: 'border-amber-200 bg-amber-50/90 text-amber-950 dark:border-amber-700/40 dark:bg-amber-950/30 dark:text-amber-100',
+    className: 'border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-50',
     iconClassName: 'bg-amber-500 text-white'
   },
   info: {
     title: 'Info',
     icon: <Info className="h-4 w-4" />,
-    className: 'border-sky-200 bg-sky-50/90 text-sky-950 dark:border-sky-700/40 dark:bg-sky-950/30 dark:text-sky-100',
+    className: 'border-sky-200 bg-sky-50 text-sky-950 dark:border-sky-500/40 dark:bg-sky-500/15 dark:text-sky-50',
     iconClassName: 'bg-sky-500 text-white'
   },
   note: {
     title: 'Note',
     icon: <Info className="h-4 w-4" />,
-    className: 'border-violet-200 bg-violet-50/90 text-violet-950 dark:border-violet-700/40 dark:bg-violet-950/30 dark:text-violet-100',
+    className: 'border-violet-200 bg-violet-50 text-violet-950 dark:border-violet-500/40 dark:bg-violet-500/15 dark:text-violet-50',
     iconClassName: 'bg-violet-500 text-white'
   },
   success: {
     title: 'Success',
     icon: <CheckCircle2 className="h-4 w-4" />,
-    className: 'border-emerald-200 bg-emerald-50/90 text-emerald-950 dark:border-emerald-700/40 dark:bg-emerald-950/30 dark:text-emerald-100',
+    className: 'border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-50',
     iconClassName: 'bg-emerald-500 text-white'
   },
   danger: {
     title: 'Danger',
     icon: <XCircle className="h-4 w-4" />,
-    className: 'border-rose-200 bg-rose-50/90 text-rose-950 dark:border-rose-700/40 dark:bg-rose-950/30 dark:text-rose-100',
+    className: 'border-rose-200 bg-rose-50 text-rose-950 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-50',
     iconClassName: 'bg-rose-500 text-white'
   },
   highlight: {
     title: 'Highlight',
     icon: <CheckCircle2 className="h-4 w-4" />,
-    className: 'border-fuchsia-200 bg-fuchsia-50/90 text-fuchsia-950 dark:border-fuchsia-700/40 dark:bg-fuchsia-950/30 dark:text-fuchsia-100',
+    className: 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-950 dark:border-fuchsia-500/40 dark:bg-fuchsia-500/15 dark:text-fuchsia-50',
     iconClassName: 'bg-fuchsia-500 text-white'
   },
   quote: {
     title: 'Quote',
     icon: <Quote className="h-4 w-4" />,
-    className: 'border-surface-200 bg-surface-50/90 text-surface-800 dark:border-surface-700 dark:bg-surface-800/60 dark:text-surface-100',
+    className: 'border-surface-200 bg-surface-50 text-surface-800 dark:border-surface-600 dark:bg-surface-800 dark:text-surface-50',
     iconClassName: 'bg-surface-900 text-white dark:bg-white dark:text-surface-900'
   },
   prompt: {
     title: 'Prompt',
     icon: <Wand2 className="h-4 w-4" />,
-    className: 'border-indigo-200 bg-indigo-50/90 text-indigo-950 dark:border-indigo-700/40 dark:bg-indigo-950/30 dark:text-indigo-100',
+    className: 'border-indigo-200 bg-indigo-50 text-indigo-950 dark:border-indigo-500/40 dark:bg-indigo-500/15 dark:text-indigo-50',
     iconClassName: 'bg-indigo-500 text-white'
   },
   example: {
     title: 'Example',
     icon: <Target className="h-4 w-4" />,
-    className: 'border-teal-200 bg-teal-50/90 text-teal-950 dark:border-teal-700/40 dark:bg-teal-950/30 dark:text-teal-100',
+    className: 'border-teal-200 bg-teal-50 text-teal-950 dark:border-teal-500/40 dark:bg-teal-500/15 dark:text-teal-50',
     iconClassName: 'bg-teal-500 text-white'
   },
   creative: {
     title: 'Creative Direction',
     icon: <Palette className="h-4 w-4" />,
-    className: 'border-pink-200 bg-pink-50/90 text-pink-950 dark:border-pink-700/40 dark:bg-pink-950/30 dark:text-pink-100',
+    className: 'border-pink-200 bg-pink-50 text-pink-950 dark:border-pink-500/40 dark:bg-pink-500/15 dark:text-pink-50',
     iconClassName: 'bg-pink-500 text-white'
   },
   model: {
     title: 'Model Note',
     icon: <Sparkles className="h-4 w-4" />,
-    className: 'border-cyan-200 bg-cyan-50/90 text-cyan-950 dark:border-cyan-700/40 dark:bg-cyan-950/30 dark:text-cyan-100',
+    className: 'border-cyan-200 bg-cyan-50 text-cyan-950 dark:border-cyan-500/40 dark:bg-cyan-500/15 dark:text-cyan-50',
     iconClassName: 'bg-cyan-500 text-white'
   },
   important: {
     title: 'Important',
     icon: <Flame className="h-4 w-4" />,
-    className: 'border-orange-200 bg-orange-50/90 text-orange-950 dark:border-orange-700/40 dark:bg-orange-950/30 dark:text-orange-100',
+    className: 'border-orange-200 bg-orange-50 text-orange-950 dark:border-orange-500/40 dark:bg-orange-500/15 dark:text-orange-50',
     iconClassName: 'bg-orange-500 text-white'
   }
 };
@@ -262,7 +262,7 @@ function Callout({ block }: { block: Extract<MarkdownBlock, { type: 'callout' }>
           <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl shadow-sm ${style.iconClassName}`}>
             {style.icon}
           </span>
-          <p className="m-0 text-sm font-black uppercase tracking-[0.14em]">
+          <p className="m-0 text-sm font-black uppercase tracking-[0.14em] text-current">
             {block.title || style.title}
           </p>
         </div>
@@ -270,14 +270,14 @@ function Callout({ block }: { block: Extract<MarkdownBlock, { type: 'callout' }>
           <button
             type="button"
             onClick={copyContent}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-current/20 px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors hover:bg-white/40 dark:hover:bg-white/10 sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-current/30 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-current transition-colors hover:bg-white/40 dark:hover:bg-white/10 sm:w-auto"
           >
             {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             {copied ? 'Copied' : 'Copy'}
           </button>
         )}
       </div>
-      <div className="callout-content prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ol:my-2 prose-li:my-1">
+      <div className="callout-content text-current prose-p:my-2 prose-p:leading-relaxed prose-p:text-current prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-li:text-current">
         <MarkdownRenderer>{block.content}</MarkdownRenderer>
       </div>
     </div>
