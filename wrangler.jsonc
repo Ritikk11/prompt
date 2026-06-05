@@ -3,6 +3,7 @@
   "name": "aipromptmatrix-opennext-staging",
   "account_id": "782cdf2aa31f278ca25d0cedfb54a3af",
   "main": ".open-next/worker.js",
+  "workers_dev": true,
   "compatibility_date": "2026-05-25",
   "compatibility_flags": [
     "nodejs_compat",
