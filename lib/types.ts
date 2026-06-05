@@ -56,6 +56,12 @@ export interface SiteFeatures {
   userSubmissionsAutoApprove?: boolean;
   comments: boolean;
   commentsRequireApproval?: boolean;
+  showCopyCollection?: boolean;
+  showStickyCopy?: boolean;
+  showHowTo?: boolean;
+  showRecommendedPosts?: boolean;
+  showTags?: boolean;
+  showDetailedInsights?: boolean;
   advancedFiltering: boolean;
   smartTemplates: boolean;
   infiniteScroll: boolean;

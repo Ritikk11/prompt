@@ -344,6 +344,12 @@ export default function Admin() {
       userSubmissionsAutoApprove: false,
       comments: false,
       commentsRequireApproval: false,
+      showCopyCollection: true,
+      showStickyCopy: true,
+      showHowTo: true,
+      showRecommendedPosts: true,
+      showTags: true,
+      showDetailedInsights: true,
       advancedFiltering: false,
       smartTemplates: false,
       infiniteScroll: false,
@@ -2552,6 +2558,42 @@ export default function Admin() {
                     </label>
                   </div>
                 )}
+              </div>
+
+              {/* Post Page Sections */}
+              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-sm font-medium">Post Page Sections</span>
+                    <p className="mt-1 text-xs text-surface-500">Control the extra blocks shown below each prompt collection.</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="checkbox" checked={features.showCopyCollection ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showCopyCollection: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    Copy entire collection block
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="checkbox" checked={features.showStickyCopy ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showStickyCopy: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    Sticky mobile copy button
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="checkbox" checked={features.showHowTo ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showHowTo: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    How to use section
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="checkbox" checked={features.showRecommendedPosts ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showRecommendedPosts: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    Recommended prompts
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="checkbox" checked={features.showTags ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showTags: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    Discovery tags
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <input type="checkbox" checked={features.showDetailedInsights ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showDetailedInsights: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
+                    Detailed insights
+                  </label>
+                </div>
               </div>
 
               {/* Advanced Filtering */}
