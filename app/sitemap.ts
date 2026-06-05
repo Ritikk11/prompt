@@ -35,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const publishedPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
     publishedPosts.forEach(post => {
       sitemapEntries.push({
-        url: `${baseUrl}/post/${post.slug || post.id}`,
+        url: `${baseUrl}/${post.slug || post.id}`,
         lastModified: new Date(post.createdAt),
         changeFrequency: 'daily',
         priority: 1.0,

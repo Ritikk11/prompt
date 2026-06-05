@@ -29,7 +29,7 @@ export async function GET() {
     <atom:link href="${baseUrl}/feed.xml" rel="self" type="application/rss+xml" />`;
 
     publishedPosts.forEach(post => {
-      const url = `${baseUrl}/post/${post.slug || post.id}`;
+      const url = `${baseUrl}/${post.slug || post.id}`;
       // Safe description XML encode
       const desc = (post.description || post.title).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       const htmlTitle = post.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

@@ -143,7 +143,7 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
                 </div>
               <h2 className="text-2xl md:text-4xl font-bold text-white mb-2 leading-tight drop-shadow-lg">{post.title}</h2>
               <p className="text-white/70 text-sm md:text-base mb-4 line-clamp-2 drop-shadow">{post.description}</p>
-              <Link href={`/post/${post.slug || post.id}`} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm transition-all hover:shadow-lg hover:shadow-primary-500/25">
+              <Link href={`/${post.slug || post.id}`} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm transition-all hover:shadow-lg hover:shadow-primary-500/25">
                 View Prompts <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -185,7 +185,7 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
             <div key={post.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <h2 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 leading-tight">{post.title}</h2>
               <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg mb-8 line-clamp-3">{post.description}</p>
-              <Link href={`/post/${post.slug || post.id}`} className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-bold transition-all shadow-lg shadow-primary-500/25">
+              <Link href={`/${post.slug || post.id}`} className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-bold transition-all shadow-lg shadow-primary-500/25">
                 Explore Prompt <ArrowRight className="w-5 h-5" />
               </Link>
             </div>
@@ -248,7 +248,7 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
             <h2 className="text-xl md:text-5xl font-black text-surface-900 dark:text-white mb-2 md:mb-6 leading-[1.1]">{post.title}</h2>
             <p className="text-surface-700 dark:text-surface-300 text-xs md:text-lg mb-4 md:mb-8 line-clamp-2 md:line-clamp-3 font-medium">{post.description}</p>
             <div className="flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 w-full">
-              <Link href={`/post/${post.slug || post.id}`} className="inline-flex flex-1 md:flex-none justify-center items-center gap-1.5 px-4 py-2.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 text-xs md:text-base font-bold hover:scale-105 transition-transform shadow-xl">
+              <Link href={`/${post.slug || post.id}`} className="inline-flex flex-1 md:flex-none justify-center items-center gap-1.5 px-4 py-2.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 text-xs md:text-base font-bold hover:scale-105 transition-transform shadow-xl">
                 Get Prompt <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
               </Link>
               <div className="flex gap-1.5 md:gap-2 shrink-0">
@@ -295,7 +295,7 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
       <div className="relative w-full rounded-2xl overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
           {/* Main Large Item */}
-          <Link href={`/post/${topFeatured[0].slug || topFeatured[0].id}`} className="relative h-[400px] lg:h-[500px] lg:col-span-2 rounded-2xl overflow-hidden group">
+          <Link href={`/${topFeatured[0].slug || topFeatured[0].id}`} className="relative h-[400px] lg:h-[500px] lg:col-span-2 rounded-2xl overflow-hidden group">
             <Image src={topFeatured[0].thumbnailUrl || topFeatured[0].images[0]?.url || ''} alt={`bg-${topFeatured[0].title}`} fill sizes="20vw" className="object-cover blur-2xl scale-125 opacity-40 dark:opacity-30"  referrerPolicy="no-referrer" />
             <LoadingImage src={topFeatured[0].thumbnailUrl || topFeatured[0].images[0]?.url || ''} alt="" fill priority sizes="(max-width: 1024px) 100vw, 66vw" showSkeleton={showSkeleton} className="object-contain transition-transform duration-700 group-hover:scale-105"  referrerPolicy="no-referrer" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -308,7 +308,7 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
           {/* Side Items */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
             {topFeatured.slice(1).map((fPost) => (
-              <Link key={fPost.id} href={`/post/${fPost.slug || fPost.id}`} className="relative h-[200px] sm:h-[250px] lg:h-[calc(250px-4px)] rounded-2xl overflow-hidden group">
+              <Link key={fPost.id} href={`/${fPost.slug || fPost.id}`} className="relative h-[200px] sm:h-[250px] lg:h-[calc(250px-4px)] rounded-2xl overflow-hidden group">
                 <Image src={fPost.thumbnailUrl || fPost.images[0]?.url || ''} alt={`bg-${fPost.title}`} fill sizes="20vw" className="object-cover blur-xl scale-125 opacity-40 dark:opacity-30"  referrerPolicy="no-referrer" />
                 <LoadingImage src={fPost.thumbnailUrl || fPost.images[0]?.url || ''} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" showSkeleton={showSkeleton} className="object-contain transition-transform duration-700 group-hover:scale-105"  referrerPolicy="no-referrer" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
@@ -362,7 +362,7 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
                <p className="text-white/80 text-lg md:text-2xl font-medium max-w-2xl mb-10 drop-shadow-lg">
                  {post.description}
                </p>
-               <Link href={`/post/${post.slug || post.id}`} className="group/btn inline-flex items-center gap-3 px-8 py-4 rounded-full bg-white text-surface-950 font-bold text-lg transition-transform hover:scale-105 shadow-2xl hover:shadow-white/20">
+               <Link href={`/${post.slug || post.id}`} className="group/btn inline-flex items-center gap-3 px-8 py-4 rounded-full bg-white text-surface-950 font-bold text-lg transition-transform hover:scale-105 shadow-2xl hover:shadow-white/20">
                  Explore Now 
                  <span className="bg-surface-100 p-2 rounded-full group-hover/btn:bg-primary-100 transition-colors">
                    <ArrowRight className="w-5 h-5 text-primary-600" />
@@ -418,7 +418,7 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
                  {post.description}
                </p>
                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mb-4">
-                  <Link href={`/post/${post.slug || post.id}`} className="px-8 py-4 rounded-2xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-2xl">
+                  <Link href={`/${post.slug || post.id}`} className="px-8 py-4 rounded-2xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-2xl">
                     View Prompt
                   </Link>
                   <div className="flex gap-2">
@@ -499,7 +499,7 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
                             );
                           })()}
                           <h3 className="text-2xl md:text-4xl font-black text-white mb-4 line-clamp-2 uppercase tracking-wide">{p.title}</h3>
-                          <Link href={`/post/${p.slug || p.id}`} className="group inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white text-black font-black text-xs md:text-sm uppercase tracking-widest w-max hover:bg-primary-500 hover:text-white transition-all">
+                          <Link href={`/${p.slug || p.id}`} className="group inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white text-black font-black text-xs md:text-sm uppercase tracking-widest w-max hover:bg-primary-500 hover:text-white transition-all">
                              View Details <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                           </Link>
                         </div>
@@ -536,7 +536,7 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
                       {p.description}
                     </p>
                     <div className="flex flex-row items-center gap-6">
-                        <Link href={`/post/${p.slug || p.id}`} className="px-10 py-4 rounded-full bg-primary-500 text-white font-black text-sm uppercase tracking-widest hover:bg-primary-400 transition-all shadow-xl shadow-primary-500/30">
+                        <Link href={`/${p.slug || p.id}`} className="px-10 py-4 rounded-full bg-primary-500 text-white font-black text-sm uppercase tracking-widest hover:bg-primary-400 transition-all shadow-xl shadow-primary-500/30">
                           PROMPT DETAILS
                         </Link>
                         <div className="flex gap-4">

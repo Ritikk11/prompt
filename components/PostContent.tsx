@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
 import Image from 'next/image';
-import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon } from 'lucide-react';
+import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Wand2 } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
 import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
@@ -103,6 +103,14 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const allPromptsText = settings.features?.premiumPrompts && post.isPremium && !user 
     ? "Premium Collection - Please sign in to view full prompts." 
     : (post.images || []).map((img, i) => `Image ${i + 1} (${img.aiTool}):\n${img.prompt}`).join('\n\n');
+  const primaryToolName = heroTools[0] || 'ChatGPT / Gemini';
+  const howToSteps = [
+    { title: `Open ${primaryToolName}`, text: 'Use ChatGPT, Gemini, Grok, Qwen, or the model listed with the prompt.', icon: Wand2 },
+    { title: 'Copy the prompt', text: 'Use the copy button on any prompt card, or copy the entire collection above.', icon: Copy },
+    { title: 'Upload reference image', text: 'Attach your reference image first when the prompt is image-guided.', icon: ImageIcon },
+    { title: 'Customize details', text: 'Replace placeholders, names, colors, aspect ratio, or style notes as needed.', icon: Check },
+    { title: 'Paste and generate', text: 'Paste the prompt with the image, generate the artwork, then refine in small steps.', icon: DownloadCloud }
+  ];
 
   const postHeroStyle = settings.postHeroStyle || 'v1';
 
@@ -539,9 +547,9 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Image + Prompt layout */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+              <div className="grid grid-cols-1 items-start gap-0 md:grid-cols-2">
                 {/* Image — no cropping, natural display */}
-                <div className="relative bg-surface-50 dark:bg-surface-800 flex items-center justify-center p-3 sm:p-5">
+                <div className="relative flex items-start justify-center bg-surface-50 p-3 dark:bg-surface-800 sm:p-5">
                   <div className="relative w-full overflow-hidden rounded-2xl shadow-lg group-hover:scale-[1.01] transition-transform duration-500 group/img">
                     <div className="w-full relative rounded-2xl overflow-hidden cursor-zoom-in flex items-center justify-center bg-surface-100 dark:bg-surface-900" onClick={() => setLightboxImage({ url: img.url || '', index, tools: img.aiTools || [img.aiTool].filter(Boolean) })}>
                       <LoadingImg
@@ -642,8 +650,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                           </div>
                           <CopyButton text={img.prompt} />
                         </div>
-                        <div className="bg-surface-50 dark:bg-surface-800/50 rounded-2xl p-6 mb-6 border border-surface-200/50 dark:border-surface-700/50 group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
-                          <p className="text-sm md:text-base leading-relaxed text-surface-700 dark:text-surface-300 font-mono">
+                        <div className="mb-6 max-h-[420px] overflow-y-auto rounded-2xl border border-surface-200/50 bg-surface-50 p-5 transition-colors group-hover:bg-primary-50/20 dark:border-surface-700/50 dark:bg-surface-800/50 dark:group-hover:bg-primary-900/10 sm:p-6 md:max-h-[520px]">
+                          <p className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-surface-700 dark:text-surface-300 md:text-base">
                             {img.prompt}
                           </p>
                         </div>
@@ -674,6 +682,36 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                <CopyButton text={allPromptsText} />
              </div>
           </div>
+        </div>
+      </div>
+
+      {/* How to use */}
+      <div className="mb-16 rounded-3xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 sm:p-8">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-2 text-xs font-black uppercase tracking-[0.22em] text-primary-500">Quick workflow</p>
+            <h3 className="text-2xl font-extrabold tracking-tight text-surface-900 dark:text-white md:text-3xl">How to use these prompts</h3>
+          </div>
+          <p className="max-w-xl text-sm leading-relaxed text-surface-500 dark:text-surface-400">
+            Copy, customize, and generate. Keep the original prompt structure intact, then adjust only the details you want to change.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {howToSteps.map((step, index) => {
+            const StepIcon = step.icon;
+            return (
+              <div key={step.title} className="rounded-2xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-800 dark:bg-surface-950/60">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500 text-white shadow-lg shadow-primary-500/20">
+                    <StepIcon className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-black text-surface-300 dark:text-surface-700">0{index + 1}</span>
+                </div>
+                <h4 className="mb-2 text-sm font-bold text-surface-900 dark:text-white">{step.title}</h4>
+                <p className="text-xs leading-relaxed text-surface-500 dark:text-surface-400">{step.text}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
 

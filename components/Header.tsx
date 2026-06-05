@@ -119,7 +119,7 @@ export default function Header() {
             {results.map(post => (
               <Link
                 key={post.id}
-                href={`/post/${post.slug || post.id}`}
+                href={`/${post.slug || post.id}`}
                 onClick={() => {
                   setShowLiveResults(false);
                   setSearchOpen(false);

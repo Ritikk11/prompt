@@ -1107,7 +1107,7 @@ export default function Admin() {
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => {
-                          const url = `${window.location.origin}/post/${post.slug || post.id}`;
+                          const url = `${window.location.origin}/${post.slug || post.id}`;
                           navigator.clipboard.writeText(url);
                           alert('Link copied to clipboard!');
                         }}
