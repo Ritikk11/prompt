@@ -70,7 +70,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
   if (cardStyle === 'v4') { // Social Card Layout
     return (
       <Link
-        href={`/post/${post.slug || post.id}`}
+        href={`/${post.slug || post.id}`}
         className={`group block bg-white dark:bg-surface-900 rounded-[24px] border border-surface-200 dark:border-surface-800 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary-500/50 break-inside-avoid mb-4 ${aspect ? aspect : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
@@ -109,7 +109,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
   if (cardStyle === 'v5') { // Brutalist Outline
     return (
       <Link
-        href={`/post/${post.slug || post.id}`}
+        href={`/${post.slug || post.id}`}
         className={`group block bg-white dark:bg-surface-900 border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.2)] transition-all hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none break-inside-avoid mb-6 ${aspect ? aspect : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
@@ -142,7 +142,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
   if (cardStyle === 'v6') { // Gradient Overlay
     return (
       <Link
-        href={`/post/${post.slug || post.id}`}
+        href={`/${post.slug || post.id}`}
         className={`group block relative aspect-[4/5] rounded-[2rem] overflow-hidden transition-all duration-500 hover:scale-[1.02] break-inside-avoid mb-6 ${aspect ? aspect : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
@@ -174,7 +174,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
     return (
       <div className="break-inside-avoid mb-6">
         <Link
-          href={`/post/${post.slug || post.id}`}
+          href={`/${post.slug || post.id}`}
           className={`group block bg-white dark:bg-surface-800 p-3 sm:p-4 rounded-lg shadow-xl border border-surface-200 dark:border-surface-700 transition-all hover:-rotate-1 hover:scale-105 ${aspect ? aspect : ''}`}
           style={{ animationDelay: `${(index || 0) * 80}ms` }}
         >
@@ -205,7 +205,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
   if (cardStyle === 'v8') { // Glassmorphism Flat
     return (
        <Link
-        href={`/post/${post.slug || post.id}`}
+        href={`/${post.slug || post.id}`}
         className={`group block relative aspect-video rounded-[24px] overflow-hidden border border-white/20 dark:border-white/10 break-inside-avoid mb-6 ${aspect ? aspect : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
@@ -238,7 +238,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
   if (cardStyle === 'v2') {
     return (
       <Link
-        href={`/post/${post.slug || post.id}`}
+        href={`/${post.slug || post.id}`}
         className={`group block relative rounded-lg overflow-hidden bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 transition-all duration-300 hover:border-primary-500 break-inside-avoid shadow-sm hover:shadow-lg ${aspect ? `${aspect} h-full` : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
@@ -283,7 +283,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
   if (cardStyle === 'v3') {
     return (
       <Link
-        href={`/post/${post.slug || post.id}`}
+        href={`/${post.slug || post.id}`}
         className={`group flex items-center gap-3 p-2 rounded-xl overflow-hidden bg-white/50 dark:bg-surface-900/50 hover:bg-white dark:hover:bg-surface-800 border border-surface-200/50 dark:border-surface-700/50 transition-all duration-300 break-inside-avoid shadow-sm hover:shadow-md ${aspect ? aspect : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
@@ -318,7 +318,7 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
   // cardStyle === 'v1'
   return (
     <Link
-      href={`/post/${post.slug || post.id}`}
+      href={`/${post.slug || post.id}`}
       className={`group block relative rounded-2xl overflow-hidden bg-surface-100 dark:bg-surface-800 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 break-inside-avoid ${aspect ? aspect : ''}`}
       style={{ animationDelay: `${(index || 0) * 80}ms` }}
     >

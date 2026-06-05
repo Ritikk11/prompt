@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
 import { getPostBySlugOrId, fetchPostSummaries } from '@/lib/data';
-import PostContent from './PostContent';
+import PostContent from '@/components/PostContent';
 import type { Post } from '@/lib/types';
 
 interface Props {
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: metaTitle,
       description: metaDescription,
       type: 'article',
-      url: `${siteUrl}/post/${slug}`,
+      url: `${siteUrl}/${slug}`,
       images: [
         {
           url: isBase64 ? `${siteUrl}/placeholder-image.png` : firstImageUrl,
