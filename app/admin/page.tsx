@@ -797,6 +797,17 @@ export default function Admin() {
     updateSection({ ...section, postIds: newIds });
   };
 
+  const movePostInSection = (section: Section, postId: string, dir: 'up' | 'down') => {
+    const currentIds = section.postIds || [];
+    const idx = currentIds.indexOf(postId);
+    if (idx === -1) return;
+    const nextIdx = dir === 'up' ? idx - 1 : idx + 1;
+    if (nextIdx < 0 || nextIdx >= currentIds.length) return;
+    const nextIds = [...currentIds];
+    [nextIds[idx], nextIds[nextIdx]] = [nextIds[nextIdx], nextIds[idx]];
+    updateSection({ ...section, postIds: nextIds });
+  };
+
   const handleSaveSettings = () => {
     updateSettings({
       ...settings,
@@ -2021,30 +2032,55 @@ export default function Admin() {
                           .filter(p => !postPickerSearch || p.title.toLowerCase().includes(postPickerSearch.toLowerCase()))
                           .map(p => {
                             const isSelected = section.postIds?.includes(p.id) || false;
+                            const selectedIndex = section.postIds?.indexOf(p.id) ?? -1;
                             return (
-                              <label
+                              <div
                                 key={p.id}
-                                className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-colors ${
+                                className={`flex items-center gap-3 p-2.5 rounded-lg transition-colors ${
                                   isSelected
                                     ? 'bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800'
                                     : 'bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 hover:border-primary-300'
                                 }`}
                               >
-                                <input
-                                  type="checkbox"
-                                  checked={isSelected}
-                                  onChange={() => togglePostInSection(section.id, p.id)}
-                                  className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                                />
-                                <div className="relative w-10 h-10 rounded overflow-hidden shrink-0 bg-surface-200 dark:bg-surface-700">
-                                  {p.images[0]?.url && <Image src={p.images[0].url} alt="" fill className="object-cover" sizes="40px" referrerPolicy="no-referrer" />}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-medium truncate">{p.title}</p>
-                                  <p className="text-[10px] text-surface-400">{p.images.length} images</p>
-                                </div>
-                                {p.featured && <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 shrink-0" />}
-                              </label>
+                                <label className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={() => togglePostInSection(section.id, p.id)}
+                                    className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500 shrink-0"
+                                  />
+                                  <div className="relative w-10 h-10 rounded overflow-hidden shrink-0 bg-surface-200 dark:bg-surface-700">
+                                    {p.images[0]?.url && <Image src={p.images[0].url} alt="" fill className="object-cover" sizes="40px" referrerPolicy="no-referrer" />}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium truncate">{p.title}</p>
+                                    <p className="text-[10px] text-surface-400">{p.images.length} images{isSelected ? ` - #${selectedIndex + 1}` : ''}</p>
+                                  </div>
+                                  {p.featured && <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 shrink-0" />}
+                                </label>
+                                {isSelected && (
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => movePostInSection(section, p.id, 'up')}
+                                      disabled={selectedIndex <= 0}
+                                      className="p-1.5 rounded-md hover:bg-white dark:hover:bg-surface-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                                      title="Move up"
+                                    >
+                                      <ChevronUp className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => movePostInSection(section, p.id, 'down')}
+                                      disabled={selectedIndex === -1 || selectedIndex >= (section.postIds?.length || 0) - 1}
+                                      className="p-1.5 rounded-md hover:bg-white dark:hover:bg-surface-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                                      title="Move down"
+                                    >
+                                      <ChevronDown className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             );
                           })}
                       </div>
