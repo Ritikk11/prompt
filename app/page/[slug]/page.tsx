@@ -4,6 +4,8 @@ import { Metadata } from 'next';
 import { getSeoPageBySlug, fetchPostSummaries, isPublicPost } from '@/lib/data';
 import PostCard from '@/components/PostCard';
 import type { Post } from '@/lib/types';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { matchesCategory, matchesTag, matchesTool } from '@/lib/sections';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -20,11 +22,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
-
   return {
-    title: seoPage.title,
-    description: `Discover best prompts for ${seoPage.title}`,
+    title: seoPage.seoTitle || seoPage.title,
+    description: seoPage.seoDescription || `Discover best prompts for ${seoPage.title}`,
   };
 }
 
@@ -51,31 +51,13 @@ export default async function SeoPublicPage({ params }: Props) {
   const filteredPosts = (allPosts as Post[]).filter(post => {
     if (!isPublicPost(post)) return false;
 
-    // Check tags: post.tags must contain all seoPage.tags
-    const hasAllTags = tags.every((t: string) => 
-      post.tags?.some(postTag => postTag.toLowerCase() === t.toLowerCase())
-    );
+    const hasAllTags = tags.every((tag: string) => matchesTag(post, tag));
     if (!hasAllTags) return false;
 
-    // Check categories: post.category must match or post.categories array must contain all seoPage.categories
-    // Assuming post has a single 'category', but the prompt says 'categories array' for SEO page. 
-    // This could mean we treat post.category as a single item or an array, let's just check if post.category is inside or matches
-    const hasAllCategories = categories.every((c: string) => {
-      if (post.category && post.category.toLowerCase() === c.toLowerCase()) return true;
-      if (post.categories?.some(cat => cat.toLowerCase() === c.toLowerCase())) return true;
-      return false;
-    });
+    const hasAllCategories = categories.every((category: string) => matchesCategory(post, category));
     if (categories.length > 0 && !hasAllCategories) return false;
 
-    // Check aiTools: post.images must contain an image that uses the specific aiTool
-    // Or post itself must have an aiTool matching.
-    const postAiTools = Array.from(new Set([
-      ...(post.images?.map(img => img.aiTool?.toLowerCase() || '') || []),
-      ...(post.aiTools?.map(tool => tool.toLowerCase() || '') || [])
-    ]));
-    const hasAllAiTools = aiTools.every((tool: string) => 
-      postAiTools.includes(tool.toLowerCase().trim())
-    );
+    const hasAllAiTools = aiTools.every((tool: string) => matchesTool(post, tool));
     if (aiTools.length > 0 && !hasAllAiTools) return false;
 
     return true;
@@ -83,7 +65,17 @@ export default async function SeoPublicPage({ params }: Props) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-      <h1 className="text-3xl md:text-5xl font-bold mb-6 text-center">{seoPage.title}</h1>
+      <div className="text-center max-w-3xl mx-auto mb-10">
+        <h1 className="text-3xl md:text-5xl font-bold mb-4">{seoPage.title}</h1>
+        {seoPage.seoDescription && (
+          <p className="text-surface-500 dark:text-surface-400 text-base md:text-lg">{seoPage.seoDescription}</p>
+        )}
+      </div>
+      {seoPage.introContent && (
+        <div className="max-w-3xl mx-auto mb-10">
+          <MarkdownRenderer content={seoPage.introContent} />
+        </div>
+      )}
       
       {filteredPosts.length === 0 ? (
         <div className="text-center py-20">
