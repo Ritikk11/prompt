@@ -3,7 +3,7 @@ export const runtime = 'edge';
 import { useState, useEffect, useRef } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
-import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures } from '@/lib/types';
+import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures, FooterLinkGroup } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
@@ -18,6 +18,7 @@ import { defaultImageModels, getDefaultImageModel, getImageModelForTools, getToo
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
+import { getSectionPath } from '@/lib/sections';
 
 
 
@@ -65,6 +66,56 @@ function slugify(text: string) {
     .replace(/\s+/g, '-')     // Replace spaces with -
     .replace(/[^\w-]+/g, '')    // Remove all non-word chars
     .replace(/--+/g, '-');      // Replace multiple - with single -
+}
+
+const defaultFooterLinkGroups: FooterLinkGroup[] = [
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms of Service', href: '/terms' },
+      { label: 'DMCA Notice', href: '/dmca' },
+      { label: 'Disclaimer', href: '/disclaimer' },
+    ],
+  },
+  {
+    title: 'Platform',
+    links: [
+      { label: 'Explore', href: '/explore' },
+      { label: 'About Us', href: '/about' },
+      { label: 'Contact', href: '/contact' },
+    ],
+  },
+];
+
+function footerGroupsToText(groups: FooterLinkGroup[] = defaultFooterLinkGroups) {
+  return groups
+    .map((group) => [`# ${group.title}`, ...group.links.map((link) => `${link.label} | ${link.href}`)].join('\n'))
+    .join('\n\n');
+}
+
+function parseFooterGroups(text: string): FooterLinkGroup[] {
+  const groups: FooterLinkGroup[] = [];
+  let current: FooterLinkGroup | null = null;
+
+  text.split('\n').forEach((rawLine) => {
+    const line = rawLine.trim();
+    if (!line) return;
+    if (line.startsWith('#')) {
+      current = { title: line.replace(/^#+\s*/, '') || 'Links', links: [] };
+      groups.push(current);
+      return;
+    }
+    const [label, href] = line.split('|').map((part) => part.trim());
+    if (!label || !href) return;
+    if (!current) {
+      current = { title: 'Links', links: [] };
+      groups.push(current);
+    }
+    current.links.push({ label, href });
+  });
+
+  return groups.filter((group) => group.title && group.links.length > 0);
 }
 
 function compressImage(file: File, maxSizeKB: number = 300): Promise<string> {
@@ -325,6 +376,7 @@ export default function Admin() {
   const [cardStyle, setCardStyle] = useState(settings.cardStyle || 'v1');
   const [badgeStyle, setBadgeStyle] = useState(settings.badgeStyle || 'v1');
   const [adminEmailsStr, setAdminEmailsStr] = useState((settings.adminEmails || []).join(', '));
+  const [footerLinksText, setFooterLinksText] = useState(footerGroupsToText(settings.footerLinkGroups || defaultFooterLinkGroups));
   const [imgbbApiKey, setImgbbApiKey] = useState(settings.imgbbApiKey || '');
   const [imageProvider, setImageProvider] = useState<'imgbb' | 'cloudinary' | 'supabase'>(settings.imageProvider || 'imgbb');
   const [cloudinaryCloudName, setCloudinaryCloudName] = useState(settings.cloudinaryCloudName || '');
@@ -366,7 +418,7 @@ export default function Admin() {
     }
   );
 
-  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'features' | 'ads' | 'ai-tools'>('general');
+  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'footer' | 'features' | 'ads' | 'ai-tools'>('general');
   const [markdownMode, setMarkdownMode] = useState<'edit' | 'preview'>('edit');
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
   const [isBackfillingModels, setIsBackfillingModels] = useState(false);
@@ -383,6 +435,7 @@ export default function Admin() {
     if (settings.cardStyle !== undefined) setCardStyle(settings.cardStyle);
     if (settings.badgeStyle !== undefined) setBadgeStyle(settings.badgeStyle);
     if (settings.adminEmails !== undefined) setAdminEmailsStr((settings.adminEmails || []).join(', '));
+    if (settings.footerLinkGroups !== undefined) setFooterLinksText(footerGroupsToText(settings.footerLinkGroups));
     if (settings.imgbbApiKey !== undefined) setImgbbApiKey(settings.imgbbApiKey);
     if (settings.imageProvider !== undefined) setImageProvider(settings.imageProvider);
     if (settings.cloudinaryCloudName !== undefined) setCloudinaryCloudName(settings.cloudinaryCloudName);
@@ -656,7 +709,7 @@ export default function Admin() {
         await addPost(post);
       }
 
-    // Update custom sections — add/remove post from sections
+    // Update custom sections - add/remove post from sections
       for (const section of customSections) {
         const wasAssigned = section.postIds?.includes(postId) || false;
         const isAssigned = assignedSections.includes(section.id);
@@ -758,6 +811,7 @@ export default function Admin() {
       cardStyle,
       badgeStyle,
       adminEmails: adminEmailsStr.split(',').map(e => e.trim()).filter(Boolean),
+      footerLinkGroups: parseFooterGroups(footerLinksText),
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
       ads: adsConfig,
       imgbbApiKey,
@@ -791,7 +845,7 @@ export default function Admin() {
   const removeAiTool = (tool: string) => {
     const inUse = posts.some(p => p.aiTools?.includes(tool) || p.images.some(img => img.aiTools ? img.aiTools.includes(tool) : img.aiTool === tool));
     if (inUse) {
-      alert(`Cannot delete "${tool}" — it's used by existing posts. Remove or reassign those images first.`);
+      alert(`Cannot delete "${tool}" - it's used by existing posts. Remove or reassign those images first.`);
       return;
     }
     updateSettings({ ...settings, aiTools: (settings.aiTools || []).filter(t => t !== tool) });
@@ -1696,7 +1750,7 @@ export default function Admin() {
                   if (!newSectionSlug) setNewSectionSlug(slugify(e.target.value));
                 }}
                 className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                placeholder="Section name (e.g., 🔥 Hot Prompts)..."
+                placeholder="Section name (e.g., Hot Prompts)..."
               />
               <input
                 value={newSectionSlug}
@@ -1710,7 +1764,7 @@ export default function Admin() {
                 className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
               >
                 <option value="homepage">Homepage</option>
-                <option value="header">Header Menu</option>
+                <option value="header">Header Menu Link</option>
               </select>
               <select
                 value={newSectionType}
@@ -1778,10 +1832,18 @@ export default function Admin() {
           <div className="space-y-8">
             {(['homepage', 'header'] as const).map(loc => (
               <div key={loc} className="mb-4">
-                <h3 className="font-semibold text-sm mb-4">{loc === 'homepage' ? 'Homepage Sections' : 'Header Sections'}</h3>
+                <div className="mb-4">
+                  <h3 className="font-semibold text-sm">{loc === 'homepage' ? 'Homepage Sections' : 'Header Menu Sections'}</h3>
+                  <p className="text-xs text-surface-500 mt-1">
+                    {loc === 'homepage'
+                      ? 'These render as content rows on the homepage.'
+                      : 'These appear in the header menu and open their full section pages.'}
+                  </p>
+                </div>
                 <div className="space-y-3">
                   {[...sections].filter(s => (s.location || 'homepage') === loc).sort((a, b) => a.order - b.order).map((section, idx, arr) => {
                 const isAutoSection = section.type === 'latest' || section.type === 'popular';
+                const sectionPath = getSectionPath(section);
                 return (
                   <div
                     key={section.id}
@@ -1854,18 +1916,18 @@ export default function Admin() {
                               </span>
                             )}
                           </h4>
-                          <div className="flex items-center gap-2 mt-0.5 text-xs text-surface-400">
+                          <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-surface-400">
                               <span className="capitalize px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800">{section.type}</span>
                             <span className="capitalize px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800 text-primary-600 dark:text-primary-400 font-semibold">{section.location || 'homepage'}</span>
-                            <span className="px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800 font-mono text-[10px]">/{section.slug || section.id}</span>
-                            {section.aiTool && <span>· {section.aiTool}</span>}
-                            {section.tag && <span>· {section.tag}</span>}
-                            {section.category && <span>· {section.category}</span>}
-                            <span>· Limit: {section.limit}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800 font-mono text-[10px]">{sectionPath}</span>
+                            {section.aiTool && <span>- {section.aiTool}</span>}
+                            {section.tag && <span>- {section.tag}</span>}
+                            {section.category && <span>- {section.category}</span>}
+                            <span>- Limit: {section.limit}</span>
                             {section.type === 'custom' && section.postIds && (
-                              <span>· {section.postIds.length} posts selected</span>
+                              <span>- {section.postIds.length} posts selected</span>
                             )}
-                            {!section.visible && <span className="text-red-400 font-medium">· Hidden</span>}
+                            {!section.visible && <span className="text-red-400 font-medium">- Hidden</span>}
                           </div>
                         </>
                       )}
@@ -1883,6 +1945,13 @@ export default function Admin() {
                             <LayoutGrid className="w-4 h-4" />
                           </button>
                         )}
+                        <button
+                          onClick={() => window.open(sectionPath, '_blank')}
+                          className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                          title="Open section"
+                        >
+                          <Eye className="w-4 h-4 text-surface-500" />
+                        </button>
                         <button
                           onClick={() => startEditSection(section)}
                           className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
@@ -2005,6 +2074,7 @@ export default function Admin() {
           <div className="flex gap-2 mb-6 overflow-x-auto pb-1 border-b border-surface-200 dark:border-surface-800">
             {[
               { id: 'general', label: 'General' },
+              { id: 'footer', label: 'Footer Links' },
               { id: 'features', label: 'Features' },
               { id: 'ads', label: 'Ads' },
               { id: 'ai-tools', label: 'AI Tools' },
@@ -2833,6 +2903,30 @@ export default function Admin() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {settingsSubTab === 'footer' && (
+              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <LayoutGrid className="w-4 h-4 text-primary-500" /> Footer Links
+                </h3>
+                <p className="text-xs text-surface-500 mb-4">
+                  Use one group heading per footer column, then add links as Label | URL. Internal URLs can start with /.
+                </p>
+                <textarea
+                  value={footerLinksText}
+                  onChange={e => setFooterLinksText(e.target.value)}
+                  rows={12}
+                  className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
+                  placeholder={'# Legal\nPrivacy Policy | /privacy\nTerms of Service | /terms\n\n# Platform\nExplore | /explore'}
+                />
+                <button
+                  onClick={handleSaveSettings}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-4"
+                >
+                  <Save className="w-4 h-4" /> Save Footer Links
+                </button>
               </div>
             )}
           </div>

@@ -5,10 +5,33 @@ import Image from 'next/image';
 
 import { Sparkles, Heart, ChevronUp } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
+import type { FooterLinkGroup } from '@/lib/types';
+
+const fallbackFooterGroups: FooterLinkGroup[] = [
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms of Service', href: '/terms' },
+      { label: 'DMCA Notice', href: '/dmca' },
+      { label: 'Disclaimer', href: '/disclaimer' },
+    ],
+  },
+  {
+    title: 'Platform',
+    links: [
+      { label: 'Explore', href: '/explore' },
+      { label: 'About Us', href: '/about' },
+      { label: 'Contact', href: '/contact' },
+    ],
+  },
+];
 
 export default function Footer() {
   const { settings } = useData();
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const footerGroups = settings.footerLinkGroups?.length ? settings.footerLinkGroups : fallbackFooterGroups;
+  const footerLinkClass = 'block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,25 +70,26 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Quick Links */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h3 className="font-semibold mb-4 text-surface-900 dark:text-white">Legal</h3>
-              <div className="space-y-2">
-                <Link href="/privacy" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Privacy Policy</Link>
-                <Link href="/terms" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Terms of Service</Link>
-                <Link href="/dmca" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">DMCA Notice</Link>
-                <Link href="/disclaimer" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Disclaimer</Link>
+            {footerGroups.slice(0, 4).map((group) => (
+              <div key={group.title}>
+                <h3 className="font-semibold mb-4 text-surface-900 dark:text-white">{group.title}</h3>
+                <div className="space-y-2">
+                  {group.links.map((link) => {
+                    const isExternal = /^https?:\/\//i.test(link.href);
+                    return isExternal ? (
+                      <a key={`${group.title}-${link.href}-${link.label}`} href={link.href} target="_blank" rel="noreferrer" className={footerLinkClass}>
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link key={`${group.title}-${link.href}-${link.label}`} href={link.href || '/'} className={footerLinkClass}>
+                        {link.label}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4 text-surface-900 dark:text-white">Platform</h3>
-              <div className="space-y-2">
-                <Link href="/explore" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Explore</Link>
-                <Link href="/about" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">About Us</Link>
-                <Link href="/contact" className="block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors">Contact</Link>
-              </div>
-            </div>
+            ))}
           </div>
 
           {/* AI Tools */}
@@ -86,7 +110,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 pt-6 border-t border-surface-200 dark:border-surface-800 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-surface-400">© {new Date().getFullYear()} {settings.siteTitle}. All rights reserved.</p>
+          <p className="text-sm text-surface-400">&copy; {new Date().getFullYear()} {settings.siteTitle}. All rights reserved.</p>
           <div className="flex items-center gap-1 text-sm text-surface-400">
             Made with <Heart className="w-3.5 h-3.5 text-red-400 mx-0.5 fill-red-400" /> for AI enthusiasts
           </div>

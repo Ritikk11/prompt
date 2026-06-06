@@ -83,6 +83,11 @@ export interface AdSettings {
   postBottom: { enabled: boolean; code: string };
 }
 
+export interface FooterLinkGroup {
+  title: string;
+  links: { label: string; href: string }[];
+}
+
 export interface SiteSettings {
   siteTitle: string;
   siteDescription: string;
@@ -98,6 +103,7 @@ export interface SiteSettings {
   aiTools: string[];
   toolDetails?: Record<string, { logo?: string; color?: string; logoScale?: number }>;
   headerSections?: Section[];
+  footerLinkGroups?: FooterLinkGroup[];
   ads?: AdSettings;
   imgbbApiKey?: string;
   imageProvider?: 'imgbb' | 'cloudinary' | 'supabase';
