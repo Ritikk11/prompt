@@ -9,16 +9,19 @@ export default function SeoPagesTab() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [title, setTitle] = useState('');
+  const [seoTitle, setSeoTitle] = useState('');
+  const [seoDescription, setSeoDescription] = useState('');
   const [slug, setSlug] = useState('');
+  const [introContent, setIntroContent] = useState('');
   const [tagsStr, setTagsStr] = useState('');
   const [categoriesStr, setCategoriesStr] = useState('');
   const [aiToolsStr, setAiToolsStr] = useState('');
 
   useEffect(() => {
     const fetchPages = async () => {
-      const { data, error } = await supabase.from('seoPages').select('data');
+      const { data, error } = await supabase.from('seopages').select('data');
       if (error) {
-        console.error('Supabase seoPages fetch error:', error);
+        console.error('Supabase seopages fetch error:', error);
       } else {
         setSeoPages((data || []).map(d => d.data));
       }
@@ -26,8 +29,8 @@ export default function SeoPagesTab() {
 
     fetchPages();
 
-    const sub = supabase.channel('seoPages_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'seoPages' }, fetchPages)
+    const sub = supabase.channel('seopages_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'seopages' }, fetchPages)
       .subscribe();
 
     return () => {
@@ -36,14 +39,17 @@ export default function SeoPagesTab() {
   }, []);
 
   const resetForm = () => {
-    setTitle(''); setSlug(''); setTagsStr(''); setCategoriesStr(''); setAiToolsStr('');
+    setTitle(''); setSeoTitle(''); setSeoDescription(''); setSlug(''); setIntroContent(''); setTagsStr(''); setCategoriesStr(''); setAiToolsStr('');
     setEditingId(null);
     setShowForm(false);
   };
 
   const startEdit = (page: any) => {
     setTitle(page.title);
+    setSeoTitle(page.seoTitle || '');
+    setSeoDescription(page.seoDescription || '');
     setSlug(page.slug);
+    setIntroContent(page.introContent || '');
     setTagsStr((page.tags || []).join(', '));
     setCategoriesStr((page.categories || []).join(', '));
     setAiToolsStr((page.aiTools || []).join(', '));
@@ -58,7 +64,10 @@ export default function SeoPagesTab() {
     const data = {
       id,
       title,
+      seoTitle,
+      seoDescription,
       slug,
+      introContent,
       tags: tagsStr.split(',').map(s => s.trim()).filter(Boolean),
       categories: categoriesStr.split(',').map(s => s.trim()).filter(Boolean),
       aiTools: aiToolsStr.split(',').map(s => s.trim()).filter(Boolean),
@@ -66,7 +75,7 @@ export default function SeoPagesTab() {
     };
 
     try {
-      await supabase.from('seoPages').upsert({ id, data });
+      await supabase.from('seopages').upsert({ id, data });
       resetForm();
     } catch (e) {
       console.error(e);
@@ -77,7 +86,7 @@ export default function SeoPagesTab() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this SEO page?')) return;
     try {
-      await supabase.from('seoPages').delete().eq('id', id);
+      await supabase.from('seopages').delete().eq('id', id);
     } catch (e) {
       console.error(e);
       alert('Error deleting');
@@ -93,23 +102,35 @@ export default function SeoPagesTab() {
         </div>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1.5">Title (Used for generateMetadata & heading)</label>
+            <label className="block text-sm font-medium mb-1.5">Page Heading</label>
             <input value={title} onChange={e => setTitle(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm" placeholder="e.g. Best Upscale Images generated with Gemini" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">SEO Title (optional)</label>
+            <input value={seoTitle} onChange={e => setSeoTitle(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm" placeholder="Defaults to page heading" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Meta Description (optional)</label>
+            <textarea value={seoDescription} onChange={e => setSeoDescription(e.target.value)} rows={2} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm resize-y" placeholder="Short search-result description for this page..." />
           </div>
           <div>
              <label className="block text-sm font-medium mb-1.5">Slug (/page/[slug])</label>
              <input value={slug} onChange={e => setSlug(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm" placeholder="e.g. upscale-images-gemini" />
           </div>
           <div>
-             <label className="block text-sm font-medium mb-1.5">Required Tags (comma separated)</label>
+             <label className="block text-sm font-medium mb-1.5">Intro Content (optional)</label>
+             <textarea value={introContent} onChange={e => setIntroContent(e.target.value)} rows={4} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm resize-y" placeholder="Short intro shown above the matching prompt grid. Markdown is supported." />
+          </div>
+          <div>
+             <label className="block text-sm font-medium mb-1.5">Required Tags (comma separated, all must match)</label>
              <input value={tagsStr} onChange={e => setTagsStr(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm" placeholder="e.g. upscale, boys" />
           </div>
           <div>
-             <label className="block text-sm font-medium mb-1.5">Required Categories (comma separated)</label>
+             <label className="block text-sm font-medium mb-1.5">Required Categories (comma separated, all must match)</label>
              <input value={categoriesStr} onChange={e => setCategoriesStr(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm" placeholder="e.g. image" />
           </div>
           <div>
-             <label className="block text-sm font-medium mb-1.5">Required AI Tools (comma separated)</label>
+             <label className="block text-sm font-medium mb-1.5">Required AI Tools (comma separated, all must match)</label>
              <input value={aiToolsStr} onChange={e => setAiToolsStr(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm" placeholder="e.g. gemini, dall-e" />
           </div>
           <button onClick={handleSave} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors">
@@ -134,6 +155,7 @@ export default function SeoPagesTab() {
           <div key={page.id} className="flex items-center justify-between p-4 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
             <div>
               <h3 className="font-semibold text-sm">{page.title}</h3>
+              {page.seoDescription && <p className="text-xs text-surface-500 mt-0.5 line-clamp-2">{page.seoDescription}</p>}
               <p className="text-xs text-primary-500 break-all mb-1">/page/{page.slug}</p>
               <div className="flex flex-wrap gap-2 text-[10px] text-surface-500">
                 {page.tags?.length > 0 && <span>Tags: {page.tags.join(', ')}</span>}
