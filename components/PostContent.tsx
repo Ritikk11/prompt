@@ -32,6 +32,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
   const [lightboxImage, setLightboxImage] = useState<{ url: string; index: number; tools: string[] } | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [expandedPrompts, setExpandedPrompts] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const supabase = createClient();
@@ -108,6 +109,15 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const showRecommendedPosts = settings.features?.showRecommendedPosts ?? true;
   const showTags = settings.features?.showTags ?? true;
   const showDetailedInsights = settings.features?.showDetailedInsights ?? true;
+  const relatedPostIds = new Set(relatedPosts.map(p => p.id));
+  const recommendedPosts = posts
+    .filter(p =>
+      p.id !== post.id &&
+      !relatedPostIds.has(p.id) &&
+      (p.status === 'published' || !p.status) &&
+      p.visibility !== 'private'
+    )
+    .slice(0, 4);
   const primaryToolName = heroTools[0] || 'ChatGPT / Gemini';
   const howToSteps = [
     { title: `Open ${primaryToolName}`, text: 'Use ChatGPT, Gemini, Grok, Qwen, or the model listed with the prompt.', icon: Wand2 },
@@ -655,11 +665,18 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                           </div>
                           <CopyButton text={img.prompt} />
                         </div>
-                        <div className="mb-6 max-h-[420px] overflow-y-auto rounded-2xl border border-surface-200/50 bg-surface-50 p-5 transition-colors group-hover:bg-primary-50/20 dark:border-surface-700/50 dark:bg-surface-800/50 dark:group-hover:bg-primary-900/10 sm:p-6 md:max-h-[520px]">
+                        <div className={`mb-3 overflow-hidden rounded-2xl border border-surface-200/50 bg-surface-50 p-5 transition-colors group-hover:bg-primary-50/20 dark:border-surface-700/50 dark:bg-surface-800/50 dark:group-hover:bg-primary-900/10 sm:p-6 md:max-h-[520px] md:overflow-y-auto ${expandedPrompts[img.id] ? 'max-h-none' : 'max-h-[260px]'}`}>
                           <p className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-surface-700 dark:text-surface-300 md:text-base">
                             {img.prompt}
                           </p>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => setExpandedPrompts(prev => ({ ...prev, [img.id]: !prev[img.id] }))}
+                          className="mb-6 inline-flex w-full items-center justify-center rounded-xl border border-surface-200 px-4 py-2 text-xs font-bold text-surface-600 transition-colors hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:text-surface-300 md:hidden"
+                        >
+                          {expandedPrompts[img.id] ? 'Show less prompt' : 'Show full prompt'}
+                        </button>
                       </>
                     )}
                   </div>
@@ -820,6 +837,33 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                 <MarkdownRenderer>{post.extendedDescription}</MarkdownRenderer>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recommended Posts */}
+      {showRecommendedPosts && recommendedPosts.length > 0 && (
+        <div className="mt-16 border-t border-surface-200 pt-10 dark:border-surface-800 sm:mt-20 sm:pt-16">
+          <div className="mb-8 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-500">
+                <Wand2 className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-500">Next ideas</p>
+                <h2 className="text-2xl font-black tracking-tight">Recommended Posts</h2>
+              </div>
+            </div>
+            <Link href="/explore" className="hidden text-sm font-bold text-primary-500 hover:text-primary-600 sm:flex items-center gap-2 group">
+              Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+          <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns) + " mb-16"}>
+            {recommendedPosts.map((p, i) => (
+              <div key={p.id} className="mb-1 inline-block w-full break-inside-avoid">
+                <PostCard post={p} index={i} />
+              </div>
+            ))}
           </div>
         </div>
       )}
