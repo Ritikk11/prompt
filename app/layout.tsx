@@ -7,7 +7,7 @@ import { DataProvider } from '@/components/context/DataContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AdSlot from '@/components/AdSlot';
-import { fetchSettings } from '@/lib/data';
+import { fetchPostSummaries, fetchSections, fetchSettings } from '@/lib/data';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -32,7 +32,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     url: 'https://aipromptmatrix.in',
   };
 
-  const initialSettings = await fetchSettings();
+  const [initialSettings, initialSections, initialPosts] = await Promise.all([
+    fetchSettings(),
+    fetchSections(),
+    fetchPostSummaries(),
+  ]);
 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
@@ -46,6 +50,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ThemeProvider>
           <DataProvider 
             initialSettings={initialSettings}
+            initialSections={initialSections}
+            initialPosts={initialPosts}
           >
             <Header />
             <AdSlot placement="header" className="max-w-7xl mx-auto w-full px-4" />

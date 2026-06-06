@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { getGridClasses } from '@/lib/utils';
 import AdSlot from '@/components/AdSlot';
+import { getSectionPath } from '@/lib/sections';
 
 import PostCard from './PostCard';
 
@@ -40,7 +41,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
     <section id={`section-${section.id}`} className="py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
-        <Link href={`/section/${section.slug || section.id}`} className="flex items-center gap-2">
+        <Link href={getSectionPath(section)} className="flex items-center gap-2">
           <h2 className="text-xl md:text-2xl font-bold hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
             {section.name}
           </h2>
@@ -51,7 +52,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
           </span>
           {!isLatest && (
             <Link 
-              href={`/section/${section.slug || section.id}`} 
+              href={getSectionPath(section)} 
               className="group flex items-center gap-1 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors bg-primary-50 dark:bg-primary-900/20 px-3 py-1.5 rounded-full"
             >
               View All <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />

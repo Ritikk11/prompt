@@ -1,12 +1,13 @@
 export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
-import { getSectionBySlug, fetchPostSummaries, isPublicPost } from '@/lib/data';
+import { getSectionBySlug, fetchPostSummaries, fetchSettings } from '@/lib/data';
 import PostCard from '@/components/PostCard';
 import type { Post, Section } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { filterPostsForSection } from '@/lib/sections';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -30,42 +31,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SectionPage({ params }: Props) {
   const { slug } = await params;
-  const [section, allPosts] = await Promise.all([
+  const [section, allPosts, settings] = await Promise.all([
     getSectionBySlug(slug) as Promise<Section | null>,
     fetchPostSummaries() as Promise<Post[]>,
+    fetchSettings(),
   ]);
 
   if (!section) {
     notFound();
   }
 
-  // Helper to filter posts based on section type
-  const getFilteredPosts = () => {
-    switch (section.type) {
-      case 'latest':
-        return [...allPosts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      case 'popular':
-        return [...allPosts].sort((a, b) => b.views - a.views);
-      case 'trending':
-        return [...allPosts].sort((a, b) => b.likes - a.likes);
-      case 'ai-tool':
-        return allPosts.filter(p => p.images.some(img => img.aiTool?.toLowerCase() === section.aiTool?.toLowerCase()));
-      case 'tag':
-        return allPosts.filter(p => p.tags.some(t => t.toLowerCase() === section.tag?.toLowerCase()));
-      case 'category':
-        return allPosts.filter(p => {
-          const matchSingle = p.category?.toLowerCase() === section.category?.toLowerCase();
-          const matchArray = p.categories?.some(c => c.toLowerCase() === section.category?.toLowerCase());
-          return matchSingle || matchArray;
-        });
-      case 'custom':
-        return allPosts.filter(p => section.postIds?.includes(p.id));
-      default:
-        return allPosts;
-    }
-  };
-
-  const filteredPosts = getFilteredPosts().filter(isPublicPost);
+  const filteredPosts = filterPostsForSection(section, allPosts, settings, false);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12">

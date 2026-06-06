@@ -1,6 +1,7 @@
 import { createClient } from './supabase-server';
 import type { Post, Section, SiteSettings } from './types';
 import { seedPosts, seedSections } from './data/seedData';
+import { filterPostsForSection } from './sections';
 
 const defaultSettings: SiteSettings = {
   siteTitle: 'Ai PromptMatrix',
@@ -11,6 +12,25 @@ const defaultSettings: SiteSettings = {
   heroEnabled: true,
   heroAutoPlay: true,
   aiTools: ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
+  footerLinkGroups: [
+    {
+      title: 'Legal',
+      links: [
+        { label: 'Privacy Policy', href: '/privacy' },
+        { label: 'Terms of Service', href: '/terms' },
+        { label: 'DMCA Notice', href: '/dmca' },
+        { label: 'Disclaimer', href: '/disclaimer' },
+      ],
+    },
+    {
+      title: 'Platform',
+      links: [
+        { label: 'Explore', href: '/explore' },
+        { label: 'About Us', href: '/about' },
+        { label: 'Contact', href: '/contact' },
+      ],
+    },
+  ],
   features: {
     userProfiles: false,
     userSubmissions: false,
@@ -158,45 +178,8 @@ export async function getSectionBySlug(slug: string) {
 }
 
 export async function getPostsForSection(section: Section, settings: SiteSettings, allPosts?: Post[]) {
-  // Fetch all posts if not provided - doing the filtering on the edge server side to avoid sending all to client
-  // The posts are fetched directly from the database but filtered here before sending to <HomeSection>
   const posts = allPosts || await fetchPosts();
-  let filtered = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
-  
-  // Apply section specific filtering
-  switch (section.type) {
-    case 'ai-tool':
-      filtered = filtered.filter(p => p.images.some(img => img.aiTool === section.aiTool));
-      break;
-    case 'tag':
-      filtered = filtered.filter(p => p.tags.some(t => t.toLowerCase() === section.tag?.toLowerCase()));
-      break;
-    case 'category':
-      filtered = filtered.filter(p => p.category?.toLowerCase() === section.category?.toLowerCase());
-      break;
-    case 'latest':
-      filtered = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      break;
-    case 'popular':
-      filtered = filtered.sort((a, b) => b.views - a.views);
-      break;
-    case 'trending':
-      const viewsW = settings.features?.trendingViewsWeight ?? 1;
-      const likesW = settings.features?.trendingLikesWeight ?? 2;
-      filtered = filtered.sort((a, b) => (b.views * viewsW + b.likes * likesW) - (a.views * viewsW + a.likes * likesW));
-      break;
-    case 'custom':
-      if (section.postIds && section.postIds.length > 0) {
-        filtered = section.postIds
-          .map(pid => posts.find(p => p.id === pid))
-          .filter((p): p is Post => p !== undefined && (p.status === 'published' || !p.status) && p.visibility !== 'private');
-      }
-      break;
-  }
-  
-  // Apply limit constraints server side
-  const limit = section.limit || 12;
-  return section.type === 'latest' ? filtered : filtered.slice(0, limit);
+  return filterPostsForSection(section, posts, settings, true);
 }
 
 export async function fetchSeoPages() {

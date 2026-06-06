@@ -36,6 +36,25 @@ const defaultSettings: SiteSettings = {
   heroEnabled: true,
   heroAutoPlay: true,
   aiTools: ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
+  footerLinkGroups: [
+    {
+      title: 'Legal',
+      links: [
+        { label: 'Privacy Policy', href: '/privacy' },
+        { label: 'Terms of Service', href: '/terms' },
+        { label: 'DMCA Notice', href: '/dmca' },
+        { label: 'Disclaimer', href: '/disclaimer' },
+      ],
+    },
+    {
+      title: 'Platform',
+      links: [
+        { label: 'Explore', href: '/explore' },
+        { label: 'About Us', href: '/about' },
+        { label: 'Contact', href: '/contact' },
+      ],
+    },
+  ],
   features: {
     userProfiles: false,
     userSubmissions: false,

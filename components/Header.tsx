@@ -9,6 +9,7 @@ import { useTheme } from '@/components/context/ThemeContext';
 import { useData } from '@/components/context/DataContext';
 import { createClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
+import { getPostPath, getSectionPath } from '@/lib/sections';
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
@@ -119,7 +120,7 @@ export default function Header() {
             {results.map(post => (
               <Link
                 key={post.id}
-                href={`/${post.slug || post.id}`}
+                href={getPostPath(post)}
                 onClick={() => {
                   setShowLiveResults(false);
                   setSearchOpen(false);
@@ -207,7 +208,7 @@ export default function Header() {
             Explore
           </Link>
           {headerSections.map(s => (
-            <Link key={s.id} href={`/${s.slug || s.id}`} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+            <Link key={s.id} href={getSectionPath(s)} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
               {s.name}
             </Link>
           ))}
@@ -305,7 +306,7 @@ export default function Header() {
               Explore
             </Link>
             {headerSections.map(s => (
-              <Link key={s.id} href={`/${s.slug || s.id}`} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
+              <Link key={s.id} href={getSectionPath(s)} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
                 {s.name}
               </Link>
             ))}
