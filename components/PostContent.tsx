@@ -32,7 +32,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
   const [lightboxImage, setLightboxImage] = useState<{ url: string; index: number; tools: string[] } | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [stickyCopied, setStickyCopied] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -105,7 +104,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     ? "Premium Collection - Please sign in to view full prompts." 
     : (post.images || []).map((img, i) => `Image ${i + 1} (${img.aiTool}):\n${img.prompt}`).join('\n\n');
   const showCopyCollection = settings.features?.showCopyCollection ?? true;
-  const showStickyCopy = settings.features?.showStickyCopy ?? true;
   const showHowTo = settings.features?.showHowTo ?? true;
   const showRecommendedPosts = settings.features?.showRecommendedPosts ?? true;
   const showTags = settings.features?.showTags ?? true;
@@ -118,17 +116,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     { title: 'Customize details', text: 'Replace placeholders, names, colors, aspect ratio, or style notes as needed.', icon: Check },
     { title: 'Paste and generate', text: 'Paste the prompt with the image, generate the artwork, then refine in small steps.', icon: DownloadCloud }
   ];
-  const recommendedPosts = relatedPosts.slice(0, 4);
-
-  const handleStickyCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(allPromptsText);
-      setStickyCopied(true);
-      window.setTimeout(() => setStickyCopied(false), 1800);
-    } catch {
-      setStickyCopied(false);
-    }
-  };
 
   const postHeroStyle = settings.postHeroStyle || 'v1';
 
@@ -687,32 +674,19 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         </div>
       </div>
 
-      {showStickyCopy && showCopyCollection && (
-        <div className="fixed inset-x-4 bottom-4 z-40 sm:hidden">
-          <button
-            type="button"
-            onClick={handleStickyCopy}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-surface-950 px-5 py-3 text-sm font-bold text-white shadow-2xl shadow-black/20 transition-colors active:bg-surface-800 dark:bg-white dark:text-surface-950 dark:active:bg-surface-200"
-          >
-            {stickyCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            {stickyCopied ? 'Copied Collection' : 'Copy All Prompts'}
-          </button>
-        </div>
-      )}
-
       {/* Copy All Prompts CTA */}
       {showCopyCollection && (
-        <div className="mb-16 rounded-3xl border border-surface-200 bg-surface-950 p-6 text-white shadow-xl dark:border-surface-800 dark:bg-white dark:text-surface-950 sm:p-8 md:p-10">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="mb-2 text-xs font-black uppercase tracking-[0.22em] text-white/50 dark:text-surface-500">Prompt bundle</p>
-              <h3 className="text-2xl font-extrabold tracking-tight md:text-3xl">Copy Entire Collection</h3>
-              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/70 dark:text-surface-500 md:text-base">
-                Grab all {post.images.length} prompts together, then paste them into your image generator one by one.
-              </p>
-            </div>
-            <div className="shrink-0">
-              <CopyButton text={allPromptsText} />
+        <div className="mb-16 p-8 md:p-12 rounded-[32px] bg-gradient-to-br from-primary-600 via-primary-500 to-purple-600 text-white text-center shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-32 translate-x-32 group-hover:scale-150 transition-transform duration-1000" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-900/20 rounded-full blur-3xl translate-y-32 -translate-x-32 group-hover:scale-150 transition-transform duration-1000" />
+          
+          <div className="relative z-10">
+            <h3 className="text-2xl md:text-3xl font-extrabold mb-3 tracking-tight">Copy Entire Collection</h3>
+            <p className="text-white/80 text-base md:text-lg mb-8 max-w-xl mx-auto font-medium">Grab all {post.images.length} creative prompts instantly to use in your favorite AI generator.</p>
+            <div className="flex justify-center">
+               <div className="bg-white/10 backdrop-blur-xl p-2 rounded-2xl border border-white/20">
+                 <CopyButton text={allPromptsText} />
+               </div>
             </div>
           </div>
         </div>
@@ -804,6 +778,28 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         </div>
       )}
 
+      {/* Related Posts */}
+      {showRecommendedPosts && relatedPosts.length > 0 && (
+        <div className="border-t border-surface-200 dark:border-surface-800 pt-16">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-8 bg-primary-500 rounded-full underline-offset-8" />
+              <h2 className="text-2xl font-black tracking-tight">Related Prompts</h2>
+            </div>
+            <Link href="/explore" className="text-sm font-bold text-primary-500 hover:text-primary-600 flex items-center gap-2 group">
+              Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+          <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns) + " mb-16"}>
+            {relatedPosts.map((p, i) => (
+              <div key={p.id} className="mb-1 inline-block w-full break-inside-avoid">
+                <PostCard post={p} index={i} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Extended HTML / Article Description */}
       {showDetailedInsights && post.extendedDescription && (
         <div className="mt-16 border-t border-surface-200 pt-10 dark:border-surface-800 sm:mt-20 sm:pt-16">
@@ -824,33 +820,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                 <MarkdownRenderer>{post.extendedDescription}</MarkdownRenderer>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Recommended Posts */}
-      {showRecommendedPosts && recommendedPosts.length > 0 && (
-        <div className="mt-16 border-t border-surface-200 pt-10 dark:border-surface-800 sm:mt-20 sm:pt-16">
-          <div className="mb-8 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-500">
-                <Wand2 className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-500">Next ideas</p>
-                <h2 className="text-2xl font-black tracking-tight">Recommended Prompts</h2>
-              </div>
-            </div>
-            <Link href="/explore" className="hidden text-sm font-bold text-primary-500 hover:text-primary-600 sm:flex items-center gap-2 group">
-              Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </div>
-          <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns) + " mb-16"}>
-            {recommendedPosts.map((p, i) => (
-              <div key={p.id} className="mb-1 inline-block w-full break-inside-avoid">
-                <PostCard post={p} index={i} />
-              </div>
-            ))}
           </div>
         </div>
       )}
