@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
-import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures, FooterLinkGroup } from '@/lib/types';
+import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, NavLink } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
@@ -117,6 +117,38 @@ function parseFooterGroups(text: string): FooterLinkGroup[] {
   return groups.filter((group) => group.title && group.links.length > 0);
 }
 
+function linksToText(links: NavLink[] = []) {
+  return links.map((link) => `${link.label} | ${link.href}`).join('\n');
+}
+
+function parseLinks(text: string): NavLink[] {
+  return text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [label, href] = line.split('|').map((part) => part.trim());
+      return label && href ? { label, href } : null;
+    })
+    .filter((link): link is NavLink => Boolean(link));
+}
+
+function homeBlocksToText(blocks: HomeLinkBlock[] = []) {
+  return blocks.map((block) => `${block.title} | ${block.href} | ${block.description || ''}`.trim()).join('\n');
+}
+
+function parseHomeBlocks(text: string): HomeLinkBlock[] {
+  return text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [title, href, description] = line.split('|').map((part) => part.trim());
+      return title && href ? { title, href, description: description || undefined } : null;
+    })
+    .filter((block): block is HomeLinkBlock => Boolean(block));
+}
+
 function compressImage(file: File, maxSizeKB: number = 300): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -217,7 +249,8 @@ export default function Admin() {
 
     const handleOauthMessage = (event: MessageEvent) => {
       const origin = event.origin;
-      if (!origin.endsWith('.run.app') && !origin.includes('localhost')) {
+      const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+      if (origin !== window.location.origin && !isLocalhost) {
         return;
       }
       
@@ -265,7 +298,7 @@ export default function Admin() {
 
   const handleGoogleLogin = () => {
     setAuthError('');
-    const popupUrl = `${window.location.origin}/auth/login-popup`;
+    const popupUrl = `${window.location.origin}/auth/login-popup?next=${encodeURIComponent('/admin')}`;
     const authWindow = window.open(
       popupUrl,
       'oauth_popup',
@@ -359,6 +392,9 @@ export default function Admin() {
   const [editSectionName, setEditSectionName] = useState('');
   const [editSectionSlug, setEditSectionSlug] = useState('');
   const [editSectionLimit, setEditSectionLimit] = useState(8);
+  const [editSectionSeoTitle, setEditSectionSeoTitle] = useState('');
+  const [editSectionSeoDescription, setEditSectionSeoDescription] = useState('');
+  const [editSectionIntroContent, setEditSectionIntroContent] = useState('');
   const [pickingPostsForSection, setPickingPostsForSection] = useState<string | null>(null);
   const [postPickerSearch, setPostPickerSearch] = useState('');
 
@@ -375,6 +411,8 @@ export default function Admin() {
   const [cardStyle, setCardStyle] = useState(settings.cardStyle || 'v1');
   const [badgeStyle, setBadgeStyle] = useState(settings.badgeStyle || 'v1');
   const [adminEmailsStr, setAdminEmailsStr] = useState((settings.adminEmails || []).join(', '));
+  const [headerLinksText, setHeaderLinksText] = useState(linksToText(settings.headerLinks || []));
+  const [homeLinkBlocksText, setHomeLinkBlocksText] = useState(homeBlocksToText(settings.homeLinkBlocks || []));
   const [footerLinksText, setFooterLinksText] = useState(footerGroupsToText(settings.footerLinkGroups || defaultFooterLinkGroups));
   const [imgbbApiKey, setImgbbApiKey] = useState(settings.imgbbApiKey || '');
   const [imageProvider, setImageProvider] = useState<'imgbb' | 'cloudinary' | 'supabase'>(settings.imageProvider || 'imgbb');
@@ -417,7 +455,7 @@ export default function Admin() {
     }
   );
 
-  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'footer' | 'features' | 'ads' | 'ai-tools'>('general');
+  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools'>('general');
   const [markdownMode, setMarkdownMode] = useState<'edit' | 'preview'>('edit');
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
   const [isBackfillingModels, setIsBackfillingModels] = useState(false);
@@ -434,6 +472,8 @@ export default function Admin() {
     if (settings.cardStyle !== undefined) setCardStyle(settings.cardStyle);
     if (settings.badgeStyle !== undefined) setBadgeStyle(settings.badgeStyle);
     if (settings.adminEmails !== undefined) setAdminEmailsStr((settings.adminEmails || []).join(', '));
+    if (settings.headerLinks !== undefined) setHeaderLinksText(linksToText(settings.headerLinks));
+    if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocksText(homeBlocksToText(settings.homeLinkBlocks));
     if (settings.footerLinkGroups !== undefined) setFooterLinksText(footerGroupsToText(settings.footerLinkGroups));
     if (settings.imgbbApiKey !== undefined) setImgbbApiKey(settings.imgbbApiKey);
     if (settings.imageProvider !== undefined) setImageProvider(settings.imageProvider);
@@ -776,10 +816,21 @@ export default function Admin() {
     setEditSectionName(section.name);
     setEditSectionSlug(section.slug || '');
     setEditSectionLimit(section.limit);
+    setEditSectionSeoTitle(section.seoTitle || '');
+    setEditSectionSeoDescription(section.seoDescription || '');
+    setEditSectionIntroContent(section.introContent || '');
   };
 
   const saveEditSection = (section: Section) => {
-    updateSection({ ...section, name: editSectionName, slug: editSectionSlug || slugify(editSectionName), limit: editSectionLimit });
+    updateSection({
+      ...section,
+      name: editSectionName,
+      slug: editSectionSlug || slugify(editSectionName),
+      limit: editSectionLimit,
+      seoTitle: editSectionSeoTitle || undefined,
+      seoDescription: editSectionSeoDescription || undefined,
+      introContent: editSectionIntroContent || undefined,
+    });
     setEditingSectionId(null);
   };
 
@@ -821,6 +872,8 @@ export default function Admin() {
       cardStyle,
       badgeStyle,
       adminEmails: adminEmailsStr.split(',').map(e => e.trim()).filter(Boolean),
+      headerLinks: parseLinks(headerLinksText),
+      homeLinkBlocks: parseHomeBlocks(homeLinkBlocksText),
       footerLinkGroups: parseFooterGroups(footerLinksText),
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
       ads: adsConfig,
@@ -1887,34 +1940,56 @@ export default function Admin() {
                       {/* Section info */}
                       <div className="flex-1 min-w-0">
                       {editingSectionId === section.id ? (
-                        <div className="flex items-center gap-2">
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <input
+                              value={editSectionName}
+                              onChange={e => setEditSectionName(e.target.value)}
+                              className="flex-1 min-w-[180px] px-3 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                              placeholder="Name"
+                            />
+                            <input
+                              value={editSectionSlug}
+                              onChange={e => setEditSectionSlug(slugify(e.target.value))}
+                              className="w-40 px-3 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                              placeholder="Slug"
+                            />
+                            <input
+                              type="number"
+                              min={1}
+                              max={50}
+                              value={editSectionLimit}
+                              onChange={e => setEditSectionLimit(parseInt(e.target.value) || 8)}
+                              className="w-16 px-2 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm text-center"
+                              title="Post limit"
+                            />
+                            <button onClick={() => saveEditSection(section)} className="p-1.5 rounded-lg bg-primary-500 text-white">
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => setEditingSectionId(null)} className="p-1.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                           <input
-                            value={editSectionName}
-                            onChange={e => setEditSectionName(e.target.value)}
-                            className="flex-1 px-3 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                            placeholder="Name"
+                            value={editSectionSeoTitle}
+                            onChange={e => setEditSectionSeoTitle(e.target.value)}
+                            className="w-full px-3 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs"
+                            placeholder="SEO title shown on Google (optional)"
                           />
-                          <input
-                            value={editSectionSlug}
-                            onChange={e => setEditSectionSlug(slugify(e.target.value))}
-                            className="w-32 px-3 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                            placeholder="Slug"
+                          <textarea
+                            value={editSectionSeoDescription}
+                            onChange={e => setEditSectionSeoDescription(e.target.value)}
+                            rows={2}
+                            className="w-full px-3 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs resize-y"
+                            placeholder="SEO meta description shown on Google (optional)"
                           />
-                          <input
-                            type="number"
-                            min={1}
-                            max={50}
-                            value={editSectionLimit}
-                            onChange={e => setEditSectionLimit(parseInt(e.target.value) || 8)}
-                            className="w-16 px-2 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm text-center"
-                            title="Post limit"
+                          <textarea
+                            value={editSectionIntroContent}
+                            onChange={e => setEditSectionIntroContent(e.target.value)}
+                            rows={3}
+                            className="w-full px-3 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs resize-y"
+                            placeholder="Intro content shown on the section page. Markdown supported."
                           />
-                          <button onClick={() => saveEditSection(section)} className="p-1.5 rounded-lg bg-primary-500 text-white">
-                            <Check className="w-3.5 h-3.5" />
-                          </button>
-                          <button onClick={() => setEditingSectionId(null)} className="p-1.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800">
-                            <X className="w-3.5 h-3.5" />
-                          </button>
                         </div>
                       ) : (
                         <>
@@ -2109,6 +2184,7 @@ export default function Admin() {
           <div className="flex gap-2 mb-6 overflow-x-auto pb-1 border-b border-surface-200 dark:border-surface-800">
             {[
               { id: 'general', label: 'General' },
+              { id: 'navigation', label: 'Navigation' },
               { id: 'footer', label: 'Footer Links' },
               { id: 'features', label: 'Features' },
               { id: 'ads', label: 'Ads' },
@@ -2938,6 +3014,47 @@ export default function Admin() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {settingsSubTab === 'navigation' && (
+              <div className="space-y-6">
+                <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                  <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                    <LayoutGrid className="w-4 h-4 text-primary-500" /> Header Links
+                  </h3>
+                  <p className="text-xs text-surface-500 mb-4">
+                    One link per line: Label | URL. Use this for SEO pages, custom pages, sections, or external links.
+                  </p>
+                  <textarea
+                    value={headerLinksText}
+                    onChange={e => setHeaderLinksText(e.target.value)}
+                    rows={7}
+                    className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
+                    placeholder={'Best Gemini Prompts | /page/best-gemini-prompts\nAnime Prompts | /section/anime-prompts'}
+                  />
+                </div>
+                <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                  <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                    <LayoutTemplate className="w-4 h-4 text-primary-500" /> Homepage Link Blocks
+                  </h3>
+                  <p className="text-xs text-surface-500 mb-4">
+                    One block per line: Title | URL | Description. These show as link cards below the hero.
+                  </p>
+                  <textarea
+                    value={homeLinkBlocksText}
+                    onChange={e => setHomeLinkBlocksText(e.target.value)}
+                    rows={7}
+                    className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
+                    placeholder={'Best Gemini Prompts | /page/best-gemini-prompts | Curated prompts made for Gemini image generation\nPoster Prompts | /section/poster-prompts | Explore poster-ready prompt collections'}
+                  />
+                  <button
+                    onClick={handleSaveSettings}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-4"
+                  >
+                    <Save className="w-4 h-4" /> Save Navigation
+                  </button>
+                </div>
               </div>
             )}
 

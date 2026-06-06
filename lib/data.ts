@@ -12,6 +12,8 @@ const defaultSettings: SiteSettings = {
   heroEnabled: true,
   heroAutoPlay: true,
   aiTools: ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
+  headerLinks: [],
+  homeLinkBlocks: [],
   footerLinkGroups: [
     {
       title: 'Legal',

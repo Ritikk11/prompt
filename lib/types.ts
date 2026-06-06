@@ -39,6 +39,9 @@ export interface Section {
   id: string;
   slug?: string;
   name: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  introContent?: string;
   type: 'ai-tool' | 'latest' | 'popular' | 'custom' | 'trending' | 'tag' | 'category';
   location?: 'homepage' | 'header';
   aiTool?: string;
@@ -88,6 +91,17 @@ export interface FooterLinkGroup {
   links: { label: string; href: string }[];
 }
 
+export interface NavLink {
+  label: string;
+  href: string;
+}
+
+export interface HomeLinkBlock {
+  title: string;
+  href: string;
+  description?: string;
+}
+
 export interface SiteSettings {
   siteTitle: string;
   siteDescription: string;
@@ -103,6 +117,8 @@ export interface SiteSettings {
   aiTools: string[];
   toolDetails?: Record<string, { logo?: string; color?: string; logoScale?: number }>;
   headerSections?: Section[];
+  headerLinks?: NavLink[];
+  homeLinkBlocks?: HomeLinkBlock[];
   footerLinkGroups?: FooterLinkGroup[];
   ads?: AdSettings;
   imgbbApiKey?: string;

@@ -3,28 +3,44 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase-client';
+import { getSafeNextPath } from '@/lib/auth-redirect';
 
 export default function AuthCallbackPage() {
   const [errorMsgs, setErrorMsgs] = useState('');
 
   useEffect(() => {
     const supabase = createClient();
+    const params = new URLSearchParams(window.location.search);
+    const nextPath = getSafeNextPath(params.get('next'));
+    const targetOrigin = window.location.origin;
+
+    const finishSuccess = (accessToken?: string, refreshToken?: string) => {
+      if (window.opener) {
+        window.opener.postMessage({ 
+          type: 'OAUTH_AUTH_SUCCESS',
+          access_token: accessToken,
+          refresh_token: refreshToken
+        }, targetOrigin);
+        window.close();
+      } else {
+        window.location.href = nextPath;
+      }
+    };
+
+    const finishError = (msg: string) => {
+      setErrorMsgs(msg);
+      if (window.opener) {
+        window.opener.postMessage({ type: 'OAUTH_AUTH_ERROR', error: msg }, targetOrigin);
+        window.close();
+      }
+    };
     
     // The supabase browser client will automatically exchange the code for a session
     // when it detects the code in the URL. We just need to listen for the event.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN') {
-          if (window.opener) {
-            window.opener.postMessage({ 
-              type: 'OAUTH_AUTH_SUCCESS',
-              access_token: session?.access_token,
-              refresh_token: session?.refresh_token
-            }, '*');
-            window.close();
-          } else {
-            window.location.href = '/admin';
-          }
+          finishSuccess(session?.access_token, session?.refresh_token);
         }
       }
     );
@@ -32,35 +48,17 @@ export default function AuthCallbackPage() {
     // Also check for existing session in case the event fired before we listened
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
-        setErrorMsgs(error.message);
-        if (window.opener) {
-          window.opener.postMessage({ type: 'OAUTH_AUTH_ERROR', error: error.message }, '*');
-        }
+        finishError(error.message);
       } else if (session) {
-        if (window.opener) {
-          window.opener.postMessage({ 
-            type: 'OAUTH_AUTH_SUCCESS',
-            access_token: session.access_token,
-            refresh_token: session.refresh_token
-          }, '*');
-          window.close();
-        } else {
-          window.location.href = '/admin';
-        }
+        finishSuccess(session.access_token, session.refresh_token);
       }
     });
 
-    const params = new URLSearchParams(window.location.search);
     const errorParam = params.get('error');
     const errorDescription = params.get('error_description');
     if (errorParam || errorDescription) {
        const msg = errorDescription || errorParam || 'Auth Error';
-       // eslint-disable-next-line react-hooks/set-state-in-effect
-       setErrorMsgs(msg);
-       if (window.opener) {
-         window.opener.postMessage({ type: 'OAUTH_AUTH_ERROR', error: msg }, '*');
-         window.close();
-       }
+       finishError(msg);
     }
 
     return () => {

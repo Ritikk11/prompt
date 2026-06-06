@@ -3,6 +3,7 @@
 
 import { useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase-client';
+import { getAuthRedirectTo } from '@/lib/auth-redirect';
 
 export default function LoginPopup() {
   const initiated = useRef(false);
@@ -17,17 +18,17 @@ export default function LoginPopup() {
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: `${window.location.origin}/auth/callback`,
+            redirectTo: getAuthRedirectTo('/admin'),
           },
         });
         if (error) {
           if (window.opener) {
-            window.opener.postMessage({ type: 'OAUTH_AUTH_ERROR', error: error.message }, '*');
+            window.opener.postMessage({ type: 'OAUTH_AUTH_ERROR', error: error.message }, window.location.origin);
           }
         }
       } catch (err: any) {
         if (window.opener) {
-          window.opener.postMessage({ type: 'OAUTH_AUTH_ERROR', error: err.message || 'OAuth initialization failed' }, '*');
+          window.opener.postMessage({ type: 'OAUTH_AUTH_ERROR', error: err.message || 'OAuth initialization failed' }, window.location.origin);
         }
       }
     };

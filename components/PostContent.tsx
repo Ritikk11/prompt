@@ -9,6 +9,7 @@ import { getGridClasses } from '@/lib/utils';
 import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
 import TemplatePrompt from '@/components/TemplatePrompt';
 import { createClient } from '@/lib/supabase-client';
+import { getAuthRedirectTo } from '@/lib/auth-redirect';
 import type { User } from '@supabase/supabase-js';
 import type { Post } from '@/lib/types';
 
@@ -69,7 +70,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: getAuthRedirectTo(),
         },
       });
     } catch (e) {

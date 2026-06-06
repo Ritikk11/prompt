@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } from '@/lib/data';
 import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
+import HomeLinkBlocks from '@/components/HomeLinkBlocks';
 
 
 export default async function Home() {
@@ -25,6 +26,8 @@ export default async function Home() {
       <section>
         <FeaturedSlider featuredPosts={featuredPosts} settings={settings} />
       </section>
+
+      <HomeLinkBlocks blocks={settings.homeLinkBlocks} />
 
       {/* Main Content */}
       {homepageSections.map((section, idx) => (
