@@ -10,11 +10,14 @@ import { useData } from '@/components/context/DataContext';
 import { createClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import { getPostPath, getSectionPath } from '@/lib/sections';
+import SmartLink from '@/components/SmartLink';
+import { getAuthRedirectTo } from '@/lib/auth-redirect';
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const { settings, sections, posts } = useData();
   const headerSections = sections.filter(s => s.location === 'header' && s.visible).sort((a,b) => a.order - b.order);
+  const headerLinks = settings.headerLinks || [];
   const navigate = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -93,7 +96,7 @@ export default function Header() {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: getAuthRedirectTo(),
         },
       });
     } catch (e) {
@@ -212,6 +215,11 @@ export default function Header() {
               {s.name}
             </Link>
           ))}
+          {headerLinks.map(link => (
+            <SmartLink key={`${link.href}-${link.label}`} href={link.href} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+              {link.label}
+            </SmartLink>
+          ))}
           
           {(settings.features?.userProfiles || settings.features?.userSubmissions) && (
             <div className="flex items-center ml-2 border-l border-surface-200 dark:border-surface-700 pl-4 gap-2">
@@ -309,6 +317,11 @@ export default function Header() {
               <Link key={s.id} href={getSectionPath(s)} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
                 {s.name}
               </Link>
+            ))}
+            {headerLinks.map(link => (
+              <SmartLink key={`${link.href}-${link.label}`} href={link.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
+                {link.label}
+              </SmartLink>
             ))}
             {(settings.features?.userProfiles || settings.features?.userSubmissions) && (
               <div className="pt-2 mt-2 border-t border-surface-100 dark:border-surface-800">

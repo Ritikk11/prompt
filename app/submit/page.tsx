@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { ImagePrompt } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { getImageModelForTools } from '@/lib/constants';
+import { getAuthRedirectTo } from '@/lib/auth-redirect';
 
 export default function SubmitPage() {
   const { settings, loading, addPost } = useData();
@@ -55,7 +56,7 @@ export default function SubmitPage() {
            await supabase.auth.signInWithOAuth({
              provider: 'google',
              options: {
-               redirectTo: `${window.location.origin}/auth/callback`,
+               redirectTo: getAuthRedirectTo('/submit'),
              },
            });
         }} className="px-6 py-3 rounded-xl font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors">

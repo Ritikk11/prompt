@@ -10,6 +10,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { filterPostsForSection } from '@/lib/sections';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -26,8 +27,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `${section.name} | AI Prompt Matrix`,
-    description: `Explore all prompts in the ${section.name} section.`,
+    title: section.seoTitle || `${section.name} | AI Prompt Matrix`,
+    description: section.seoDescription || `Explore all prompts in the ${section.name} section.`,
   };
 }
 
@@ -58,9 +59,14 @@ export default async function SectionPage({ params }: Props) {
           {section.name}
         </h1>
         <p className="text-surface-500 dark:text-surface-400 text-lg max-w-3xl">
-          Discover a curated collection of {filteredPosts.length} prompts.
+          {section.seoDescription || `Discover a curated collection of ${filteredPosts.length} prompts.`}
         </p>
       </div>
+      {section.introContent && (
+        <div className="max-w-3xl mb-12">
+          <MarkdownRenderer content={section.introContent} />
+        </div>
+      )}
 
       {filteredPosts.length === 0 ? (
         <div className="text-center py-20 bg-surface-50 dark:bg-surface-900 rounded-[32px] border border-dashed border-surface-200 dark:border-surface-800">
