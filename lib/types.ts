@@ -57,7 +57,6 @@ export interface SiteFeatures {
   comments: boolean;
   commentsRequireApproval?: boolean;
   showCopyCollection?: boolean;
-  showStickyCopy?: boolean;
   showHowTo?: boolean;
   showRecommendedPosts?: boolean;
   showTags?: boolean;

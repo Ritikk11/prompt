@@ -43,7 +43,6 @@ const defaultSettings: SiteSettings = {
     comments: false,
     commentsRequireApproval: false,
     showCopyCollection: true,
-    showStickyCopy: true,
     showHowTo: true,
     showRecommendedPosts: true,
     showTags: true,

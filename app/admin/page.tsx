@@ -346,7 +346,6 @@ export default function Admin() {
       comments: false,
       commentsRequireApproval: false,
       showCopyCollection: true,
-      showStickyCopy: true,
       showHowTo: true,
       showRecommendedPosts: true,
       showTags: true,
@@ -2573,10 +2572,6 @@ export default function Admin() {
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
                     <input type="checkbox" checked={features.showCopyCollection ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showCopyCollection: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
                     Copy entire collection block
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="checkbox" checked={features.showStickyCopy ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showStickyCopy: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    Sticky mobile copy button
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
                     <input type="checkbox" checked={features.showHowTo ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showHowTo: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
