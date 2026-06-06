@@ -58,14 +58,25 @@ const defaultSettings: SiteSettings = {
   }
 };
 
+function isNextDynamicServerError(error: unknown) {
+  const err = error as { digest?: string; message?: string };
+  return err?.digest === 'DYNAMIC_SERVER_USAGE' || err?.message?.includes('Dynamic server usage');
+}
+
 export async function fetchPosts() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from('posts').select('data');
-  if (error) {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from('posts').select('data');
+    if (error) {
+      console.error('Supabase posts fetch error:', error);
+      return [];
+    }
+    return (data || []).map(d => d.data as Post).filter(Boolean);
+  } catch (error) {
+    if (isNextDynamicServerError(error)) throw error;
     console.error('Supabase posts fetch error:', error);
     return [];
   }
-  return (data || []).map(d => d.data as Post);
 }
 
 export function isPublicPost(post: Pick<Post, 'status' | 'visibility'>) {
@@ -147,24 +158,35 @@ export async function fetchPostSummaries() {
 }
 
 export async function fetchSections() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from('sections').select('data');
-  if (error) {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from('sections').select('data');
+    if (error) {
+      console.error('Supabase sections fetch error:', error);
+      return [];
+    }
+    return (data || []).map(d => d.data as Section).filter(Boolean);
+  } catch (error) {
+    if (isNextDynamicServerError(error)) throw error;
     console.error('Supabase sections fetch error:', error);
     return [];
   }
-  return (data || []).map(d => d.data as Section);
 }
 
 export async function fetchSettings() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from('settings').select('data').eq('id', 'global').maybeSingle();
-  if (error) {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from('settings').select('data').eq('id', 'global').maybeSingle();
+    if (error) {
+      console.error('Supabase settings fetch error:', error);
+      return defaultSettings;
+    }
+    if (data && data.data) {
+      return sanitizeSettings({ ...defaultSettings, ...(data.data as Partial<SiteSettings>) });
+    }
+  } catch (error) {
+    if (isNextDynamicServerError(error)) throw error;
     console.error('Supabase settings fetch error:', error);
-    return defaultSettings;
-  }
-  if (data && data.data) {
-    return sanitizeSettings({ ...defaultSettings, ...(data.data as Partial<SiteSettings>) });
   }
   return defaultSettings;
 }
@@ -185,13 +207,19 @@ export async function getPostsForSection(section: Section, settings: SiteSetting
 }
 
 export async function fetchSeoPages() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from('seopages').select('data');
-  if (error) {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from('seopages').select('data');
+    if (error) {
+      console.error('Supabase seo pages fetch error:', error);
+      return [];
+    }
+    return (data || []).map(d => d.data).filter(Boolean);
+  } catch (error) {
+    if (isNextDynamicServerError(error)) throw error;
     console.error('Supabase seo pages fetch error:', error);
     return [];
   }
-  return (data || []).map(d => d.data);
 }
 
 export async function getSeoPageBySlug(slug: string) {

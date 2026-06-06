@@ -1,7 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode, useMemo } from 'react';
 import type { Post, Section, SiteSettings } from '@/lib/types';
-import { seedPosts, seedSections } from '@/lib/data/seedData';
 import { createClient } from '@/lib/supabase-client';
 
 interface DataContextType {
@@ -27,65 +26,18 @@ interface DataContextType {
   loading: boolean;
 }
 
-const defaultSettings: SiteSettings = {
-  siteTitle: 'Ai PromptMatrix',
-  siteDescription: 'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.',
-  siteLogo: '',
-  heroTitle: 'Discover AI Prompt Masterpieces',
-  heroSubtitle: 'Explore a curated collection of breathtaking AI-generated imagery and their full prompts. Learn, inspire, and create.',
-  heroEnabled: true,
-  heroAutoPlay: true,
-  aiTools: ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
-  headerLinks: [],
-  homeLinkBlocks: [],
-  footerLinkGroups: [
-    {
-      title: 'Legal',
-      links: [
-        { label: 'Privacy Policy', href: '/privacy' },
-        { label: 'Terms of Service', href: '/terms' },
-        { label: 'DMCA Notice', href: '/dmca' },
-        { label: 'Disclaimer', href: '/disclaimer' },
-      ],
-    },
-    {
-      title: 'Platform',
-      links: [
-        { label: 'Explore', href: '/explore' },
-        { label: 'About Us', href: '/about' },
-        { label: 'Contact', href: '/contact' },
-      ],
-    },
-  ],
-  features: {
-    userProfiles: false,
-    userSubmissions: false,
-    userSubmissionsAutoApprove: false,
-    comments: false,
-    commentsRequireApproval: false,
-    showCopyCollection: true,
-    showHowTo: true,
-    showRecommendedPosts: true,
-    showTags: true,
-    showDetailedInsights: true,
-    advancedFiltering: false,
-    smartTemplates: false,
-    infiniteScroll: false,
-    infiniteScrollItems: 20,
-    premiumPrompts: false,
-    premiumPrice: 5,
-    premiumPaymentUrl: '',
-    skeletonLoaders: false,
-    trendingAlgorithm: false,
-    trendingLikesWeight: 2,
-    trendingViewsWeight: 1,
-  }
-};
-
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Local supabase client reference for components that need it outside hooks
-export let globalSupabase: any = null;
+async function adminRequest(payload?: any) {
+  const res = await fetch('/api/admin', {
+    method: payload ? 'POST' : 'GET',
+    headers: payload ? { 'Content-Type': 'application/json' } : undefined,
+    body: payload ? JSON.stringify(payload) : undefined,
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.error || 'Admin request failed');
+  return json;
+}
 
 export function DataProvider({ children, initialPosts = [], initialSections = [], initialSettings }: { children: ReactNode, initialPosts?: Post[], initialSections?: Section[], initialSettings: SiteSettings }) {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
@@ -97,10 +49,6 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
   const supabase = useMemo(() => {
     return createClient();
   }, []);
-
-  useEffect(() => {
-    globalSupabase = supabase;
-  }, [supabase]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -125,42 +73,29 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
 
   const resetData = useCallback(async () => {
     try {
-      for (const section of seedSections) {
-        await supabase.from('sections').upsert({ id: section.id, data: section });
-      }
-      for (const post of seedPosts) {
-        await supabase.from('posts').upsert({ id: post.id, data: post });
-      }
-      await supabase.from('settings').upsert({ id: 'global', data: defaultSettings });
-      await supabase.from('settings').upsert({ id: 'seeded', data: { completedAt: new Date().toISOString() } });
+      await adminRequest({ action: 'reset' });
     } catch (e) {
       console.error(e);
     }
-  }, [supabase]);
+  }, []);
 
   const deleteMockData = useCallback(async () => {
-    for (const post of seedPosts) {
-      await supabase.from('posts').delete().eq('id', post.id);
-    }
-    for (const section of seedSections) {
-      await supabase.from('sections').delete().eq('id', section.id);
-    }
-  }, [supabase]);
+    await adminRequest({ action: 'deleteMockData' });
+  }, []);
 
   const loadAdminData = useCallback(async () => {
     setLoading(true);
     try {
-      const { data: postsData } = await supabase.from('posts').select('data');
-      if (postsData) setPosts(postsData.map((p: any) => p.data));
-      
-      const { data: sectionsData } = await supabase.from('sections').select('data');
-      if (sectionsData) setSections(sectionsData.map((s: any) => s.data));
+      const data = await adminRequest();
+      if (data.posts) setPosts(data.posts);
+      if (data.sections) setSections(data.sections);
+      if (data.settings) setSettings(data.settings);
     } catch (e) {
       console.error('Error loading admin data', e);
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -183,8 +118,12 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     const cleanPost = JSON.parse(JSON.stringify(saveable));
     setPosts(prev => [...prev, post]);
     try {
-      const { error } = await supabase.from('posts').upsert({ id: post.id, data: cleanPost });
-      if (error) throw error;
+      if (post.authorId) {
+        const { error } = await supabase.from('posts').upsert({ id: post.id, data: cleanPost });
+        if (error) throw error;
+      } else {
+        await adminRequest({ action: 'upsert', resource: 'posts', id: post.id, data: cleanPost });
+      }
     } catch (error: any) {
       setPosts(prev => prev.filter(p => p.id !== post.id));
       console.error('Supabase save error:', error);
@@ -199,19 +138,18 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     const previousPost = posts.find(p => p.id === post.id);
     setPosts(prev => prev.map(p => p.id === post.id ? post : p));
     try {
-      const { error } = await supabase.from('posts').upsert({ id: post.id, data: cleanPost });
-      if (error) throw error;
+      await adminRequest({ action: 'upsert', resource: 'posts', id: post.id, data: cleanPost });
     } catch (error: any) {
       if (previousPost) setPosts(prev => prev.map(p => p.id === post.id ? previousPost : p));
       console.error('Supabase save error:', error);
       throw error;
     }
-  }, [posts, supabase]);
+  }, [posts]);
 
   const deletePost = useCallback(async (id: string) => {
     setPosts(prev => prev.filter(p => p.id !== id));
-    await supabase.from('posts').delete().eq('id', id);
-  }, [supabase]);
+    await adminRequest({ action: 'delete', resource: 'posts', id });
+  }, []);
 
   const incrementViews = useCallback(async (id: string, fallbackPost?: Post) => {
     try {
@@ -274,38 +212,41 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
   const addSection = useCallback(async (section: Section) => {
     const cleanSection = JSON.parse(JSON.stringify(section));
     setSections(prev => [...prev, section]);
-    const { error } = await supabase.from('sections').upsert({ id: section.id, data: cleanSection });
-    if (error) {
+    try {
+      await adminRequest({ action: 'upsert', resource: 'sections', id: section.id, data: cleanSection });
+    } catch (error) {
       setSections(prev => prev.filter(s => s.id !== section.id));
       throw error;
     }
-  }, [supabase]);
+  }, []);
 
   const updateSection = useCallback(async (section: Section) => {
     const cleanSection = JSON.parse(JSON.stringify(section));
     const previousSection = sections.find(s => s.id === section.id);
     setSections(prev => prev.map(s => s.id === section.id ? section : s));
-    const { error } = await supabase.from('sections').upsert({ id: section.id, data: cleanSection });
-    if (error) {
+    try {
+      await adminRequest({ action: 'upsert', resource: 'sections', id: section.id, data: cleanSection });
+    } catch (error) {
       if (previousSection) setSections(prev => prev.map(s => s.id === section.id ? previousSection : s));
       throw error;
     }
-  }, [sections, supabase]);
+  }, [sections]);
 
   const deleteSection = useCallback(async (id: string) => {
     setSections(prev => prev.filter(s => s.id !== id));
-    await supabase.from('sections').delete().eq('id', id);
-  }, [supabase]);
+    await adminRequest({ action: 'delete', resource: 'sections', id });
+  }, []);
 
   const updateSettings = useCallback(async (s: SiteSettings) => {
     const previousSettings = settings;
     setSettings(s);
-    const { error } = await supabase.from('settings').upsert({ id: 'global', data: s });
-    if (error) {
+    try {
+      await adminRequest({ action: 'upsert', resource: 'settings', id: 'global', data: s });
+    } catch (error) {
       setSettings(previousSettings);
       throw error;
     }
-  }, [settings, supabase]);
+  }, [settings]);
 
   // Map localLikes onto posts efficiently
   const enrichedPosts: Post[] = posts.map(p => ({ ...p, likedByUser: localLikes.includes(p.id) }));

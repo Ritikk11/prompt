@@ -1,7 +1,17 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { globalSupabase as supabase } from '@/components/context/DataContext';
 import { Plus, Trash2, Edit3, X, Save } from 'lucide-react';
+
+async function adminRequest(payload?: any) {
+  const res = await fetch('/api/admin', {
+    method: payload ? 'POST' : 'GET',
+    headers: payload ? { 'Content-Type': 'application/json' } : undefined,
+    body: payload ? JSON.stringify(payload) : undefined,
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.error || 'Admin request failed');
+  return json;
+}
 
 export default function SeoPagesTab() {
   const [seoPages, setSeoPages] = useState<any[]>([]);
@@ -19,23 +29,11 @@ export default function SeoPagesTab() {
 
   useEffect(() => {
     const fetchPages = async () => {
-      const { data, error } = await supabase.from('seopages').select('data');
-      if (error) {
-        console.error('Supabase seopages fetch error:', error);
-      } else {
-        setSeoPages((data || []).map(d => d.data));
-      }
+      const data = await adminRequest();
+      setSeoPages(data.seopages || []);
     };
 
-    fetchPages();
-
-    const sub = supabase.channel('seopages_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'seopages' }, fetchPages)
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(sub);
-    };
+    fetchPages().catch((error) => console.error('SEO pages fetch error:', error));
   }, []);
 
   const resetForm = () => {
@@ -75,7 +73,9 @@ export default function SeoPagesTab() {
     };
 
     try {
-      await supabase.from('seopages').upsert({ id, data });
+      await adminRequest({ action: 'upsert', resource: 'seopages', id, data });
+      const adminData = await adminRequest();
+      setSeoPages(adminData.seopages || []);
       resetForm();
     } catch (e) {
       console.error(e);
@@ -86,7 +86,8 @@ export default function SeoPagesTab() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this SEO page?')) return;
     try {
-      await supabase.from('seopages').delete().eq('id', id);
+      await adminRequest({ action: 'delete', resource: 'seopages', id });
+      setSeoPages(prev => prev.filter(page => page.id !== id));
     } catch (e) {
       console.error(e);
       alert('Error deleting');
