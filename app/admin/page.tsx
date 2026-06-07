@@ -143,7 +143,7 @@ function parseHomeBlocks(text: string): HomeLinkBlock[] {
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean)
-    .map((line) => {
+    .map<HomeLinkBlock | null>((line) => {
       const [title, href, description] = line.split('|').map((part) => part.trim());
       return title && href ? { title, href, description: description || undefined } : null;
     })
@@ -2424,6 +2424,71 @@ export default function Admin() {
           )}
 
           {/* Ad Spaces Management */}
+          {settingsSubTab === 'navigation' && (
+            <div className="space-y-6">
+              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <LayoutGrid className="w-4 h-4 text-primary-500" /> Header Links
+                </h3>
+                <p className="text-xs text-surface-500 mb-4">
+                  One link per line: Label | URL. Use this for SEO pages, custom pages, sections, or external links.
+                </p>
+                <textarea
+                  value={headerLinksText}
+                  onChange={e => setHeaderLinksText(e.target.value)}
+                  rows={7}
+                  className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
+                  placeholder={'Best Gemini Prompts | /page/best-gemini-prompts\nAnime Prompts | /section/anime-prompts'}
+                />
+              </div>
+              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <LayoutTemplate className="w-4 h-4 text-primary-500" /> Homepage Link Blocks
+                </h3>
+                <p className="text-xs text-surface-500 mb-4">
+                  One block per line: Title | URL | Description. These show as link cards below the hero.
+                </p>
+                <textarea
+                  value={homeLinkBlocksText}
+                  onChange={e => setHomeLinkBlocksText(e.target.value)}
+                  rows={7}
+                  className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
+                  placeholder={'Best Gemini Prompts | /page/best-gemini-prompts | Curated prompts made for Gemini image generation\nPoster Prompts | /section/poster-prompts | Explore poster-ready prompt collections'}
+                />
+                <button
+                  onClick={handleSaveSettings}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-4"
+                >
+                  <Save className="w-4 h-4" /> Save Navigation
+                </button>
+              </div>
+            </div>
+          )}
+
+          {settingsSubTab === 'footer' && (
+            <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+              <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                <LayoutGrid className="w-4 h-4 text-primary-500" /> Footer Links
+              </h3>
+              <p className="text-xs text-surface-500 mb-4">
+                Use one group heading per footer column, then add links as Label | URL. Internal URLs can start with /.
+              </p>
+              <textarea
+                value={footerLinksText}
+                onChange={e => setFooterLinksText(e.target.value)}
+                rows={12}
+                className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
+                placeholder={'# Legal\nPrivacy Policy | /privacy\nTerms of Service | /terms\n\n# Platform\nExplore | /explore'}
+              />
+              <button
+                onClick={handleSaveSettings}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-4"
+              >
+                <Save className="w-4 h-4" /> Save Footer Links
+              </button>
+            </div>
+          )}
+
           {settingsSubTab === 'ads' && (
           <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
              <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
@@ -3015,71 +3080,6 @@ export default function Admin() {
                     ))}
                   </div>
                 )}
-              </div>
-            )}
-
-            {settingsSubTab === 'navigation' && (
-              <div className="space-y-6">
-                <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-                  <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                    <LayoutGrid className="w-4 h-4 text-primary-500" /> Header Links
-                  </h3>
-                  <p className="text-xs text-surface-500 mb-4">
-                    One link per line: Label | URL. Use this for SEO pages, custom pages, sections, or external links.
-                  </p>
-                  <textarea
-                    value={headerLinksText}
-                    onChange={e => setHeaderLinksText(e.target.value)}
-                    rows={7}
-                    className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
-                    placeholder={'Best Gemini Prompts | /page/best-gemini-prompts\nAnime Prompts | /section/anime-prompts'}
-                  />
-                </div>
-                <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-                  <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                    <LayoutTemplate className="w-4 h-4 text-primary-500" /> Homepage Link Blocks
-                  </h3>
-                  <p className="text-xs text-surface-500 mb-4">
-                    One block per line: Title | URL | Description. These show as link cards below the hero.
-                  </p>
-                  <textarea
-                    value={homeLinkBlocksText}
-                    onChange={e => setHomeLinkBlocksText(e.target.value)}
-                    rows={7}
-                    className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
-                    placeholder={'Best Gemini Prompts | /page/best-gemini-prompts | Curated prompts made for Gemini image generation\nPoster Prompts | /section/poster-prompts | Explore poster-ready prompt collections'}
-                  />
-                  <button
-                    onClick={handleSaveSettings}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-4"
-                  >
-                    <Save className="w-4 h-4" /> Save Navigation
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {settingsSubTab === 'footer' && (
-              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <LayoutGrid className="w-4 h-4 text-primary-500" /> Footer Links
-                </h3>
-                <p className="text-xs text-surface-500 mb-4">
-                  Use one group heading per footer column, then add links as Label | URL. Internal URLs can start with /.
-                </p>
-                <textarea
-                  value={footerLinksText}
-                  onChange={e => setFooterLinksText(e.target.value)}
-                  rows={12}
-                  className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
-                  placeholder={'# Legal\nPrivacy Policy | /privacy\nTerms of Service | /terms\n\n# Platform\nExplore | /explore'}
-                />
-                <button
-                  onClick={handleSaveSettings}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-4"
-                >
-                  <Save className="w-4 h-4" /> Save Footer Links
-                </button>
               </div>
             )}
           </div>
