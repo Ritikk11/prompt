@@ -1,11 +1,18 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit3, X, Save } from 'lucide-react';
+import { createClient } from '@/lib/supabase-client';
 
 async function adminRequest(payload?: any) {
+  const supabase = createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const headers: Record<string, string> = {};
+  if (payload) headers['Content-Type'] = 'application/json';
+  if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+
   const res = await fetch('/api/admin', {
     method: payload ? 'POST' : 'GET',
-    headers: payload ? { 'Content-Type': 'application/json' } : undefined,
+    headers,
     body: payload ? JSON.stringify(payload) : undefined,
   });
   const json = await res.json().catch(() => ({}));

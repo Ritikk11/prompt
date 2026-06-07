@@ -29,13 +29,35 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 async function adminRequest(payload?: any) {
+  const supabase = createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const headers: Record<string, string> = {};
+  if (payload) headers['Content-Type'] = 'application/json';
+  if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+
   const res = await fetch('/api/admin', {
     method: payload ? 'POST' : 'GET',
-    headers: payload ? { 'Content-Type': 'application/json' } : undefined,
+    headers,
     body: payload ? JSON.stringify(payload) : undefined,
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json.error || 'Admin request failed');
+  return json;
+}
+
+async function postRequest(payload: any) {
+  const supabase = createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+
+  const res = await fetch('/api/posts', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.error || 'Post request failed');
   return json;
 }
 
@@ -119,8 +141,7 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     setPosts(prev => [...prev, post]);
     try {
       if (post.authorId) {
-        const { error } = await supabase.from('posts').upsert({ id: post.id, data: cleanPost });
-        if (error) throw error;
+        await postRequest({ action: 'submit', data: cleanPost });
       } else {
         await adminRequest({ action: 'upsert', resource: 'posts', id: post.id, data: cleanPost });
       }
@@ -129,7 +150,7 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
       console.error('Supabase save error:', error);
       throw error;
     }
-  }, [supabase]);
+  }, []);
 
   const updatePost = useCallback(async (post: Post) => {
     // Remove transient property before save
@@ -166,9 +187,7 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
          if (!post) return;
       }
       
-      const updated = { ...post, views: (post.views || 0) + 1 };
-      const { likedByUser, ...saveable } = updated as any;
-      await supabase.from('posts').update({ data: saveable }).eq('id', id);
+      await postRequest({ action: 'view', id });
     } catch {}
   }, [posts, supabase]);
 
@@ -193,18 +212,14 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
             if (!prev.find(p => p.id === id)) return [...prev, { ...post!, likes: Math.max(0, (post!.likes || 0) - 1) }];
             return prev.map(p => p.id === id ? { ...p, likes: Math.max(0, (p.likes || 0) - 1) } : p);
         });
-        const updated = { ...post, likes: Math.max(0, (post.likes || 0) - 1) };
-        const { likedByUser, ...saveable } = updated as any;
-        await supabase.from('posts').update({ data: saveable }).eq('id', id);
+        await postRequest({ action: 'like', id, liked: false });
       } else {
         setLocalLikes(prev => [...prev, id]);
         setPosts(prev => {
             if (!prev.find(p => p.id === id)) return [...prev, { ...post!, likes: (post!.likes || 0) + 1 }];
             return prev.map(p => p.id === id ? { ...p, likes: (p.likes || 0) + 1 } : p);
         });
-        const updated = { ...post, likes: (post.likes || 0) + 1 };
-        const { likedByUser, ...saveable } = updated as any;
-        await supabase.from('posts').update({ data: saveable }).eq('id', id);
+        await postRequest({ action: 'like', id, liked: true });
       }
     } catch {}
   }, [localLikes, posts, supabase]);

@@ -88,7 +88,6 @@ export default function SubmitPage() {
         const { createClient: createSupabaseClient } = await import('@/lib/supabase-client');
         const supabase = createSupabaseClient();
         const ext = file.name.split('.').pop() || 'jpg';
-        const { generateId } = await import('@/lib/utils');
         const fileName = `${generateId()}.${ext}`;
         const { data, error } = await supabase.storage.from('images').upload(fileName, file);
         if (error) throw new Error(error.message);

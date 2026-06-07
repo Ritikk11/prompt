@@ -4,10 +4,26 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { seedPosts, seedSections } from '@/lib/data/seedData';
 
 const resources = new Set(['posts', 'sections', 'settings', 'seopages']);
+const tableForResource: Record<string, string> = {
+  posts: 'posts',
+  sections: 'sections',
+  settings: 'settings',
+  seopages: 'seoPages',
+};
 
-async function requireAdmin() {
+async function getRequestUser(request: Request) {
+  const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+  if (token) {
+    const admin = createAdminClient();
+    return admin.auth.getUser(token);
+  }
+
   const userClient = await createUserClient();
-  const { data: { user }, error } = await userClient.auth.getUser();
+  return userClient.auth.getUser();
+}
+
+async function requireAdmin(request: Request) {
+  const { data: { user }, error } = await getRequestUser(request);
   if (error || !user?.email) {
     return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
   }
@@ -22,8 +38,8 @@ async function requireAdmin() {
   return { admin, user };
 }
 
-export async function GET() {
-  const auth = await requireAdmin();
+export async function GET(request: Request) {
+  const auth = await requireAdmin(request);
   if (auth.error) return auth.error;
   const admin = auth.admin!;
 
@@ -31,7 +47,7 @@ export async function GET() {
     admin.from('posts').select('data'),
     admin.from('sections').select('data'),
     admin.from('settings').select('data').eq('id', 'global').maybeSingle(),
-    admin.from('seopages').select('data'),
+    admin.from('seoPages').select('data'),
   ]);
 
   return NextResponse.json({
@@ -43,7 +59,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireAdmin();
+  const auth = await requireAdmin(request);
   if (auth.error) return auth.error;
   const admin = auth.admin!;
   const body = await request.json();
@@ -73,18 +89,19 @@ export async function POST(request: Request) {
   if (!resources.has(resource)) {
     return NextResponse.json({ error: 'Invalid resource' }, { status: 400 });
   }
+  const table = tableForResource[resource];
 
   if (action === 'upsert') {
     const rowId = id || data?.id || (resource === 'settings' ? 'global' : undefined);
     if (!rowId || !data) return NextResponse.json({ error: 'Missing data' }, { status: 400 });
-    const { error } = await admin.from(resource).upsert({ id: rowId, data });
+    const { error } = await admin.from(table).upsert({ id: rowId, data });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
   }
 
   if (action === 'delete') {
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-    const { error } = await admin.from(resource).delete().eq('id', id);
+    const { error } = await admin.from(table).delete().eq('id', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
   }

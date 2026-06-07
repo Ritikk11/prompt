@@ -62,7 +62,7 @@ export default async function SectionPage({ params }: Props) {
       </div>
       {section.introContent && (
         <div className="max-w-3xl mb-12">
-          <MarkdownRenderer content={section.introContent} />
+          <MarkdownRenderer>{section.introContent}</MarkdownRenderer>
         </div>
       )}
 

@@ -73,7 +73,7 @@ export default async function SeoPublicPage({ params }: Props) {
       </div>
       {seoPage.introContent && (
         <div className="max-w-3xl mx-auto mb-10">
-          <MarkdownRenderer content={seoPage.introContent} />
+          <MarkdownRenderer>{seoPage.introContent}</MarkdownRenderer>
         </div>
       )}
       

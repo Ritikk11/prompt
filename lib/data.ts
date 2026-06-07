@@ -209,7 +209,7 @@ export async function getPostsForSection(section: Section, settings: SiteSetting
 export async function fetchSeoPages() {
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase.from('seopages').select('data');
+    const { data, error } = await supabase.from('seoPages').select('data');
     if (error) {
       console.error('Supabase seo pages fetch error:', error);
       return [];

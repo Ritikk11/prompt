@@ -21,7 +21,7 @@ function SearchContent({ posts, settings }: { posts: Post[], settings: SiteSetti
       ((p.status === 'published' || !p.status) && p.visibility !== 'private') &&
       (p.title.toLowerCase().includes(term) ||
       p.tags.some(t => t.toLowerCase().includes(term)) ||
-      p.seoKeywords?.some(k => k.toLowerCase().includes(term)) ||
+      p.seoKeywords?.some((k: string) => k.toLowerCase().includes(term)) ||
       (p.category && p.category.toLowerCase().includes(term)))
     );
   };
