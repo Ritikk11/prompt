@@ -3,6 +3,7 @@ export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { getSeoPageBySlug, fetchPostSummaries, isPublicPost } from '@/lib/data';
 import PostCard from '@/components/PostCard';
 import type { Post } from '@/lib/types';
@@ -39,12 +40,7 @@ export default async function SeoPublicPage({ params }: Props) {
   ]);
 
   if (!seoPage) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <h1 className="text-3xl font-bold mb-4">Page Not Found</h1>
-        <p className="text-surface-500">The SEO page you are looking for does not exist.</p>
-      </div>
-    );
+    notFound();
   }
 
   const { tags = [], categories = [], aiTools = [] } = seoPage;
