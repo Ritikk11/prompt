@@ -88,66 +88,26 @@ const defaultFooterLinkGroups: FooterLinkGroup[] = [
   },
 ];
 
-function footerGroupsToText(groups: FooterLinkGroup[] = defaultFooterLinkGroups) {
-  return groups
-    .map((group) => [`# ${group.title}`, ...group.links.map((link) => `${link.label} | ${link.href}`)].join('\n'))
-    .join('\n\n');
+function cleanNavLinks(links: NavLink[] = []) {
+  return links.map(link => ({
+    label: link.label.trim(),
+    href: link.href.trim(),
+  })).filter(link => link.label && link.href);
 }
 
-function parseFooterGroups(text: string): FooterLinkGroup[] {
-  const groups: FooterLinkGroup[] = [];
-  let current: FooterLinkGroup | null = null;
-
-  text.split('\n').forEach((rawLine) => {
-    const line = rawLine.trim();
-    if (!line) return;
-    if (line.startsWith('#')) {
-      current = { title: line.replace(/^#+\s*/, '') || 'Links', links: [] };
-      groups.push(current);
-      return;
-    }
-    const [label, href] = line.split('|').map((part) => part.trim());
-    if (!label || !href) return;
-    if (!current) {
-      current = { title: 'Links', links: [] };
-      groups.push(current);
-    }
-    current.links.push({ label, href });
-  });
-
-  return groups.filter((group) => group.title && group.links.length > 0);
+function cleanHomeBlocks(blocks: HomeLinkBlock[] = []) {
+  return blocks.map(block => ({
+    title: block.title.trim(),
+    href: block.href.trim(),
+    description: block.description?.trim() || undefined,
+  })).filter(block => block.title && block.href);
 }
 
-function linksToText(links: NavLink[] = []) {
-  return links.map((link) => `${link.label} | ${link.href}`).join('\n');
-}
-
-function parseLinks(text: string): NavLink[] {
-  return text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [label, href] = line.split('|').map((part) => part.trim());
-      return label && href ? { label, href } : null;
-    })
-    .filter((link): link is NavLink => Boolean(link));
-}
-
-function homeBlocksToText(blocks: HomeLinkBlock[] = []) {
-  return blocks.map((block) => `${block.title} | ${block.href} | ${block.description || ''}`.trim()).join('\n');
-}
-
-function parseHomeBlocks(text: string): HomeLinkBlock[] {
-  return text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map<HomeLinkBlock | null>((line) => {
-      const [title, href, description] = line.split('|').map((part) => part.trim());
-      return title && href ? { title, href, description: description || undefined } : null;
-    })
-    .filter((block): block is HomeLinkBlock => Boolean(block));
+function cleanFooterGroups(groups: FooterLinkGroup[] = []) {
+  return groups.map(group => ({
+    title: group.title.trim() || 'Links',
+    links: cleanNavLinks(group.links),
+  })).filter(group => group.title && group.links.length > 0);
 }
 
 function compressImage(file: File, maxSizeKB: number = 300): Promise<string> {
@@ -412,9 +372,9 @@ export default function Admin() {
   const [cardStyle, setCardStyle] = useState(settings.cardStyle || 'v1');
   const [badgeStyle, setBadgeStyle] = useState(settings.badgeStyle || 'v1');
   const [adminEmailsStr, setAdminEmailsStr] = useState((settings.adminEmails || []).join(', '));
-  const [headerLinksText, setHeaderLinksText] = useState(linksToText(settings.headerLinks || []));
-  const [homeLinkBlocksText, setHomeLinkBlocksText] = useState(homeBlocksToText(settings.homeLinkBlocks || []));
-  const [footerLinksText, setFooterLinksText] = useState(footerGroupsToText(settings.footerLinkGroups || defaultFooterLinkGroups));
+  const [headerLinks, setHeaderLinks] = useState<NavLink[]>(settings.headerLinks || []);
+  const [homeLinkBlocks, setHomeLinkBlocks] = useState<HomeLinkBlock[]>(settings.homeLinkBlocks || []);
+  const [footerLinkGroups, setFooterLinkGroups] = useState<FooterLinkGroup[]>(settings.footerLinkGroups || defaultFooterLinkGroups);
   const [imgbbApiKey, setImgbbApiKey] = useState(settings.imgbbApiKey || '');
   const [imageProvider, setImageProvider] = useState<'imgbb' | 'cloudinary' | 'supabase'>(settings.imageProvider || 'imgbb');
   const [cloudinaryCloudName, setCloudinaryCloudName] = useState(settings.cloudinaryCloudName || '');
@@ -473,9 +433,9 @@ export default function Admin() {
     if (settings.cardStyle !== undefined) setCardStyle(settings.cardStyle);
     if (settings.badgeStyle !== undefined) setBadgeStyle(settings.badgeStyle);
     if (settings.adminEmails !== undefined) setAdminEmailsStr((settings.adminEmails || []).join(', '));
-    if (settings.headerLinks !== undefined) setHeaderLinksText(linksToText(settings.headerLinks));
-    if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocksText(homeBlocksToText(settings.homeLinkBlocks));
-    if (settings.footerLinkGroups !== undefined) setFooterLinksText(footerGroupsToText(settings.footerLinkGroups));
+    if (settings.headerLinks !== undefined) setHeaderLinks(settings.headerLinks || []);
+    if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocks(settings.homeLinkBlocks || []);
+    if (settings.footerLinkGroups !== undefined) setFooterLinkGroups(settings.footerLinkGroups || defaultFooterLinkGroups);
     if (settings.imgbbApiKey !== undefined) setImgbbApiKey(settings.imgbbApiKey);
     if (settings.imageProvider !== undefined) setImageProvider(settings.imageProvider);
     if (settings.cloudinaryCloudName !== undefined) setCloudinaryCloudName(settings.cloudinaryCloudName);
@@ -860,6 +820,26 @@ export default function Admin() {
     updateSection({ ...section, postIds: nextIds });
   };
 
+  const updateHeaderLink = (index: number, field: keyof NavLink, value: string) => {
+    setHeaderLinks(prev => prev.map((link, i) => i === index ? { ...link, [field]: value } : link));
+  };
+
+  const updateHomeLinkBlock = (index: number, field: keyof HomeLinkBlock, value: string) => {
+    setHomeLinkBlocks(prev => prev.map((block, i) => i === index ? { ...block, [field]: value } : block));
+  };
+
+  const updateFooterGroupTitle = (groupIndex: number, title: string) => {
+    setFooterLinkGroups(prev => prev.map((group, i) => i === groupIndex ? { ...group, title } : group));
+  };
+
+  const updateFooterLink = (groupIndex: number, linkIndex: number, field: keyof NavLink, value: string) => {
+    setFooterLinkGroups(prev => prev.map((group, i) => (
+      i === groupIndex
+        ? { ...group, links: group.links.map((link, j) => j === linkIndex ? { ...link, [field]: value } : link) }
+        : group
+    )));
+  };
+
   const handleSaveSettings = () => {
     updateSettings({
       ...settings,
@@ -873,9 +853,9 @@ export default function Admin() {
       cardStyle,
       badgeStyle,
       adminEmails: adminEmailsStr.split(',').map(e => e.trim()).filter(Boolean),
-      headerLinks: parseLinks(headerLinksText),
-      homeLinkBlocks: parseHomeBlocks(homeLinkBlocksText),
-      footerLinkGroups: parseFooterGroups(footerLinksText),
+      headerLinks: cleanNavLinks(headerLinks),
+      homeLinkBlocks: cleanHomeBlocks(homeLinkBlocks),
+      footerLinkGroups: cleanFooterGroups(footerLinkGroups),
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
       ads: adsConfig,
       imgbbApiKey,
@@ -2472,13 +2452,39 @@ export default function Admin() {
                 <p className="text-xs text-surface-500 mb-4">
                   Home, Explore, Submit, Profile, and header sections are handled automatically. Add only extra custom links here, one per line as Label | URL.
                 </p>
-                <textarea
-                  value={headerLinksText}
-                  onChange={e => setHeaderLinksText(e.target.value)}
-                  rows={7}
-                  className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
-                  placeholder="Optional custom header links only"
-                />
+                <div className="space-y-3">
+                  {headerLinks.length === 0 && (
+                    <p className="text-xs text-surface-500">No extra header links.</p>
+                  )}
+                  {headerLinks.map((link, index) => (
+                    <div key={index} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
+                      <input
+                        value={link.label}
+                        onChange={e => updateHeaderLink(index, 'label', e.target.value)}
+                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                        placeholder="Label"
+                      />
+                      <input
+                        value={link.href}
+                        onChange={e => updateHeaderLink(index, 'href', e.target.value)}
+                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                        placeholder="/page/custom or https://..."
+                      />
+                      <button
+                        onClick={() => setHeaderLinks(prev => prev.filter((_, i) => i !== index))}
+                        className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => setHeaderLinks(prev => [...prev, { label: '', href: '' }])}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-medium"
+                  >
+                    <Plus className="w-4 h-4" /> Add Header Link
+                  </button>
+                </div>
               </div>
               <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                 <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
@@ -2487,13 +2493,48 @@ export default function Admin() {
                 <p className="text-xs text-surface-500 mb-4">
                   Optional cards shown below the hero for pages you want to promote. Leave blank if you do not want extra homepage cards.
                 </p>
-                <textarea
-                  value={homeLinkBlocksText}
-                  onChange={e => setHomeLinkBlocksText(e.target.value)}
-                  rows={7}
-                  className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
-                  placeholder="Optional homepage cards: Title | URL | Description"
-                />
+                <div className="space-y-3">
+                  {homeLinkBlocks.length === 0 && (
+                    <p className="text-xs text-surface-500">No homepage quick cards.</p>
+                  )}
+                  {homeLinkBlocks.map((block, index) => (
+                    <div key={index} className="p-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/60 space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input
+                          value={block.title}
+                          onChange={e => updateHomeLinkBlock(index, 'title', e.target.value)}
+                          className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                          placeholder="Card title"
+                        />
+                        <input
+                          value={block.href}
+                          onChange={e => updateHomeLinkBlock(index, 'href', e.target.value)}
+                          className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                          placeholder="/page/custom or /section/name"
+                        />
+                      </div>
+                      <textarea
+                        value={block.description || ''}
+                        onChange={e => updateHomeLinkBlock(index, 'description', e.target.value)}
+                        rows={2}
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
+                        placeholder="Short description"
+                      />
+                      <button
+                        onClick={() => setHomeLinkBlocks(prev => prev.filter((_, i) => i !== index))}
+                        className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+                      >
+                        Remove Card
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => setHomeLinkBlocks(prev => [...prev, { title: '', href: '', description: '' }])}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-medium"
+                  >
+                    <Plus className="w-4 h-4" /> Add Homepage Card
+                  </button>
+                </div>
                 <button
                   onClick={handleSaveSettings}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-4"
@@ -2510,15 +2551,71 @@ export default function Admin() {
                 <LayoutGrid className="w-4 h-4 text-primary-500" /> Footer Links
               </h3>
               <p className="text-xs text-surface-500 mb-4">
-                Use one group heading per footer column, then add links as Label | URL. Internal URLs can start with /.
+                Create footer columns, then add individual links inside each column.
               </p>
-              <textarea
-                value={footerLinksText}
-                onChange={e => setFooterLinksText(e.target.value)}
-                rows={12}
-                className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
-                placeholder={'# Legal\nPrivacy Policy | /privacy\nTerms of Service | /terms\n\n# Platform\nExplore | /explore'}
-              />
+              <div className="space-y-4">
+                {footerLinkGroups.map((group, groupIndex) => (
+                  <div key={groupIndex} className="p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/60 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                      <input
+                        value={group.title}
+                        onChange={e => updateFooterGroupTitle(groupIndex, e.target.value)}
+                        className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-semibold"
+                        placeholder="Footer column title"
+                      />
+                      <button
+                        onClick={() => setFooterLinkGroups(prev => prev.filter((_, i) => i !== groupIndex))}
+                        className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+                      >
+                        Remove Group
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {group.links.length === 0 && (
+                        <p className="text-xs text-surface-500">No links in this group.</p>
+                      )}
+                      {group.links.map((link, linkIndex) => (
+                        <div key={linkIndex} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
+                          <input
+                            value={link.label}
+                            onChange={e => updateFooterLink(groupIndex, linkIndex, 'label', e.target.value)}
+                            className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                            placeholder="Label"
+                          />
+                          <input
+                            value={link.href}
+                            onChange={e => updateFooterLink(groupIndex, linkIndex, 'href', e.target.value)}
+                            className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                            placeholder="/privacy or https://..."
+                          />
+                          <button
+                            onClick={() => setFooterLinkGroups(prev => prev.map((item, i) => (
+                              i === groupIndex ? { ...item, links: item.links.filter((_, j) => j !== linkIndex) } : item
+                            )))}
+                            className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setFooterLinkGroups(prev => prev.map((item, i) => (
+                        i === groupIndex ? { ...item, links: [...item.links, { label: '', href: '' }] } : item
+                      )))}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 hover:border-primary-400 text-sm font-medium"
+                    >
+                      <Plus className="w-4 h-4" /> Add Link
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => setFooterLinkGroups(prev => [...prev, { title: 'New Group', links: [{ label: '', href: '' }] }])}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-medium"
+                >
+                  <Plus className="w-4 h-4" /> Add Footer Group
+                </button>
+              </div>
               <button
                 onClick={handleSaveSettings}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-4"
