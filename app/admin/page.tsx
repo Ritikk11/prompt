@@ -10,7 +10,7 @@ import {
   Plus, Trash2, Edit3, Eye, EyeOff, ChevronUp, ChevronDown,
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload,
   Settings, Check, Search, RotateCcw, GripVertical, Image as ImageIcon,
-  Zap, Layers, Info, LayoutTemplate, BarChart2
+  Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight
 } from 'lucide-react';
 
 import Image from 'next/image';
@@ -35,6 +35,27 @@ const TAILWIND_COLORS = [
 const DEFAULT_MODEL_OPTIONS = Object.values(defaultImageModels);
 const CUSTOM_MODEL_VALUE = '__custom';
 const AUTO_MODEL_VALUE = '__auto';
+const homeCardIcons = [
+  { value: 'sparkles', label: 'Sparkles', Icon: Sparkles },
+  { value: 'image', label: 'Image', Icon: ImageIcon },
+  { value: 'wand', label: 'Wand', Icon: Wand2 },
+  { value: 'layers', label: 'Layers', Icon: Layers },
+  { value: 'search', label: 'Search', Icon: Search },
+  { value: 'tag', label: 'Tag', Icon: Tag },
+] as const;
+const homeCardAccents = [
+  { value: 'violet', label: 'Violet', className: 'bg-violet-500', soft: 'bg-violet-500/10 text-violet-300 border-violet-500/30' },
+  { value: 'cyan', label: 'Cyan', className: 'bg-cyan-500', soft: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30' },
+  { value: 'emerald', label: 'Emerald', className: 'bg-emerald-500', soft: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' },
+  { value: 'amber', label: 'Amber', className: 'bg-amber-500', soft: 'bg-amber-500/10 text-amber-300 border-amber-500/30' },
+  { value: 'rose', label: 'Rose', className: 'bg-rose-500', soft: 'bg-rose-500/10 text-rose-300 border-rose-500/30' },
+  { value: 'slate', label: 'Slate', className: 'bg-surface-500', soft: 'bg-surface-700/40 text-surface-200 border-surface-600' },
+] as const;
+const homeCardStyles = [
+  { value: 'showcase', label: 'Showcase', description: 'Bigger visual card for important links.' },
+  { value: 'clean', label: 'Clean', description: 'Balanced card with a top accent line.' },
+  { value: 'compact', label: 'Compact', description: 'Short utility row for denser pages.' },
+] as const;
 
 const MARKDOWN_HELP_EXAMPLE = `## Main section
 ### Question style heading
@@ -102,6 +123,7 @@ function cleanHomeBlocks(blocks: HomeLinkBlock[] = []) {
     description: block.description?.trim() || undefined,
     icon: block.icon,
     accent: block.accent,
+    style: block.style,
   })).filter(block => block.title && block.href);
 }
 
@@ -2488,78 +2510,153 @@ export default function Admin() {
                   </button>
                 </div>
               </div>
-              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <LayoutTemplate className="w-4 h-4 text-primary-500" /> Homepage Quick Cards
-                </h3>
-                <p className="text-xs text-surface-500 mb-4">
-                  Optional cards shown below the hero for pages you want to promote. Leave blank if you do not want extra homepage cards.
-                </p>
-                <div className="space-y-3">
-                  {homeLinkBlocks.length === 0 && (
-                    <p className="text-xs text-surface-500">No homepage quick cards.</p>
-                  )}
-                  {homeLinkBlocks.map((block, index) => (
-                    <div key={index} className="p-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/60 space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input
-                          value={block.title}
-                          onChange={e => updateHomeLinkBlock(index, 'title', e.target.value)}
-                          className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                          placeholder="Card title"
-                        />
-                        <input
-                          value={block.href}
-                          onChange={e => updateHomeLinkBlock(index, 'href', e.target.value)}
-                          className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                          placeholder="/page/custom or /section/name"
-                        />
+                <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                  <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                    <LayoutTemplate className="w-4 h-4 text-primary-500" /> Homepage Quick Cards
+                  </h3>
+                  <p className="text-xs text-surface-500 mb-4">
+                    Optional cards shown below the hero for pages you want to promote. Each card can have its own icon, accent, and layout style.
+                  </p>
+                  <div className="space-y-4">
+                    {homeLinkBlocks.length === 0 && (
+                      <div className="rounded-lg border border-dashed border-surface-300 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/40 p-5 text-sm text-surface-500">
+                        No homepage quick cards yet. Add one to preview the design.
                       </div>
-                      <textarea
-                        value={block.description || ''}
-                        onChange={e => updateHomeLinkBlock(index, 'description', e.target.value)}
-                        rows={2}
-                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
-                        placeholder="Short description"
-                      />
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <select
-                          value={block.icon || 'sparkles'}
-                          onChange={e => updateHomeLinkBlock(index, 'icon', e.target.value)}
-                          className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                        >
-                          <option value="sparkles">Sparkles icon</option>
-                          <option value="image">Image icon</option>
-                          <option value="wand">Wand icon</option>
-                          <option value="layers">Layers icon</option>
-                          <option value="search">Search icon</option>
-                          <option value="tag">Tag icon</option>
-                        </select>
-                        <select
-                          value={block.accent || 'violet'}
-                          onChange={e => updateHomeLinkBlock(index, 'accent', e.target.value)}
-                          className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                        >
-                          <option value="violet">Violet accent</option>
-                          <option value="cyan">Cyan accent</option>
-                          <option value="emerald">Emerald accent</option>
-                          <option value="amber">Amber accent</option>
-                          <option value="rose">Rose accent</option>
-                          <option value="slate">Slate accent</option>
-                        </select>
+                    )}
+                    {homeLinkBlocks.map((block, index) => (
+                      <div key={index} className="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/60 p-4">
+                        <div className="flex items-center justify-between gap-3 mb-4">
+                          <div>
+                            <p className="text-xs font-bold uppercase text-surface-500">Card {index + 1}</p>
+                            <p className="text-sm font-semibold text-surface-950 dark:text-white">{block.title || 'Untitled quick card'}</p>
+                          </div>
+                          <button
+                            onClick={() => setHomeLinkBlocks(prev => prev.filter((_, i) => i !== index))}
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+                          >
+                            <Trash2 className="w-4 h-4" /> Remove
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-4">
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <label className="space-y-1">
+                                <span className="text-xs font-medium text-surface-500">Title</span>
+                                <input
+                                  value={block.title}
+                                  onChange={e => updateHomeLinkBlock(index, 'title', e.target.value)}
+                                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  placeholder="Anime Poster Prompts"
+                                />
+                              </label>
+                              <label className="space-y-1">
+                                <span className="text-xs font-medium text-surface-500">Link</span>
+                                <input
+                                  value={block.href}
+                                  onChange={e => updateHomeLinkBlock(index, 'href', e.target.value)}
+                                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  placeholder="/page/custom or /section/name"
+                                />
+                              </label>
+                            </div>
+                            <label className="space-y-1 block">
+                              <span className="text-xs font-medium text-surface-500">Description</span>
+                              <textarea
+                                value={block.description || ''}
+                                onChange={e => updateHomeLinkBlock(index, 'description', e.target.value)}
+                                rows={2}
+                                className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
+                                placeholder="Short reason to open this collection"
+                              />
+                            </label>
+                            <div className="space-y-2">
+                              <span className="text-xs font-medium text-surface-500">Icon</span>
+                              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                                {homeCardIcons.map(({ value, label, Icon }) => (
+                                  <button
+                                    key={value}
+                                    type="button"
+                                    onClick={() => updateHomeLinkBlock(index, 'icon', value)}
+                                    className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-medium transition-colors ${
+                                      (block.icon || 'sparkles') === value
+                                        ? 'border-primary-500 bg-primary-500/10 text-primary-300'
+                                        : 'border-surface-200 dark:border-surface-700 hover:border-primary-400'
+                                    }`}
+                                    title={label}
+                                  >
+                                    <Icon className="w-4 h-4" />
+                                    <span className="hidden sm:inline">{label}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <span className="text-xs font-medium text-surface-500">Accent</span>
+                              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                                {homeCardAccents.map(({ value, label, className }) => (
+                                  <button
+                                    key={value}
+                                    type="button"
+                                    onClick={() => updateHomeLinkBlock(index, 'accent', value)}
+                                    className={`flex items-center justify-center gap-2 rounded-lg border px-2 py-2 text-xs font-medium transition-colors ${
+                                      (block.accent || 'violet') === value
+                                        ? 'border-primary-500 bg-primary-500/10 text-primary-300'
+                                        : 'border-surface-200 dark:border-surface-700 hover:border-primary-400'
+                                    }`}
+                                  >
+                                    <span className={`w-3 h-3 rounded-full ${className}`} />
+                                    {label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                              {homeCardStyles.map(({ value, label, description }) => (
+                                <button
+                                  key={value}
+                                  type="button"
+                                  onClick={() => updateHomeLinkBlock(index, 'style', value)}
+                                  className={`text-left rounded-lg border p-3 transition-colors ${
+                                    (block.style || 'showcase') === value
+                                      ? 'border-primary-500 bg-primary-500/10'
+                                      : 'border-surface-200 dark:border-surface-700 hover:border-primary-400'
+                                  }`}
+                                >
+                                  <span className="block text-sm font-semibold">{label}</span>
+                                  <span className="block text-xs text-surface-500 mt-1">{description}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-950 p-3 self-start">
+                            {(() => {
+                              const iconChoice = homeCardIcons.find(item => item.value === (block.icon || 'sparkles')) || homeCardIcons[0];
+                              const accentChoice = homeCardAccents.find(item => item.value === (block.accent || 'violet')) || homeCardAccents[0];
+                              const PreviewIcon = iconChoice.Icon;
+                              return (
+                                <div className={`rounded-lg border ${accentChoice.soft} p-4 min-h-[140px] flex flex-col justify-between gap-5`}>
+                                  <div className="flex items-center justify-between">
+                                    <span className={`w-10 h-10 rounded-lg ${accentChoice.className} text-white flex items-center justify-center shadow-lg`}>
+                                      <PreviewIcon className="w-5 h-5" />
+                                    </span>
+                                    <ArrowRight className="w-4 h-4 opacity-70" />
+                                  </div>
+                                  <div>
+                                    <p className="font-extrabold text-sm leading-snug text-surface-950 dark:text-white">{block.title || 'Card preview'}</p>
+                                    <p className="text-xs mt-1 line-clamp-2 text-surface-600 dark:text-surface-400">{block.description || 'Your short description will appear here.'}</p>
+                                    <p className="text-[10px] uppercase tracking-wide mt-3 opacity-70">{block.style || 'showcase'} style</p>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => setHomeLinkBlocks(prev => prev.filter((_, i) => i !== index))}
-                        className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
-                      >
-                        Remove Card
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    onClick={() => setHomeLinkBlocks(prev => [...prev, { title: '', href: '', description: '', icon: 'sparkles', accent: 'violet' }])}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-medium"
-                  >
+                    ))}
+                    <button
+                      onClick={() => setHomeLinkBlocks(prev => [...prev, { title: '', href: '', description: '', icon: 'sparkles', accent: 'violet', style: 'showcase' }])}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-medium"
+                    >
                     <Plus className="w-4 h-4" /> Add Homepage Card
                   </button>
                 </div>
