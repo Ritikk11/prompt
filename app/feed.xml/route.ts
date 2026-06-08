@@ -11,7 +11,7 @@ export async function GET() {
   try {
     // 1. Fetch site settings for title and description
     const settings = await fetchSettings() as SiteSettings;
-    const siteTitle = settings?.siteTitle || 'AI Prompt Matrix';
+    const siteTitle = settings?.siteTitle || 'AI PromptMatrix';
     const siteDescription = settings?.siteDescription || 'Curated AI Prompts';
 
     // 2. Fetch posts

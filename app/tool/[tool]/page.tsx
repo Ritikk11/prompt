@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const decodedTool = decodeURIComponent(tool);
   
   return {
-    title: `Best ${decodedTool} AI Prompts | AI Prompt Matrix`,
+    title: `Best ${decodedTool} AI Prompts | AI PromptMatrix`,
     description: `Explore the best AI prompts and images for ${decodedTool}. Discover collections curated for advanced text generation, image creation, and more.`,
     keywords: [decodedTool, 'AI prompts', 'templates'],
   };

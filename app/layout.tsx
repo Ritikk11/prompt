@@ -16,7 +16,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in'),
-  title: 'Ai PromptMatrix - AI Prompts',
+  title: 'AI PromptMatrix - AI Prompts',
   description: 'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.',
   other: {
     'google-adsense-account': 'ca-pub-7670949318287729' // User needs to replace this
@@ -27,8 +27,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Ai PromptMatrix',
-    alternateName: ['AI Prompt Matrix', 'Prompt Matrix'],
+    name: 'AI PromptMatrix',
+    alternateName: ['AI PromptMatrix', 'Prompt Matrix'],
     url: 'https://aipromptmatrix.in',
   };
 

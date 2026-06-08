@@ -4,7 +4,7 @@ import { seedPosts, seedSections } from './data/seedData';
 import { filterPostsForSection } from './sections';
 
 const defaultSettings: SiteSettings = {
-  siteTitle: 'Ai PromptMatrix',
+  siteTitle: 'AI PromptMatrix',
   siteDescription: 'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.',
   siteLogo: '',
   heroTitle: 'Discover AI Prompt Masterpieces',

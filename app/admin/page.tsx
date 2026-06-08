@@ -2228,7 +2228,7 @@ export default function Admin() {
                     value={siteTitle}
                     onChange={e => setSiteTitle(e.target.value)}
                     className="flex-1 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                    placeholder="AI Prompt Matrix"
+                    placeholder="AI PromptMatrix"
                   />
                   <button 
                     onClick={async () => {
@@ -2428,32 +2428,71 @@ export default function Admin() {
             <div className="space-y-6">
               <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                 <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <LayoutGrid className="w-4 h-4 text-primary-500" /> Header Links
+                  <LayoutGrid className="w-4 h-4 text-primary-500" /> Current Header Navigation
                 </h3>
                 <p className="text-xs text-surface-500 mb-4">
-                  One link per line: Label | URL. Use this for SEO pages, custom pages, sections, or external links.
+                  This is what the header can show. Built-in links are controlled by the app; header sections are managed in Sections.
+                </p>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-surface-500 font-semibold mb-2">Built-in links</p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: 'Home', href: '/' },
+                        { label: 'Explore', href: '/explore' },
+                        ...(settings.features?.userSubmissions ? [{ label: 'Submit Prompt', href: '/submit' }] : []),
+                        ...(settings.features?.userProfiles ? [{ label: 'Profile', href: '/profile' }] : []),
+                      ].map(link => (
+                        <span key={link.href} className="px-3 py-1.5 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-xs">
+                          {link.label} <span className="text-surface-500">{link.href}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-surface-500 font-semibold mb-2">Header sections</p>
+                    <div className="flex flex-wrap gap-2">
+                      {sections.filter(s => s.location === 'header' && s.visible).sort((a,b) => a.order - b.order).length > 0 ? (
+                        sections.filter(s => s.location === 'header' && s.visible).sort((a,b) => a.order - b.order).map(section => (
+                          <span key={section.id} className="px-3 py-1.5 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-xs">
+                            {section.name} <span className="text-surface-500">{getSectionPath(section)}</span>
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-surface-500">No header sections enabled.</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <LayoutGrid className="w-4 h-4 text-primary-500" /> Extra Header Links
+                </h3>
+                <p className="text-xs text-surface-500 mb-4">
+                  Home, Explore, Submit, Profile, and header sections are handled automatically. Add only extra custom links here, one per line as Label | URL.
                 </p>
                 <textarea
                   value={headerLinksText}
                   onChange={e => setHeaderLinksText(e.target.value)}
                   rows={7}
                   className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
-                  placeholder={'Best Gemini Prompts | /page/best-gemini-prompts\nAnime Prompts | /section/anime-prompts'}
+                  placeholder="Optional custom header links only"
                 />
               </div>
               <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                 <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <LayoutTemplate className="w-4 h-4 text-primary-500" /> Homepage Link Blocks
+                  <LayoutTemplate className="w-4 h-4 text-primary-500" /> Homepage Quick Cards
                 </h3>
                 <p className="text-xs text-surface-500 mb-4">
-                  One block per line: Title | URL | Description. These show as link cards below the hero.
+                  Optional cards shown below the hero for pages you want to promote. Leave blank if you do not want extra homepage cards.
                 </p>
                 <textarea
                   value={homeLinkBlocksText}
                   onChange={e => setHomeLinkBlocksText(e.target.value)}
                   rows={7}
                   className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-mono resize-y"
-                  placeholder={'Best Gemini Prompts | /page/best-gemini-prompts | Curated prompts made for Gemini image generation\nPoster Prompts | /section/poster-prompts | Explore poster-ready prompt collections'}
+                  placeholder="Optional homepage cards: Title | URL | Description"
                 />
                 <button
                   onClick={handleSaveSettings}

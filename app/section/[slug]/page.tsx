@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: section.seoTitle || `${section.name} | AI Prompt Matrix`,
+    title: section.seoTitle || `${section.name} | AI PromptMatrix`,
     description: section.seoDescription || `Explore all prompts in the ${section.name} section.`,
   };
 }
