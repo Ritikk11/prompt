@@ -103,6 +103,7 @@ export interface HomeLinkBlock {
   description?: string;
   icon?: 'sparkles' | 'image' | 'wand' | 'layers' | 'search' | 'tag';
   accent?: 'violet' | 'cyan' | 'emerald' | 'amber' | 'rose' | 'slate';
+  style?: 'showcase' | 'clean' | 'compact';
 }
 
 export interface SiteSettings {
