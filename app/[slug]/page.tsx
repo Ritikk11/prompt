@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!post) {
     return {
-      title: 'Post Not Found | AI Prompt Matrix',
+      title: 'Post Not Found | AI PromptMatrix',
       description: 'The requested AI prompt could not be found.',
     };
   }
@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const firstImageUrl = post.images[0]?.url || '';
   const isBase64 = firstImageUrl.startsWith('data:');
 
-  const metaTitle = post.seoTitle || `${post.title} | AI Prompts - AI Prompt Matrix`;
+  const metaTitle = post.seoTitle || `${post.title} | AI Prompts - AI PromptMatrix`;
   const metaDescription = post.seoDescription || post.description;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
 

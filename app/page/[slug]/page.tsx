@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!seoPage) {
     return {
-      title: 'Page Not Found | AI Prompt Matrix',
+      title: 'Page Not Found | AI PromptMatrix',
       description: 'The requested page could not be found.',
     };
   }

@@ -10,7 +10,7 @@ export default async function About() {
 
 We are dedicated to building the largest and most curated collection of AI engineering prompts to inspire creators, designers, and developers. Our mission is to empower individuals and teams by providing the ultimate foundation for AI-driven art, code, and textual generation.
 
-AI Prompt Matrix originated from the realization that crafting the perfect prompt is half the battle; an AI tool is only as powerful as the given instructions. We meticulously test, refine, and categorize every prompt, ensuring you can focus on building and creating rather than trial and error.
+AI PromptMatrix originated from the realization that crafting the perfect prompt is half the battle; an AI tool is only as powerful as the given instructions. We meticulously test, refine, and categorize every prompt, ensuring you can focus on building and creating rather than trial and error.
 
 ## Our Mission
 
