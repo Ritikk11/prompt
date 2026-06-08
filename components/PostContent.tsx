@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 
 import Image from 'next/image';
@@ -26,7 +26,16 @@ function formatDate(dateStr: string) {
 
 export default function PostContent({ post: initialPost, relatedPosts }: { post: Post; relatedPosts: Post[] }) {
   const { incrementViews, toggleLike, settings, posts } = useData();
-  const post = posts.find(p => p.id === initialPost?.id) || initialPost;
+  const contextPost = posts.find(p => p.id === initialPost?.id);
+  const contextHasPrompts = contextPost?.images?.some((image) => image.prompt?.trim());
+  const post = useMemo(() => (
+    contextHasPrompts ? contextPost! : {
+      ...initialPost,
+      views: contextPost?.views ?? initialPost.views,
+      likes: contextPost?.likes ?? initialPost.likes,
+      likedByUser: contextPost?.likedByUser ?? initialPost.likedByUser,
+    }
+  ), [contextHasPrompts, contextPost, initialPost]);
   
   const viewIncrementedRef = useRef(false);
   const showSkeleton = settings.features?.skeletonLoaders ?? false;
