@@ -101,6 +101,8 @@ export interface HomeLinkBlock {
   title: string;
   href: string;
   description?: string;
+  icon?: 'sparkles' | 'image' | 'wand' | 'layers' | 'search' | 'tag';
+  accent?: 'violet' | 'cyan' | 'emerald' | 'amber' | 'rose' | 'slate';
 }
 
 export interface SiteSettings {
