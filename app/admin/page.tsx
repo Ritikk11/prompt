@@ -100,6 +100,8 @@ function cleanHomeBlocks(blocks: HomeLinkBlock[] = []) {
     title: block.title.trim(),
     href: block.href.trim(),
     description: block.description?.trim() || undefined,
+    icon: block.icon,
+    accent: block.accent,
   })).filter(block => block.title && block.href);
 }
 
@@ -2520,6 +2522,32 @@ export default function Admin() {
                         className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
                         placeholder="Short description"
                       />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select
+                          value={block.icon || 'sparkles'}
+                          onChange={e => updateHomeLinkBlock(index, 'icon', e.target.value)}
+                          className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                        >
+                          <option value="sparkles">Sparkles icon</option>
+                          <option value="image">Image icon</option>
+                          <option value="wand">Wand icon</option>
+                          <option value="layers">Layers icon</option>
+                          <option value="search">Search icon</option>
+                          <option value="tag">Tag icon</option>
+                        </select>
+                        <select
+                          value={block.accent || 'violet'}
+                          onChange={e => updateHomeLinkBlock(index, 'accent', e.target.value)}
+                          className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                        >
+                          <option value="violet">Violet accent</option>
+                          <option value="cyan">Cyan accent</option>
+                          <option value="emerald">Emerald accent</option>
+                          <option value="amber">Amber accent</option>
+                          <option value="rose">Rose accent</option>
+                          <option value="slate">Slate accent</option>
+                        </select>
+                      </div>
                       <button
                         onClick={() => setHomeLinkBlocks(prev => prev.filter((_, i) => i !== index))}
                         className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
@@ -2529,7 +2557,7 @@ export default function Admin() {
                     </div>
                   ))}
                   <button
-                    onClick={() => setHomeLinkBlocks(prev => [...prev, { title: '', href: '', description: '' }])}
+                    onClick={() => setHomeLinkBlocks(prev => [...prev, { title: '', href: '', description: '', icon: 'sparkles', accent: 'violet' }])}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-medium"
                   >
                     <Plus className="w-4 h-4" /> Add Homepage Card
