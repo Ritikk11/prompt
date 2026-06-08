@@ -122,7 +122,7 @@ export default function SeoPagesTab() {
             <textarea value={seoDescription} onChange={e => setSeoDescription(e.target.value)} rows={2} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm resize-y" placeholder="Short search-result description for this page..." />
           </div>
           <div>
-             <label className="block text-sm font-medium mb-1.5">Slug (/page/[slug])</label>
+             <label className="block text-sm font-medium mb-1.5">Slug (available as /slug and /page/slug)</label>
              <input value={slug} onChange={e => setSlug(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm" placeholder="e.g. upscale-images-gemini" />
           </div>
           <div>
@@ -164,7 +164,7 @@ export default function SeoPagesTab() {
             <div>
               <h3 className="font-semibold text-sm">{page.title}</h3>
               {page.seoDescription && <p className="text-xs text-surface-500 mt-0.5 line-clamp-2">{page.seoDescription}</p>}
-              <p className="text-xs text-primary-500 break-all mb-1">/page/{page.slug}</p>
+              <p className="text-xs text-primary-500 break-all mb-1">/{page.slug} <span className="text-surface-500">or</span> /page/{page.slug}</p>
               <div className="flex flex-wrap gap-2 text-[10px] text-surface-500">
                 {page.tags?.length > 0 && <span>Tags: {page.tags.join(', ')}</span>}
                 {page.categories?.length > 0 && <span>Cats: {page.categories.join(', ')}</span>}
@@ -172,7 +172,7 @@ export default function SeoPagesTab() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button title="View Details" onClick={() => window.open(`/page/${page.slug}`,'_blank')} className="p-2 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-lg text-primary-500">
+              <button title="View Details" onClick={() => window.open(`/${page.slug}`,'_blank')} className="p-2 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-lg text-primary-500">
                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
               </button>
               <button onClick={() => startEdit(page)} className="p-2 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-lg text-primary-500"><Edit3 className="w-4 h-4" /></button>
