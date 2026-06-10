@@ -18,6 +18,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
 import { getSectionPath } from '@/lib/sections';
+import { optimizeImageFile, optimizeImageToDataUrl, type ImageOptimizePreset } from '@/lib/client-image-optimizer';
 
 
 
@@ -131,52 +132,6 @@ function cleanFooterGroups(groups: FooterLinkGroup[] = []) {
     title: group.title.trim() || 'Links',
     links: cleanNavLinks(group.links),
   })).filter(group => group.title && group.links.length > 0);
-}
-
-function compressImage(file: File, maxSizeKB: number = 300): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (e) => {
-      const img = new window.Image();
-      img.src = e.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        const maxDim = 1200;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round(height * (maxDim / width));
-            width = maxDim;
-          } else {
-            width = Math.round(width * (maxDim / height));
-            height = maxDim;
-          }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            // Fill with white background in case of transparent png -> jpeg
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, width, height);
-            ctx.drawImage(img, 0, 0, width, height);
-        }
-        
-        let quality = 0.8;
-        let dataUrl = canvas.toDataURL('image/jpeg', quality);
-        
-        while (dataUrl.length > maxSizeKB * 1024 * 1.33 && quality > 0.2) {
-          quality -= 0.15;
-          dataUrl = canvas.toDataURL('image/jpeg', quality);
-        }
-        resolve(dataUrl);
-      };
-      img.onerror = reject;
-    };
-    reader.onerror = reject;
-  });
 }
 
 export default function Admin() {
@@ -583,10 +538,12 @@ export default function Admin() {
     setImages(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const uploadImageFile = async (file: File, fallbackCompression: number = 400): Promise<string> => {
+  const uploadImageFile = async (file: File, preset: ImageOptimizePreset = 'prompt'): Promise<string> => {
+    const optimizedFile = await optimizeImageFile(file, preset);
+
     if (imageProvider === 'cloudinary' && cloudinaryCloudName && cloudinaryUploadPreset) {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', optimizedFile);
       formData.append('upload_preset', cloudinaryUploadPreset);
       const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`, { method: 'POST', body: formData });
       const data = await res.json();
@@ -594,28 +551,31 @@ export default function Admin() {
       throw new Error(data.error?.message || 'Cloudinary upload failed');
     } else if (imageProvider === 'supabase') {
       const supabase = createSupabaseClient();
-      const ext = file.name.split('.').pop() || 'jpg';
+      const ext = optimizedFile.name.split('.').pop() || 'webp';
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-      const { data, error } = await supabase.storage.from('images').upload(fileName, file);
+      const { data, error } = await supabase.storage.from('images').upload(fileName, optimizedFile, {
+        contentType: optimizedFile.type || 'image/webp',
+        cacheControl: '31536000',
+      });
       if (error) throw new Error(error.message);
       const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName);
       return publicUrl;
     } else if ((imageProvider === 'imgbb' || !imageProvider) && imgbbApiKey) {
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('image', optimizedFile);
       const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: 'POST', body: formData });
       const data = await res.json();
       if (data.success) return data.data.url;
       throw new Error(data.error?.message || 'ImgBB upload failed');
     }
     
-    return await compressImage(file, fallbackCompression);
+    return await optimizeImageToDataUrl(file, preset);
   };
 
   const handleImageUpload = async (idx: number, file: File) => {
     try {
       updateImage(idx, 'url', 'Uploading...');
-      const url = await uploadImageFile(file, 400);
+      const url = await uploadImageFile(file, 'prompt');
       updateImage(idx, 'url', url);
     } catch (err) {
       console.error(err);
@@ -961,7 +921,7 @@ export default function Admin() {
   const handleToolLogoUpload = async (file: File) => {
     try {
       setEditAiToolLogo('Uploading...');
-      const url = await uploadImageFile(file, 50);
+      const url = await uploadImageFile(file, 'logo');
       setEditAiToolLogo(url);
     } catch (err) {
       console.error(err);
@@ -1394,7 +1354,7 @@ export default function Admin() {
                           if (file) {
                              try {
                                setThumbnailUrl('Uploading...');
-                               const url = await uploadImageFile(file, 250);
+                               const url = await uploadImageFile(file, 'thumbnail');
                                setThumbnailUrl(url);
                              } catch (err) {
                                console.error(err);
@@ -1431,7 +1391,7 @@ export default function Admin() {
                              setReferenceImages(prev => [...prev, ...uploadingLabels]);
                              try {
                                const urls = await Promise.all(
-                                 files.map(file => uploadImageFile(file, 800))
+                                 files.map(file => uploadImageFile(file, 'reference'))
                                );
                                setReferenceImages(prev => [
                                  ...prev.filter(url => url !== 'Uploading...'),
