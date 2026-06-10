@@ -44,13 +44,13 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
   return (
     <div className="max-w-7xl mx-auto px-1 py-6 sm:py-8 fade-in">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-surface-500 mb-6">
-        <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
-        <span>/</span>
-        <Link href="/explore" className="hover:text-primary-500 transition-colors">Explore</Link>
-        <span>/</span>
-        <span className="text-surface-900 dark:text-surface-100 font-medium capitalize">Tag: {tag}</span>
-      </div>
+        <div className="flex items-center gap-2 text-sm text-surface-500 mb-6">
+          <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
+          <span>/</span>
+          <span className="text-surface-500 dark:text-surface-400">Tags</span>
+          <span>/</span>
+          <span className="text-surface-900 dark:text-surface-100 font-medium capitalize">Tag: {tag}</span>
+        </div>
 
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold mb-3 capitalize">
