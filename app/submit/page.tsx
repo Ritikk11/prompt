@@ -12,6 +12,7 @@ import { ImagePrompt } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { getImageModelForTools } from '@/lib/constants';
 import { getAuthRedirectTo } from '@/lib/auth-redirect';
+import { optimizeImageFile } from '@/lib/client-image-optimizer';
 
 export default function SubmitPage() {
   const { settings, loading, addPost } = useData();
@@ -78,9 +79,10 @@ export default function SubmitPage() {
     }
     try {
       let url = '';
+      const optimizedFile = await optimizeImageFile(file, 'prompt');
       if (settings.imageProvider === 'cloudinary' && settings.cloudinaryCloudName && settings.cloudinaryUploadPreset) {
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', optimizedFile);
         formData.append('upload_preset', settings.cloudinaryUploadPreset);
         const res = await fetch(`https://api.cloudinary.com/v1_1/${settings.cloudinaryCloudName}/image/upload`, { method: 'POST', body: formData });
         const data = await res.json();
@@ -89,15 +91,18 @@ export default function SubmitPage() {
       } else if (settings.imageProvider === 'supabase') {
         const { createClient: createSupabaseClient } = await import('@/lib/supabase-client');
         const supabase = createSupabaseClient();
-        const ext = file.name.split('.').pop() || 'jpg';
+        const ext = optimizedFile.name.split('.').pop() || 'webp';
         const fileName = `${generateId()}.${ext}`;
-        const { data, error } = await supabase.storage.from('images').upload(fileName, file);
+        const { data, error } = await supabase.storage.from('images').upload(fileName, optimizedFile, {
+          contentType: optimizedFile.type || 'image/webp',
+          cacheControl: '31536000',
+        });
         if (error) throw new Error(error.message);
         const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName);
         url = publicUrl;
       } else if ((settings.imageProvider === 'imgbb' || !settings.imageProvider) && settings.imgbbApiKey) {
         const formData = new FormData();
-        formData.append('image', file);
+        formData.append('image', optimizedFile);
         const res = await fetch(`https://api.imgbb.com/1/upload?key=${settings.imgbbApiKey}`, {
           method: 'POST',
           body: formData,
