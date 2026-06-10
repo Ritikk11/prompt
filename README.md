@@ -1,20 +1,41 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# AI PromptMatrix
 
-# Run and deploy your AI Studio app
+AI PromptMatrix is a Next.js app for publishing, organizing, and managing AI prompt collections.
 
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/40c393d7-119e-4843-aa4a-5845e5f3b74a
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
+## Local Development
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+
+   ```bash
+   npm install
+   ```
+
+2. Create `.env.local` and add the required public Supabase values:
+
+   ```bash
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   NEXT_PUBLIC_SITE_URL=http://localhost:3000
+   ```
+
+3. Start the dev server:
+
+   ```bash
+   npm run dev
+   ```
+
+## Useful Commands
+
+```bash
+npm run lint
+npx tsc --noEmit
+npm run build
+```
+
+## Cloudflare Worker Deploy
+
+Set the Cloudflare token and production public environment values, then run:
+
+```bash
+npm run deploy:worker
+```
