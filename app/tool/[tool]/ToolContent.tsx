@@ -37,13 +37,13 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 fade-in">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-surface-500 mb-6">
-        <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
-        <span>/</span>
-        <Link href="/explore" className="hover:text-primary-500 transition-colors">Explore</Link>
-        <span>/</span>
-        <span className="text-surface-900 dark:text-surface-100 font-medium capitalize">{tool}</span>
-      </div>
+        <div className="flex items-center gap-2 text-sm text-surface-500 mb-6">
+          <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
+          <span>/</span>
+          <span className="text-surface-500 dark:text-surface-400">Tools</span>
+          <span>/</span>
+          <span className="text-surface-900 dark:text-surface-100 font-medium capitalize">{tool}</span>
+        </div>
 
       <div className="mb-10 text-center max-w-2xl mx-auto">
         <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 text-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
