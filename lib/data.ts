@@ -2,6 +2,7 @@ import { createClient } from './supabase-server';
 import type { Post, Section, SiteSettings } from './types';
 import { seedPosts, seedSections } from './data/seedData';
 import { filterPostsForSection } from './sections';
+import { getThumbnailImageUrl } from './image-url';
 
 const defaultSettings: SiteSettings = {
   siteTitle: 'AI PromptMatrix',
@@ -118,7 +119,7 @@ function publicImageUrl(post: Post) {
 }
 
 export function toPostSummary(post: Post): Post {
-  const imageUrl = publicImageUrl(post);
+  const imageUrl = getThumbnailImageUrl(publicImageUrl(post));
   const primaryImage = post.images?.[0];
 
   return {

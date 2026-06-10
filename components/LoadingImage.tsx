@@ -182,6 +182,8 @@ export function LoadingImg({
         {...props}
         ref={imageRef}
         alt={alt}
+        loading={props.loading ?? 'lazy'}
+        decoding={props.decoding ?? 'async'}
         onLoad={(event) => {
           setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
           onLoad?.(event);

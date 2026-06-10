@@ -248,7 +248,6 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
             alt={post.title}
             width={500}
             height={700}
-            priority={index != null && index < 3}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             showSkeleton={showSkeleton}
             className={`w-full transition-transform duration-700 ease-in-out group-hover:scale-105 block ${aspect ? 'h-full object-cover' : 'h-auto'}`}
@@ -293,7 +292,6 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
             alt={post.title}
             fill
             sizes="100px"
-            priority={index != null && index < 6}
             showSkeleton={showSkeleton}
             className="object-cover transition-transform duration-500 group-hover:scale-110"
            referrerPolicy="no-referrer" skeleton={showSkeleton} />
@@ -327,7 +325,6 @@ export default function PostCard({ post: initialPost, index, aspect }: { post: P
         alt={post.title}
         width={500}
         height={700}
-        priority={index != null && index < 3}
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         showSkeleton={showSkeleton}
         className={`w-full transition-transform duration-700 ease-in-out group-hover:scale-105 block ${aspect ? 'h-full object-cover' : 'h-auto'}`}
