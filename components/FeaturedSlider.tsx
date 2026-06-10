@@ -8,6 +8,12 @@ import type { Post, SiteSettings } from '@/lib/types';
 import { getToolInfo, getAllTools } from '@/lib/constants';
 import LoadingImage from '@/components/LoadingImage';
 
+function isNearbySlide(index: number, current: number, total: number) {
+  if (total <= 3) return true;
+  const distance = Math.abs(index - current);
+  return distance <= 1 || distance >= total - 1;
+}
+
 export default function FeaturedSlider({ featuredPosts, settings }: { featuredPosts: Post[], settings: SiteSettings }) {
   const featured = featuredPosts;
   const [current, setCurrent] = useState(0);
@@ -62,6 +68,7 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
   const primaryToolName = allTools[0] || post?.images[0]?.aiTool || '';
   const primaryToolInfo = getToolInfo(primaryToolName, settings?.toolDetails);
   const toolInfo = primaryToolInfo;
+  const currentImageUrl = post.thumbnailUrl || post.images[0]?.url || '';
 
   // Common Nav & Progress Controls
   const renderProgress = (
@@ -109,15 +116,20 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
               key={p.id}
               className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
             >
-              <Image
-                src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill
-                className="object-cover blur-xl scale-125 opacity-40 dark:opacity-30" sizes="100vw"
-               referrerPolicy="no-referrer" />
-              <LoadingImage
-                src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={i === 0}
-                showSkeleton={showSkeleton}
-                className="object-contain object-center" sizes="100vw"
-               referrerPolicy="no-referrer" />
+              {isNearbySlide(i, current, featured.length) ? (
+                <>
+                  <Image
+                    src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill
+                    className="object-cover blur-xl scale-125 opacity-40 dark:opacity-30" sizes="100vw"
+                    loading={i === current ? 'eager' : 'lazy'}
+                    referrerPolicy="no-referrer" />
+                  <LoadingImage
+                    src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={i === current}
+                    showSkeleton={showSkeleton}
+                    className="object-contain object-center" sizes="100vw"
+                    referrerPolicy="no-referrer" />
+                </>
+              ) : null}
             </div>
           ))}
           <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
@@ -197,15 +209,20 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
                   key={p.id}
                   className={`absolute inset-0 transition-all duration-700 ease-out ${i === current ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-105 z-0'}`}
                 >
-                  <Image
-                    src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill
-                    className="object-cover blur-3xl scale-125 opacity-30 dark:opacity-20" sizes="50vw"
-                   referrerPolicy="no-referrer" />
-                  <LoadingImage
-                    src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={i === 0}
-                    showSkeleton={showSkeleton}
-                    className="object-contain" sizes="50vw"
-                   referrerPolicy="no-referrer" />
+                  {isNearbySlide(i, current, featured.length) ? (
+                    <>
+                      <Image
+                        src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill
+                        className="object-cover blur-3xl scale-125 opacity-30 dark:opacity-20" sizes="50vw"
+                        loading={i === current ? 'eager' : 'lazy'}
+                        referrerPolicy="no-referrer" />
+                      <LoadingImage
+                        src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={i === current}
+                        showSkeleton={showSkeleton}
+                        className="object-contain" sizes="50vw"
+                        referrerPolicy="no-referrer" />
+                    </>
+                  ) : null}
                 </div>
               ))}
           </div>
@@ -221,7 +238,7 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
       <div className="relative w-full rounded-3xl overflow-hidden py-6 px-4 md:py-12 md:px-10 shadow-inner flex items-center justify-center min-h-[500px]" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
         {/* Blurred Background */}
         <div className="absolute inset-0 z-0">
-          <Image src={post.thumbnailUrl || post.images[0]?.url || ''} alt="" fill sizes="20vw" className="object-cover opacity-30 dark:opacity-20 blur-3xl scale-125"  referrerPolicy="no-referrer" />
+          <Image src={currentImageUrl} alt="" fill sizes="20vw" className="object-cover opacity-30 dark:opacity-20 blur-3xl scale-125"  referrerPolicy="no-referrer" />
           <div className="absolute inset-0 bg-surface-50/80 dark:bg-surface-950/80 backdrop-blur-md" />
         </div>
         
@@ -331,15 +348,20 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
         <div className="relative w-full h-[600px]">
           {featured.map((p, i) => (
             <div key={p.id} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
-              <Image
-                src={p.thumbnailUrl || p.images[0]?.url || ''} alt={`bg-${p.title}`} fill
-                className="object-cover object-center blur-2xl scale-125 opacity-30" sizes="100vw"
-               referrerPolicy="no-referrer" />
-              <LoadingImage
-                src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill priority={i === 0}
-                showSkeleton={showSkeleton}
-                className="object-contain object-center opacity-80" sizes="100vw"
-               referrerPolicy="no-referrer" />
+              {isNearbySlide(i, current, featured.length) ? (
+                <>
+                  <Image
+                    src={p.thumbnailUrl || p.images[0]?.url || ''} alt={`bg-${p.title}`} fill
+                    className="object-cover object-center blur-2xl scale-125 opacity-30" sizes="100vw"
+                    loading={i === current ? 'eager' : 'lazy'}
+                    referrerPolicy="no-referrer" />
+                  <LoadingImage
+                    src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill priority={i === current}
+                    showSkeleton={showSkeleton}
+                    className="object-contain object-center opacity-80" sizes="100vw"
+                    referrerPolicy="no-referrer" />
+                </>
+              ) : null}
             </div>
           ))}
           <div className="absolute inset-0 z-20 bg-gradient-to-b from-surface-950/20 via-transparent to-surface-950/80 pointer-events-none" />
@@ -520,9 +542,13 @@ export default function FeaturedSlider({ featuredPosts, settings }: { featuredPo
       <div className="relative w-full h-[600px] md:h-[750px] mb-12 flex items-center justify-center p-4">
         {featured.map((p, i) => (
           <div key={p.id} className={`absolute inset-0 transition-all duration-1000 ease-in-out ${i === current ? 'opacity-100 z-10' : 'opacity-0 scale-105 blur-sm z-0'}`}>
-            <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt="" fill className="object-cover scale-105 blur-2xl opacity-20" referrerPolicy="no-referrer" />
+            {isNearbySlide(i, current, featured.length) ? (
+              <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt="" fill className="object-cover scale-105 blur-2xl opacity-20" loading={i === current ? 'eager' : 'lazy'} referrerPolicy="no-referrer" />
+            ) : null}
             <div className="relative h-full w-full max-w-6xl mx-auto rounded-[3rem] overflow-hidden shadow-2xl border border-white/10 mt-4 h-full md:h-[90%]">
-               <LoadingImage src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill showSkeleton={showSkeleton} className="object-cover" referrerPolicy="no-referrer" priority={i === 0} />
+               {isNearbySlide(i, current, featured.length) ? (
+                 <LoadingImage src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill showSkeleton={showSkeleton} className="object-cover" referrerPolicy="no-referrer" priority={i === current} />
+               ) : null}
                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent p-8 md:p-20 flex flex-col justify-end md:justify-center">
                   <div className="max-w-2xl animate-in slide-in-from-bottom-8 duration-700">
                     <div className="flex items-center gap-3 mb-6">
