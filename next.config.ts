@@ -1,4 +1,26 @@
 import type {NextConfig} from 'next';
+import { existsSync, readFileSync } from 'node:fs';
+
+function loadCloudflarePublicEnv() {
+  const configPath = './wrangler.jsonc';
+  if (!existsSync(configPath)) return;
+
+  try {
+    const config = JSON.parse(readFileSync(configPath, 'utf8')) as {
+      vars?: Record<string, string>;
+    };
+
+    Object.entries(config.vars || {}).forEach(([key, value]) => {
+      if (key.startsWith('NEXT_PUBLIC_') && !process.env[key]) {
+        process.env[key] = value;
+      }
+    });
+  } catch (error) {
+    console.warn('Unable to load public env vars from wrangler.jsonc:', error);
+  }
+}
+
+loadCloudflarePublicEnv();
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
