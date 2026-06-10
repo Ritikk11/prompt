@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-import { Sparkles, Heart, ChevronUp } from 'lucide-react';
+import { Sparkles, ChevronUp } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import type { FooterLinkGroup } from '@/lib/types';
 
@@ -111,9 +111,6 @@ export default function Footer() {
 
         <div className="mt-10 pt-6 border-t border-surface-200 dark:border-surface-800 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-surface-400">&copy; {new Date().getFullYear()} {settings.siteTitle}. All rights reserved.</p>
-          <div className="flex items-center gap-1 text-sm text-surface-400">
-            Made with <Heart className="w-3.5 h-3.5 text-red-400 mx-0.5 fill-red-400" /> for AI enthusiasts
-          </div>
         </div>
       </div>
 
