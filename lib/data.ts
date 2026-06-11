@@ -145,11 +145,23 @@ export function toPostSummary(post: Post): Post {
     featured: post.featured,
     views: post.views,
     likes: post.likes,
+    comments: (post.comments || []).filter((comment) => comment.status === 'approved'),
+    bookmarkedByUser: undefined,
+    bookmarkedBy: undefined,
     isPremium: post.isPremium,
     isTemplate: post.isTemplate,
     status: post.status,
     visibility: post.visibility,
     createdAt: post.createdAt,
+  };
+}
+
+export function toPublicPost(post: Post): Post {
+  return {
+    ...post,
+    comments: (post.comments || []).filter((comment) => comment.status === 'approved'),
+    bookmarkedBy: undefined,
+    bookmarkedByUser: undefined,
   };
 }
 
@@ -194,7 +206,8 @@ export async function fetchSettings() {
 
 export async function getPostBySlugOrId(idOrSlug: string) {
   const posts = await fetchPosts();
-  return posts.find((p) => p.slug === idOrSlug || p.id === idOrSlug) || null;
+  const post = posts.find((p) => p.slug === idOrSlug || p.id === idOrSlug);
+  return post ? toPublicPost(post) : null;
 }
 
 export async function getSectionBySlug(slug: string) {

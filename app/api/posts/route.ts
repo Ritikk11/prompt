@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
-import type { Post, SiteSettings } from '@/lib/types';
+import type { Post, PostComment, SiteSettings } from '@/lib/types';
 
 async function getUserFromRequest(request: Request) {
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
@@ -19,7 +19,7 @@ function isPublicPost(post: Pick<Post, 'status' | 'visibility'>) {
 export async function POST(request: Request) {
   const admin = createAdminClient();
   const body = await request.json().catch(() => null);
-  const { action, id, data, liked } = body || {};
+  const { action, id, data, liked, text } = body || {};
 
   if (action === 'submit') {
     const user = await getUserFromRequest(request);
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, post: cleanPost });
   }
 
-  if (action === 'view' || action === 'like') {
+  if (action === 'view' || action === 'like' || action === 'bookmark' || action === 'comment') {
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
     const { data: row, error: readError } = await admin
@@ -69,6 +69,62 @@ export async function POST(request: Request) {
     if (readError) return NextResponse.json({ error: readError.message }, { status: 500 });
     const post = row?.data as Post | undefined;
     if (!post || !isPublicPost(post)) return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+
+    if (action === 'comment' || action === 'bookmark') {
+      const user = await getUserFromRequest(request);
+      if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+      const { data: settingsRow, error: settingsError } = await admin
+        .from('settings')
+        .select('data')
+        .eq('id', 'global')
+        .maybeSingle();
+      if (settingsError) return NextResponse.json({ error: settingsError.message }, { status: 500 });
+
+      const settings = (settingsRow?.data || {}) as SiteSettings;
+
+      if (action === 'comment') {
+        if (!settings.features?.comments) {
+          return NextResponse.json({ error: 'Comments are disabled' }, { status: 403 });
+        }
+        const cleanText = String(text || '').trim().slice(0, 1000);
+        if (cleanText.length < 2) {
+          return NextResponse.json({ error: 'Comment is too short' }, { status: 400 });
+        }
+
+        const comment: PostComment = {
+          id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+          postId: id,
+          userId: user.id,
+          userName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Reader',
+          userAvatar: user.user_metadata?.avatar_url,
+          text: cleanText,
+          status: settings.features.commentsRequireApproval ? 'pending' : 'approved',
+          createdAt: new Date().toISOString(),
+        };
+
+        const updated = {
+          ...post,
+          comments: [...(post.comments || []), comment],
+        };
+        const { error } = await admin.from('posts').update({ data: updated }).eq('id', id);
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ ok: true, comment });
+      }
+
+      const bookmarkedBy = new Set(post.bookmarkedBy || []);
+      const nextBookmarked = !bookmarkedBy.has(user.id);
+      if (nextBookmarked) bookmarkedBy.add(user.id);
+      else bookmarkedBy.delete(user.id);
+
+      const updated = {
+        ...post,
+        bookmarkedBy: Array.from(bookmarkedBy),
+      };
+      const { error } = await admin.from('posts').update({ data: updated }).eq('id', id);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ ok: true, bookmarked: nextBookmarked });
+    }
 
     const updated = {
       ...post,

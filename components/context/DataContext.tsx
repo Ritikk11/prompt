@@ -12,6 +12,7 @@ interface DataContextType {
   deletePost: (id: string) => Promise<void>;
   incrementViews: (id: string, fallbackPost?: Post) => void;
   toggleLike: (id: string, fallbackPost?: Post) => void;
+  toggleBookmark: (id: string, fallbackPost?: Post) => Promise<boolean | null>;
   addSection: (section: Section) => Promise<void>;
   updateSection: (section: Section) => Promise<void>;
   deleteSection: (id: string) => Promise<void>;
@@ -224,6 +225,31 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     } catch {}
   }, [localLikes, posts, supabase]);
 
+  const toggleBookmark = useCallback(async (id: string, fallbackPost?: Post) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return null;
+
+    const current = posts.find(p => p.id === id) || fallbackPost;
+    const nextBookmarked = !current?.bookmarkedByUser;
+    if (current) {
+      setPosts(prev => {
+        if (!prev.find(p => p.id === id)) return [...prev, { ...current, bookmarkedByUser: nextBookmarked }];
+        return prev.map(p => p.id === id ? { ...p, bookmarkedByUser: nextBookmarked } : p);
+      });
+    }
+
+    try {
+      const res = await postRequest({ action: 'bookmark', id });
+      setPosts(prev => prev.map(p => p.id === id ? { ...p, bookmarkedByUser: res.bookmarked } : p));
+      return Boolean(res.bookmarked);
+    } catch (error) {
+      if (current) {
+        setPosts(prev => prev.map(p => p.id === id ? { ...p, bookmarkedByUser: current.bookmarkedByUser } : p));
+      }
+      throw error;
+    }
+  }, [posts, supabase]);
+
   const addSection = useCallback(async (section: Section) => {
     const cleanSection = JSON.parse(JSON.stringify(section));
     setSections(prev => [...prev, section]);
@@ -282,7 +308,7 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
   return (
     <DataContext.Provider value={{
       posts: enrichedPosts, sections, settings, addPost, updatePost, deletePost,
-      incrementViews, toggleLike, addSection, updateSection, deleteSection,
+      incrementViews, toggleLike, toggleBookmark, addSection, updateSection, deleteSection,
       updateSettings, getPostById, searchPosts, resetData, deleteMockData, 
       loadAdminData, setPosts, setSections, loading
     }}>

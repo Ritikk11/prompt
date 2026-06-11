@@ -15,6 +15,9 @@ import PostCard from '@/components/PostCard';
 export default function ProfileClient({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [bookmarks, setBookmarks] = useState<Post[]>([]);
+  const [submissions, setSubmissions] = useState<Post[]>([]);
+  const [profileLoading, setProfileLoading] = useState(false);
   const navigate = useRouter();
 
   useEffect(() => {
@@ -36,6 +39,42 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
     return () => subscription.unsubscribe();
   }, [navigate, settings]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const loadProfile = async () => {
+      if (!user) {
+        setBookmarks([]);
+        setSubmissions([]);
+        setProfileLoading(false);
+        return;
+      }
+
+      setProfileLoading(true);
+      try {
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch('/api/profile', {
+          headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error || 'Failed to load profile');
+        if (!cancelled) {
+          setBookmarks(json.bookmarks || []);
+          setSubmissions(json.submissions || []);
+        }
+      } catch (error) {
+        console.error('Profile load failed', error);
+      } finally {
+        if (!cancelled) setProfileLoading(false);
+      }
+    };
+
+    loadProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
   if (!settings.features?.userProfiles) {
     return null;
   }
@@ -56,8 +95,12 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
     );
   }
 
-  const likedPosts = posts.filter(p => p.likedByUser && (p.status === 'published' || !p.status) && p.visibility !== 'private');
-  const mySubmissions = posts.filter(p => p.authorId === user.id);
+  const likedPosts = bookmarks.length > 0
+    ? bookmarks
+    : posts.filter(p => p.bookmarkedByUser && (p.status === 'published' || !p.status) && p.visibility !== 'private');
+  const mySubmissions = submissions.length > 0
+    ? submissions
+    : posts.filter(p => p.authorId === user.id);
 
   return (
     <div className="max-w-7xl mx-auto px-1 py-6 sm:py-8 fade-in">
@@ -89,7 +132,11 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
             <h2 className="text-xl md:text-2xl font-bold mb-6 flex items-center gap-2">
               <Heart className="w-6 h-6 text-red-500 fill-red-500" /> My Bookmarks
             </h2>
-            {likedPosts.length === 0 ? (
+            {profileLoading ? (
+              <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+                {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} />)}
+              </div>
+            ) : likedPosts.length === 0 ? (
               <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
                 <Heart className="w-8 h-8 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
                 <p className="text-surface-500 font-medium">No bookmarks yet</p>
@@ -113,7 +160,11 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
               <h2 className="text-xl md:text-2xl font-bold mb-6 flex items-center gap-2">
                 <FileText className="w-6 h-6 text-primary-500" /> My Submissions
               </h2>
-              {mySubmissions.length === 0 ? (
+              {profileLoading ? (
+                <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+                  {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} />)}
+                </div>
+              ) : mySubmissions.length === 0 ? (
                 <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
                   <p className="text-surface-500 font-medium">You haven&apos;t submitted any prompts.</p>
                   <Link href="/submit" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">

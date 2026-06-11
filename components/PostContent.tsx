@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 
 import Image from 'next/image';
-import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Wand2 } from 'lucide-react';
+import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Wand2, Bookmark } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
 import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
@@ -25,7 +25,7 @@ function formatDate(dateStr: string) {
 }
 
 export default function PostContent({ post: initialPost, relatedPosts }: { post: Post; relatedPosts: Post[] }) {
-  const { incrementViews, toggleLike, settings, posts } = useData();
+  const { incrementViews, toggleLike, toggleBookmark, settings, posts } = useData();
   const contextPost = posts.find(p => p.id === initialPost?.id);
   const contextHasPrompts = contextPost?.images?.some((image) => image.prompt?.trim());
   const post = useMemo(() => (
@@ -43,6 +43,13 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const [lightboxImage, setLightboxImage] = useState<{ url: string; index: number; tools: string[] } | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [expandedPrompts, setExpandedPrompts] = useState<Record<string, boolean>>({});
+  const [commentText, setCommentText] = useState('');
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [commentState, setCommentState] = useState(() => ({
+    postId: post.id,
+    items: post.comments || [],
+  }));
+  const comments = commentState.postId === post.id ? commentState.items : (post.comments || []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -54,6 +61,53 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  const hasTemplateVariables = (prompt: string) => /(?:\[[^\]]+\]|\{[^}]+\})/.test(prompt);
+
+  const handleBookmark = async () => {
+    if (!user) {
+      handleLogin();
+      return;
+    }
+    try {
+      await toggleBookmark(post.id, post);
+    } catch (error: any) {
+      alert(error?.message || 'Could not update bookmark.');
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!user) {
+      handleLogin();
+      return;
+    }
+    const text = commentText.trim();
+    if (text.length < 2) return;
+    setCommentSubmitting(true);
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ action: 'comment', id: post.id, text }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || 'Could not post comment');
+      setCommentState(prev => {
+        const currentItems = prev.postId === post.id ? prev.items : (post.comments || []);
+        return { postId: post.id, items: [...currentItems, json.comment] };
+      });
+      setCommentText('');
+    } catch (error: any) {
+      alert(error?.message || 'Could not post comment.');
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
 
   const handleDownload = async (url: string, filename: string) => {
     try {
@@ -158,6 +212,15 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           }`}
         >
           <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop text-red-500' : ''}`} /> {(post.likes || 0).toLocaleString()} <span className="hidden sm:inline">likes</span>
+        </button>
+        <button
+          onClick={handleBookmark}
+          className={`flex items-center gap-1.5 transition-colors ${
+            post.bookmarkedByUser ? 'text-primary-500' : isV2 ? 'hover:text-primary-300' : 'hover:text-primary-500'
+          }`}
+        >
+          <Bookmark className={`w-4.5 h-4.5 ${post.bookmarkedByUser ? 'fill-current' : ''}`} />
+          <span className="hidden sm:inline">{post.bookmarkedByUser ? 'saved' : 'save'}</span>
         </button>
         <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
         <span className="flex items-center gap-1.5">
@@ -664,7 +727,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                            {img.prompt.slice(0, 100)}...
                          </p>
                        </div>
-                    ) : settings.features?.smartTemplates && img.prompt.includes('[') && img.prompt.includes(']') ? (
+                    ) : settings.features?.smartTemplates && hasTemplateVariables(img.prompt) ? (
                        <TemplatePrompt originalPrompt={img.prompt} />
                     ) : (
                       <>
@@ -779,12 +842,19 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                <div className="max-w-2xl mx-auto flex flex-col gap-4">
                  <textarea
                    rows={3}
+                   value={commentText}
+                   onChange={(event) => setCommentText(event.target.value)}
                    placeholder="Share your experience using these prompts, or post your own variations..."
                    className="w-full px-4 py-3 rounded-xl bg-white dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none transition-colors text-sm resize-none"
                  />
                  <div className="flex justify-end">
-                   <button className="px-5 py-2.5 rounded-xl text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors">
-                     Post Comment
+                   <button
+                     type="button"
+                     onClick={handleSubmitComment}
+                     disabled={commentSubmitting || commentText.trim().length < 2}
+                     className="px-5 py-2.5 rounded-xl text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                   >
+                     {commentSubmitting ? 'Posting...' : 'Post Comment'}
                    </button>
                  </div>
                </div>
@@ -798,8 +868,39 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             )}
             
             <div className="mt-12 text-left">
-              <p className="text-sm font-medium text-surface-400 mb-6">0 comments</p>
-              {/* Future comment list maps here */}
+              <p className="text-sm font-medium text-surface-400 mb-6">
+                {comments.filter(comment => comment.status === 'approved' || comment.userId === user?.id).length} comments
+              </p>
+              <div className="space-y-4">
+                {comments
+                  .filter(comment => comment.status === 'approved' || comment.userId === user?.id)
+                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                  .map(comment => (
+                    <div key={comment.id} className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-950">
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          {comment.userAvatar ? (
+                            <Image src={comment.userAvatar} alt="" width={32} height={32} className="rounded-full" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600 dark:bg-primary-900/40">
+                              {comment.userName.slice(0, 1).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-surface-900 dark:text-white">{comment.userName}</p>
+                            <p className="text-xs text-surface-400">{formatDate(comment.createdAt)}</p>
+                          </div>
+                        </div>
+                        {comment.status === 'pending' && (
+                          <span className="rounded-full bg-yellow-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
+                            Pending
+                          </span>
+                        )}
+                      </div>
+                      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-surface-600 dark:text-surface-300">{comment.text}</p>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
         </div>
