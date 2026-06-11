@@ -961,12 +961,15 @@ export default function Admin() {
     
   filteredPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
+  const pendingSubmissionCount = posts.filter(p => p.status === 'pending').length;
+  const pendingCommentCount = posts.reduce((count, post) => count + (post.comments || []).filter(comment => comment.status === 'pending').length, 0);
+
   const tabs: { key: AdminTab; label: string; icon: React.ReactNode; count?: number }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: <BarChart2 className="w-4 h-4" /> },
     { key: 'posts', label: 'Posts', icon: <FileText className="w-4 h-4" />, count: posts.length },
     { key: 'sections', label: 'Sections', icon: <Layers className="w-4 h-4" /> },
     { key: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
-    { key: 'submissions', label: 'Submissions', icon: <Upload className="w-4 h-4" />, count: posts.filter(p => p.status === 'pending').length },
+    { key: 'submissions', label: 'Submissions', icon: <Upload className="w-4 h-4" />, count: pendingSubmissionCount + pendingCommentCount },
     { key: 'seo-pages', label: 'SEO Pages', icon: <LayoutTemplate className="w-4 h-4" /> },
     { key: 'static-pages', label: 'Static Pages', icon: <FileText className="w-4 h-4" /> },
   ];
@@ -3255,7 +3258,7 @@ export default function Admin() {
 
       {/* ===== SUBMISSIONS TAB ===== */}
       {tab === 'submissions' && (
-        <div className="max-w-3xl">
+        <div className="max-w-3xl space-y-6">
           <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
             <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
               <Upload className="w-4 h-4 text-primary-500" /> Pending Submissions
@@ -3301,6 +3304,57 @@ export default function Admin() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+          <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+            <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary-500" /> Pending Comments
+            </h3>
+            {!features.comments ? (
+              <p className="text-sm text-surface-500">Comments are currently disabled. Enable them in the Features tab.</p>
+            ) : pendingCommentCount === 0 ? (
+              <p className="text-sm text-surface-500 text-center py-8">No pending comments.</p>
+            ) : (
+              <div className="space-y-4">
+                {posts.flatMap(post => (post.comments || [])
+                  .filter(comment => comment.status === 'pending')
+                  .map(comment => ({ post, comment }))
+                ).map(({ post, comment }) => (
+                  <div key={comment.id} className="p-4 rounded-xl border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                    <div className="mb-3 flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold uppercase tracking-wider text-surface-400">On {post.title}</p>
+                        <p className="mt-1 text-sm font-semibold">{comment.userName}</p>
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        <button
+                          onClick={() => {
+                            updatePost({
+                              ...post,
+                              comments: (post.comments || []).map(item => item.id === comment.id ? { ...item, status: 'approved' } : item),
+                            });
+                          }}
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500 text-white hover:bg-green-600"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => {
+                            updatePost({
+                              ...post,
+                              comments: (post.comments || []).filter(item => item.id !== comment.id),
+                            });
+                          }}
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-surface-600 dark:text-surface-300">{comment.text}</p>
+                  </div>
+                ))}
               </div>
             )}
           </div>

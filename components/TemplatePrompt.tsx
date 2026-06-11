@@ -7,12 +7,10 @@ interface Props {
 }
 
 export default function TemplatePrompt({ originalPrompt }: Props) {
-  // Find all instances of [variable_name]
   const variables = useMemo(() => {
-    const regex = /\[([^\]]+)\]/g;
+    const regex = /(?:\[([^\]]+)\]|\{([^}]+)\})/g;
     const matches = Array.from(originalPrompt.matchAll(regex));
-    // Unique variables only
-    return Array.from(new Set(matches.map(m => m[1])));
+    return Array.from(new Set(matches.map(m => (m[1] || m[2]).trim()).filter(Boolean)));
   }, [originalPrompt]);
 
   const [values, setValues] = useState<Record<string, string>>({});
@@ -21,9 +19,10 @@ export default function TemplatePrompt({ originalPrompt }: Props) {
   let generatedPrompt = originalPrompt;
   variables.forEach(v => {
     const val = values[v];
-    const lookup = `[${v}]`;
     if (val && val.trim() !== '') {
-      generatedPrompt = generatedPrompt.split(lookup).join(val);
+      generatedPrompt = generatedPrompt
+        .split(`[${v}]`).join(val)
+        .split(`{${v}}`).join(val);
     }
   });
 

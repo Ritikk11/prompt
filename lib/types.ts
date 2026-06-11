@@ -27,12 +27,26 @@ export interface Post {
   views: number;
   likes: number;
   likedByUser?: boolean;
+  bookmarkedByUser?: boolean;
+  bookmarkedBy?: string[];
+  comments?: PostComment[];
   isPremium?: boolean;
   isTemplate?: boolean;
   templateVariables?: string[];
   authorId?: string;
   status?: 'published' | 'pending' | 'draft';
   visibility?: 'public' | 'private';
+  createdAt: string;
+}
+
+export interface PostComment {
+  id: string;
+  postId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  text: string;
+  status: 'approved' | 'pending';
   createdAt: string;
 }
 
