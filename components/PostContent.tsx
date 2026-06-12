@@ -24,6 +24,26 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
+const WhatsAppLogo = ({ className = '' }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
+    <path d="M12.04 2a9.89 9.89 0 0 0-8.44 15.03L2.5 22l5.08-1.06A9.9 9.9 0 1 0 12.04 2Zm0 1.8a8.1 8.1 0 0 1 6.88 12.37 8.1 8.1 0 0 1-10.98 2.94l-.34-.2-2.8.59.6-2.72-.22-.35A8.09 8.09 0 0 1 12.04 3.8Zm-3.1 4.16c-.17 0-.43.06-.66.31-.23.25-.88.86-.88 2.1s.9 2.43 1.03 2.6c.13.16 1.75 2.8 4.34 3.81 2.15.85 2.6.68 3.06.64.47-.04 1.52-.62 1.74-1.22.21-.59.21-1.1.15-1.21-.07-.11-.24-.17-.5-.31-.27-.13-1.53-.76-1.77-.84-.24-.09-.42-.13-.6.13-.17.26-.68.84-.84 1.01-.15.17-.31.19-.58.06-.26-.13-1.11-.41-2.12-1.31-.78-.7-1.31-1.56-1.46-1.82-.15-.26-.02-.4.12-.53.12-.12.27-.31.4-.47.13-.15.17-.26.26-.43.09-.18.04-.33-.02-.46-.07-.13-.58-1.43-.82-1.96-.2-.45-.42-.46-.62-.47h-.53Z" />
+  </svg>
+);
+
+const XLogo = ({ className = '' }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
+    <path d="M13.74 10.62 21.05 2h-1.73l-6.35 7.48L7.9 2H2.05l7.67 11.31L2.05 22h1.73l6.71-7.9L15.86 22h5.85l-7.97-11.38Zm-2.38 2.8-.78-1.13L4.4 3.32h2.67l4.99 7.24.78 1.13 6.48 9.42h-2.67l-5.29-7.69Z" />
+  </svg>
+);
+
+const InstagramLogo = ({ className = '' }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none">
+    <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="2" />
+    <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
+    <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" />
+  </svg>
+);
+
 export default function PostContent({ post: initialPost, relatedPosts }: { post: Post; relatedPosts: Post[] }) {
   const { incrementViews, toggleLike, toggleBookmark, settings, posts } = useData();
   const contextPost = posts.find(p => p.id === initialPost?.id);
@@ -44,6 +64,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const [lightboxImage, setLightboxImage] = useState<{ url: string; index: number; tools: string[] } | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [expandedPrompts, setExpandedPrompts] = useState<Record<string, boolean>>({});
+  const [shareFeedback, setShareFeedback] = useState('');
+  const [tryFeedback, setTryFeedback] = useState('');
   const [commentText, setCommentText] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -232,7 +254,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     const encoded = encodeURIComponent(prompt);
     const normalized = tool.toLowerCase();
     if (normalized.includes('chatgpt') || normalized.includes('openai')) return `https://chatgpt.com/?q=${encoded}`;
-    if (normalized.includes('gemini') || normalized.includes('banana')) return `https://gemini.google.com/app?text=${encoded}`;
+    if (normalized.includes('gemini') || normalized.includes('banana')) return `https://gemini.google.com/app?q=${encoded}`;
     if (normalized.includes('grok')) return `https://grok.com/?q=${encoded}`;
     if (normalized.includes('qwen')) return `https://chat.qwen.ai/?q=${encoded}`;
     if (normalized.includes('claude')) return `https://claude.ai/new?q=${encoded}`;
@@ -243,16 +265,27 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const handleTryTool = async (tool: string, prompt: string) => {
     try {
       await navigator.clipboard.writeText(prompt);
+      setTryFeedback(`Prompt copied. Opening ${tool}...`);
+      window.setTimeout(() => setTryFeedback(''), 2500);
     } catch {}
     trackEvent('try_tool_clicked', { tool });
     window.open(getTryToolUrl(tool, prompt), '_blank', 'noopener,noreferrer');
   };
 
-  const handleShare = async (target: 'whatsapp' | 'x' | 'copy') => {
+  const handleShare = async (target: 'whatsapp' | 'x' | 'instagram' | 'copy') => {
     const text = `${post.title} - ${pageUrl}`;
     trackEvent('share_clicked', { target });
     if (target === 'copy') {
       await navigator.clipboard.writeText(pageUrl);
+      setShareFeedback('Link copied');
+      window.setTimeout(() => setShareFeedback(''), 2500);
+      return;
+    }
+    if (target === 'instagram') {
+      await navigator.clipboard.writeText(text);
+      setShareFeedback('Caption copied for Instagram');
+      window.setTimeout(() => setShareFeedback(''), 2500);
+      window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
       return;
     }
     const url = target === 'whatsapp'
@@ -261,10 +294,17 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  const SidebarCard = ({ item }: { item: Post }) => (
+  const SidebarCard = ({ item }: { item: Post }) => {
+    const tools = getAllTools(item);
+    return (
     <Link href={`/${item.slug || item.id}`} className="group flex gap-3 rounded-2xl border border-surface-200 bg-white p-2.5 transition-colors hover:border-primary-400 dark:border-surface-800 dark:bg-surface-900">
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-800">
         <LoadingImage src={item.thumbnailUrl || item.images?.[0]?.url || ''} alt="" fill showSkeleton={showSkeleton} className="object-cover transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
+        {tools[0] && (
+          <span className="absolute left-1 top-1 rounded-full bg-white/80 px-1.5 py-0.5 text-[8px] font-black uppercase text-surface-900 shadow-sm backdrop-blur dark:bg-black/50 dark:text-white">
+            {tools[0]}
+          </span>
+        )}
       </div>
       <div className="min-w-0 py-1">
         <h4 className="line-clamp-2 text-xs font-bold leading-snug text-surface-900 dark:text-white">{item.title}</h4>
@@ -274,19 +314,39 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       </div>
     </Link>
   );
+  };
+
+  const renderTryButtonsForPrompt = (tools: string[], prompt: string, className = '') => {
+    const uniqueTools = Array.from(new Set(tools.filter(Boolean)));
+    if (!showTryButtons || uniqueTools.length === 0 || !prompt.trim()) return null;
+    return (
+      <div className={`flex flex-wrap gap-2 ${className}`}>
+        {uniqueTools.map(tool => (
+          <button
+            key={tool}
+            onClick={() => handleTryTool(tool, prompt)}
+            className="inline-flex items-center gap-2 rounded-xl border border-surface-200 bg-white px-3 py-2 text-xs font-bold text-surface-700 transition-colors hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:text-white"
+          >
+            Try in {tool}
+            <ExternalLink className="h-3.5 w-3.5" />
+          </button>
+        ))}
+      </div>
+    );
+  };
 
   const renderMetaInfo = () => {
     const isV2 = postHeroStyle === 'v2';
     const containerClasses = isV2
       ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md'
-      : 'text-surface-600 bg-white/85 dark:bg-surface-900/70 border-surface-200/80 dark:border-surface-800 shadow-lg shadow-surface-900/5 backdrop-blur-xl';
+      : 'bg-white/35 text-surface-800 border-white/40 shadow-lg shadow-surface-900/10 backdrop-blur-xl dark:bg-black/40 dark:text-white/90 dark:border-white/10';
     
     return (
       <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium py-3 px-6 rounded-full border transition-colors ${containerClasses}`}>
         <span className="flex items-center gap-1.5">
           <Eye className={`w-4.5 h-4.5 ${isV2 ? 'text-white' : 'text-primary-500'}`} /> {(post.views || 0).toLocaleString()} <span className="hidden sm:inline">views</span>
         </span>
-        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
+        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-600/30 dark:bg-white/30'}`} />
         <button
           onClick={() => toggleLike(post.id, initialPost)}
           className={`flex items-center gap-1.5 transition-colors ${
@@ -304,7 +364,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           <Bookmark className={`w-4.5 h-4.5 ${post.bookmarkedByUser ? 'fill-current' : ''}`} />
           <span className="hidden sm:inline">{post.bookmarkedByUser ? 'saved' : 'save'}</span>
         </button>
-        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
+        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-600/30 dark:bg-white/30'}`} />
         <span className="flex items-center gap-1.5">
           <Clock className="w-4.5 h-4.5" /> {formatDate(post.createdAt)}
         </span>
@@ -655,6 +715,12 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         </div>
       )}
 
+      {(shareFeedback || tryFeedback) && (
+        <div className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-full border border-surface-200 bg-white px-4 py-2 text-xs font-bold text-surface-800 shadow-xl dark:border-surface-700 dark:bg-surface-900 dark:text-white">
+          {shareFeedback || tryFeedback}
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-surface-400 mb-6 font-medium">
         <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
@@ -685,10 +751,21 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             </div>
           )}
           {showShareButtons && (
-            <div className="flex flex-wrap gap-2">
-              <button onClick={() => handleShare('whatsapp')} className="rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">WhatsApp</button>
-              <button onClick={() => handleShare('x')} className="rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">X</button>
-              <button onClick={() => handleShare('copy')} className="rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">Copy link</button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button onClick={() => handleShare('whatsapp')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
+                <WhatsAppLogo className="h-4 w-4 text-green-500" /> WhatsApp
+              </button>
+              <button onClick={() => handleShare('x')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
+                <XLogo className="h-4 w-4" /> X
+              </button>
+              <button onClick={() => handleShare('instagram')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
+                <InstagramLogo className="h-4 w-4 text-pink-500" /> Instagram
+              </button>
+              <button onClick={() => handleShare('copy')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
+                <LinkIcon className="h-4 w-4" /> Copy link
+              </button>
+              {shareFeedback && <span className="text-xs font-bold text-primary-500">{shareFeedback}</span>}
+              {tryFeedback && <span className="text-xs font-bold text-primary-500">{tryFeedback}</span>}
             </div>
           )}
         </div>
@@ -853,7 +930,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                           </div>
                           <CopyButton text={img.prompt} />
                         </div>
-                        <div className={`mb-3 overflow-hidden rounded-2xl border border-surface-200/50 bg-surface-50 p-5 transition-colors group-hover:bg-primary-50/20 dark:border-surface-700/50 dark:bg-surface-800/50 dark:group-hover:bg-primary-900/10 sm:p-6 md:max-h-[520px] md:overflow-y-auto ${expandedPrompts[img.id] ? 'max-h-none' : 'max-h-[260px]'}`}>
+                        <div className={`mb-3 overflow-hidden rounded-2xl border border-surface-200/50 bg-surface-50 p-5 transition-colors group-hover:bg-primary-50/20 dark:border-surface-700/50 dark:bg-surface-800/50 dark:group-hover:bg-primary-900/10 sm:p-6 md:max-h-[460px] md:overflow-y-auto ${expandedPrompts[img.id] ? 'max-h-none md:max-h-[460px]' : 'max-h-[260px]'}`}>
                           <p className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-surface-700 dark:text-surface-300 md:text-base">
                             {img.prompt}
                           </p>
@@ -872,6 +949,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                     <Clock className="w-4 h-4 text-primary-500/50" />
                     Model: <span className="text-surface-600 dark:text-surface-200">{img.model || getDefaultImageModel(img.aiTool) || img.aiTool}</span>
                   </div>
+                  {renderTryButtonsForPrompt(img.aiTools || [img.aiTool].filter(Boolean), img.prompt, 'mt-4')}
                 </div>
               </div>
             </div>
@@ -964,13 +1042,23 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-surface-900 dark:text-white">
                     <Share2 className="h-4 w-4 text-primary-500" /> Share
                   </h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button onClick={() => handleShare('whatsapp')} className="rounded-xl bg-surface-100 p-2 text-xs font-bold hover:bg-green-500 hover:text-white dark:bg-surface-800">WA</button>
-                    <button onClick={() => handleShare('x')} className="rounded-xl bg-surface-100 p-2 text-xs font-bold hover:bg-black hover:text-white dark:bg-surface-800">X</button>
+                  <div className="grid grid-cols-4 gap-2">
+                    <button onClick={() => handleShare('whatsapp')} className="flex items-center justify-center rounded-xl bg-surface-100 p-2 text-green-500 hover:bg-green-500 hover:text-white dark:bg-surface-800" title="Share on WhatsApp">
+                      <WhatsAppLogo className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => handleShare('x')} className="flex items-center justify-center rounded-xl bg-surface-100 p-2 hover:bg-black hover:text-white dark:bg-surface-800" title="Share on X">
+                      <XLogo className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => handleShare('instagram')} className="flex items-center justify-center rounded-xl bg-surface-100 p-2 text-pink-500 hover:bg-pink-500 hover:text-white dark:bg-surface-800" title="Copy caption for Instagram">
+                      <InstagramLogo className="h-4 w-4" />
+                    </button>
                     <button onClick={() => handleShare('copy')} className="rounded-xl bg-surface-100 p-2 text-xs font-bold hover:bg-primary-500 hover:text-white dark:bg-surface-800">
                       <LinkIcon className="mx-auto h-4 w-4" />
                     </button>
                   </div>
+                  {(shareFeedback || tryFeedback) && (
+                    <p className="mt-3 text-[11px] font-bold text-primary-500">{shareFeedback || tryFeedback}</p>
+                  )}
                 </div>
               )}
 
@@ -1067,7 +1155,13 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                             </div>
                           )}
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-bold text-surface-900 dark:text-white">{comment.userName}</p>
+                            {settings.features?.showPublicProfiles ? (
+                              <Link href={`/user/${comment.userId}`} className="block truncate text-sm font-bold text-surface-900 hover:text-primary-500 dark:text-white">
+                                {comment.userName}
+                              </Link>
+                            ) : (
+                              <p className="truncate text-sm font-bold text-surface-900 dark:text-white">{comment.userName}</p>
+                            )}
                             <p className="text-xs text-surface-400">{formatDate(comment.createdAt)}</p>
                           </div>
                         </div>
