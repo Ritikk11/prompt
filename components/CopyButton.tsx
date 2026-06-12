@@ -4,15 +4,19 @@ import { Copy, Check } from 'lucide-react';
 
 interface Props {
   text: string;
+  eventName?: string;
 }
 
-export default function CopyButton({ text }: Props) {
+export default function CopyButton({ text, eventName = 'prompt_copied' }: Props) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
+      if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
+        (window as any).gtag('event', eventName);
+      }
       setTimeout(() => setCopied(false), 2000);
     } catch {
       const ta = document.createElement('textarea');
@@ -22,6 +26,9 @@ export default function CopyButton({ text }: Props) {
       document.execCommand('copy');
       document.body.removeChild(ta);
       setCopied(true);
+      if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
+        (window as any).gtag('event', eventName);
+      }
       setTimeout(() => setCopied(false), 2000);
     }
   };

@@ -49,12 +49,21 @@ export async function GET(request: Request) {
     admin.from('settings').select('data').eq('id', 'global').maybeSingle(),
     admin.from('seoPages').select('data'),
   ]);
+  const { data: userData } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
 
   return NextResponse.json({
     posts: (posts.data || []).map((row: any) => row.data),
     sections: (sections.data || []).map((row: any) => row.data),
     settings: settings.data?.data || null,
     seopages: (seopages.data || []).map((row: any) => row.data),
+    users: (userData?.users || []).map((user: any) => ({
+      id: user.id,
+      email: user.email,
+      name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+      avatar: user.user_metadata?.avatar_url,
+      createdAt: user.created_at,
+      lastSignInAt: user.last_sign_in_at,
+    })),
   });
 }
 

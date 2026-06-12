@@ -68,6 +68,7 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
   const [settings, setSettings] = useState<SiteSettings>(initialSettings);
   const [loading, setLoading] = useState(false);
   const [localLikes, setLocalLikes] = useState<string[]>([]);
+  const [localBookmarks, setLocalBookmarks] = useState<string[]>([]);
   
   const supabase = useMemo(() => {
     return createClient();
@@ -93,6 +94,38 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
       localStorage.setItem('pv-liked', JSON.stringify(localLikes));
     }
   }, [localLikes]);
+
+  useEffect(() => {
+    const applyViewerState = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setLocalBookmarks([]);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/profile', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) return;
+        const viewerState = Array.isArray(json.viewerState) ? json.viewerState : [];
+        setLocalBookmarks(viewerState.filter((item: any) => item.bookmarkedByUser).map((item: any) => item.id));
+        setLocalLikes(prev => Array.from(new Set([
+          ...prev,
+          ...viewerState.filter((item: any) => item.likedByUser).map((item: any) => item.id),
+        ])));
+      } catch (error) {
+        console.error('Viewer state load failed', error);
+      }
+    };
+
+    applyViewerState();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      applyViewerState();
+    });
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
   const resetData = useCallback(async () => {
     try {
@@ -241,6 +274,7 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     try {
       const res = await postRequest({ action: 'bookmark', id });
       setPosts(prev => prev.map(p => p.id === id ? { ...p, bookmarkedByUser: res.bookmarked } : p));
+      setLocalBookmarks(prev => res.bookmarked ? Array.from(new Set([...prev, id])) : prev.filter(item => item !== id));
       return Boolean(res.bookmarked);
     } catch (error) {
       if (current) {
@@ -290,7 +324,11 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
   }, [settings]);
 
   // Map localLikes onto posts efficiently
-  const enrichedPosts: Post[] = posts.map(p => ({ ...p, likedByUser: localLikes.includes(p.id) }));
+  const enrichedPosts: Post[] = posts.map(p => ({
+    ...p,
+    likedByUser: localLikes.includes(p.id),
+    bookmarkedByUser: localBookmarks.includes(p.id) || p.bookmarkedByUser,
+  }));
 
   const getPostById = useCallback((id: string) => enrichedPosts.find(p => p.id === id), [enrichedPosts]);
 

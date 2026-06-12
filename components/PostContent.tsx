@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 
 import Image from 'next/image';
-import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Wand2, Bookmark } from 'lucide-react';
+import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Wand2, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
 import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
@@ -34,6 +34,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       views: contextPost?.views ?? initialPost.views,
       likes: contextPost?.likes ?? initialPost.likes,
       likedByUser: contextPost?.likedByUser ?? initialPost.likedByUser,
+      bookmarkedByUser: contextPost?.bookmarkedByUser ?? initialPost.bookmarkedByUser,
     }
   ), [contextHasPrompts, contextPost, initialPost]);
   
@@ -45,6 +46,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const [expandedPrompts, setExpandedPrompts] = useState<Record<string, boolean>>({});
   const [commentText, setCommentText] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const [commentState, setCommentState] = useState(() => ({
     postId: post.id,
     items: post.comments || [],
@@ -64,13 +66,38 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
   const hasTemplateVariables = (prompt: string) => /(?:\[[^\]]+\]|\{[^}]+\})/.test(prompt);
 
+  const trackEvent = (eventName: string, params: Record<string, string | number | boolean> = {}) => {
+    if (typeof window === 'undefined') return;
+    const gtag = (window as any).gtag;
+    if (typeof gtag === 'function') {
+      gtag('event', eventName, { post_id: post.id, post_slug: post.slug, ...params });
+    }
+  };
+
+  useEffect(() => {
+    if (!settings.features?.showScrollProgress) return;
+    const updateProgress = () => {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      setScrollProgress(max > 0 ? Math.min(100, Math.max(0, (window.scrollY / max) * 100)) : 0);
+    };
+    updateProgress();
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    window.addEventListener('resize', updateProgress);
+    return () => {
+      window.removeEventListener('scroll', updateProgress);
+      window.removeEventListener('resize', updateProgress);
+    };
+  }, [settings.features?.showScrollProgress]);
+
   const handleBookmark = async () => {
     if (!user) {
       handleLogin();
       return;
     }
     try {
-      await toggleBookmark(post.id, post);
+      const saved = await toggleBookmark(post.id, post);
+      if (saved !== null) trackEvent(saved ? 'prompt_saved' : 'prompt_unsaved');
     } catch (error: any) {
       alert(error?.message || 'Could not update bookmark.');
     }
@@ -97,6 +124,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || 'Could not post comment');
+      trackEvent('comment_submitted', { status: json.comment?.status || 'unknown' });
       setCommentState(prev => {
         const currentItems = prev.postId === post.id ? prev.items : (post.comments || []);
         return { postId: post.id, items: [...currentItems, json.comment] };
@@ -171,6 +199,10 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const showCopyCollection = settings.features?.showCopyCollection ?? true;
   const showHowTo = settings.features?.showHowTo ?? true;
   const showRecommendedPosts = settings.features?.showRecommendedPosts ?? true;
+  const showPostSidebar = settings.features?.showPostSidebar ?? true;
+  const showShareButtons = settings.features?.showShareButtons ?? true;
+  const showTryButtons = settings.features?.showTryButtons ?? true;
+  const showYouMightAlsoLike = settings.features?.showYouMightAlsoLike ?? true;
   const showTags = settings.features?.showTags ?? true;
   const showDetailedInsights = settings.features?.showDetailedInsights ?? true;
   const relatedPostIds = new Set(relatedPosts.map(p => p.id));
@@ -183,8 +215,9 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     )
     .slice(0, 4);
   const primaryToolName = heroTools[0] || 'ChatGPT / Gemini';
+  const toolLabel = heroTools.length === 0 ? 'your AI tool' : heroTools.length === 1 ? heroTools[0] : heroTools.join(' or ');
   const howToSteps = [
-    { title: `Open ${primaryToolName}`, text: 'Use ChatGPT, Gemini, Grok, Qwen, or the model listed with the prompt.', icon: Wand2 },
+    { title: `Open ${toolLabel}`, text: 'Use the tool or model listed with this prompt. If multiple tools are shown, choose the one you prefer.', icon: Wand2 },
     { title: 'Copy the prompt', text: 'Use the copy button on any prompt card, or copy the entire collection above.', icon: Copy },
     { title: 'Upload reference image', text: 'Attach your reference image first when the prompt is image-guided.', icon: ImageIcon },
     { title: 'Customize details', text: 'Replace placeholders, names, colors, aspect ratio, or style notes as needed.', icon: Check },
@@ -192,12 +225,61 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   ];
 
   const postHeroStyle = settings.postHeroStyle || 'v1';
+  const pageUrl = typeof window !== 'undefined' ? window.location.href : `https://aipromptmatrix.in/${post.slug || post.id}`;
+  const firstPrompt = post.images?.find(image => image.prompt?.trim())?.prompt || allPromptsText;
+
+  const getTryToolUrl = (tool: string, prompt: string) => {
+    const encoded = encodeURIComponent(prompt);
+    const normalized = tool.toLowerCase();
+    if (normalized.includes('chatgpt') || normalized.includes('openai')) return `https://chatgpt.com/?q=${encoded}`;
+    if (normalized.includes('gemini') || normalized.includes('banana')) return `https://gemini.google.com/app?text=${encoded}`;
+    if (normalized.includes('grok')) return `https://grok.com/?q=${encoded}`;
+    if (normalized.includes('qwen')) return `https://chat.qwen.ai/?q=${encoded}`;
+    if (normalized.includes('claude')) return `https://claude.ai/new?q=${encoded}`;
+    if (normalized.includes('perplexity')) return `https://www.perplexity.ai/search?q=${encoded}`;
+    return `https://www.google.com/search?q=${encodeURIComponent(`${tool} AI image generator`)}`;
+  };
+
+  const handleTryTool = async (tool: string, prompt: string) => {
+    try {
+      await navigator.clipboard.writeText(prompt);
+    } catch {}
+    trackEvent('try_tool_clicked', { tool });
+    window.open(getTryToolUrl(tool, prompt), '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShare = async (target: 'whatsapp' | 'x' | 'copy') => {
+    const text = `${post.title} - ${pageUrl}`;
+    trackEvent('share_clicked', { target });
+    if (target === 'copy') {
+      await navigator.clipboard.writeText(pageUrl);
+      return;
+    }
+    const url = target === 'whatsapp'
+      ? `https://wa.me/?text=${encodeURIComponent(text)}`
+      : `https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(pageUrl)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const SidebarCard = ({ item }: { item: Post }) => (
+    <Link href={`/${item.slug || item.id}`} className="group flex gap-3 rounded-2xl border border-surface-200 bg-white p-2.5 transition-colors hover:border-primary-400 dark:border-surface-800 dark:bg-surface-900">
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-800">
+        <LoadingImage src={item.thumbnailUrl || item.images?.[0]?.url || ''} alt="" fill showSkeleton={showSkeleton} className="object-cover transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
+      </div>
+      <div className="min-w-0 py-1">
+        <h4 className="line-clamp-2 text-xs font-bold leading-snug text-surface-900 dark:text-white">{item.title}</h4>
+        <p className="mt-1 flex items-center gap-2 text-[11px] text-surface-400">
+          <Eye className="h-3 w-3" /> {(item.views || 0).toLocaleString()}
+        </p>
+      </div>
+    </Link>
+  );
 
   const renderMetaInfo = () => {
     const isV2 = postHeroStyle === 'v2';
     const containerClasses = isV2
       ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md'
-      : 'text-surface-500 bg-surface-50 dark:bg-surface-900/50 border-surface-200 dark:border-surface-800';
+      : 'text-surface-600 bg-white/85 dark:bg-surface-900/70 border-surface-200/80 dark:border-surface-800 shadow-lg shadow-surface-900/5 backdrop-blur-xl';
     
     return (
       <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium py-3 px-6 rounded-full border transition-colors ${containerClasses}`}>
@@ -567,6 +649,12 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
   return (
     <div className="max-w-6xl mx-auto px-1 py-4 sm:py-6 fade-in">
+      {settings.features?.showScrollProgress && (
+        <div className="fixed left-0 right-0 top-12 z-40 h-1 bg-transparent">
+          <div className="h-full bg-primary-500 transition-[width] duration-150" style={{ width: `${scrollProgress}%` }} />
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-surface-400 mb-6 font-medium">
         <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
@@ -578,6 +666,33 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       {renderHero()}
 
       <AdSlot placement="postTop" />
+
+      <div className={showPostSidebar ? 'grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_280px]' : ''}>
+        <div className="min-w-0">
+
+      {(showTryButtons || showShareButtons) && (
+        <div className="mb-8 grid gap-3 rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900 lg:hidden">
+          {showTryButtons && heroTools.length > 0 && (
+            <div>
+              <h3 className="mb-2 text-sm font-black">Try this prompt</h3>
+              <div className="flex flex-wrap gap-2">
+                {Array.from(new Set(heroTools)).map(tool => (
+                  <button key={tool} onClick={() => handleTryTool(tool, firstPrompt)} className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-3 py-2 text-xs font-bold text-white">
+                    {tool} <ExternalLink className="h-3 w-3" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {showShareButtons && (
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => handleShare('whatsapp')} className="rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">WhatsApp</button>
+              <button onClick={() => handleShare('x')} className="rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">X</button>
+              <button onClick={() => handleShare('copy')} className="rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">Copy link</button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Reference Images */}
       {post.referenceImages && post.referenceImages.length > 0 && (
@@ -772,10 +887,14 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           
           <div className="relative z-10">
             <h3 className="text-2xl md:text-3xl font-extrabold mb-3 tracking-tight">Copy Entire Collection</h3>
-            <p className="text-white/80 text-base md:text-lg mb-8 max-w-xl mx-auto font-medium">Grab all {post.images.length} creative prompts instantly to use in your favorite AI generator.</p>
+            <p className="text-white/80 text-base md:text-lg mb-8 max-w-xl mx-auto font-medium">
+              {post.images.length === 1
+                ? 'Copy this prompt instantly to use in your favorite AI generator.'
+                : `Grab all ${post.images.length} creative prompts instantly to use in your favorite AI generator.`}
+            </p>
             <div className="flex justify-center">
                <div className="bg-white/10 backdrop-blur-xl p-2 rounded-2xl border border-white/20">
-                 <CopyButton text={allPromptsText} />
+                 <CopyButton text={allPromptsText} eventName="collection_copied" />
                </div>
             </div>
           </div>
@@ -815,6 +934,67 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       )}
 
       <AdSlot placement="postBottom" />
+
+        </div>
+
+        {showPostSidebar && (
+          <aside className="hidden lg:block">
+            <div className="sticky top-20 space-y-4">
+              {showTryButtons && (
+                <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                  <h3 className="mb-3 text-sm font-black text-surface-900 dark:text-white">Try this prompt</h3>
+                  <div className="space-y-2">
+                    {Array.from(new Set(heroTools)).map(tool => (
+                      <button
+                        key={tool}
+                        onClick={() => handleTryTool(tool, firstPrompt)}
+                        className="flex w-full items-center justify-between gap-2 rounded-xl bg-surface-100 px-3 py-2 text-left text-xs font-bold text-surface-700 transition-colors hover:bg-primary-500 hover:text-white dark:bg-surface-800 dark:text-surface-200"
+                      >
+                        <span>Open {tool}</span>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[11px] leading-relaxed text-surface-400">Copies the prompt first, then opens the selected tool.</p>
+                </div>
+              )}
+
+              {showShareButtons && (
+                <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-surface-900 dark:text-white">
+                    <Share2 className="h-4 w-4 text-primary-500" /> Share
+                  </h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button onClick={() => handleShare('whatsapp')} className="rounded-xl bg-surface-100 p-2 text-xs font-bold hover:bg-green-500 hover:text-white dark:bg-surface-800">WA</button>
+                    <button onClick={() => handleShare('x')} className="rounded-xl bg-surface-100 p-2 text-xs font-bold hover:bg-black hover:text-white dark:bg-surface-800">X</button>
+                    <button onClick={() => handleShare('copy')} className="rounded-xl bg-surface-100 p-2 text-xs font-bold hover:bg-primary-500 hover:text-white dark:bg-surface-800">
+                      <LinkIcon className="mx-auto h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                <h3 className="mb-3 text-sm font-black text-surface-900 dark:text-white">Prompt details</h3>
+                <div className="space-y-2 text-xs text-surface-500 dark:text-surface-400">
+                  <p><span className="font-bold text-surface-800 dark:text-surface-200">{post.images.length}</span> prompt{post.images.length === 1 ? '' : 's'}</p>
+                  <p><span className="font-bold text-surface-800 dark:text-surface-200">{heroTools.join(', ') || 'AI tool'}</span></p>
+                  <p>{(post.tags || []).slice(0, 4).map(tag => `#${tag}`).join(' ')}</p>
+                </div>
+              </div>
+
+              {showYouMightAlsoLike && recommendedPosts.length > 0 && (
+                <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                  <h3 className="mb-3 text-sm font-black text-surface-900 dark:text-white">You might also like</h3>
+                  <div className="space-y-2">
+                    {recommendedPosts.slice(0, 3).map(item => <SidebarCard key={item.id} item={item} />)}
+                  </div>
+                </div>
+              )}
+            </div>
+          </aside>
+        )}
+      </div>
 
       {/* Tags */}
       {showTags && (
