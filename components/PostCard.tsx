@@ -13,7 +13,7 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
   
   const getBadgeStyle = () => {
     switch(style) {
-      case 'v2': return `backdrop-blur-xl bg-white/20 dark:bg-black/30 border border-white/30 text-white shadow-xl`;
+      case 'v2': return `backdrop-blur-xl bg-black/55 border border-white/30 text-white shadow-xl`;
       case 'v3': return `bg-surface-900 border-2 border-primary-500 text-primary-500 shadow-[0_0_15px_rgba(var(--primary-500),0.5)]`;
       case 'v4': return `bg-surface-100 dark:bg-surface-800 border-b-4 border-r-4 border-surface-300 dark:border-surface-700 text-surface-900 dark:text-white shadow-md active:border-0 active:translate-x-[2px] active:translate-y-[2px]`;
       case 'v5': return `bg-surface-900 dark:bg-white text-white dark:text-black font-bold uppercase tracking-widest text-[8px] px-2 py-0.5 rounded-none`;
@@ -22,7 +22,7 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
       case 'v8': return `bg-black/40 backdrop-blur-md p-1.5 rounded-xl border border-white/10`;
       case 'v9': return `bg-transparent border-2 border-white/50 text-white font-black hover:bg-white hover:text-black transition-colors`;
       case 'v10': return `bg-primary-500 text-white [clip-path:polygon(0_0,100%_0,85%_100%,0%_100%)] pl-3 pr-6 py-1 font-black italic`;
-      default: return `backdrop-blur-md ${toolInfo.color}/90 border border-white/20 text-white shadow-md`;
+      default: return `backdrop-blur-md bg-black/55 border border-white/25 text-white shadow-[0_8px_24px_rgba(0,0,0,0.35)]`;
     }
   };
 

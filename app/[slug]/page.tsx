@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getPostBySlugOrId, fetchPostSummaries, getSeoPageBySlug, isPublicPost } from '@/lib/data';
+import { getPostBySlugOrId, fetchPostSummaries, getSeoPageBySlug, isPublicPost, fetchSettings } from '@/lib/data';
 import PostContent from '@/components/PostContent';
 import PostCard from '@/components/PostCard';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
@@ -42,6 +42,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: metaTitle,
     description: metaDescription,
+    alternates: {
+      canonical: `${siteUrl}/${slug}`,
+    },
     keywords: [...post!.tags, 'AI prompts', 'midjourney', 'dall-e'],
     openGraph: {
       title: metaTitle,
@@ -116,7 +119,7 @@ export default async function PostPage({ params }: Props) {
   if (!post) notFound();
 
   let relatedPosts: Post[] = [];
-  const allPosts = await fetchPostSummaries();
+  const [allPosts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
   relatedPosts = allPosts
     .filter(p =>
       p.id !== post.id &&
@@ -126,5 +129,35 @@ export default async function PostPage({ params }: Props) {
     )
     .slice(0, 4);
 
-  return <PostContent post={post} relatedPosts={relatedPosts} />;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+  const howToJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: `How to use ${post.title}`,
+    description: post.description,
+    step: [
+      'Open the AI tool listed with the prompt.',
+      'Copy the prompt.',
+      'Upload a reference image if the prompt asks for one.',
+      'Customize placeholders, names, colors, or style notes.',
+      'Paste the prompt and generate the artwork.',
+    ].map((name, index) => ({
+      '@type': 'HowToStep',
+      position: index + 1,
+      name,
+    })),
+    url: `${siteUrl}/${post.slug || post.id}`,
+  };
+
+  return (
+    <>
+      {(settings.features?.showFaqSchema ?? true) && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+        />
+      )}
+      <PostContent post={post} relatedPosts={relatedPosts} />
+    </>
+  );
 }

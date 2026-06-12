@@ -17,7 +17,8 @@ function sanitizeProfilePost(post: Post, userId: string): Post {
   return {
     ...post,
     images: isPublic ? post.images : post.images.map((image) => ({ ...image, prompt: image.prompt || '' })),
-    likedByUser: false,
+    likedByUser: post.likedBy?.includes(userId) || false,
+    likedBy: undefined,
     bookmarkedByUser: post.bookmarkedBy?.includes(userId) || false,
     bookmarkedBy: undefined,
   };
@@ -37,9 +38,23 @@ export async function GET(request: Request) {
     .filter((post) => (post.status === 'published' || !post.status) && post.visibility !== 'private')
     .map((post) => sanitizeProfilePost(post, user.id));
 
+  const liked = posts
+    .filter((post) => post.likedBy?.includes(user.id))
+    .filter((post) => (post.status === 'published' || !post.status) && post.visibility !== 'private')
+    .map((post) => sanitizeProfilePost(post, user.id));
+
   const submissions = posts
     .filter((post) => post.authorId === user.id)
     .map((post) => sanitizeProfilePost(post, user.id));
 
-  return NextResponse.json({ bookmarks, submissions });
+  const viewerState = posts
+    .filter((post) => (post.status === 'published' || !post.status) && post.visibility !== 'private')
+    .filter((post) => post.bookmarkedBy?.includes(user.id) || post.likedBy?.includes(user.id))
+    .map((post) => ({
+      id: post.id,
+      bookmarkedByUser: post.bookmarkedBy?.includes(user.id) || false,
+      likedByUser: post.likedBy?.includes(user.id) || false,
+    }));
+
+  return NextResponse.json({ bookmarks, liked, submissions, viewerState });
 }

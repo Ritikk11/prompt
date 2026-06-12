@@ -2,14 +2,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
-import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, NavLink } from '@/lib/types';
+import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, NavLink, AdminUserSummary } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
   Plus, Trash2, Edit3, Eye, EyeOff, ChevronUp, ChevronDown,
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload,
   Settings, Check, Search, RotateCcw, GripVertical, Image as ImageIcon,
-  Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight
+  Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle
 } from 'lucide-react';
 
 import Image from 'next/image';
@@ -22,7 +22,7 @@ import { optimizeImageFile, optimizeImageToDataUrl, type ImageOptimizePreset } f
 
 
 
-type AdminTab = 'dashboard' | 'posts' | 'sections' | 'settings' | 'features' | 'submissions' | 'seo-pages' | 'static-pages';
+type AdminTab = 'dashboard' | 'posts' | 'sections' | 'settings' | 'features' | 'submissions' | 'comments' | 'users' | 'seo-pages' | 'static-pages';
 
 const TAILWIND_COLORS = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500',
@@ -141,6 +141,7 @@ export default function Admin() {
   } = useData();
 
   const [user, setUser] = useState<User | null>(null);
+  const [adminUsers, setAdminUsers] = useState<AdminUserSummary[]>([]);
   const [authLoading, setAuthLoading] = useState(true);
   
   const [email, setEmail] = useState('');
@@ -155,6 +156,20 @@ export default function Admin() {
   useEffect(() => {
     if (user && isAdmin && !initialDataLoaded.current) {
       loadAdminData();
+      const loadUsers = async () => {
+        try {
+          const supabase = createSupabaseClient();
+          const { data: { session } } = await supabase.auth.getSession();
+          const res = await fetch('/api/admin', {
+            headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+          });
+          const json = await res.json().catch(() => ({}));
+          if (res.ok && Array.isArray(json.users)) setAdminUsers(json.users);
+        } catch (error) {
+          console.error('Failed to load users', error);
+        }
+      };
+      loadUsers();
       initialDataLoaded.current = true;
     }
   }, [user, isAdmin, loadAdminData]);
@@ -378,6 +393,15 @@ export default function Admin() {
       showRecommendedPosts: true,
       showTags: true,
       showDetailedInsights: true,
+      showPostSidebar: true,
+      showShareButtons: true,
+      showTryButtons: true,
+      showYouMightAlsoLike: true,
+      showScrollProgress: true,
+      showFaqSchema: true,
+      showPublicProfiles: true,
+      publicProfileLikes: false,
+      publicProfileBookmarks: false,
       advancedFiltering: false,
       smartTemplates: false,
       infiniteScroll: false,
@@ -968,7 +992,9 @@ export default function Admin() {
     { key: 'posts', label: 'Posts', icon: <FileText className="w-4 h-4" />, count: posts.length },
     { key: 'sections', label: 'Sections', icon: <Layers className="w-4 h-4" /> },
     { key: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
-    { key: 'submissions', label: 'Submissions', icon: <Upload className="w-4 h-4" />, count: pendingSubmissionCount + pendingCommentCount },
+    { key: 'submissions', label: 'Submissions', icon: <Upload className="w-4 h-4" />, count: pendingSubmissionCount },
+    { key: 'comments', label: 'Comments', icon: <MessageCircle className="w-4 h-4" />, count: pendingCommentCount },
+    { key: 'users', label: 'Users', icon: <Users className="w-4 h-4" />, count: adminUsers.length },
     { key: 'seo-pages', label: 'SEO Pages', icon: <LayoutTemplate className="w-4 h-4" /> },
     { key: 'static-pages', label: 'Static Pages', icon: <FileText className="w-4 h-4" /> },
   ];
@@ -3059,6 +3085,27 @@ export default function Admin() {
                     <input type="checkbox" checked={features.showDetailedInsights ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showDetailedInsights: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
                     Detailed insights
                   </label>
+                  {[
+                    ['showPostSidebar', 'Post sidebar'],
+                    ['showShareButtons', 'Share buttons'],
+                    ['showTryButtons', 'Try it on buttons'],
+                    ['showYouMightAlsoLike', 'You might also like'],
+                    ['showScrollProgress', 'Scroll progress bar'],
+                    ['showFaqSchema', 'FAQ + HowTo schema'],
+                    ['showPublicProfiles', 'Public profiles'],
+                    ['publicProfileLikes', 'Show likes on public profiles'],
+                    ['publicProfileBookmarks', 'Show saves on public profiles'],
+                  ].map(([key, label]) => (
+                    <label key={key} className="flex items-center gap-2 cursor-pointer text-sm">
+                      <input
+                        type="checkbox"
+                        checked={Boolean((features as any)[key] ?? ['showPostSidebar', 'showShareButtons', 'showTryButtons', 'showYouMightAlsoLike', 'showScrollProgress', 'showFaqSchema', 'showPublicProfiles'].includes(key))}
+                        onChange={(e) => setFeatures(prev => ({ ...prev, [key]: e.target.checked }))}
+                        className="w-4 h-4 rounded text-primary-500"
+                      />
+                      {label}
+                    </label>
+                  ))}
                 </div>
               </div>
 
@@ -3354,6 +3401,89 @@ export default function Admin() {
                     <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-surface-600 dark:text-surface-300">{comment.text}</p>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ===== COMMENTS TAB ===== */}
+      {tab === 'comments' && (
+        <div className="max-w-4xl space-y-6">
+          <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+            <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-primary-500" /> Comment Review
+            </h3>
+            {!features.comments ? (
+              <p className="text-sm text-surface-500">Comments are currently disabled. Enable them in Settings &gt; Features.</p>
+            ) : pendingCommentCount === 0 ? (
+              <p className="text-sm text-surface-500 text-center py-8">No pending comments.</p>
+            ) : (
+              <div className="space-y-4">
+                {posts.flatMap(post => (post.comments || [])
+                  .filter(comment => comment.status === 'pending')
+                  .map(comment => ({ post, comment }))
+                ).map(({ post, comment }) => (
+                  <div key={comment.id} className="p-4 rounded-xl border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                    <div className="mb-3 flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold uppercase tracking-wider text-surface-400">On {post.title}</p>
+                        <p className="mt-1 text-sm font-semibold">{comment.userName}</p>
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        <button
+                          onClick={() => updatePost({ ...post, comments: (post.comments || []).map(item => item.id === comment.id ? { ...item, status: 'approved' } : item) })}
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500 text-white hover:bg-green-600"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => updatePost({ ...post, comments: (post.comments || []).filter(item => item.id !== comment.id) })}
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-surface-600 dark:text-surface-300">{comment.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ===== USERS TAB ===== */}
+      {tab === 'users' && (
+        <div className="max-w-5xl space-y-4">
+          <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+            <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+              <Users className="w-4 h-4 text-primary-500" /> User Management
+            </h3>
+            {adminUsers.length === 0 ? (
+              <p className="text-sm text-surface-500 text-center py-8">No users found yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {adminUsers.map(account => {
+                  const submitted = posts.filter(post => post.authorId === account.id).length;
+                  const saved = posts.filter(post => post.bookmarkedBy?.includes(account.id)).length;
+                  const liked = posts.filter(post => post.likedBy?.includes(account.id)).length;
+                  return (
+                    <div key={account.id} className="flex flex-col gap-3 rounded-xl border border-surface-200 p-4 dark:border-surface-800 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold">{account.name}</p>
+                        <p className="truncate text-xs text-surface-500">{account.email || account.id}</p>
+                        <p className="mt-1 text-[11px] text-surface-400">Last sign in: {account.lastSignInAt ? new Date(account.lastSignInAt).toLocaleString() : 'Never'}</p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                        <span className="rounded-lg bg-surface-100 px-3 py-2 dark:bg-surface-800"><b>{submitted}</b><br />posts</span>
+                        <span className="rounded-lg bg-surface-100 px-3 py-2 dark:bg-surface-800"><b>{saved}</b><br />saves</span>
+                        <span className="rounded-lg bg-surface-100 px-3 py-2 dark:bg-surface-800"><b>{liked}</b><br />likes</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

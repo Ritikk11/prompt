@@ -70,8 +70,9 @@ export async function POST(request: Request) {
     const post = row?.data as Post | undefined;
     if (!post || !isPublicPost(post)) return NextResponse.json({ error: 'Post not found' }, { status: 404 });
 
+    const user = await getUserFromRequest(request);
+
     if (action === 'comment' || action === 'bookmark') {
-      const user = await getUserFromRequest(request);
       if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
       const { data: settingsRow, error: settingsError } = await admin
@@ -126,10 +127,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, bookmarked: nextBookmarked });
     }
 
+    const likedBy = new Set(post.likedBy || []);
+    if (action === 'like' && user) {
+      if (liked) likedBy.add(user.id);
+      else likedBy.delete(user.id);
+    }
+
     const updated = {
       ...post,
       views: action === 'view' ? (post.views || 0) + 1 : post.views || 0,
       likes: action === 'like' ? Math.max(0, (post.likes || 0) + (liked ? 1 : -1)) : post.likes || 0,
+      likedBy: action === 'like' && user ? Array.from(likedBy) : post.likedBy,
     };
 
     const { error } = await admin.from('posts').update({ data: updated }).eq('id', id);

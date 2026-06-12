@@ -27,6 +27,7 @@ export interface Post {
   views: number;
   likes: number;
   likedByUser?: boolean;
+  likedBy?: string[];
   bookmarkedByUser?: boolean;
   bookmarkedBy?: string[];
   comments?: PostComment[];
@@ -79,6 +80,15 @@ export interface SiteFeatures {
   showRecommendedPosts?: boolean;
   showTags?: boolean;
   showDetailedInsights?: boolean;
+  showPostSidebar?: boolean;
+  showShareButtons?: boolean;
+  showTryButtons?: boolean;
+  showYouMightAlsoLike?: boolean;
+  showScrollProgress?: boolean;
+  showFaqSchema?: boolean;
+  showPublicProfiles?: boolean;
+  publicProfileLikes?: boolean;
+  publicProfileBookmarks?: boolean;
   advancedFiltering: boolean;
   smartTemplates: boolean;
   infiniteScroll: boolean;
@@ -151,6 +161,15 @@ export interface SiteSettings {
   pageDmca?: string;
   pageDisclaimer?: string;
   pageContact?: string;
+}
+
+export interface AdminUserSummary {
+  id: string;
+  email?: string;
+  name: string;
+  avatar?: string;
+  createdAt?: string;
+  lastSignInAt?: string;
 }
 
 export type Theme = 'light' | 'dark';
