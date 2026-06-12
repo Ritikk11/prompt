@@ -301,7 +301,12 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-800">
         <LoadingImage src={item.thumbnailUrl || item.images?.[0]?.url || ''} alt="" fill showSkeleton={showSkeleton} className="object-cover transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
         {tools[0] && (
-          <span className="absolute left-1 top-1 rounded-full bg-white/80 px-1.5 py-0.5 text-[8px] font-black uppercase text-surface-900 shadow-sm backdrop-blur dark:bg-black/50 dark:text-white">
+          <span className={`absolute left-1 top-1 inline-flex items-center gap-1 rounded-full ${getToolInfo(tools[0], settings?.toolDetails).color}/80 px-1.5 py-1 text-[7px] font-bold uppercase tracking-wider text-white shadow-xl backdrop-blur-md border border-white/10`}>
+            {getToolInfo(tools[0], settings?.toolDetails).logo && (
+              <span className="relative h-3 w-3 shrink-0 overflow-hidden rounded-full bg-white p-[1px]">
+                <Image src={getToolInfo(tools[0], settings?.toolDetails).logo!} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+              </span>
+            )}
             {tools[0]}
           </span>
         )}
@@ -322,14 +327,24 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     return (
       <div className={`flex flex-wrap gap-2 ${className}`}>
         {uniqueTools.map(tool => (
+          (() => {
+            const info = getToolInfo(tool, settings?.toolDetails);
+            return (
           <button
             key={tool}
             onClick={() => handleTryTool(tool, prompt)}
             className="inline-flex items-center gap-2 rounded-xl border border-surface-200 bg-white px-3 py-2 text-xs font-bold text-surface-700 transition-colors hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:text-white"
           >
+            {info.logo && (
+              <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white p-[1px] shadow-sm">
+                <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+              </span>
+            )}
             Try in {tool}
             <ExternalLink className="h-3.5 w-3.5" />
           </button>
+            );
+          })()
         ))}
       </div>
     );
@@ -1018,25 +1033,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         {showPostSidebar && (
           <aside className="hidden lg:block">
             <div className="sticky top-20 space-y-4">
-              {showTryButtons && (
-                <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
-                  <h3 className="mb-3 text-sm font-black text-surface-900 dark:text-white">Try this prompt</h3>
-                  <div className="space-y-2">
-                    {Array.from(new Set(heroTools)).map(tool => (
-                      <button
-                        key={tool}
-                        onClick={() => handleTryTool(tool, firstPrompt)}
-                        className="flex w-full items-center justify-between gap-2 rounded-xl bg-surface-100 px-3 py-2 text-left text-xs font-bold text-surface-700 transition-colors hover:bg-primary-500 hover:text-white dark:bg-surface-800 dark:text-surface-200"
-                      >
-                        <span>Open {tool}</span>
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </button>
-                    ))}
-                  </div>
-                  <p className="mt-3 text-[11px] leading-relaxed text-surface-400">Copies the prompt first, then opens the selected tool.</p>
-                </div>
-              )}
-
               {showShareButtons && (
                 <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
                   <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-surface-900 dark:text-white">
