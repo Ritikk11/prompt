@@ -33,6 +33,7 @@ export default function SeoPagesTab() {
   const [tagsStr, setTagsStr] = useState('');
   const [categoriesStr, setCategoriesStr] = useState('');
   const [aiToolsStr, setAiToolsStr] = useState('');
+  const [filterTagsStr, setFilterTagsStr] = useState('');
 
   useEffect(() => {
     const fetchPages = async () => {
@@ -44,7 +45,7 @@ export default function SeoPagesTab() {
   }, []);
 
   const resetForm = () => {
-    setTitle(''); setSeoTitle(''); setSeoDescription(''); setSlug(''); setIntroContent(''); setTagsStr(''); setCategoriesStr(''); setAiToolsStr('');
+    setTitle(''); setSeoTitle(''); setSeoDescription(''); setSlug(''); setIntroContent(''); setTagsStr(''); setCategoriesStr(''); setAiToolsStr(''); setFilterTagsStr('');
     setEditingId(null);
     setShowForm(false);
   };
@@ -58,6 +59,7 @@ export default function SeoPagesTab() {
     setTagsStr((page.tags || []).join(', '));
     setCategoriesStr((page.categories || []).join(', '));
     setAiToolsStr((page.aiTools || []).join(', '));
+    setFilterTagsStr((page.filterTags || []).join(', '));
     setEditingId(page.id);
     setShowForm(true);
   };
@@ -76,6 +78,7 @@ export default function SeoPagesTab() {
       tags: tagsStr.split(',').map(s => s.trim()).filter(Boolean),
       categories: categoriesStr.split(',').map(s => s.trim()).filter(Boolean),
       aiTools: aiToolsStr.split(',').map(s => s.trim()).filter(Boolean),
+      filterTags: filterTagsStr.split(',').map(s => s.trim()).filter(Boolean),
       createdAt: new Date().toISOString()
     };
 
@@ -141,6 +144,11 @@ export default function SeoPagesTab() {
              <label className="block text-sm font-medium mb-1.5">Required AI Tools (comma separated, all must match)</label>
              <input value={aiToolsStr} onChange={e => setAiToolsStr(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm" placeholder="e.g. gemini, dall-e" />
           </div>
+          <div>
+             <label className="block text-sm font-medium mb-1.5">Filter Rail Tags (optional)</label>
+             <input value={filterTagsStr} onChange={e => setFilterTagsStr(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm" placeholder="e.g. character, anime, realistic" />
+             <p className="mt-1 text-xs text-surface-500">Shows a horizontal tag selector above this page grid. Tags must match post tags.</p>
+          </div>
           <button onClick={handleSave} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors">
             <Save className="w-4 h-4" /> Save SEO Page
           </button>
@@ -169,6 +177,7 @@ export default function SeoPagesTab() {
                 {page.tags?.length > 0 && <span>Tags: {page.tags.join(', ')}</span>}
                 {page.categories?.length > 0 && <span>Cats: {page.categories.join(', ')}</span>}
                 {page.aiTools?.length > 0 && <span>Tools: {page.aiTools.join(', ')}</span>}
+                {page.filterTags?.length > 0 && <span>Filter rail: {page.filterTags.join(', ')}</span>}
               </div>
             </div>
             <div className="flex gap-2">

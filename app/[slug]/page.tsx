@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { getPostBySlugOrId, fetchPostSummaries, getSeoPageBySlug, isPublicPost, fetchSettings } from '@/lib/data';
 import PostContent from '@/components/PostContent';
 import PostCard from '@/components/PostCard';
+import FilterChipRail from '@/components/FilterChipRail';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import type { Post } from '@/lib/types';
 import { matchesCategory, matchesTag, matchesTool } from '@/lib/sections';
@@ -78,7 +79,7 @@ export default async function PostPage({ params }: Props) {
   ]);
 
   if (!post && seoPage) {
-    const allPosts = await fetchPostSummaries();
+    const [allPosts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
     const { tags = [], categories = [], aiTools = [] } = seoPage;
     const filteredPosts = (allPosts as Post[]).filter(candidate => {
       if (!isPublicPost(candidate)) return false;
@@ -106,6 +107,8 @@ export default async function PostPage({ params }: Props) {
           <div className="text-center py-20">
             <p className="text-surface-500">No posts found matching the criteria.</p>
           </div>
+        ) : seoPage.filterTags?.length ? (
+          <FilterChipRail posts={filteredPosts} tags={seoPage.filterTags} tools={[]} showTools={false} settings={settings} renderGrid />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start pt-8">
             {filteredPosts.map((candidate, index) => (

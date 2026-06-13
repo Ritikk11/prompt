@@ -135,6 +135,10 @@ function cleanFooterGroups(groups: FooterLinkGroup[] = []) {
   })).filter(group => group.title && group.links.length > 0);
 }
 
+function cleanCommaList(value: string) {
+  return value.split(',').map(item => item.trim()).filter(Boolean);
+}
+
 export default function Admin() {
   const {
     posts, sections, settings, addPost, updatePost, deletePost,
@@ -344,11 +348,13 @@ export default function Admin() {
   const [newSectionCategory, setNewSectionCategory] = useState('');
   const [newSectionLimit, setNewSectionLimit] = useState(8);
   const [newSectionCardStyle, setNewSectionCardStyle] = useState<Section['cardStyle'] | ''>('');
+  const [newSectionFilterTags, setNewSectionFilterTags] = useState('');
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editSectionName, setEditSectionName] = useState('');
   const [editSectionSlug, setEditSectionSlug] = useState('');
   const [editSectionLimit, setEditSectionLimit] = useState(8);
   const [editSectionCardStyle, setEditSectionCardStyle] = useState<Section['cardStyle'] | ''>('');
+  const [editSectionFilterTags, setEditSectionFilterTags] = useState('');
   const [editSectionSeoTitle, setEditSectionSeoTitle] = useState('');
   const [editSectionSeoDescription, setEditSectionSeoDescription] = useState('');
   const [editSectionIntroContent, setEditSectionIntroContent] = useState('');
@@ -370,6 +376,7 @@ export default function Admin() {
   const [adminEmailsStr, setAdminEmailsStr] = useState((settings.adminEmails || []).join(', '));
   const [headerLinks, setHeaderLinks] = useState<NavLink[]>(settings.headerLinks || []);
   const [homeLinkBlocks, setHomeLinkBlocks] = useState<HomeLinkBlock[]>(settings.homeLinkBlocks || []);
+  const [exploreFilterTags, setExploreFilterTags] = useState((settings.exploreFilterTags || []).join(', '));
   const [footerLinkGroups, setFooterLinkGroups] = useState<FooterLinkGroup[]>(settings.footerLinkGroups || defaultFooterLinkGroups);
   const [imgbbApiKey, setImgbbApiKey] = useState(settings.imgbbApiKey || '');
   const [imageProvider, setImageProvider] = useState<'imgbb' | 'cloudinary' | 'supabase'>(settings.imageProvider || 'imgbb');
@@ -440,6 +447,7 @@ export default function Admin() {
     if (settings.adminEmails !== undefined) setAdminEmailsStr((settings.adminEmails || []).join(', '));
     if (settings.headerLinks !== undefined) setHeaderLinks(settings.headerLinks || []);
     if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocks(settings.homeLinkBlocks || []);
+    if (settings.exploreFilterTags !== undefined) setExploreFilterTags((settings.exploreFilterTags || []).join(', '));
     if (settings.footerLinkGroups !== undefined) setFooterLinkGroups(settings.footerLinkGroups || defaultFooterLinkGroups);
     if (settings.imgbbApiKey !== undefined) setImgbbApiKey(settings.imgbbApiKey);
     if (settings.imageProvider !== undefined) setImageProvider(settings.imageProvider);
@@ -758,6 +766,7 @@ export default function Admin() {
       visible: true,
       limit: newSectionLimit,
       cardStyle: newSectionCardStyle || undefined,
+      filterTags: cleanCommaList(newSectionFilterTags),
     });
     setNewSectionName('');
     setNewSectionSlug('');
@@ -766,6 +775,7 @@ export default function Admin() {
     setNewSectionTag('');
     setNewSectionCategory('');
     setNewSectionCardStyle('');
+    setNewSectionFilterTags('');
   };
 
   const moveSection = (section: Section, dir: 'up' | 'down') => {
@@ -793,6 +803,7 @@ export default function Admin() {
     setEditSectionSeoTitle(section.seoTitle || '');
     setEditSectionSeoDescription(section.seoDescription || '');
     setEditSectionIntroContent(section.introContent || '');
+    setEditSectionFilterTags((section.filterTags || []).join(', '));
   };
 
   const saveEditSection = (section: Section) => {
@@ -805,6 +816,7 @@ export default function Admin() {
       seoTitle: editSectionSeoTitle || undefined,
       seoDescription: editSectionSeoDescription || undefined,
       introContent: editSectionIntroContent || undefined,
+      filterTags: cleanCommaList(editSectionFilterTags),
     });
     setEditingSectionId(null);
   };
@@ -869,6 +881,7 @@ export default function Admin() {
       adminEmails: adminEmailsStr.split(',').map(e => e.trim()).filter(Boolean),
       headerLinks: cleanNavLinks(headerLinks),
       homeLinkBlocks: cleanHomeBlocks(homeLinkBlocks),
+      exploreFilterTags: cleanCommaList(exploreFilterTags),
       footerLinkGroups: cleanFooterGroups(footerLinkGroups),
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
       ads: adsConfig,
@@ -1899,6 +1912,16 @@ export default function Admin() {
                   <option value="v8">v8 - Glass Panel</option>
                 </select>
               </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs text-surface-400 mb-1">Optional filter tags</label>
+                <input
+                  value={newSectionFilterTags}
+                  onChange={e => setNewSectionFilterTags(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                  placeholder="character, anime, realistic"
+                />
+                <p className="mt-1 text-[11px] text-surface-500">Adds a horizontal tag rail above this section grid. Tags must match post tags.</p>
+              </div>
             </div>
             <button
               onClick={handleAddSection}
@@ -1997,6 +2020,13 @@ export default function Admin() {
                               <option value="v7">v7 Polaroid</option>
                               <option value="v8">v8 Glass Panel</option>
                             </select>
+                            <input
+                              value={editSectionFilterTags}
+                              onChange={e => setEditSectionFilterTags(e.target.value)}
+                              className="min-w-[220px] flex-1 px-3 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                              placeholder="Filter rail tags: anime, realistic"
+                              title="Comma-separated filter tags shown as a horizontal rail"
+                            />
                             <button onClick={() => saveEditSection(section)} className="p-1.5 rounded-lg bg-primary-500 text-white">
                               <Check className="w-3.5 h-3.5" />
                             </button>
@@ -2047,6 +2077,7 @@ export default function Admin() {
                               <span>- {section.postIds.length} posts selected</span>
                             )}
                             {section.cardStyle && <span>- Cards: {section.cardStyle}</span>}
+                            {section.filterTags?.length ? <span>- Filters: {section.filterTags.join(', ')}</span> : null}
                             {!section.visible && <span className="text-red-400 font-medium">- Hidden</span>}
                           </div>
                         </>
@@ -2539,6 +2570,21 @@ export default function Admin() {
                     <Plus className="w-4 h-4" /> Add Header Link
                   </button>
                 </div>
+              </div>
+              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-primary-500" /> Explore Filter Tags
+                </h3>
+                <p className="text-xs text-surface-500 mb-4">
+                  Optional custom tag chips for the Explore page. Leave blank to automatically use the most common post tags.
+                </p>
+                <input
+                  value={exploreFilterTags}
+                  onChange={e => setExploreFilterTags(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                  placeholder="video, character, anime, realistic, illustration"
+                />
+                <p className="mt-2 text-[11px] text-surface-500">These must match post tags exactly enough to filter posts.</p>
               </div>
                 <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                   <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getGridClasses } from '@/lib/utils';
 import AdSlot from '@/components/AdSlot';
 import { getSectionPath } from '@/lib/sections';
+import FilterChipRail from '@/components/FilterChipRail';
 
 import PostCard from './PostCard';
 
@@ -26,6 +27,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
 
   const visibleLatest = allLatestPosts.slice(0, showCount);
   const hasMore = allLatestPosts.length > showCount;
+  const sectionFilterTags = section.filterTags || [];
 
   // Don't render empty sections
   if (!isLatest && sectionPosts.length === 0) return null;
@@ -61,7 +63,17 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
         </div>
       </div>
 
-      {isLatest ? (
+      {sectionFilterTags.length > 0 ? (
+        <FilterChipRail
+          posts={isLatest ? allLatestPosts : sectionPosts}
+          tools={[]}
+          tags={sectionFilterTags}
+          showTools={false}
+          settings={settings}
+          cardStyleOverride={section.cardStyle}
+          renderGrid
+        />
+      ) : isLatest ? (
         /* Latest — Masonry grid with Load More */
         <div>
             <>

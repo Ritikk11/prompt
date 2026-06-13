@@ -4,24 +4,23 @@ import { getGridClasses } from '@/lib/utils';
 import type { Post, SiteSettings } from '@/lib/types';
 import AdSlot from '@/components/AdSlot';
 import PostCard from '@/components/PostCard';
+import FilterChipRail, { getFilterTagsFromPosts } from '@/components/FilterChipRail';
+import { getAllTools } from '@/lib/constants';
 
 export default function ExploreClient({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'trending'>('latest');
-  const [filterTool, setFilterTool] = useState('all');
 
   const itemsPerLoad = settings.features?.infiniteScrollItems || 20;
   const [displayedCount, setDisplayedCount] = useState(itemsPerLoad);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
-  const tools = ['all', ...Array.from(new Set(publicPosts.flatMap(p => p.images.map(i => i.aiTool))))];
+  const tools = Array.from(new Set(publicPosts.flatMap(p => getAllTools(p))));
+  const filterTags = settings.exploreFilterTags?.length ? settings.exploreFilterTags : getFilterTagsFromPosts(publicPosts);
   const showAdvancedFilters = settings.features?.advancedFiltering;
   const showTrending = settings.features?.trendingAlgorithm;
 
   let filtered = [...publicPosts];
-  if (showAdvancedFilters && filterTool !== 'all') {
-    filtered = filtered.filter(p => p.aiTools?.includes(filterTool) || p.images.some(i => i.aiTools ? i.aiTools.includes(filterTool) : i.aiTool === filterTool));
-  }
   if (sortBy === 'latest') {
     filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } else if (sortBy === 'popular') {
@@ -55,9 +54,9 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
       <p className="text-surface-500 dark:text-surface-400 mb-6">Discover {posts.length} curated prompt collections</p>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-8 p-4 rounded-xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
+      <div className="mb-8 rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-800 dark:bg-surface-900">
         {/* Sort */}
-        <div className="flex items-center gap-2">
+        <div className="mb-4 flex items-center gap-2">
           <span className="text-xs font-medium text-surface-400 uppercase tracking-wide">Sort:</span>
           <div className="flex rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700">
             <button
@@ -83,55 +82,47 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
           </div>
         </div>
 
-        {/* AI Tool filter */}
         {showAdvancedFilters && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-surface-400 uppercase tracking-wide">Tool:</span>
-            <select
-              value={filterTool}
-              onChange={e => setFilterTool(e.target.value)}
-              className="px-3 py-1.5 rounded-lg text-xs bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none"
-            >
-              {tools.map(t => <option key={t} value={t}>{t === 'all' ? 'All Tools' : t}</option>)}
-            </select>
-          </div>
+          <FilterChipRail posts={filtered} tools={tools} tags={filterTags} settings={settings} renderGrid />
         )}
       </div>
 
       {/* Masonry layout like Pinterest */}
-      <>
-        <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-          {visiblePosts.map((post, i) => (
-            <React.Fragment key={post.id}>
-              <div className="mb-1 inline-block w-full break-inside-avoid">
-                <PostCard post={post} index={i} />
-              </div>
-              <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
-            </React.Fragment>
-          ))}
-        </div>
-        
-        {visiblePosts.length < filtered.length && (
-          <div ref={loadMoreRef} className="py-8 text-center flex flex-col items-center justify-center">
-            {settings.features?.infiniteScroll ? (
-              <div className="w-8 h-8 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
-            ) : (
-              <button 
-                onClick={() => setDisplayedCount(prev => prev + itemsPerLoad)}
-                className="px-6 py-2.5 rounded-full font-bold bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-300 transition-colors"
-              >
-                Load More Prompts
-              </button>
-            )}
+      {!showAdvancedFilters && (
+        <>
+          <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+            {visiblePosts.map((post, i) => (
+              <React.Fragment key={post.id}>
+                <div className="mb-1 inline-block w-full break-inside-avoid">
+                  <PostCard post={post} index={i} />
+                </div>
+                <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
+              </React.Fragment>
+            ))}
           </div>
-        )}
-      </>
+          
+          {visiblePosts.length < filtered.length && (
+            <div ref={loadMoreRef} className="py-8 text-center flex flex-col items-center justify-center">
+              {settings.features?.infiniteScroll ? (
+                <div className="w-8 h-8 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
+              ) : (
+                <button 
+                  onClick={() => setDisplayedCount(prev => prev + itemsPerLoad)}
+                  className="px-6 py-2.5 rounded-full font-bold bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-300 transition-colors"
+                >
+                  Load More Prompts
+                </button>
+              )}
+            </div>
+          )}
 
-      {filtered.length === 0 && (
-        <div className="text-center py-20">
-          <p className="text-xl font-semibold text-surface-400">No prompts found</p>
-          <p className="text-sm text-surface-400 mt-2">Try adjusting your filters</p>
-        </div>
+          {filtered.length === 0 && (
+            <div className="text-center py-20">
+              <p className="text-xl font-semibold text-surface-400">No prompts found</p>
+              <p className="text-sm text-surface-400 mt-2">Try adjusting your filters</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

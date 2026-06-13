@@ -62,6 +62,7 @@ export interface Section {
   location?: 'homepage' | 'header';
   aiTool?: string;
   tag?: string;
+  filterTags?: string[];
   category?: string;
   postIds?: string[];
   order: number;
@@ -148,6 +149,7 @@ export interface SiteSettings {
   headerSections?: Section[];
   headerLinks?: NavLink[];
   homeLinkBlocks?: HomeLinkBlock[];
+  exploreFilterTags?: string[];
   footerLinkGroups?: FooterLinkGroup[];
   ads?: AdSettings;
   imgbbApiKey?: string;
