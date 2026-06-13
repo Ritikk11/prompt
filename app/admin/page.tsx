@@ -342,10 +342,12 @@ export default function Admin() {
   const [newSectionTag, setNewSectionTag] = useState('');
   const [newSectionCategory, setNewSectionCategory] = useState('');
   const [newSectionLimit, setNewSectionLimit] = useState(8);
+  const [newSectionCardStyle, setNewSectionCardStyle] = useState<Section['cardStyle'] | ''>('');
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editSectionName, setEditSectionName] = useState('');
   const [editSectionSlug, setEditSectionSlug] = useState('');
   const [editSectionLimit, setEditSectionLimit] = useState(8);
+  const [editSectionCardStyle, setEditSectionCardStyle] = useState<Section['cardStyle'] | ''>('');
   const [editSectionSeoTitle, setEditSectionSeoTitle] = useState('');
   const [editSectionSeoDescription, setEditSectionSeoDescription] = useState('');
   const [editSectionIntroContent, setEditSectionIntroContent] = useState('');
@@ -754,6 +756,7 @@ export default function Admin() {
       order: sections.filter(s => s.location === newSectionLocation).length,
       visible: true,
       limit: newSectionLimit,
+      cardStyle: newSectionCardStyle || undefined,
     });
     setNewSectionName('');
     setNewSectionSlug('');
@@ -761,6 +764,7 @@ export default function Admin() {
     setNewSectionTool('');
     setNewSectionTag('');
     setNewSectionCategory('');
+    setNewSectionCardStyle('');
   };
 
   const moveSection = (section: Section, dir: 'up' | 'down') => {
@@ -784,6 +788,7 @@ export default function Admin() {
     setEditSectionName(section.name);
     setEditSectionSlug(section.slug || '');
     setEditSectionLimit(section.limit);
+    setEditSectionCardStyle(section.cardStyle || '');
     setEditSectionSeoTitle(section.seoTitle || '');
     setEditSectionSeoDescription(section.seoDescription || '');
     setEditSectionIntroContent(section.introContent || '');
@@ -795,6 +800,7 @@ export default function Admin() {
       name: editSectionName,
       slug: editSectionSlug || slugify(editSectionName),
       limit: editSectionLimit,
+      cardStyle: editSectionCardStyle || undefined,
       seoTitle: editSectionSeoTitle || undefined,
       seoDescription: editSectionSeoDescription || undefined,
       introContent: editSectionIntroContent || undefined,
@@ -1874,6 +1880,24 @@ export default function Admin() {
                   className="w-20 px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
                 />
               </div>
+              <div>
+                <select
+                  value={newSectionCardStyle}
+                  onChange={e => setNewSectionCardStyle(e.target.value as Section['cardStyle'] | '')}
+                  className="w-full px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                  title="Card style for this section"
+                >
+                  <option value="">Use global card style</option>
+                  <option value="v1">v1 - Hover Overlay</option>
+                  <option value="v2">v2 - Floating Image</option>
+                  <option value="v3">v3 - Compact Editorial</option>
+                  <option value="v4">v4 - Social Card</option>
+                  <option value="v5">v5 - Brutalist</option>
+                  <option value="v6">v6 - Gradient Overlay</option>
+                  <option value="v7">v7 - Polaroid</option>
+                  <option value="v8">v8 - Glass Panel</option>
+                </select>
+              </div>
             </div>
             <button
               onClick={handleAddSection}
@@ -1956,6 +1980,22 @@ export default function Admin() {
                               className="w-16 px-2 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm text-center"
                               title="Post limit"
                             />
+                            <select
+                              value={editSectionCardStyle}
+                              onChange={e => setEditSectionCardStyle(e.target.value as Section['cardStyle'] | '')}
+                              className="w-44 px-3 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                              title="Card style for this section"
+                            >
+                              <option value="">Global card style</option>
+                              <option value="v1">v1 Hover Overlay</option>
+                              <option value="v2">v2 Floating Image</option>
+                              <option value="v3">v3 Compact Editorial</option>
+                              <option value="v4">v4 Social Card</option>
+                              <option value="v5">v5 Brutalist</option>
+                              <option value="v6">v6 Gradient Overlay</option>
+                              <option value="v7">v7 Polaroid</option>
+                              <option value="v8">v8 Glass Panel</option>
+                            </select>
                             <button onClick={() => saveEditSection(section)} className="p-1.5 rounded-lg bg-primary-500 text-white">
                               <Check className="w-3.5 h-3.5" />
                             </button>
@@ -2005,6 +2045,7 @@ export default function Admin() {
                             {section.type === 'custom' && section.postIds && (
                               <span>- {section.postIds.length} posts selected</span>
                             )}
+                            {section.cardStyle && <span>- Cards: {section.cardStyle}</span>}
                             {!section.visible && <span className="text-red-400 font-medium">- Hidden</span>}
                           </div>
                         </>
