@@ -69,7 +69,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
                 {visibleLatest.map((post, i) => (
                   <React.Fragment key={post.id}>
                     <div className="mb-1 inline-block w-full break-inside-avoid">
-                      <PostCard post={post} index={i} />
+                      <PostCard post={post} index={i} cardStyleOverride={section.cardStyle} />
                     </div>
                     <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
                   </React.Fragment>
@@ -110,7 +110,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
               {sectionPosts.map((post, i) => (
                 <React.Fragment key={post.id}>
                   <div className="flex-none w-56 sm:w-72 md:w-80 lg:w-96">
-                    <PostCard post={post} index={i} aspect="aspect-[3/4]" />
+                    <PostCard post={post} index={i} aspect="aspect-[3/4]" cardStyleOverride={section.cardStyle} />
                   </div>
                   <AdSlot placement="inFeed" inFeedIndex={i} className="flex-none w-56 sm:w-72 md:w-80 lg:w-96 bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
                 </React.Fragment>

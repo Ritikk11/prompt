@@ -296,23 +296,27 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
   const SidebarCard = ({ item }: { item: Post }) => {
     const tools = getAllTools(item);
+    const firstTool = tools[0];
+    const firstToolInfo = firstTool ? getToolInfo(firstTool, settings?.toolDetails) : null;
     return (
     <Link href={`/${item.slug || item.id}`} className="group flex gap-3 rounded-2xl border border-surface-200 bg-white p-2.5 transition-colors hover:border-primary-400 dark:border-surface-800 dark:bg-surface-900">
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-800">
         <LoadingImage src={item.thumbnailUrl || item.images?.[0]?.url || ''} alt="" fill showSkeleton={showSkeleton} className="object-cover transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
-        {tools[0] && (
-          <span className={`absolute left-1 top-1 inline-flex items-center gap-1 rounded-full ${getToolInfo(tools[0], settings?.toolDetails).color}/80 px-1.5 py-1 text-[7px] font-bold uppercase tracking-wider text-white shadow-xl backdrop-blur-md border border-white/10`}>
-            {getToolInfo(tools[0], settings?.toolDetails).logo && (
-              <span className="relative h-3 w-3 shrink-0 overflow-hidden rounded-full bg-white p-[1px]">
-                <Image src={getToolInfo(tools[0], settings?.toolDetails).logo!} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-              </span>
-            )}
-            {tools[0]}
-          </span>
-        )}
       </div>
-      <div className="min-w-0 py-1">
-        <h4 className="line-clamp-2 text-xs font-bold leading-snug text-surface-900 dark:text-white">{item.title}</h4>
+      <div className="min-w-0 flex-1 py-1">
+        <div className="flex items-start gap-2">
+          <h4 className="min-w-0 flex-1 line-clamp-2 text-xs font-bold leading-snug text-surface-900 dark:text-white">{item.title}</h4>
+          {firstTool && firstToolInfo && (
+            <span className={`inline-flex shrink-0 items-center gap-1 rounded-full ${firstToolInfo.color}/80 px-1.5 py-1 text-[7px] font-bold uppercase tracking-wider text-white shadow-xl backdrop-blur-md border border-white/10`}>
+              {firstToolInfo.logo && (
+                <span className="relative h-3 w-3 shrink-0 overflow-hidden rounded-full bg-white p-[1px]">
+                  <Image src={firstToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                </span>
+              )}
+              {firstTool}
+            </span>
+          )}
+        </div>
         <p className="mt-1 flex items-center gap-2 text-[11px] text-surface-400">
           <Eye className="h-3 w-3" /> {(item.views || 0).toLocaleString()}
         </p>
