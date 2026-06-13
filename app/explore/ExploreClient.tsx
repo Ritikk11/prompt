@@ -4,7 +4,8 @@ import { getGridClasses } from '@/lib/utils';
 import type { Post, SiteSettings } from '@/lib/types';
 import AdSlot from '@/components/AdSlot';
 import PostCard from '@/components/PostCard';
-import FilterChipRail, { getFilterTagsFromPosts } from '@/components/FilterChipRail';
+import FilterChipRail from '@/components/FilterChipRail';
+import { getFilterTagsFromPosts } from '@/lib/filter-tags';
 import { getAllTools } from '@/lib/constants';
 
 export default function ExploreClient({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
