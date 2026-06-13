@@ -64,6 +64,11 @@ export default function LoadingImage({
       }
     });
     const timer = window.setTimeout(() => {
+      const image = imageRef.current;
+      if (image?.complete && image.naturalWidth > 0) {
+        setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+        return;
+      }
       setImageState(prev => (
         prev.src === srcValue && prev.loaded
           ? prev
@@ -97,7 +102,7 @@ export default function LoadingImage({
   const shimmer = enabled && !settled ? (
     <span className="pointer-events-none absolute inset-0 z-[1] image-shimmer" aria-hidden="true" />
   ) : null;
-  const fallback = enabled && (failed || timedOut) && !loaded ? <ImageFallback /> : null;
+  const fallback = enabled && failed && !loaded ? <ImageFallback /> : null;
 
   if (props.fill) {
     return (
@@ -157,6 +162,11 @@ export function LoadingImg({
       }
     });
     const timer = window.setTimeout(() => {
+      const image = imageRef.current;
+      if (image?.complete && image.naturalWidth > 0) {
+        setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+        return;
+      }
       setImageState(prev => (
         prev.src === srcValue && prev.loaded
           ? prev
@@ -176,7 +186,7 @@ export function LoadingImg({
       {showSkeleton && !settled ? (
         <span className="pointer-events-none absolute inset-0 z-[1] image-shimmer" aria-hidden="true" />
       ) : null}
-      {showSkeleton && (failed || timedOut) && !loaded ? <ImageFallback compact /> : null}
+      {showSkeleton && failed && !loaded ? <ImageFallback compact /> : null}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         {...props}

@@ -2,8 +2,9 @@ export const dynamic = 'force-dynamic';
 
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getSeoPageBySlug, fetchPostSummaries, isPublicPost } from '@/lib/data';
+import { getSeoPageBySlug, fetchPostSummaries, isPublicPost, fetchSettings } from '@/lib/data';
 import PostCard from '@/components/PostCard';
+import FilterChipRail from '@/components/FilterChipRail';
 import type { Post } from '@/lib/types';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { matchesCategory, matchesTag, matchesTool } from '@/lib/sections';
@@ -32,9 +33,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SeoPublicPage({ params }: Props) {
   const { slug } = await params;
   
-  const [seoPage, allPosts] = await Promise.all([
+  const [seoPage, allPosts, settings] = await Promise.all([
     getSeoPageBySlug(slug),
     fetchPostSummaries(),
+    fetchSettings(),
   ]);
 
   if (!seoPage) {
@@ -77,6 +79,8 @@ export default async function SeoPublicPage({ params }: Props) {
         <div className="text-center py-20">
           <p className="text-surface-500">No posts found matching the criteria.</p>
         </div>
+      ) : seoPage.filterTags?.length ? (
+        <FilterChipRail posts={filteredPosts} tags={seoPage.filterTags} tools={[]} showTools={false} settings={settings} renderGrid />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start pt-8">
           {filteredPosts.map((post, index) => (

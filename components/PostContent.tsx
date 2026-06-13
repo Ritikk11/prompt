@@ -254,7 +254,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     const encoded = encodeURIComponent(prompt);
     const normalized = tool.toLowerCase();
     if (normalized.includes('chatgpt') || normalized.includes('openai')) return `https://chatgpt.com/?q=${encoded}`;
-    if (normalized.includes('gemini') || normalized.includes('banana')) return `https://gemini.google.com/app?q=${encoded}`;
+    if (normalized.includes('gemini') || normalized.includes('banana')) return 'https://gemini.google.com/app';
     if (normalized.includes('grok')) return `https://grok.com/?q=${encoded}`;
     if (normalized.includes('qwen')) return `https://chat.qwen.ai/?q=${encoded}`;
     if (normalized.includes('claude')) return `https://claude.ai/new?q=${encoded}`;
@@ -324,6 +324,46 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     </Link>
   );
   };
+
+  const renderExploreAllPromptsBlock = (mobile = false) => (
+    <div className={`rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900 ${mobile ? 'mb-16 lg:hidden' : ''}`}>
+      <div className="mb-3 flex items-center gap-2">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-500/10 text-primary-500">
+          <Tag className="h-4 w-4" />
+        </div>
+        <div>
+          <h3 className="text-sm font-black text-surface-900 dark:text-white">Explore all prompts</h3>
+          <p className="text-xs text-surface-500 dark:text-surface-400">Find more ideas by tool, tag, and style.</p>
+        </div>
+      </div>
+      <div className="mb-4 flex flex-wrap gap-2">
+        {heroTools.slice(0, 3).map(tool => (
+          <Link
+            key={tool}
+            href="/explore"
+            className="rounded-full bg-surface-100 px-3 py-1.5 text-[11px] font-bold text-surface-600 hover:bg-primary-500 hover:text-white dark:bg-surface-800 dark:text-surface-300"
+          >
+            {tool}
+          </Link>
+        ))}
+        {(post.tags || []).slice(0, 3).map(tag => (
+          <Link
+            key={tag}
+            href={`/tag/${encodeURIComponent(tag)}`}
+            className="rounded-full bg-surface-100 px-3 py-1.5 text-[11px] font-bold text-surface-600 hover:bg-primary-500 hover:text-white dark:bg-surface-800 dark:text-surface-300"
+          >
+            #{tag}
+          </Link>
+        ))}
+      </div>
+      <Link
+        href="/explore"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-xs font-black text-white transition-colors hover:bg-primary-600"
+      >
+        Browse prompt library <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
+    </div>
+  );
 
   const renderTryButtonsForPrompt = (tools: string[], prompt: string, className = '') => {
     const uniqueTools = Array.from(new Set(tools.filter(Boolean)));
@@ -1071,6 +1111,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                 </div>
               </div>
 
+              {renderExploreAllPromptsBlock()}
+
               {showYouMightAlsoLike && recommendedPosts.length > 0 && (
                 <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
                   <h3 className="mb-3 text-sm font-black text-surface-900 dark:text-white">You might also like</h3>
@@ -1201,6 +1243,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           </div>
         </div>
       )}
+
+      {renderExploreAllPromptsBlock(true)}
 
       {/* Extended HTML / Article Description */}
       {showDetailedInsights && post.extendedDescription && (

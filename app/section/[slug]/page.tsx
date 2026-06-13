@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { filterPostsForSection } from '@/lib/sections';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import FilterChipRail from '@/components/FilterChipRail';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -73,6 +74,16 @@ export default async function SectionPage({ params }: Props) {
             Explore other prompts
           </Link>
         </div>
+      ) : section.filterTags?.length ? (
+        <FilterChipRail
+          posts={filteredPosts}
+          tools={[]}
+          tags={section.filterTags}
+          showTools={false}
+          settings={settings}
+          cardStyleOverride={section.cardStyle}
+          renderGrid
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
           {filteredPosts.map((post, i) => (
