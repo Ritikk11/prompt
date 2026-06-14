@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 
 import Image from 'next/image';
-import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Wand2, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle } from 'lucide-react';
+import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Wand2, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle, Layers, ClipboardCheck } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
 import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
@@ -315,40 +315,44 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
   const renderExploreAllPromptsBlock = (mobile = false) => (
     <div className={`rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900 ${mobile ? 'mb-16 lg:hidden' : ''}`}>
-      <div className="mb-3 flex items-center gap-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-500/10 text-primary-500">
-          <Tag className="h-4 w-4" />
+      <div className="mb-4 flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-500/10 text-primary-500">
+          <Wand2 className="h-4 w-4" />
         </div>
         <div>
-          <h3 className="text-sm font-black text-surface-900 dark:text-white">Explore all prompts</h3>
-          <p className="text-xs text-surface-500 dark:text-surface-400">Find more ideas by tool, tag, and style.</p>
+          <h3 className="text-sm font-black text-surface-900 dark:text-white">Keep exploring</h3>
+          <p className="mt-1 text-xs leading-relaxed text-surface-500 dark:text-surface-400">
+            Browse more prompt pages with examples, model notes, and copy-ready creative workflows.
+          </p>
         </div>
       </div>
-      <div className="mb-4 flex flex-wrap gap-2">
-        {heroTools.slice(0, 3).map(tool => (
-          <Link
-            key={tool}
-            href={`/tool/${encodeURIComponent(tool)}`}
-            className="rounded-full bg-surface-100 px-3 py-1.5 text-[11px] font-bold text-surface-600 hover:bg-primary-500 hover:text-white dark:bg-surface-800 dark:text-surface-300"
-          >
-            {tool}
-          </Link>
-        ))}
-        {(post.tags || []).slice(0, 3).map(tag => (
-          <Link
-            key={tag}
-            href={`/tag/${encodeURIComponent(tag)}`}
-            className="rounded-full bg-surface-100 px-3 py-1.5 text-[11px] font-bold text-surface-600 hover:bg-primary-500 hover:text-white dark:bg-surface-800 dark:text-surface-300"
-          >
-            #{tag}
-          </Link>
-        ))}
+      <div className="mb-4 grid gap-2">
+        {[
+          { label: 'Image prompt library', icon: ImageIcon },
+          { label: 'Poster and portrait ideas', icon: Layers },
+          { label: 'Copy-ready creative workflows', icon: ClipboardCheck },
+        ].map(item => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.label}
+              href="/explore"
+              className="group flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-xs font-bold text-surface-700 transition-colors hover:border-primary-300 hover:bg-white hover:text-primary-600 dark:border-surface-800 dark:bg-surface-950/60 dark:text-surface-300 dark:hover:border-primary-500/50 dark:hover:bg-surface-900 dark:hover:text-white"
+            >
+              <span className="flex items-center gap-2">
+                <Icon className="h-3.5 w-3.5 text-primary-500" />
+                {item.label}
+              </span>
+              <ArrowRight className="h-3.5 w-3.5 text-surface-400 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          );
+        })}
       </div>
       <Link
         href="/explore"
         className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-xs font-black text-white transition-colors hover:bg-primary-600"
       >
-        Browse prompt library <ArrowRight className="h-3.5 w-3.5" />
+        Open prompt library <ArrowRight className="h-3.5 w-3.5" />
       </Link>
     </div>
   );
