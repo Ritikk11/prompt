@@ -406,6 +406,7 @@ export default function Admin() {
       showShareButtons: true,
       showTryButtons: true,
       showYouMightAlsoLike: true,
+      showHomepageHowTo: true,
       showScrollProgress: true,
       showFaqSchema: true,
       showPublicProfiles: true,
@@ -2433,6 +2434,7 @@ export default function Admin() {
                   className="w-full sm:w-1/2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
                 >
                   <option value="v1">Default: Classic Slider</option>
+                  <option value="v9">Library Landing</option>
                   <option value="v3">Current: Diagonal Cards</option>
                   <option value="v4">Bento Feature Grid</option>
                   <option value="v8">Cinematic Edge</option>
@@ -3194,6 +3196,23 @@ export default function Admin() {
                     </label>
                   ))}
                 </div>
+              </div>
+
+              {/* Homepage Sections */}
+              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                <div className="mb-3">
+                  <span className="text-sm font-medium">Homepage Sections</span>
+                  <p className="mt-1 text-xs text-surface-500">Control optional homepage guidance blocks that are not part of your post sections.</p>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="checkbox"
+                    checked={features.showHomepageHowTo ?? true}
+                    onChange={(e) => setFeatures(prev => ({ ...prev, showHomepageHowTo: e.target.checked }))}
+                    className="w-4 h-4 rounded text-primary-500"
+                  />
+                  Homepage how it works section
+                </label>
               </div>
 
               {/* Advanced Filtering */}

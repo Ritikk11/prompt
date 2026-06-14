@@ -86,6 +86,7 @@ export interface SiteFeatures {
   showShareButtons?: boolean;
   showTryButtons?: boolean;
   showYouMightAlsoLike?: boolean;
+  showHomepageHowTo?: boolean;
   showScrollProgress?: boolean;
   showFaqSchema?: boolean;
   showPublicProfiles?: boolean;
@@ -140,7 +141,7 @@ export interface SiteSettings {
   heroSubtitle?: string;
   heroEnabled: boolean;
   heroAutoPlay: boolean;
-  heroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'custom';
+  heroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'custom';
   postHeroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
   cardStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
   badgeStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10';
