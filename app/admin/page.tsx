@@ -407,6 +407,7 @@ export default function Admin() {
       showShareButtons: true,
       showTryButtons: true,
       showYouMightAlsoLike: true,
+      showHomepageLibraryHero: true,
       showHomepageHowTo: true,
       showScrollProgress: true,
       showFaqSchema: true,
@@ -3206,6 +3207,15 @@ export default function Admin() {
                   <p className="mt-1 text-xs text-surface-500">Control optional homepage guidance blocks that are not part of your post sections.</p>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="checkbox"
+                    checked={features.showHomepageLibraryHero ?? true}
+                    onChange={(e) => setFeatures(prev => ({ ...prev, showHomepageLibraryHero: e.target.checked }))}
+                    className="w-4 h-4 rounded text-primary-500"
+                  />
+                  Homepage library hero
+                </label>
+                <label className="mt-3 flex items-center gap-2 cursor-pointer text-sm">
                   <input
                     type="checkbox"
                     checked={features.showHomepageHowTo ?? true}
