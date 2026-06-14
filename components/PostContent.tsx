@@ -68,7 +68,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const [tryFeedback, setTryFeedback] = useState('');
   const [commentText, setCommentText] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [commentState, setCommentState] = useState(() => ({
     postId: post.id,
     items: post.comments || [],
@@ -95,22 +94,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       gtag('event', eventName, { post_id: post.id, post_slug: post.slug, ...params });
     }
   };
-
-  useEffect(() => {
-    if (!settings.features?.showScrollProgress) return;
-    const updateProgress = () => {
-      const doc = document.documentElement;
-      const max = doc.scrollHeight - window.innerHeight;
-      setScrollProgress(max > 0 ? Math.min(100, Math.max(0, (window.scrollY / max) * 100)) : 0);
-    };
-    updateProgress();
-    window.addEventListener('scroll', updateProgress, { passive: true });
-    window.addEventListener('resize', updateProgress);
-    return () => {
-      window.removeEventListener('scroll', updateProgress);
-      window.removeEventListener('resize', updateProgress);
-    };
-  }, [settings.features?.showScrollProgress]);
 
   const handleBookmark = async () => {
     if (!user) {
@@ -263,13 +246,18 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   };
 
   const handleTryTool = async (tool: string, prompt: string) => {
+    const targetUrl = getTryToolUrl(tool, prompt);
+    const opened = window.open(targetUrl, '_blank', 'noopener,noreferrer');
     try {
       await navigator.clipboard.writeText(prompt);
       setTryFeedback(`Prompt copied. Opening ${tool}...`);
       window.setTimeout(() => setTryFeedback(''), 2500);
     } catch {}
     trackEvent('try_tool_clicked', { tool });
-    window.open(getTryToolUrl(tool, prompt), '_blank', 'noopener,noreferrer');
+    if (!opened) {
+      setTryFeedback(`Prompt copied. Please allow popups to open ${tool}.`);
+      window.setTimeout(() => setTryFeedback(''), 3500);
+    }
   };
 
   const handleShare = async (target: 'whatsapp' | 'x' | 'instagram' | 'copy') => {
@@ -304,10 +292,13 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         <LoadingImage src={item.thumbnailUrl || item.images?.[0]?.url || ''} alt="" fill showSkeleton={showSkeleton} className="object-cover transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
       </div>
       <div className="min-w-0 flex-1 py-1">
-        <div className="flex items-start gap-2">
-          <h4 className="min-w-0 flex-1 line-clamp-2 text-xs font-bold leading-snug text-surface-900 dark:text-white">{item.title}</h4>
+        <h4 className="line-clamp-2 text-xs font-bold leading-snug text-surface-900 dark:text-white">{item.title}</h4>
+        <div className="mt-1 flex items-center justify-between gap-2">
+          <p className="flex min-w-0 items-center gap-2 text-[11px] text-surface-400">
+            <Eye className="h-3 w-3" /> {(item.views || 0).toLocaleString()}
+          </p>
           {firstTool && firstToolInfo && (
-            <span className={`inline-flex shrink-0 items-center gap-1 rounded-full ${firstToolInfo.color}/80 px-1.5 py-1 text-[7px] font-bold uppercase tracking-wider text-white shadow-xl backdrop-blur-md border border-white/10`}>
+            <span className={`inline-flex shrink-0 items-center gap-1 rounded-full ${firstToolInfo.color}/80 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wider text-white shadow-xl backdrop-blur-md border border-white/10`}>
               {firstToolInfo.logo && (
                 <span className="relative h-3 w-3 shrink-0 overflow-hidden rounded-full bg-white p-[1px]">
                   <Image src={firstToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
@@ -317,9 +308,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             </span>
           )}
         </div>
-        <p className="mt-1 flex items-center gap-2 text-[11px] text-surface-400">
-          <Eye className="h-3 w-3" /> {(item.views || 0).toLocaleString()}
-        </p>
       </div>
     </Link>
   );
@@ -340,7 +328,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         {heroTools.slice(0, 3).map(tool => (
           <Link
             key={tool}
-            href="/explore"
+            href={`/tool/${encodeURIComponent(tool)}`}
             className="rounded-full bg-surface-100 px-3 py-1.5 text-[11px] font-bold text-surface-600 hover:bg-primary-500 hover:text-white dark:bg-surface-800 dark:text-surface-300"
           >
             {tool}
@@ -768,12 +756,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
   return (
     <div className="max-w-6xl mx-auto px-1 py-4 sm:py-6 fade-in">
-      {settings.features?.showScrollProgress && (
-        <div className="fixed left-0 right-0 top-12 z-40 h-1 bg-transparent">
-          <div className="h-full bg-primary-500 transition-[width] duration-150" style={{ width: `${scrollProgress}%` }} />
-        </div>
-      )}
-
       {(shareFeedback || tryFeedback) && (
         <div className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-full border border-surface-200 bg-white px-4 py-2 text-xs font-bold text-surface-800 shadow-xl dark:border-surface-700 dark:bg-surface-900 dark:text-white">
           {shareFeedback || tryFeedback}
@@ -903,7 +885,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                       {(img.aiTools || [img.aiTool].filter(Boolean)).map((tool) => {
                         const info = getToolInfo(tool, settings?.toolDetails);
                         return (
-                          <div key={tool} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[9px] font-bold text-white shadow-xl backdrop-blur-md ${info.color}/80 border border-white/10 uppercase tracking-wider`}>
+                          <div key={tool} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold text-white shadow-xl backdrop-blur-md ${info.color}/80 border border-white/10 uppercase tracking-wider`}>
                             {info.logo && (
                               <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
                                 <div 

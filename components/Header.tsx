@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { Search, Sun, Moon, Menu, X, Sparkles, Shield, User as UserIcon, LogOut, Plus } from 'lucide-react';
 import Image from 'next/image';
@@ -19,6 +19,8 @@ export default function Header() {
   const headerSections = sections.filter(s => s.location === 'header' && s.visible).sort((a,b) => a.order - b.order);
   const headerLinks = settings.headerLinks || [];
   const navigate = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -28,6 +30,9 @@ export default function Header() {
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [routeProgress, setRouteProgress] = useState(0);
+  const routeTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,6 +48,36 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY, menuOpen, searchOpen, showLiveResults]);
+
+  useEffect(() => {
+    if (!settings.features?.showScrollProgress) {
+      window.setTimeout(() => setScrollProgress(0), 0);
+      return;
+    }
+    const updateProgress = () => {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      setScrollProgress(max > 0 ? Math.min(100, Math.max(0, (window.scrollY / max) * 100)) : 0);
+    };
+    updateProgress();
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    window.addEventListener('resize', updateProgress);
+    return () => {
+      window.removeEventListener('scroll', updateProgress);
+      window.removeEventListener('resize', updateProgress);
+    };
+  }, [settings.features?.showScrollProgress, pathname, searchParams]);
+
+  useEffect(() => {
+    window.setTimeout(() => setRouteProgress(65), 0);
+    if (routeTimerRef.current) window.clearTimeout(routeTimerRef.current);
+    routeTimerRef.current = window.setTimeout(() => setRouteProgress(0), 450);
+    return () => {
+      if (routeTimerRef.current) window.clearTimeout(routeTimerRef.current);
+    };
+  }, [pathname, searchParams]);
+
+  const progressWidth = Math.max(routeProgress, settings.features?.showScrollProgress ? scrollProgress : 0);
 
   useEffect(() => {
     const supabase = createClient();
@@ -344,6 +379,12 @@ export default function Header() {
           </div>
         </nav>
       )}
+      <div className="absolute inset-x-0 bottom-0 h-0.5 bg-transparent">
+        <div
+          className="h-full bg-primary-500 shadow-[0_0_12px_rgba(99,102,241,0.45)] transition-[width,opacity] duration-200"
+          style={{ width: `${progressWidth}%`, opacity: progressWidth > 0 ? 1 : 0 }}
+        />
+      </div>
     </header>
   );
 }

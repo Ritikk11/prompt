@@ -1,8 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Image from 'next/image';
+import { Hash } from 'lucide-react';
 import type { Post } from '@/lib/types';
-import { getAllTools } from '@/lib/constants';
+import { getAllTools, getToolInfo } from '@/lib/constants';
 import PostCard from '@/components/PostCard';
 import AdSlot from '@/components/AdSlot';
 import { getGridClasses } from '@/lib/utils';
@@ -83,12 +85,24 @@ export default function FilterChipRail({
                 key={`${chip.kind}:${chip.value}`}
                 type="button"
                 onClick={() => setActive(chip)}
-                className={`rounded-xl px-3.5 py-2 text-xs font-black transition-colors ${
+                className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-black transition-colors ${
                   isActive
                     ? 'bg-white text-surface-950 shadow-sm dark:bg-white dark:text-surface-950'
                     : 'bg-surface-100 text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-white dark:hover:bg-surface-700'
                 }`}
               >
+                {chip.kind === 'tool' ? (
+                  (() => {
+                    const info = getToolInfo(chip.label, settings?.toolDetails);
+                    return info.logo ? (
+                      <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white p-[1px] shadow-sm">
+                        <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                      </span>
+                    ) : null;
+                  })()
+                ) : chip.kind === 'tag' ? (
+                  <Hash className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                ) : null}
                 {chip.label}
               </button>
             );

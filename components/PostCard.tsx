@@ -27,7 +27,7 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
   };
 
   return (
-    <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wider ${getBadgeStyle()} ${className}`}>
+    <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider ${getBadgeStyle()} ${className}`}>
       {toolInfo.logo ? (
         <div 
           className={`relative shrink-0 ${isIconOnly ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-3.5 h-3.5 sm:w-4 sm:h-4'} bg-white rounded-full overflow-hidden p-[2px] shadow-sm`}

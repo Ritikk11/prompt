@@ -54,15 +54,19 @@ export default function LoadingImage({
 
   useEffect(() => {
     if (!enabled) return;
-    const completeCheck = window.requestAnimationFrame(() => {
+    const markIfLoaded = () => {
       const image = imageRef.current;
-      if (!image?.complete) return;
+      if (!image?.complete) return false;
       if (image.naturalWidth > 0) {
         setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+        return true;
       } else {
         setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
+        return true;
       }
-    });
+    };
+    const completeCheck = window.requestAnimationFrame(markIfLoaded);
+    const interval = window.setInterval(markIfLoaded, 500);
     const timer = window.setTimeout(() => {
       const image = imageRef.current;
       if (image?.complete && image.naturalWidth > 0) {
@@ -77,6 +81,7 @@ export default function LoadingImage({
     }, IMAGE_WAIT_TIMEOUT_MS);
     return () => {
       window.cancelAnimationFrame(completeCheck);
+      window.clearInterval(interval);
       window.clearTimeout(timer);
     };
   }, [enabled, srcValue]);
@@ -152,15 +157,19 @@ export function LoadingImg({
 
   useEffect(() => {
     if (!showSkeleton) return;
-    const completeCheck = window.requestAnimationFrame(() => {
+    const markIfLoaded = () => {
       const image = imageRef.current;
-      if (!image?.complete) return;
+      if (!image?.complete) return false;
       if (image.naturalWidth > 0) {
         setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+        return true;
       } else {
         setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
+        return true;
       }
-    });
+    };
+    const completeCheck = window.requestAnimationFrame(markIfLoaded);
+    const interval = window.setInterval(markIfLoaded, 500);
     const timer = window.setTimeout(() => {
       const image = imageRef.current;
       if (image?.complete && image.naturalWidth > 0) {
@@ -175,6 +184,7 @@ export function LoadingImg({
     }, IMAGE_WAIT_TIMEOUT_MS);
     return () => {
       window.cancelAnimationFrame(completeCheck);
+      window.clearInterval(interval);
       window.clearTimeout(timer);
     };
   }, [srcValue, showSkeleton]);
