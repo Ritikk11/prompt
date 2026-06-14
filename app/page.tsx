@@ -4,6 +4,7 @@ import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } 
 import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
 import HomeLinkBlocks from '@/components/HomeLinkBlocks';
+import HomeHowItWorks from '@/components/HomeHowItWorks';
 
 
 export default async function Home() {
@@ -25,10 +26,16 @@ export default async function Home() {
     <div className="max-w-7xl mx-auto px-1 py-0 sm:py-2 space-y-4">
       {/* Featured Slider */}
       <section>
-        <FeaturedSlider featuredPosts={featuredPosts} settings={settings} />
+        <FeaturedSlider
+          featuredPosts={featuredPosts}
+          settings={settings}
+          stats={{ postCount: allPosts.length, sectionCount: homepageSections.length }}
+        />
       </section>
 
       <HomeLinkBlocks blocks={settings.homeLinkBlocks} />
+
+      {(settings.features?.showHomepageHowTo ?? true) && <HomeHowItWorks />}
 
       {/* Main Content */}
       {homepageSections.map((section, idx) => (
