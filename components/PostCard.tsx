@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-import { Eye, Heart } from 'lucide-react';
+import { Eye, Heart, ShieldCheck } from 'lucide-react';
 import type { Post } from '@/lib/types';
 import { getToolInfo, getAllTools } from '@/lib/constants';
 import { useData } from '@/components/context/DataContext';
@@ -67,6 +67,13 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
     </div>
   );
 
+  const renderReviewedBadge = (className = "") => (
+    <span className={`inline-flex items-center gap-1 rounded-full border border-white/20 bg-black/45 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-white shadow-sm backdrop-blur-md ${className}`}>
+      <ShieldCheck className="h-3 w-3" />
+      Reviewed
+    </span>
+  );
+
   if (cardStyle === 'v4') { // Social Card Layout
     return (
       <Link
@@ -91,6 +98,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
             showSkeleton={showSkeleton}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             referrerPolicy="no-referrer" skeleton={showSkeleton} />
+           <div className="absolute top-3 left-3">{renderReviewedBadge()}</div>
            <div className="absolute top-3 right-3">{renderBadges()}</div>
         </div>
         <div className="p-4">
@@ -121,6 +129,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
             showSkeleton={showSkeleton}
             className="object-cover"
             referrerPolicy="no-referrer" skeleton={showSkeleton} />
+           <div className="absolute left-2 top-2">{renderReviewedBadge()}</div>
            <div className="absolute top-0 right-0 p-2">{renderBadges()}</div>
         </div>
         <div className="p-4">
@@ -155,7 +164,10 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
           referrerPolicy="no-referrer" skeleton={showSkeleton} />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
         <div className="absolute inset-0 p-6 flex flex-col justify-between">
-           <div className="flex justify-end">{renderBadges()}</div>
+           <div className="flex items-start justify-between gap-2">
+             {renderReviewedBadge()}
+             {renderBadges()}
+           </div>
            <div>
              <h3 className="font-bold text-white text-xl mb-4 leading-tight drop-shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform">
                {post.title}
@@ -186,7 +198,8 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
               showSkeleton={showSkeleton}
               className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
               referrerPolicy="no-referrer" skeleton={showSkeleton} />
-             <div className="absolute top-2 left-2">{renderBadges("scale-75 origin-top-left")}</div>
+             <div className="absolute left-2 top-2">{renderReviewedBadge("scale-90 origin-top-left")}</div>
+             <div className="absolute right-2 top-2">{renderBadges("scale-75 origin-top-right")}</div>
           </div>
           <div className="px-2 pb-2">
             <h3 className="font-serif italic text-lg text-surface-900 dark:text-white leading-tight mb-3">
@@ -222,7 +235,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
              <h3 className="font-bold text-surface-900 dark:text-white text-sm line-clamp-1 truncate flex-1">
                {post.title}
              </h3>
-             {renderBadges("scale-90")}
+             {renderReviewedBadge("scale-90")}
            </div>
            <div className="flex items-center gap-3 mt-2">
               <div className="flex -space-x-2">
@@ -254,6 +267,9 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
            referrerPolicy="no-referrer" skeleton={showSkeleton} />
           <div className="absolute top-2.5 left-2.5 z-10">
              {renderBadges()}
+          </div>
+          <div className="absolute top-2.5 right-2.5 z-10">
+            {renderReviewedBadge()}
           </div>
           {aspect && (
             <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/85 via-black/35 to-transparent">
@@ -300,6 +316,9 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
           <div className="flex items-center gap-1 mb-1">
              <div className={`w-2 h-2 rounded-full ${toolInfo.color}`} />
              <span className="text-[9px] uppercase tracking-wider font-bold text-surface-500 dark:text-surface-400 truncate">{primaryTool}</span>
+             <span className="ml-1 inline-flex items-center gap-0.5 rounded-full bg-primary-500/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-primary-500">
+               <ShieldCheck className="h-2.5 w-2.5" /> Reviewed
+             </span>
           </div>
           <h3 className="font-bold text-surface-900 dark:text-white text-xs sm:text-sm leading-snug line-clamp-2 mb-1.5 group-hover:text-primary-500 transition-colors">
             {post.title}
@@ -336,6 +355,9 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
       {/* Top Left AI Tool Badge - Hidden on Hover */}
       <div className="absolute top-3 left-3 z-10 pointer-events-none transition-opacity duration-300 group-hover:opacity-0">
         {renderBadges()}
+      </div>
+      <div className="absolute top-3 right-3 z-10 pointer-events-none transition-opacity duration-300 group-hover:opacity-0">
+        {renderReviewedBadge()}
       </div>
 
       {/* Bottom Left Prompt Count - Hidden on Hover */}
