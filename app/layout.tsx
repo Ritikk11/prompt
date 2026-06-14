@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { Inter } from 'next/font/google';
 import './globals.css';
  // Global styles
@@ -53,7 +54,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             initialSections={initialSections}
             initialPosts={initialPosts}
           >
-            <Header />
+            <Suspense fallback={null}>
+              <Header />
+            </Suspense>
             <AdSlot placement="header" className="max-w-7xl mx-auto w-full px-4" />
             <main className="flex-1 w-full min-h-[80vh]">
               {children}

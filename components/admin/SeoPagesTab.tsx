@@ -34,6 +34,7 @@ export default function SeoPagesTab() {
   const [categoriesStr, setCategoriesStr] = useState('');
   const [aiToolsStr, setAiToolsStr] = useState('');
   const [filterTagsStr, setFilterTagsStr] = useState('');
+  const [cardStyle, setCardStyle] = useState('');
 
   useEffect(() => {
     const fetchPages = async () => {
@@ -45,7 +46,7 @@ export default function SeoPagesTab() {
   }, []);
 
   const resetForm = () => {
-    setTitle(''); setSeoTitle(''); setSeoDescription(''); setSlug(''); setIntroContent(''); setTagsStr(''); setCategoriesStr(''); setAiToolsStr(''); setFilterTagsStr('');
+    setTitle(''); setSeoTitle(''); setSeoDescription(''); setSlug(''); setIntroContent(''); setTagsStr(''); setCategoriesStr(''); setAiToolsStr(''); setFilterTagsStr(''); setCardStyle('');
     setEditingId(null);
     setShowForm(false);
   };
@@ -60,6 +61,7 @@ export default function SeoPagesTab() {
     setCategoriesStr((page.categories || []).join(', '));
     setAiToolsStr((page.aiTools || []).join(', '));
     setFilterTagsStr((page.filterTags || []).join(', '));
+    setCardStyle(page.cardStyle || '');
     setEditingId(page.id);
     setShowForm(true);
   };
@@ -79,6 +81,7 @@ export default function SeoPagesTab() {
       categories: categoriesStr.split(',').map(s => s.trim()).filter(Boolean),
       aiTools: aiToolsStr.split(',').map(s => s.trim()).filter(Boolean),
       filterTags: filterTagsStr.split(',').map(s => s.trim()).filter(Boolean),
+      cardStyle: cardStyle || undefined,
       createdAt: new Date().toISOString()
     };
 
@@ -149,6 +152,16 @@ export default function SeoPagesTab() {
              <input value={filterTagsStr} onChange={e => setFilterTagsStr(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm" placeholder="e.g. character, anime, realistic" />
              <p className="mt-1 text-xs text-surface-500">Shows a horizontal tag selector above this page grid. Tags must match post tags.</p>
           </div>
+          <div>
+             <label className="block text-sm font-medium mb-1.5">Card Style (optional)</label>
+             <select value={cardStyle} onChange={e => setCardStyle(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm">
+               <option value="">Use global card style</option>
+               {['v1','v2','v3','v4','v5','v6','v7','v8'].map(style => (
+                 <option key={style} value={style}>{style}</option>
+               ))}
+             </select>
+             <p className="mt-1 text-xs text-surface-500">Use this when you want this page to show a different card design than the rest of the site.</p>
+          </div>
           <button onClick={handleSave} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors">
             <Save className="w-4 h-4" /> Save SEO Page
           </button>
@@ -178,6 +191,7 @@ export default function SeoPagesTab() {
                 {page.categories?.length > 0 && <span>Cats: {page.categories.join(', ')}</span>}
                 {page.aiTools?.length > 0 && <span>Tools: {page.aiTools.join(', ')}</span>}
                 {page.filterTags?.length > 0 && <span>Filter rail: {page.filterTags.join(', ')}</span>}
+                {page.cardStyle && <span>Cards: {page.cardStyle}</span>}
               </div>
             </div>
             <div className="flex gap-2">

@@ -107,11 +107,11 @@ export default async function PostPage({ params }: Props) {
             <p className="text-surface-500">No posts found matching the criteria.</p>
           </div>
         ) : seoPage.filterTags?.length ? (
-          <FilterChipRail posts={filteredPosts} tags={seoPage.filterTags} tools={[]} showTools={false} settings={settings} renderGrid />
+          <FilterChipRail posts={filteredPosts} tags={seoPage.filterTags} tools={[]} showTools={false} settings={settings} cardStyleOverride={seoPage.cardStyle} renderGrid />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start pt-8">
             {filteredPosts.map((candidate, index) => (
-              <PostCard key={candidate.id} post={candidate} index={index} />
+              <PostCard key={candidate.id} post={candidate} index={index} cardStyleOverride={seoPage.cardStyle} />
             ))}
           </div>
         )}
