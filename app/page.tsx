@@ -4,6 +4,7 @@ import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
 import HomeLinkBlocks from '@/components/HomeLinkBlocks';
 import HomeHowItWorks from '@/components/HomeHowItWorks';
+import HomeLibraryHero from '@/components/HomeLibraryHero';
 
 
 export default async function Home() {
@@ -23,6 +24,10 @@ export default async function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-1 py-0 sm:py-2 space-y-4">
+      {(settings.features?.showHomepageLibraryHero ?? true) && settings.heroStyle !== 'v9' && (
+        <HomeLibraryHero featuredPosts={featuredPosts} settings={settings} postCount={allPosts.length} />
+      )}
+
       {/* Featured Slider */}
       <section>
         <FeaturedSlider

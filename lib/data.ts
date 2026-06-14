@@ -49,6 +49,7 @@ const defaultSettings: SiteSettings = {
     showShareButtons: true,
     showTryButtons: true,
     showYouMightAlsoLike: true,
+    showHomepageLibraryHero: true,
     showHomepageHowTo: true,
     showScrollProgress: true,
     showFaqSchema: true,

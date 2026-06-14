@@ -86,6 +86,7 @@ export interface SiteFeatures {
   showShareButtons?: boolean;
   showTryButtons?: boolean;
   showYouMightAlsoLike?: boolean;
+  showHomepageLibraryHero?: boolean;
   showHomepageHowTo?: boolean;
   showScrollProgress?: boolean;
   showFaqSchema?: boolean;
