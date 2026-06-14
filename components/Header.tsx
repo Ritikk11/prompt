@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
@@ -33,6 +33,24 @@ export default function Header() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [routeProgress, setRouteProgress] = useState(0);
   const routeTimerRef = useRef<number | null>(null);
+  const routeIntervalRef = useRef<number | null>(null);
+  const didMountRef = useRef(false);
+
+  const stopRouteTimers = useCallback(() => {
+    if (routeTimerRef.current) window.clearTimeout(routeTimerRef.current);
+    if (routeIntervalRef.current) window.clearInterval(routeIntervalRef.current);
+    routeTimerRef.current = null;
+    routeIntervalRef.current = null;
+  }, []);
+
+  const startRouteProgress = useCallback(() => {
+    stopRouteTimers();
+    setRouteProgress(8);
+    routeTimerRef.current = window.setTimeout(() => setRouteProgress(28), 120);
+    routeIntervalRef.current = window.setInterval(() => {
+      setRouteProgress(prev => (prev > 0 && prev < 88 ? Math.min(prev + 7, 88) : prev));
+    }, 450);
+  }, [stopRouteTimers]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,7 +68,8 @@ export default function Header() {
   }, [lastScrollY, menuOpen, searchOpen, showLiveResults]);
 
   useEffect(() => {
-    if (!settings.features?.showScrollProgress) {
+    const showScrollProgress = settings.features?.showScrollProgress !== false;
+    if (!showScrollProgress) {
       window.setTimeout(() => setScrollProgress(0), 0);
       return;
     }
@@ -69,15 +88,35 @@ export default function Header() {
   }, [settings.features?.showScrollProgress, pathname, searchParams]);
 
   useEffect(() => {
-    window.setTimeout(() => setRouteProgress(65), 0);
-    if (routeTimerRef.current) window.clearTimeout(routeTimerRef.current);
-    routeTimerRef.current = window.setTimeout(() => setRouteProgress(0), 450);
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    stopRouteTimers();
+    window.setTimeout(() => setRouteProgress(100), 0);
+    routeTimerRef.current = window.setTimeout(() => setRouteProgress(0), 350);
     return () => {
-      if (routeTimerRef.current) window.clearTimeout(routeTimerRef.current);
+      stopRouteTimers();
     };
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, stopRouteTimers]);
 
-  const progressWidth = Math.max(routeProgress, settings.features?.showScrollProgress ? scrollProgress : 0);
+  useEffect(() => {
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const anchor = (event.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
+      if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+      const nextUrl = new URL(anchor.href, window.location.href);
+      const currentUrl = new URL(window.location.href);
+      if (nextUrl.origin !== currentUrl.origin) return;
+      if (nextUrl.pathname === currentUrl.pathname && nextUrl.search === currentUrl.search) return;
+      startRouteProgress();
+    };
+    document.addEventListener('click', handleDocumentClick, true);
+    return () => document.removeEventListener('click', handleDocumentClick, true);
+  }, [startRouteProgress]);
+
+  const showScrollProgress = settings.features?.showScrollProgress !== false;
+  const progressWidth = routeProgress > 0 ? routeProgress : (showScrollProgress ? scrollProgress : 0);
 
   useEffect(() => {
     const supabase = createClient();
@@ -379,7 +418,7 @@ export default function Header() {
           </div>
         </nav>
       )}
-      <div className="absolute inset-x-0 bottom-0 h-0.5 bg-transparent">
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-transparent">
         <div
           className="h-full bg-primary-500 shadow-[0_0_12px_rgba(99,102,241,0.45)] transition-[width,opacity] duration-200"
           style={{ width: `${progressWidth}%`, opacity: progressWidth > 0 ? 1 : 0 }}
