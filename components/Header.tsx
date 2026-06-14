@@ -116,7 +116,8 @@ export default function Header() {
   }, [startRouteProgress]);
 
   const showScrollProgress = settings.features?.showScrollProgress !== false;
-  const progressWidth = routeProgress > 0 ? routeProgress : (showScrollProgress ? scrollProgress : 0);
+  const loadingProgressWidth = routeProgress;
+  const scrollProgressWidth = showScrollProgress ? scrollProgress : 0;
 
   useEffect(() => {
     const supabase = createClient();
@@ -420,8 +421,14 @@ export default function Header() {
       )}
       <div className="absolute inset-x-0 top-0 h-0.5 bg-transparent">
         <div
-          className="h-full bg-primary-500 shadow-[0_0_12px_rgba(99,102,241,0.45)] transition-[width,opacity] duration-200"
-          style={{ width: `${progressWidth}%`, opacity: progressWidth > 0 ? 1 : 0 }}
+          className="h-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.5)] transition-[width,opacity] duration-200"
+          style={{ width: `${loadingProgressWidth}%`, opacity: loadingProgressWidth > 0 ? 1 : 0 }}
+        />
+      </div>
+      <div className="absolute inset-x-0 bottom-0 h-0.5 bg-transparent">
+        <div
+          className="h-full bg-gradient-to-r from-primary-500 via-fuchsia-500 to-purple-500 shadow-[0_0_10px_rgba(139,92,246,0.35)] transition-[width,opacity] duration-150"
+          style={{ width: `${scrollProgressWidth}%`, opacity: scrollProgressWidth > 0 ? 1 : 0 }}
         />
       </div>
     </header>
