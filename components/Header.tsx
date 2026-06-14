@@ -34,6 +34,7 @@ export default function Header() {
   const [routeProgress, setRouteProgress] = useState(0);
   const routeTimerRef = useRef<number | null>(null);
   const routeIntervalRef = useRef<number | null>(null);
+  const scrollFrameRef = useRef<number | null>(null);
   const didMountRef = useRef(false);
 
   const stopRouteTimers = useCallback(() => {
@@ -74,9 +75,13 @@ export default function Header() {
       return;
     }
     const updateProgress = () => {
+      if (scrollFrameRef.current) return;
+      scrollFrameRef.current = window.requestAnimationFrame(() => {
+        scrollFrameRef.current = null;
       const doc = document.documentElement;
       const max = doc.scrollHeight - window.innerHeight;
       setScrollProgress(max > 0 ? Math.min(100, Math.max(0, (window.scrollY / max) * 100)) : 0);
+      });
     };
     updateProgress();
     window.addEventListener('scroll', updateProgress, { passive: true });
@@ -84,6 +89,8 @@ export default function Header() {
     return () => {
       window.removeEventListener('scroll', updateProgress);
       window.removeEventListener('resize', updateProgress);
+      if (scrollFrameRef.current) window.cancelAnimationFrame(scrollFrameRef.current);
+      scrollFrameRef.current = null;
     };
   }, [settings.features?.showScrollProgress, pathname, searchParams]);
 
@@ -232,6 +239,22 @@ export default function Header() {
   };
 
   return (
+    <>
+    <div className="fixed inset-x-0 top-0 z-[60] h-0.5 bg-transparent pointer-events-none">
+      <div
+        className="h-full origin-left bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.5)] transition-[transform,opacity] duration-200 ease-out"
+        style={{ transform: `scaleX(${loadingProgressWidth / 100})`, opacity: loadingProgressWidth > 0 ? 1 : 0 }}
+      />
+    </div>
+    <div
+      className="fixed inset-x-0 z-[60] h-0.5 bg-transparent pointer-events-none transition-[top] duration-300 ease-in-out"
+      style={{ top: isVisible ? '48px' : '0px' }}
+    >
+      <div
+        className="h-full origin-left bg-gradient-to-r from-primary-500 via-fuchsia-500 to-purple-500 shadow-[0_0_10px_rgba(139,92,246,0.35)] transition-[transform,opacity] duration-75 ease-out"
+        style={{ transform: `scaleX(${scrollProgressWidth / 100})`, opacity: scrollProgressWidth > 0 ? 1 : 0 }}
+      />
+    </div>
     <header className={`sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-surface-950/80 border-b border-surface-200 dark:border-surface-800 transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between gap-4">
         {/* Logo */}
@@ -419,18 +442,7 @@ export default function Header() {
           </div>
         </nav>
       )}
-      <div className="absolute inset-x-0 top-0 h-0.5 bg-transparent">
-        <div
-          className="h-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.5)] transition-[width,opacity] duration-200"
-          style={{ width: `${loadingProgressWidth}%`, opacity: loadingProgressWidth > 0 ? 1 : 0 }}
-        />
-      </div>
-      <div className="absolute inset-x-0 bottom-0 h-0.5 bg-transparent">
-        <div
-          className="h-full bg-gradient-to-r from-primary-500 via-fuchsia-500 to-purple-500 shadow-[0_0_10px_rgba(139,92,246,0.35)] transition-[width,opacity] duration-150"
-          style={{ width: `${scrollProgressWidth}%`, opacity: scrollProgressWidth > 0 ? 1 : 0 }}
-        />
-      </div>
     </header>
+    </>
   );
 }
