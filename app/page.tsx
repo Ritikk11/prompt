@@ -4,7 +4,6 @@ import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } 
 import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
 import HomeLinkBlocks from '@/components/HomeLinkBlocks';
-import HomeEditorialSections from '@/components/HomeEditorialSections';
 
 
 export default async function Home() {
@@ -30,7 +29,6 @@ export default async function Home() {
       </section>
 
       <HomeLinkBlocks blocks={settings.homeLinkBlocks} />
-      <HomeEditorialSections posts={allPosts} />
 
       {/* Main Content */}
       {homepageSections.map((section, idx) => (
