@@ -409,6 +409,12 @@ export default function Admin() {
       showYouMightAlsoLike: true,
       showHomepageLibraryHero: true,
       showHomepageHowTo: true,
+      showHomepageReviewProcess: true,
+      showHomepagePromptOfDay: true,
+      showHomepageCreativeDirections: true,
+      showHomepageSupportedTools: true,
+      showHomepageNewsletter: true,
+      showHomepageCreatorFeedback: true,
       showScrollProgress: true,
       showFaqSchema: true,
       showPublicProfiles: true,
@@ -3224,6 +3230,32 @@ export default function Admin() {
                   />
                   Homepage how it works section
                 </label>
+                <label className="mt-3 flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="checkbox"
+                    checked={features.showHomepageReviewProcess ?? true}
+                    onChange={(e) => setFeatures(prev => ({ ...prev, showHomepageReviewProcess: e.target.checked }))}
+                    className="w-4 h-4 rounded text-primary-500"
+                  />
+                  Homepage review process section
+                </label>
+                {[
+                  ['showHomepagePromptOfDay', 'Homepage prompt of the day'],
+                  ['showHomepageCreativeDirections', 'Homepage creative directions'],
+                  ['showHomepageSupportedTools', 'Homepage supported AI tools'],
+                  ['showHomepageNewsletter', 'Homepage newsletter section'],
+                  ['showHomepageCreatorFeedback', 'Homepage creator feedback section'],
+                ].map(([key, label]) => (
+                  <label key={key} className="mt-3 flex items-center gap-2 cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={Boolean((features as any)[key] ?? true)}
+                      onChange={(e) => setFeatures(prev => ({ ...prev, [key]: e.target.checked }))}
+                      className="w-4 h-4 rounded text-primary-500"
+                    />
+                    {label}
+                  </label>
+                ))}
               </div>
 
               {/* Advanced Filtering */}

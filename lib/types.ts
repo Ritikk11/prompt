@@ -88,6 +88,12 @@ export interface SiteFeatures {
   showYouMightAlsoLike?: boolean;
   showHomepageLibraryHero?: boolean;
   showHomepageHowTo?: boolean;
+  showHomepageReviewProcess?: boolean;
+  showHomepagePromptOfDay?: boolean;
+  showHomepageCreativeDirections?: boolean;
+  showHomepageSupportedTools?: boolean;
+  showHomepageNewsletter?: boolean;
+  showHomepageCreatorFeedback?: boolean;
   showScrollProgress?: boolean;
   showFaqSchema?: boolean;
   showPublicProfiles?: boolean;

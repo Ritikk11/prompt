@@ -6,6 +6,12 @@ import HomeSection from '@/components/HomeSection';
 import HomeLinkBlocks from '@/components/HomeLinkBlocks';
 import HomeHowItWorks from '@/components/HomeHowItWorks';
 import HomeLibraryHero from '@/components/HomeLibraryHero';
+import HomeReviewProcess from '@/components/HomeReviewProcess';
+import HomePromptOfDay from '@/components/HomePromptOfDay';
+import HomeCreativeDirections from '@/components/HomeCreativeDirections';
+import HomeSupportedTools from '@/components/HomeSupportedTools';
+import HomeNewsletter from '@/components/HomeNewsletter';
+import HomeCreatorFeedback from '@/components/HomeCreatorFeedback';
 
 
 export default async function Home() {
@@ -41,6 +47,18 @@ export default async function Home() {
       <HomeLinkBlocks blocks={settings.homeLinkBlocks} />
 
       {(settings.features?.showHomepageHowTo ?? true) && <HomeHowItWorks />}
+
+      {(settings.features?.showHomepageReviewProcess ?? true) && <HomeReviewProcess />}
+
+      {(settings.features?.showHomepagePromptOfDay ?? true) && <HomePromptOfDay post={featuredPosts[0] || allPosts[0]} />}
+
+      {(settings.features?.showHomepageSupportedTools ?? true) && <HomeSupportedTools posts={allPosts} settings={settings} />}
+
+      {(settings.features?.showHomepageCreativeDirections ?? true) && <HomeCreativeDirections posts={allPosts} />}
+
+      {(settings.features?.showHomepageCreatorFeedback ?? true) && <HomeCreatorFeedback />}
+
+      {(settings.features?.showHomepageNewsletter ?? true) && <HomeNewsletter />}
 
       {/* Main Content */}
       {homepageSections.map((section, idx) => (
