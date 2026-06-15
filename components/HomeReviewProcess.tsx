@@ -30,9 +30,9 @@ const reviewSteps = [
 
 export default function HomeReviewProcess() {
   return (
-    <section className="relative overflow-hidden rounded-[30px] border border-surface-200 bg-white px-5 py-10 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-surface-800 dark:bg-surface-950/80 sm:px-8 lg:px-10">
+    <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-surface-50 px-5 py-16 dark:bg-surface-950 sm:px-8">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
-      <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+      <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <div>
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-300">
             <ShieldCheck className="h-4 w-4" />
@@ -42,7 +42,7 @@ export default function HomeReviewProcess() {
             How prompts are reviewed before they go live
           </h2>
           <p className="mt-4 max-w-xl text-base leading-7 text-surface-600 dark:text-surface-300">
-            This gives visitors and AdSense reviewers a clear trust signal: prompts are not just dumped into a feed, they are organized and checked before appearing publicly.
+            Every public prompt is checked for clarity, useful examples, model context, and clean organization before it appears in the library.
           </p>
           <Link
             href="/submit"

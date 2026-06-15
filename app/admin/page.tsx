@@ -2,14 +2,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
-import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, NavLink, AdminUserSummary } from '@/lib/types';
+import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, NavLink, AdminUserSummary, FilterRailItem } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
   Plus, Trash2, Edit3, Eye, EyeOff, ChevronUp, ChevronDown,
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload,
   Settings, Check, Search, RotateCcw, GripVertical, Image as ImageIcon,
-  Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle
+  Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3
 } from 'lucide-react';
 
 import Image from 'next/image';
@@ -136,6 +136,20 @@ function cleanFooterGroups(groups: FooterLinkGroup[] = []) {
 
 function cleanCommaList(value: string) {
   return value.split(',').map(item => item.trim()).filter(Boolean);
+}
+
+function tagsToRailItems(tags: string[] = []): FilterRailItem[] {
+  return tags.filter(Boolean).map(tag => ({ label: tag, type: 'tag', value: tag }));
+}
+
+function cleanRailItems(items: FilterRailItem[] = []) {
+  return items
+    .map(item => ({
+      label: item.label.trim(),
+      type: item.type || 'tag',
+      value: item.value.trim(),
+    }))
+    .filter(item => item.label && item.value);
 }
 
 export default function Admin() {
@@ -376,6 +390,12 @@ export default function Admin() {
   const [headerLinks, setHeaderLinks] = useState<NavLink[]>(settings.headerLinks || []);
   const [homeLinkBlocks, setHomeLinkBlocks] = useState<HomeLinkBlock[]>(settings.homeLinkBlocks || []);
   const [exploreFilterTags, setExploreFilterTags] = useState((settings.exploreFilterTags || []).join(', '));
+  const [exploreFilterItems, setExploreFilterItems] = useState<FilterRailItem[]>(
+    settings.exploreFilterItems || tagsToRailItems(settings.exploreFilterTags || [])
+  );
+  const [creativeDirectionItems, setCreativeDirectionItems] = useState<FilterRailItem[]>(
+    settings.creativeDirectionItems || []
+  );
   const [footerLinkGroups, setFooterLinkGroups] = useState<FooterLinkGroup[]>(settings.footerLinkGroups || defaultFooterLinkGroups);
   const [imgbbApiKey, setImgbbApiKey] = useState(settings.imgbbApiKey || '');
   const [imageProvider, setImageProvider] = useState<'imgbb' | 'cloudinary' | 'supabase'>(settings.imageProvider || 'imgbb');
@@ -455,6 +475,10 @@ export default function Admin() {
     if (settings.headerLinks !== undefined) setHeaderLinks(settings.headerLinks || []);
     if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocks(settings.homeLinkBlocks || []);
     if (settings.exploreFilterTags !== undefined) setExploreFilterTags((settings.exploreFilterTags || []).join(', '));
+    if (settings.exploreFilterItems !== undefined || settings.exploreFilterTags !== undefined) {
+      setExploreFilterItems(settings.exploreFilterItems || tagsToRailItems(settings.exploreFilterTags || []));
+    }
+    if (settings.creativeDirectionItems !== undefined) setCreativeDirectionItems(settings.creativeDirectionItems || []);
     if (settings.footerLinkGroups !== undefined) setFooterLinkGroups(settings.footerLinkGroups || defaultFooterLinkGroups);
     if (settings.imgbbApiKey !== undefined) setImgbbApiKey(settings.imgbbApiKey);
     if (settings.imageProvider !== undefined) setImageProvider(settings.imageProvider);
@@ -861,6 +885,21 @@ export default function Admin() {
     setHomeLinkBlocks(prev => prev.map((block, i) => i === index ? { ...block, [field]: value } : block));
   };
 
+  const updateRailItem = (list: 'explore' | 'creative', index: number, field: keyof FilterRailItem, value: string) => {
+    const setter = list === 'explore' ? setExploreFilterItems : setCreativeDirectionItems;
+    setter(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+  };
+
+  const addRailItem = (list: 'explore' | 'creative') => {
+    const setter = list === 'explore' ? setExploreFilterItems : setCreativeDirectionItems;
+    setter(prev => [...prev, { label: '', type: 'tag', value: '' }]);
+  };
+
+  const removeRailItem = (list: 'explore' | 'creative', index: number) => {
+    const setter = list === 'explore' ? setExploreFilterItems : setCreativeDirectionItems;
+    setter(prev => prev.filter((_, i) => i !== index));
+  };
+
   const updateFooterGroupTitle = (groupIndex: number, title: string) => {
     setFooterLinkGroups(prev => prev.map((group, i) => i === groupIndex ? { ...group, title } : group));
   };
@@ -889,6 +928,8 @@ export default function Admin() {
       headerLinks: cleanNavLinks(headerLinks),
       homeLinkBlocks: cleanHomeBlocks(homeLinkBlocks),
       exploreFilterTags: cleanCommaList(exploreFilterTags),
+      exploreFilterItems: cleanRailItems(exploreFilterItems),
+      creativeDirectionItems: cleanRailItems(creativeDirectionItems),
       footerLinkGroups: cleanFooterGroups(footerLinkGroups),
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
       ads: adsConfig,
@@ -2581,18 +2622,118 @@ export default function Admin() {
               </div>
               <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                 <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-primary-500" /> Explore Filter Tags
+                  <Tag className="w-4 h-4 text-primary-500" /> Explore Filter Rail
                 </h3>
                 <p className="text-xs text-surface-500 mb-4">
-                  Optional custom tag chips for the Explore page. Leave blank to automatically use the most common post tags.
+                  Add custom chips for the Explore page. The title is what users see; the match value is the real post tag, category, or AI tool to filter by.
                 </p>
-                <input
-                  value={exploreFilterTags}
-                  onChange={e => setExploreFilterTags(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                  placeholder="video, character, anime, realistic, illustration"
-                />
-                <p className="mt-2 text-[11px] text-surface-500">These must match post tags exactly enough to filter posts.</p>
+                <div className="space-y-3">
+                  {exploreFilterItems.length === 0 && (
+                    <div className="rounded-lg border border-dashed border-surface-300 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/40 p-4 text-xs text-surface-500">
+                      Leave empty to auto-use common post tags, or add custom chips like Anime | Tag | anime.
+                    </div>
+                  )}
+                  {exploreFilterItems.map((item, index) => (
+                    <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_140px_1fr_auto]">
+                      <input
+                        value={item.label}
+                        onChange={e => updateRailItem('explore', index, 'label', e.target.value)}
+                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                        placeholder="Visible title, e.g. Anime"
+                      />
+                      <select
+                        value={item.type}
+                        onChange={e => updateRailItem('explore', index, 'type', e.target.value)}
+                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      >
+                        <option value="tag">Tag</option>
+                        <option value="tool">AI Tool</option>
+                        <option value="category">Category</option>
+                      </select>
+                      <input
+                        value={item.value}
+                        onChange={e => updateRailItem('explore', index, 'value', e.target.value)}
+                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                        placeholder="Match value, e.g. anime"
+                      />
+                      <button
+                        onClick={() => removeRailItem('explore', index)}
+                        className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => addRailItem('explore')}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-medium"
+                  >
+                    <Plus className="w-4 h-4" /> Add Explore Chip
+                  </button>
+                </div>
+                <details className="mt-4 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50 p-3">
+                  <summary className="cursor-pointer text-xs font-semibold text-surface-600 dark:text-surface-300">Legacy comma tags</summary>
+                  <p className="mt-2 text-[11px] text-surface-500">Fallback only. New custom chips above are preferred.</p>
+                  <input
+                    value={exploreFilterTags}
+                    onChange={e => setExploreFilterTags(e.target.value)}
+                    className="mt-2 w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    placeholder="video, character, anime, realistic, illustration"
+                  />
+                </details>
+              </div>
+
+              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <Grid3X3 className="w-4 h-4 text-primary-500" /> Browse by Style Cards
+                </h3>
+                <p className="text-xs text-surface-500 mb-4">
+                  Control the homepage Creative Directions cards. Leave empty to auto-generate from your most used tags and categories.
+                </p>
+                <div className="space-y-3">
+                  {creativeDirectionItems.length === 0 && (
+                    <div className="rounded-lg border border-dashed border-surface-300 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/40 p-4 text-xs text-surface-500">
+                      No custom cards. The homepage will use real post tags/categories automatically.
+                    </div>
+                  )}
+                  {creativeDirectionItems.map((item, index) => (
+                    <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_140px_1fr_auto]">
+                      <input
+                        value={item.label}
+                        onChange={e => updateRailItem('creative', index, 'label', e.target.value)}
+                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                        placeholder="Card title, e.g. Anime"
+                      />
+                      <select
+                        value={item.type}
+                        onChange={e => updateRailItem('creative', index, 'type', e.target.value)}
+                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      >
+                        <option value="tag">Tag</option>
+                        <option value="tool">AI Tool</option>
+                        <option value="category">Category</option>
+                      </select>
+                      <input
+                        value={item.value}
+                        onChange={e => updateRailItem('creative', index, 'value', e.target.value)}
+                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                        placeholder="Match value, e.g. anime"
+                      />
+                      <button
+                        onClick={() => removeRailItem('creative', index)}
+                        className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => addRailItem('creative')}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-medium"
+                  >
+                    <Plus className="w-4 h-4" /> Add Browse Card
+                  </button>
+                </div>
               </div>
                 <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                   <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">

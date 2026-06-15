@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Copy, Heart, ImagePlus, Search, Wand2 } from 'lucide-react';
+import { Check, Copy, Heart, Search, Wand2 } from 'lucide-react';
 
 const steps = [
   {
@@ -44,7 +44,7 @@ export default function HomeHowItWorks() {
   const ActiveIcon = active.icon;
 
   return (
-    <section id="how-it-works" className="relative overflow-hidden rounded-[30px] border border-surface-200 bg-white px-4 py-10 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-surface-800 dark:bg-surface-950/80 sm:px-6 lg:px-8">
+    <section id="how-it-works" className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-white px-5 py-16 dark:bg-surface-950 sm:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="mb-10 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-50 px-4 py-2 text-xs font-bold text-primary-700">
@@ -70,6 +70,8 @@ export default function HomeHowItWorks() {
                   key={step.number}
                   type="button"
                   data-home-how-step={step.number}
+                  onMouseEnter={() => setActiveIndex(index)}
+                  onFocus={() => setActiveIndex(index)}
                   onClick={() => setActiveIndex(index)}
                   className={`group grid w-full grid-cols-[auto_1fr_auto] items-start gap-4 rounded-2xl border p-5 text-left transition ${
                     isActive
@@ -108,10 +110,6 @@ export default function HomeHowItWorks() {
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="pointer-events-none absolute -bottom-5 -left-4 hidden h-24 w-24 rounded-3xl border border-primary-100 bg-primary-50/80 p-5 text-primary-500 shadow-xl dark:border-primary-500/20 dark:bg-primary-500/10 lg:block">
-              <ImagePlus className="h-full w-full" />
             </div>
           </div>
         </div>

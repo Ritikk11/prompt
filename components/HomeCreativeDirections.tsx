@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Aperture, Camera, Gem, Globe2, Grid3X3, Palette, Sparkles, Wand2 } from 'lucide-react';
-import type { Post } from '@/lib/types';
+import type { FilterRailItem, Post, SiteSettings } from '@/lib/types';
 
 const icons = [Camera, Globe2, Palette, Sparkles, Gem, Grid3X3, Wand2, Aperture];
 const accents = [
@@ -18,21 +18,46 @@ function titleCase(value: string) {
   return value.replace(/[-_]+/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
 }
 
-export default function HomeCreativeDirections({ posts }: { posts: Post[] }) {
+function countMatches(posts: Post[], item: FilterRailItem) {
+  const target = item.value.toLowerCase();
+  return posts.filter(post => {
+    if (item.type === 'tool') {
+      return [...(post.aiTools || []), ...post.images.flatMap(image => image.aiTools || [image.aiTool].filter(Boolean))]
+        .some(value => value.toLowerCase() === target);
+    }
+    if (item.type === 'category') {
+      return [post.category, ...(post.categories || [])].filter(Boolean).some(value => value!.toLowerCase() === target);
+    }
+    return (post.tags || []).some(value => value.toLowerCase() === target);
+  }).length;
+}
+
+function itemHref(item: FilterRailItem) {
+  if (item.type === 'tool') return `/tool/${encodeURIComponent(item.value)}`;
+  if (item.type === 'category') return `/explore?category=${encodeURIComponent(item.value)}`;
+  return `/tag/${encodeURIComponent(item.value)}`;
+}
+
+export default function HomeCreativeDirections({ posts, settings }: { posts: Post[]; settings?: SiteSettings }) {
   const counts = new Map<string, number>();
   posts.forEach(post => {
     const values = [...(post.categories || []), post.category, ...(post.tags || [])].filter(Boolean) as string[];
     values.slice(0, 4).forEach(value => counts.set(value, (counts.get(value) || 0) + 1));
   });
 
-  const directions = Array.from(counts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8);
+  const customDirections = settings?.creativeDirectionItems?.filter(item => item.label && item.value) || [];
+  const directions = customDirections.length > 0
+    ? customDirections.map(item => [item, countMatches(posts, item)] as const).filter(([, count]) => count > 0).slice(0, 8)
+    : Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([name, count]) => [{ label: titleCase(name), value: name, type: 'tag' as const }, count] as const);
 
   if (directions.length === 0) return null;
 
   return (
-    <section className="rounded-[30px] border border-surface-200 bg-white px-5 py-12 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-surface-800 dark:bg-surface-950/80 sm:px-8">
+    <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-white px-5 py-16 dark:bg-surface-950 sm:px-8">
+      <div className="mx-auto max-w-6xl">
       <div className="text-center">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-4 py-2 text-xs font-bold text-blue-600 dark:text-blue-300">
           <Grid3X3 className="h-4 w-4" />
@@ -45,19 +70,20 @@ export default function HomeCreativeDirections({ posts }: { posts: Post[] }) {
       </div>
 
       <div className="mx-auto mt-9 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {directions.map(([name, count], index) => {
+        {directions.map(([item, count], index) => {
           const Icon = icons[index % icons.length];
           return (
-            <Link key={name} href={`/tag/${encodeURIComponent(name)}`} className="rounded-2xl border border-surface-200 bg-surface-50 p-5 transition hover:-translate-y-1 hover:border-primary-300 hover:shadow-xl dark:border-surface-800 dark:bg-surface-900/70 dark:hover:border-primary-500/60">
+            <Link key={`${item.type}:${item.value}`} href={itemHref(item)} className="rounded-2xl border border-surface-200 bg-surface-50 p-5 transition hover:-translate-y-1 hover:border-primary-300 hover:shadow-xl dark:border-surface-800 dark:bg-surface-900/70 dark:hover:border-primary-500/60">
               <span className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${accents[index % accents.length]} text-white shadow-lg`}>
                 <Icon className="h-5 w-5" />
               </span>
-              <h3 className="mt-5 font-extrabold text-surface-950 dark:text-white">{titleCase(name)}</h3>
+              <h3 className="mt-5 font-extrabold text-surface-950 dark:text-white">{item.label}</h3>
               <p className="mt-2 text-sm text-surface-500 dark:text-surface-400">Curated prompt direction</p>
               <p className="mt-4 text-sm font-bold text-primary-600 dark:text-primary-300">{count} {count === 1 ? 'prompt' : 'prompts'}</p>
             </Link>
           );
         })}
+      </div>
       </div>
     </section>
   );

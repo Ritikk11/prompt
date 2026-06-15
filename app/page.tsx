@@ -53,7 +53,7 @@ export default async function Home() {
 
       {(settings.features?.showHomepageSupportedTools ?? true) && <HomeSupportedTools posts={allPosts} settings={settings} />}
 
-      {(settings.features?.showHomepageCreativeDirections ?? true) && <HomeCreativeDirections posts={allPosts} />}
+      {(settings.features?.showHomepageCreativeDirections ?? true) && <HomeCreativeDirections posts={allPosts} settings={settings} />}
 
       {(settings.features?.showHomepageCreatorFeedback ?? true) && <HomeCreatorFeedback />}
 

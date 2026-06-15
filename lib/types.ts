@@ -140,6 +140,12 @@ export interface HomeLinkBlock {
   style?: 'showcase' | 'clean' | 'compact';
 }
 
+export interface FilterRailItem {
+  label: string;
+  type: 'tool' | 'tag' | 'category';
+  value: string;
+}
+
 export interface SiteSettings {
   siteTitle: string;
   siteDescription: string;
@@ -158,6 +164,8 @@ export interface SiteSettings {
   headerLinks?: NavLink[];
   homeLinkBlocks?: HomeLinkBlock[];
   exploreFilterTags?: string[];
+  exploreFilterItems?: FilterRailItem[];
+  creativeDirectionItems?: FilterRailItem[];
   footerLinkGroups?: FooterLinkGroup[];
   ads?: AdSettings;
   imgbbApiKey?: string;
