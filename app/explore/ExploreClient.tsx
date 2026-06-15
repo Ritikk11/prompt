@@ -7,6 +7,7 @@ import PostCard from '@/components/PostCard';
 import FilterChipRail from '@/components/FilterChipRail';
 import { getFilterTagsFromPosts } from '@/lib/filter-tags';
 import { getAllTools } from '@/lib/constants';
+import { Compass, Flame, Sparkles } from 'lucide-react';
 
 export default function ExploreClient({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'trending'>('latest');
@@ -18,6 +19,7 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
   const tools = Array.from(new Set(publicPosts.flatMap(p => getAllTools(p))));
   const filterTags = settings.exploreFilterTags?.length ? settings.exploreFilterTags : getFilterTagsFromPosts(publicPosts);
+  const filterItems = settings.exploreFilterItems || [];
   const showAdvancedFilters = settings.features?.advancedFiltering;
   const showTrending = settings.features?.trendingAlgorithm;
 
@@ -50,33 +52,60 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
   const visiblePosts = filtered.slice(0, displayedCount);
 
   return (
-    <div className="max-w-7xl mx-auto px-1 py-4 sm:py-6 fade-in">
-      <h1 className="text-2xl md:text-3xl font-bold mb-2">Explore All Prompts</h1>
-      <p className="text-surface-500 dark:text-surface-400 mb-6">Discover {posts.length} curated prompt collections</p>
+    <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8 fade-in">
+      <section className="relative mb-8 overflow-hidden rounded-[30px] border border-surface-200 bg-white px-5 py-10 shadow-[0_22px_70px_rgba(15,23,42,0.08)] dark:border-surface-800 dark:bg-surface-950 sm:px-8 lg:px-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(124,58,237,0.12),transparent_30%),radial-gradient(circle_at_82%_0%,rgba(14,165,233,0.10),transparent_28%)]" />
+        <div className="relative grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-500/10 px-4 py-2 text-xs font-black text-primary-600 dark:text-primary-300">
+              <Compass className="h-4 w-4" />
+              Prompt Library
+            </div>
+            <h1 className="max-w-3xl text-4xl font-black tracking-normal text-surface-950 dark:text-white sm:text-5xl">
+              Explore curated AI image prompts
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-surface-600 dark:text-surface-300">
+              Browse {publicPosts.length} prompt collections by model, visual direction, and creative use case.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:flex">
+            <div className="rounded-2xl border border-surface-200 bg-surface-50 px-5 py-4 dark:border-surface-800 dark:bg-surface-900/70">
+              <p className="text-2xl font-black text-surface-950 dark:text-white">{publicPosts.length}</p>
+              <p className="mt-1 text-xs font-bold text-surface-500 dark:text-surface-400">Prompts</p>
+            </div>
+            <div className="rounded-2xl border border-surface-200 bg-surface-50 px-5 py-4 dark:border-surface-800 dark:bg-surface-900/70">
+              <p className="text-2xl font-black text-surface-950 dark:text-white">{tools.length}</p>
+              <p className="mt-1 text-xs font-bold text-surface-500 dark:text-surface-400">AI tools</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Filters */}
-      <div className="mb-8 rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-800 dark:bg-surface-900">
+      <div className="mb-7 space-y-4">
         {/* Sort */}
-        <div className="mb-4 flex items-center gap-2">
-          <span className="text-xs font-medium text-surface-400 uppercase tracking-wide">Sort:</span>
-          <div className="flex rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <div className="flex shrink-0 rounded-2xl border border-surface-200 bg-surface-50 p-1 dark:border-surface-800 dark:bg-surface-900">
             <button
               onClick={() => setSortBy('latest')}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === 'latest' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700'}`}
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition ${sortBy === 'latest' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-600 hover:bg-white dark:text-surface-300 dark:hover:bg-surface-800'}`}
             >
+              <Sparkles className="h-3.5 w-3.5" />
               Latest
             </button>
             <button
               onClick={() => setSortBy('popular')}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === 'popular' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700'}`}
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition ${sortBy === 'popular' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-600 hover:bg-white dark:text-surface-300 dark:hover:bg-surface-800'}`}
             >
+              <Flame className="h-3.5 w-3.5" />
               Popular
             </button>
             {showTrending && (
               <button
                 onClick={() => setSortBy('trending')}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === 'trending' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700'}`}
+                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition ${sortBy === 'trending' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-600 hover:bg-white dark:text-surface-300 dark:hover:bg-surface-800'}`}
               >
+                <Flame className="h-3.5 w-3.5" />
                 Trending
               </button>
             )}
@@ -84,7 +113,7 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
         </div>
 
         {showAdvancedFilters && (
-          <FilterChipRail posts={filtered} tools={tools} tags={filterTags} settings={settings} renderGrid />
+          <FilterChipRail posts={filtered} tools={tools} tags={filterTags} items={filterItems} settings={settings} renderGrid />
         )}
       </div>
 

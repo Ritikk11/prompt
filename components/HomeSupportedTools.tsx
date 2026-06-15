@@ -19,7 +19,8 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
   if (tools.length === 0) return null;
 
   return (
-    <section className="rounded-[30px] border border-surface-200 bg-white px-5 py-12 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-surface-800 dark:bg-surface-950/80 sm:px-8">
+    <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-surface-50 px-5 py-16 dark:bg-surface-950 sm:px-8">
+      <div className="mx-auto max-w-6xl">
       <div className="text-center">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-300">
           <Zap className="h-4 w-4" />
@@ -66,6 +67,7 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
             </Link>
           );
         })}
+      </div>
       </div>
     </section>
   );

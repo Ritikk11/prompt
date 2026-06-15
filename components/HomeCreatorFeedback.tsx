@@ -21,7 +21,8 @@ const feedback = [
 
 export default function HomeCreatorFeedback() {
   return (
-    <section className="rounded-[30px] border border-surface-200 bg-white px-5 py-12 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-surface-800 dark:bg-surface-950/80 sm:px-8">
+    <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-white px-5 py-16 dark:bg-surface-950 sm:px-8">
+      <div className="mx-auto max-w-6xl">
       <div className="text-center">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-pink-500/10 px-4 py-2 text-xs font-bold text-pink-600 dark:text-pink-300">
           <MessageSquareText className="h-4 w-4" />
@@ -43,6 +44,7 @@ export default function HomeCreatorFeedback() {
             <p className="mt-2 text-sm leading-6 text-surface-600 dark:text-surface-300">{item.text}</p>
           </div>
         ))}
+      </div>
       </div>
     </section>
   );

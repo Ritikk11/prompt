@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
-import { Hash } from 'lucide-react';
-import type { Post } from '@/lib/types';
+import type { FilterRailItem, Post } from '@/lib/types';
 import { getAllTools, getToolInfo } from '@/lib/constants';
 import PostCard from '@/components/PostCard';
 import AdSlot from '@/components/AdSlot';
@@ -12,7 +11,7 @@ import { getGridClasses } from '@/lib/utils';
 type Chip = {
   label: string;
   value: string;
-  kind: 'all' | 'tool' | 'tag';
+  kind: 'all' | 'tool' | 'tag' | 'category';
 };
 
 function postMatchesTool(post: Post, tool: string) {
@@ -25,10 +24,16 @@ function postMatchesTag(post: Post, tag: string) {
   return post.tags?.some(item => item.toLowerCase() === target);
 }
 
+function postMatchesCategory(post: Post, category: string) {
+  const target = category.toLowerCase();
+  return [post.category, ...(post.categories || [])].filter(Boolean).some(item => item!.toLowerCase() === target);
+}
+
 export default function FilterChipRail({
   posts,
   tools = [],
   tags = [],
+  items = [],
   showTools = true,
   showTags = true,
   renderGrid = false,
@@ -38,6 +43,7 @@ export default function FilterChipRail({
   posts: Post[];
   tools?: string[];
   tags?: string[];
+  items?: FilterRailItem[];
   showTools?: boolean;
   showTags?: boolean;
   renderGrid?: boolean;
@@ -49,6 +55,15 @@ export default function FilterChipRail({
   const chips = useMemo(() => {
     const list: Chip[] = [{ label: 'All', value: 'all', kind: 'all' }];
     const seenLabels = new Set(['all']);
+    if (items.length > 0) {
+      items.filter(item => item.label && item.value).forEach(item => {
+        const key = `${item.type}:${item.value}`.toLowerCase();
+        if (seenLabels.has(key)) return;
+        seenLabels.add(key);
+        list.push({ label: item.label, value: item.value, kind: item.type });
+      });
+      return list;
+    }
     if (showTools) {
       tools.filter(Boolean).forEach(tool => {
         const key = tool.toLowerCase();
@@ -66,42 +81,38 @@ export default function FilterChipRail({
       });
     }
     return list;
-  }, [showTags, showTools, tags, tools]);
+  }, [items, showTags, showTools, tags, tools]);
 
   const filteredPosts = useMemo(() => {
     if (active.kind === 'all') return posts;
     if (active.kind === 'tool') return posts.filter(post => postMatchesTool(post, active.value));
+    if (active.kind === 'category') return posts.filter(post => postMatchesCategory(post, active.value));
     return posts.filter(post => postMatchesTag(post, active.value));
   }, [active, posts]);
 
   return (
     <>
-      <div className="-mx-1 mb-6 overflow-x-auto pb-1">
-        <div className="flex min-w-max items-center gap-2 px-1">
+      <div className="-mx-1 mb-7 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex min-w-max items-center gap-3 px-1">
           {chips.map(chip => {
             const isActive = active.kind === chip.kind && active.value === chip.value;
+            const toolInfo = getToolInfo(chip.value || chip.label, settings?.toolDetails);
+            const showToolLogo = Boolean(toolInfo.logo);
             return (
               <button
                 key={`${chip.kind}:${chip.value}`}
                 type="button"
                 onClick={() => setActive(chip)}
-                className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-black transition-colors ${
+                className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-black transition ${
                   isActive
-                    ? 'bg-white text-surface-950 shadow-sm dark:bg-white dark:text-surface-950'
-                    : 'bg-surface-100 text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-white dark:hover:bg-surface-700'
+                    ? 'bg-primary-600 text-white shadow-[0_12px_26px_rgba(124,58,237,0.24)] dark:bg-primary-500'
+                    : 'bg-surface-100 text-surface-700 hover:-translate-y-0.5 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-100 dark:hover:bg-surface-700'
                 }`}
               >
-                {chip.kind === 'tool' ? (
-                  (() => {
-                    const info = getToolInfo(chip.label, settings?.toolDetails);
-                    return info.logo ? (
-                      <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white p-[1px] shadow-sm">
-                        <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-                      </span>
-                    ) : null;
-                  })()
-                ) : chip.kind === 'tag' ? (
-                  <Hash className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                {showToolLogo ? (
+                  <span className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-white p-[1px] shadow-sm">
+                    <Image src={toolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" sizes="20px" />
+                  </span>
                 ) : null}
                 {chip.label}
               </button>
