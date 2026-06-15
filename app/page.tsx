@@ -29,7 +29,7 @@ export default async function Home() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-1 py-0 sm:py-2 space-y-4">
+    <div className="max-w-7xl mx-auto px-1 py-0">
       {(settings.features?.showHomepageLibraryHero ?? true) && settings.heroStyle !== 'v9' && (
         <HomeLibraryHero featuredPosts={featuredPosts} settings={settings} postCount={allPosts.length} />
       )}

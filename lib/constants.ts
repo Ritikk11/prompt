@@ -1,12 +1,23 @@
 export const fallbackToolInfo: Record<string, { color: string; logo: string; logoScale?: number }> = {
   'ChatGPT': {
     color: 'bg-[#74aa9c]',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg'
+    logo: '/tool-logos/chatgpt.svg'
   },
   'Gemini': {
     color: 'bg-[#4285f4]',
-    logo: 'https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg',
-    logoScale: 1.5
+    logo: '/tool-logos/gemini.svg'
+  },
+  'Grok': {
+    color: 'bg-black',
+    logo: '/tool-logos/grok.svg'
+  },
+  'Qwen': {
+    color: 'bg-[#6366f1]',
+    logo: '/tool-logos/qwen.svg'
+  },
+  'Qwen Image': {
+    color: 'bg-[#6366f1]',
+    logo: '/tool-logos/qwen.svg'
   },
   'Midjourney': {
     color: 'bg-surface-900',
@@ -72,13 +83,29 @@ export function getAllTools(post: any): string[] {
 }
 
 export function getToolInfo(tool: string, customDetails?: Record<string, {logo?: string; color?: string; logoScale?: number}>) {
-  if (customDetails && customDetails[tool]) {
-    const custom = customDetails[tool];
+  const normalizedTool = tool?.trim();
+  const fallbackEntry = Object.entries(fallbackToolInfo).find(([name]) => name.toLowerCase() === normalizedTool?.toLowerCase());
+  const fallbackKey = fallbackEntry?.[0] || normalizedTool;
+  const localFallback = fallbackEntry?.[1];
+
+  // Keep core AI-tool logos local/repo-backed for speed and consistent circular rendering.
+  // Admin custom logos still work for non-core tools.
+  if (localFallback && ['/tool-logos/chatgpt.svg', '/tool-logos/gemini.svg', '/tool-logos/grok.svg', '/tool-logos/qwen.svg'].includes(localFallback.logo)) {
+    const custom = customDetails?.[fallbackKey] || customDetails?.[normalizedTool];
     return {
-      color: custom.color || fallbackToolInfo[tool]?.color || 'bg-surface-500',
-      logo: custom.logo || fallbackToolInfo[tool]?.logo || '',
-      logoScale: custom.logoScale !== undefined ? custom.logoScale : fallbackToolInfo[tool]?.logoScale
+      color: custom?.color || localFallback.color || 'bg-surface-500',
+      logo: localFallback.logo,
+      logoScale: undefined
     };
   }
-  return { color: fallbackToolInfo[tool]?.color || 'bg-surface-500', logo: fallbackToolInfo[tool]?.logo || '', logoScale: fallbackToolInfo[tool]?.logoScale };
+
+  const custom = customDetails?.[fallbackKey] || customDetails?.[normalizedTool];
+  if (custom) {
+    return {
+      color: custom.color || localFallback?.color || 'bg-surface-500',
+      logo: custom.logo || localFallback?.logo || '',
+      logoScale: custom.logoScale !== undefined ? custom.logoScale : localFallback?.logoScale
+    };
+  }
+  return { color: localFallback?.color || 'bg-surface-500', logo: localFallback?.logo || '', logoScale: localFallback?.logoScale };
 }

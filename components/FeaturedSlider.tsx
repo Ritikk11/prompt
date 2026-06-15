@@ -252,7 +252,7 @@ export default function FeaturedSlider({
                         {info.logo && (
                           <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
                             <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                              <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                              <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                             </div>
                           </div>
                         )}
@@ -292,7 +292,7 @@ export default function FeaturedSlider({
                     {info.logo && (
                       <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
                         <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                          <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                          <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                         </div>
                       </div>
                     )}
@@ -362,7 +362,7 @@ export default function FeaturedSlider({
                     {info.logo && (
                       <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
                         <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                          <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                          <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                         </div>
                       </div>
                     )}
@@ -533,7 +533,7 @@ export default function FeaturedSlider({
                         {info.logo && (
                           <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-0.5">
                             <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                              <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                              <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                             </div>
                           </div>
                         )}
@@ -621,7 +621,7 @@ export default function FeaturedSlider({
                                 {slideToolInfo.logo && (
                                   <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
                                     <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={slideToolInfo.logoScale ? { transform: `scale(${slideToolInfo.logoScale})` } : undefined}>
-                                      <Image src={slideToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                                      <Image src={slideToolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                                     </div>
                                   </div>
                                 )}
