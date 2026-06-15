@@ -781,38 +781,24 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       <div className={showPostSidebar ? 'grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_280px]' : ''}>
         <div className="min-w-0">
 
-      {(showTryButtons || showShareButtons) && (
+      {showShareButtons && (
         <div className="mb-8 grid gap-3 rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900 lg:hidden">
-          {showTryButtons && heroTools.length > 0 && (
-            <div>
-              <h3 className="mb-2 text-sm font-black">Try this prompt</h3>
-              <div className="flex flex-wrap gap-2">
-                {Array.from(new Set(heroTools)).map(tool => (
-                  <button key={tool} onClick={() => handleTryTool(tool, firstPrompt)} className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-3 py-2 text-xs font-bold text-white">
-                    {tool} <ExternalLink className="h-3 w-3" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {showShareButtons && (
-            <div className="flex flex-wrap items-center gap-2">
-              <button onClick={() => handleShare('whatsapp')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
-                <WhatsAppLogo className="h-4 w-4 text-green-500" /> WhatsApp
-              </button>
-              <button onClick={() => handleShare('x')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
-                <XLogo className="h-4 w-4" /> X
-              </button>
-              <button onClick={() => handleShare('instagram')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
-                <InstagramLogo className="h-4 w-4 text-pink-500" /> Instagram
-              </button>
-              <button onClick={() => handleShare('copy')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
-                <LinkIcon className="h-4 w-4" /> Copy link
-              </button>
-              {shareFeedback && <span className="text-xs font-bold text-primary-500">{shareFeedback}</span>}
-              {tryFeedback && <span className="text-xs font-bold text-primary-500">{tryFeedback}</span>}
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={() => handleShare('whatsapp')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
+              <WhatsAppLogo className="h-4 w-4 text-green-500" /> WhatsApp
+            </button>
+            <button onClick={() => handleShare('x')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
+              <XLogo className="h-4 w-4" /> X
+            </button>
+            <button onClick={() => handleShare('instagram')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
+              <InstagramLogo className="h-4 w-4 text-pink-500" /> Instagram
+            </button>
+            <button onClick={() => handleShare('copy')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
+              <LinkIcon className="h-4 w-4" /> Copy link
+            </button>
+            {shareFeedback && <span className="text-xs font-bold text-primary-500">{shareFeedback}</span>}
+            {tryFeedback && <span className="text-xs font-bold text-primary-500">{tryFeedback}</span>}
+          </div>
         </div>
       )}
 
