@@ -92,8 +92,8 @@ export default function FilterChipRail({
 
   return (
     <>
-      <div className="-mx-1 mb-7 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex min-w-max items-center gap-3 px-1">
+      <div className="-mx-2 mb-7 overflow-x-auto px-2 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex min-w-max items-center gap-3">
           {chips.map(chip => {
             const isActive = active.kind === chip.kind && active.value === chip.value;
             const toolInfo = getToolInfo(chip.value || chip.label, settings?.toolDetails);
@@ -103,15 +103,15 @@ export default function FilterChipRail({
                 key={`${chip.kind}:${chip.value}`}
                 type="button"
                 onClick={() => setActive(chip)}
-                className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-black transition ${
+                className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-black transition-colors ${
                   isActive
-                    ? 'bg-primary-600 text-white shadow-[0_12px_26px_rgba(124,58,237,0.24)] dark:bg-primary-500'
-                    : 'bg-surface-100 text-surface-700 hover:-translate-y-0.5 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-100 dark:hover:bg-surface-700'
+                    ? 'bg-primary-600 text-white shadow-none ring-0 dark:bg-primary-500'
+                    : 'bg-surface-100 text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-100 dark:hover:bg-surface-700'
                 }`}
               >
                 {showToolLogo ? (
-                  <span className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-white p-[1px] shadow-sm">
-                    <Image src={toolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" sizes="20px" />
+                  <span className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-white p-[2px] shadow-sm">
+                    <Image src={toolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" sizes="20px" />
                   </span>
                 ) : null}
                 {chip.label}

@@ -33,7 +33,7 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
           className={`relative shrink-0 ${isIconOnly ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-3.5 h-3.5 sm:w-4 sm:h-4'} bg-white rounded-full overflow-hidden p-[2px] shadow-sm`}
         >
           <div className="relative w-full h-full rounded-full overflow-hidden" style={toolInfo.logoScale ? { transform: `scale(${toolInfo.logoScale})` } : undefined}>
-            <LoadingImage src={toolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" skeleton={false} />
+            <LoadingImage src={toolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" skeleton={false} />
           </div>
         </div>
       ) : null}

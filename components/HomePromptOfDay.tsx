@@ -25,16 +25,19 @@ export default function HomePromptOfDay({ post }: { post?: Post }) {
 
         <div className={`mx-auto mt-8 grid overflow-hidden rounded-[32px] border border-white/15 bg-white/10 text-left shadow-2xl backdrop-blur-md ${imageUrl ? 'lg:grid-cols-[0.9fr_1.1fr]' : 'max-w-4xl'}`}>
           {imageUrl && (
-            <Link href={`/${post.slug || post.id}`} className="group relative min-h-[320px] overflow-hidden bg-black/20 sm:min-h-[420px] lg:min-h-full">
-              <Image
-                src={imageUrl}
-                alt={post.title}
-                fill
-                sizes="(max-width: 1024px) 100vw, 42vw"
-                className="object-cover transition duration-700 group-hover:scale-105"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
+            <Link href={`/${post.slug || post.id}`} className="group relative flex min-h-[320px] items-center justify-center overflow-hidden bg-black/20 p-4 sm:min-h-[420px] sm:p-6 lg:min-h-full">
+              <div className="relative flex h-full max-h-[520px] w-full items-center justify-center overflow-hidden rounded-3xl bg-black/20">
+                <Image
+                  src={imageUrl}
+                  alt={post.title}
+                  width={720}
+                  height={960}
+                  sizes="(max-width: 1024px) 100vw, 42vw"
+                  className="max-h-[520px] w-auto max-w-full rounded-3xl object-contain transition duration-700 group-hover:scale-[1.02]"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10" />
               <span className="absolute left-5 top-5 rounded-full bg-black/45 px-4 py-1.5 text-xs font-black text-white backdrop-blur-md">
                 Featured
               </span>

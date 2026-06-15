@@ -301,7 +301,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <span className={`inline-flex shrink-0 items-center gap-1 rounded-full ${firstToolInfo.color}/80 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wider text-white shadow-xl backdrop-blur-md border border-white/10`}>
               {firstToolInfo.logo && (
                 <span className="relative h-3 w-3 shrink-0 overflow-hidden rounded-full bg-white p-[1px]">
-                  <Image src={firstToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                  <Image src={firstToolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                 </span>
               )}
               {firstTool}
@@ -373,7 +373,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           >
             {info.logo && (
               <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white p-[1px] shadow-sm">
-                <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
               </span>
             )}
             Try in {tool}
@@ -450,7 +450,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                       {info.logo && (
                         <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
                           <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                            <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                            <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                           </div>
                         </div>
                       )}
@@ -479,7 +479,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                            {info.logo && (
                              <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
                                <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                                 <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                                 <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                                </div>
                              </div>
                            )}
@@ -510,7 +510,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                 {heroToolInfo.logo && (
                   <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
                     <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={heroToolInfo.logoScale ? { transform: `scale(${heroToolInfo.logoScale})` } : undefined}>
-                      <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                      <Image src={heroToolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                     </div>
                   </div>
                 )}
@@ -545,7 +545,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                     {info.logo && (
                       <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
                         <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                          <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                          <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                         </div>
                       </div>
                     )}
@@ -589,7 +589,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                         {heroToolInfo.logo && (
                           <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
                             <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={heroToolInfo.logoScale ? { transform: `scale(${heroToolInfo.logoScale})` } : undefined}>
-                              <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                              <Image src={heroToolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                             </div>
                           </div>
                         )}
@@ -640,7 +640,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                        {info.logo && (
                           <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
                             <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                              <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                              <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                             </div>
                           </div>
                         )}
@@ -690,7 +690,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                           {info.logo && (
                             <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
                               <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                                <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                                <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                               </div>
                             </div>
                           )}
@@ -737,7 +737,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                     {heroToolInfo.logo && (
                       <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
                         <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={heroToolInfo.logoScale ? { transform: `scale(${heroToolInfo.logoScale})` } : undefined}>
-                          <Image src={heroToolInfo.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                          <Image src={heroToolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                         </div>
                       </div>
                     )}
@@ -780,27 +780,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
       <div className={showPostSidebar ? 'grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_280px]' : ''}>
         <div className="min-w-0">
-
-      {showShareButtons && (
-        <div className="mb-8 grid gap-3 rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900 lg:hidden">
-          <div className="flex flex-wrap items-center gap-2">
-            <button onClick={() => handleShare('whatsapp')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
-              <WhatsAppLogo className="h-4 w-4 text-green-500" /> WhatsApp
-            </button>
-            <button onClick={() => handleShare('x')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
-              <XLogo className="h-4 w-4" /> X
-            </button>
-            <button onClick={() => handleShare('instagram')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
-              <InstagramLogo className="h-4 w-4 text-pink-500" /> Instagram
-            </button>
-            <button onClick={() => handleShare('copy')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
-              <LinkIcon className="h-4 w-4" /> Copy link
-            </button>
-            {shareFeedback && <span className="text-xs font-bold text-primary-500">{shareFeedback}</span>}
-            {tryFeedback && <span className="text-xs font-bold text-primary-500">{tryFeedback}</span>}
-          </div>
-        </div>
-      )}
 
       {/* Reference Images */}
       {post.referenceImages && post.referenceImages.length > 0 && (
@@ -882,7 +861,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                                   className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm flex items-center justify-center p-[1px]"
                                 >
                                   <div className="relative w-full h-full" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                                    <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                                    <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                                   </div>
                                 </div>
                               </div>
@@ -987,6 +966,23 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           ))}
         </div>
       </div>
+
+      {showShareButtons && (
+        <div className="mb-10 flex flex-wrap items-center gap-2 lg:hidden">
+          <button onClick={() => handleShare('whatsapp')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
+            <WhatsAppLogo className="h-4 w-4 text-green-500" /> WhatsApp
+          </button>
+          <button onClick={() => handleShare('x')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
+            <XLogo className="h-4 w-4" /> X
+          </button>
+          <button onClick={() => handleShare('instagram')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
+            <InstagramLogo className="h-4 w-4 text-pink-500" /> Instagram
+          </button>
+          <button onClick={() => handleShare('copy')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
+            <LinkIcon className="h-4 w-4" /> Copy link
+          </button>
+        </div>
+      )}
 
       {/* Copy All Prompts CTA */}
       {showCopyCollection && (
@@ -1313,7 +1309,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                         <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
                           <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm flex items-center justify-center p-[1px]">
                             <div className="relative w-full h-full" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                              <Image src={info.logo} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                              <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                             </div>
                           </div>
                         </div>
