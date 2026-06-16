@@ -69,6 +69,10 @@ const homepageBlockOptions = [
 ] as const;
 const defaultHomepageBlockOrder = homepageBlockOptions.map(item => item.key);
 
+function normalizeHomepageOrderToken(key: string) {
+  return key.startsWith('block:') || key.startsWith('section:') ? key : `block:${key}`;
+}
+
 const MARKDOWN_HELP_EXAMPLE = `## Main section
 ### Question style heading
 #### Small subpoint
@@ -443,7 +447,7 @@ export default function Admin() {
   const [headerLinks, setHeaderLinks] = useState<NavLink[]>(settings.headerLinks || []);
   const [homeLinkBlocks, setHomeLinkBlocks] = useState<HomeLinkBlock[]>(settings.homeLinkBlocks || []);
   const [homepageBlockOrder, setHomepageBlockOrder] = useState<string[]>(
-    settings.homepageBlockOrder || defaultHomepageBlockOrder
+    (settings.homepageBlockOrder || defaultHomepageBlockOrder).map(normalizeHomepageOrderToken)
   );
   const [exploreFilterTags, setExploreFilterTags] = useState((settings.exploreFilterTags || []).join(', '));
   const [exploreFilterItems, setExploreFilterItems] = useState<FilterRailItem[]>(
@@ -530,7 +534,9 @@ export default function Admin() {
     if (settings.adminEmails !== undefined) setAdminEmailsStr((settings.adminEmails || []).join(', '));
     if (settings.headerLinks !== undefined) setHeaderLinks(settings.headerLinks || []);
     if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocks(settings.homeLinkBlocks || []);
-    if (settings.homepageBlockOrder !== undefined) setHomepageBlockOrder(settings.homepageBlockOrder || defaultHomepageBlockOrder);
+    if (settings.homepageBlockOrder !== undefined) {
+      setHomepageBlockOrder((settings.homepageBlockOrder || defaultHomepageBlockOrder).map(normalizeHomepageOrderToken));
+    }
     if (settings.exploreFilterTags !== undefined) setExploreFilterTags((settings.exploreFilterTags || []).join(', '));
     if (settings.exploreFilterItems !== undefined || settings.exploreFilterTags !== undefined) {
       setExploreFilterItems(settings.exploreFilterItems || tagsToRailItems(settings.exploreFilterTags || []));
@@ -555,9 +561,18 @@ export default function Admin() {
   const homepagePostSections = sections
     .filter(section => section.visible && (section.location || 'homepage') === 'homepage')
     .sort((a, b) => a.order - b.order);
-  const orderedHomepageBlocks = [
-    ...homepageBlockOrder.filter(key => defaultHomepageBlockOrder.includes(key as any)),
-    ...defaultHomepageBlockOrder.filter(key => !homepageBlockOrder.includes(key)),
+  const homepageSectionTokens = homepagePostSections.map(section => `section:${section.id}`);
+  const defaultHomepageOrder = [
+    ...defaultHomepageBlockOrder.map(key => `block:${key}`),
+    ...homepageSectionTokens,
+  ];
+  const orderedHomepageItems = [
+    ...homepageBlockOrder.filter(token => {
+      if (token.startsWith('block:')) return defaultHomepageBlockOrder.includes(token.replace('block:', '') as any);
+      if (token.startsWith('section:')) return homepageSectionTokens.includes(token);
+      return false;
+    }),
+    ...defaultHomepageOrder.filter(token => !homepageBlockOrder.includes(token)),
   ];
   const autoExploreItems = getAutoExploreItems(posts);
   const savedExploreItems = cleanRailItems(exploreFilterItems);
@@ -988,10 +1003,10 @@ export default function Admin() {
     setter(prev => prev.filter((_, i) => i !== index));
   };
 
-  const moveHomepageBlock = (index: number, direction: 'up' | 'down') => {
+  const moveHomepageItem = (index: number, direction: 'up' | 'down') => {
     const nextIndex = direction === 'up' ? index - 1 : index + 1;
-    if (nextIndex < 0 || nextIndex >= orderedHomepageBlocks.length) return;
-    const next = [...orderedHomepageBlocks];
+    if (nextIndex < 0 || nextIndex >= orderedHomepageItems.length) return;
+    const next = [...orderedHomepageItems];
     [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
     setHomepageBlockOrder(next);
   };
@@ -1023,10 +1038,7 @@ export default function Admin() {
       adminEmails: adminEmailsStr.split(',').map(e => e.trim()).filter(Boolean),
       headerLinks: cleanNavLinks(headerLinks),
       homeLinkBlocks: cleanHomeBlocks(homeLinkBlocks),
-      homepageBlockOrder: [
-        ...homepageBlockOrder.filter(key => defaultHomepageBlockOrder.includes(key as any)),
-        ...defaultHomepageBlockOrder.filter(key => !homepageBlockOrder.includes(key)),
-      ],
+      homepageBlockOrder: orderedHomepageItems,
       exploreFilterTags: cleanCommaList(exploreFilterTags),
       exploreFilterItems: cleanRailItems(exploreFilterItems),
       creativeDirectionItems: cleanRailItems(creativeDirectionItems),
@@ -2792,26 +2804,36 @@ export default function Admin() {
                   Reorder the added homepage blocks. This order is used on the live homepage after the hero and quick cards.
                 </p>
                 <div className="space-y-2">
-                  {orderedHomepageBlocks.map((key, index) => {
-                    const option = homepageBlockOptions.find(item => item.key === key);
-                    if (!option) return null;
-                    const enabled = Boolean((features as any)[option.featureKey] ?? true);
+                  {orderedHomepageItems.map((token, index) => {
+                    const isSection = token.startsWith('section:');
+                    const section = isSection ? homepagePostSections.find(item => item.id === token.replace('section:', '')) : undefined;
+                    const blockKey = isSection ? '' : token.replace('block:', '');
+                    const option = isSection ? undefined : homepageBlockOptions.find(item => item.key === blockKey);
+                    if (!section && !option) return null;
+                    const enabled = section ? section.visible : Boolean((features as any)[option!.featureKey] ?? true);
+                    const title = section?.name || option!.title;
+                    const detail = section
+                      ? `${section.type} section · ${getSectionPath(section)} · Limit: ${section.limit}`
+                      : getHomepageBlockDetail(blockKey);
                     return (
-                      <div key={key} className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                      <div key={token} className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-[11px] font-black text-surface-500 dark:bg-surface-900 dark:text-surface-300">{index + 1}</span>
-                              <p className="text-sm font-bold text-surface-950 dark:text-white">{option.title}</p>
+                              <p className="text-sm font-bold text-surface-950 dark:text-white">{title}</p>
+                              <span className={`rounded-full px-2 py-1 text-[10px] font-black ${isSection ? 'bg-blue-500/10 text-blue-600 dark:text-blue-300' : 'bg-primary-500/10 text-primary-600 dark:text-primary-300'}`}>
+                                {isSection ? 'POST SECTION' : 'BLOCK'}
+                              </span>
                               <span className={`rounded-full px-2 py-1 text-[10px] font-black ${enabled ? 'bg-green-500/10 text-green-600 dark:text-green-300' : 'bg-surface-200 text-surface-500 dark:bg-surface-700 dark:text-surface-300'}`}>
                                 {enabled ? 'ON' : 'OFF'}
                               </span>
                             </div>
-                            <p className="mt-1 pl-8 text-[11px] leading-5 text-surface-500">{getHomepageBlockDetail(key)}</p>
+                            <p className="mt-1 pl-8 text-[11px] leading-5 text-surface-500">{detail}</p>
                           </div>
                           <div className="flex shrink-0 items-center gap-2">
                             <button
-                              onClick={() => moveHomepageBlock(index, 'up')}
+                              onClick={() => moveHomepageItem(index, 'up')}
                               disabled={index === 0}
                               className="rounded-lg border border-surface-200 bg-white p-2 text-surface-500 hover:bg-surface-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-surface-700 dark:bg-surface-900 dark:hover:bg-surface-800"
                               title="Move up"
@@ -2819,8 +2841,8 @@ export default function Admin() {
                               <ChevronUp className="h-4 w-4" />
                             </button>
                             <button
-                              onClick={() => moveHomepageBlock(index, 'down')}
-                              disabled={index === orderedHomepageBlocks.length - 1}
+                              onClick={() => moveHomepageItem(index, 'down')}
+                              disabled={index === orderedHomepageItems.length - 1}
                               className="rounded-lg border border-surface-200 bg-white p-2 text-surface-500 hover:bg-surface-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-surface-700 dark:bg-surface-900 dark:hover:bg-surface-800"
                               title="Move down"
                             >
@@ -2830,7 +2852,10 @@ export default function Admin() {
                               <input
                                 type="checkbox"
                                 checked={enabled}
-                                onChange={(e) => setFeatures(prev => ({ ...prev, [option.featureKey]: e.target.checked }))}
+                                onChange={(e) => {
+                                  if (section) updateSection({ ...section, visible: e.target.checked });
+                                  else setFeatures(prev => ({ ...prev, [option!.featureKey]: e.target.checked }));
+                                }}
                                 className="h-4 w-4 rounded text-primary-500"
                               />
                               Show
@@ -2840,14 +2865,12 @@ export default function Admin() {
                       </div>
                     );
                   })}
-                  <div className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
-                    <p className="text-sm font-bold text-surface-950 dark:text-white">Regular homepage post sections</p>
-                    <p className="mt-1 text-[11px] leading-5 text-surface-500">
-                      {homepagePostSections.length > 0
-                        ? homepagePostSections.map(section => section.name).join(', ')
-                        : 'No visible homepage post sections. Manage these from the Sections tab.'}
-                    </p>
-                  </div>
+                  {homepagePostSections.length === 0 && (
+                    <div className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                      <p className="text-sm font-bold text-surface-950 dark:text-white">No regular homepage post sections</p>
+                      <p className="mt-1 text-[11px] leading-5 text-surface-500">Create one in the Sections tab to place it in this homepage order.</p>
+                    </div>
+                  )}
                 </div>
               </div>
 

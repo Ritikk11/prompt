@@ -24,6 +24,10 @@ const defaultHomepageBlockOrder = [
   'newsletter',
 ];
 
+function normalizeBlockToken(key: string) {
+  return key.startsWith('block:') || key.startsWith('section:') ? key : `block:${key}`;
+}
+
 export default async function Home() {
   const sections = await fetchSections();
   const settings = await fetchSettings();
@@ -38,9 +42,19 @@ export default async function Home() {
   const sectionPostsData = await Promise.all(
     homepageSections.map(section => getPostsForSection(section, settings, allPosts))
   );
-  const homepageBlockOrder = [
-    ...(settings.homepageBlockOrder || []),
-    ...defaultHomepageBlockOrder.filter(key => !(settings.homepageBlockOrder || []).includes(key)),
+  const homepageSectionIds = new Set(homepageSections.map(section => section.id));
+  const defaultHomepageOrder = [
+    ...defaultHomepageBlockOrder.map(key => `block:${key}`),
+    ...homepageSections.map(section => `section:${section.id}`),
+  ];
+  const savedHomepageOrder = (settings.homepageBlockOrder || []).map(normalizeBlockToken);
+  const homepageOrder = [
+    ...savedHomepageOrder.filter(token => {
+      if (token.startsWith('block:')) return defaultHomepageBlockOrder.includes(token.replace('block:', ''));
+      if (token.startsWith('section:')) return homepageSectionIds.has(token.replace('section:', ''));
+      return false;
+    }),
+    ...defaultHomepageOrder.filter(token => !savedHomepageOrder.includes(token)),
   ];
   const homepageBlocks: Record<string, ReactNode> = {
     howTo: (settings.features?.showHomepageHowTo ?? true) ? <HomeHowItWorks /> : null,
@@ -51,6 +65,8 @@ export default async function Home() {
     creatorFeedback: (settings.features?.showHomepageCreatorFeedback ?? true) ? <HomeCreatorFeedback /> : null,
     newsletter: (settings.features?.showHomepageNewsletter ?? true) ? <HomeNewsletter /> : null,
   };
+  const homepageSectionPosts = new Map(homepageSections.map((section, index) => [section.id, sectionPostsData[index]]));
+  const homepageSectionsById = new Map(homepageSections.map(section => [section.id, section]));
 
   return (
     <div className="max-w-7xl mx-auto px-1 py-0">
@@ -69,14 +85,16 @@ export default async function Home() {
 
       <HomeLinkBlocks blocks={settings.homeLinkBlocks} />
 
-      {homepageBlockOrder.map(key => homepageBlocks[key] ? (
-        <div key={key}>{homepageBlocks[key]}</div>
-      ) : null)}
-
-      {/* Main Content */}
-      {homepageSections.map((section, idx) => (
-        <HomeSection key={section.id} section={section} initialPosts={sectionPostsData[idx]} settings={settings} />
-      ))}
+      {homepageOrder.map(token => {
+        if (token.startsWith('block:')) {
+          const key = token.replace('block:', '');
+          return homepageBlocks[key] ? <div key={token}>{homepageBlocks[key]}</div> : null;
+        }
+        const sectionId = token.replace('section:', '');
+        const section = homepageSectionsById.get(sectionId);
+        if (!section) return null;
+        return <HomeSection key={token} section={section} initialPosts={homepageSectionPosts.get(sectionId) || []} settings={settings} />;
+      })}
       
       {homepageSections.length === 0 && (
         <div className="text-center py-12 text-surface-400">
