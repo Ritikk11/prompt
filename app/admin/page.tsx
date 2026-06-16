@@ -13,11 +13,12 @@ import {
 } from 'lucide-react';
 
 import Image from 'next/image';
-import { defaultImageModels, getDefaultImageModel, getImageModelForTools, getToolInfo } from '@/lib/constants';
+import { defaultImageModels, getAllTools, getDefaultImageModel, getImageModelForTools, getToolInfo } from '@/lib/constants';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
 import { getSectionPath } from '@/lib/sections';
+import { getFilterTagsFromPosts } from '@/lib/filter-tags';
 import { optimizeImageFile, optimizeImageToDataUrl, type ImageOptimizePreset } from '@/lib/client-image-optimizer';
 
 
@@ -56,6 +57,16 @@ const homeCardStyles = [
   { value: 'clean', label: 'Clean', description: 'Balanced card with a top accent line.' },
   { value: 'compact', label: 'Compact', description: 'Short utility row for denser pages.' },
 ] as const;
+const homepageBlockOptions = [
+  { key: 'howTo', featureKey: 'showHomepageHowTo', title: 'How it works' },
+  { key: 'reviewProcess', featureKey: 'showHomepageReviewProcess', title: 'Review process' },
+  { key: 'promptOfDay', featureKey: 'showHomepagePromptOfDay', title: 'Prompt of the day' },
+  { key: 'supportedTools', featureKey: 'showHomepageSupportedTools', title: 'Supported AI tools' },
+  { key: 'creativeDirections', featureKey: 'showHomepageCreativeDirections', title: 'Creative directions' },
+  { key: 'creatorFeedback', featureKey: 'showHomepageCreatorFeedback', title: 'Creator feedback' },
+  { key: 'newsletter', featureKey: 'showHomepageNewsletter', title: 'Newsletter' },
+] as const;
+const defaultHomepageBlockOrder = homepageBlockOptions.map(item => item.key);
 
 const MARKDOWN_HELP_EXAMPLE = `## Main section
 ### Question style heading
@@ -142,6 +153,10 @@ function tagsToRailItems(tags: string[] = []): FilterRailItem[] {
   return tags.filter(Boolean).map(tag => ({ label: tag, type: 'tag', value: tag }));
 }
 
+function titleCase(value: string) {
+  return value.replace(/[-_]+/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+}
+
 function cleanRailItems(items: FilterRailItem[] = []) {
   return items
     .map(item => ({
@@ -150,6 +165,43 @@ function cleanRailItems(items: FilterRailItem[] = []) {
       value: item.value.trim(),
     }))
     .filter(item => item.label && item.value);
+}
+
+function getPublicPosts(posts: Post[]) {
+  return posts.filter(post => (post.status === 'published' || !post.status) && post.visibility !== 'private');
+}
+
+function getAutoExploreItems(posts: Post[]): FilterRailItem[] {
+  const publicPosts = getPublicPosts(posts);
+  const tools = Array.from(new Set(publicPosts.flatMap(post => getAllTools(post)).filter(Boolean)));
+  const tags = getFilterTagsFromPosts(publicPosts);
+  return [
+    ...tools.map(tool => ({ label: tool, type: 'tool' as const, value: tool })),
+    ...tags.map(tag => ({ label: titleCase(tag), type: 'tag' as const, value: tag })),
+  ];
+}
+
+function getAutoCreativeItems(posts: Post[]): FilterRailItem[] {
+  const counts = new Map<string, number>();
+  getPublicPosts(posts).forEach(post => {
+    const values = [...(post.categories || []), post.category, ...(post.tags || [])].filter(Boolean) as string[];
+    values.slice(0, 4).forEach(value => counts.set(value, (counts.get(value) || 0) + 1));
+  });
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([name]) => ({ label: titleCase(name), type: 'tag' as const, value: name }));
+}
+
+function countRailMatches(posts: Post[], item: FilterRailItem) {
+  const target = item.value.toLowerCase();
+  return getPublicPosts(posts).filter(post => {
+    if (item.type === 'tool') return getAllTools(post).some(value => value.toLowerCase() === target);
+    if (item.type === 'category') {
+      return [post.category, ...(post.categories || [])].filter(Boolean).some(value => value!.toLowerCase() === target);
+    }
+    return (post.tags || []).some(value => value.toLowerCase() === target);
+  }).length;
 }
 
 export default function Admin() {
@@ -389,6 +441,9 @@ export default function Admin() {
   const [adminEmailsStr, setAdminEmailsStr] = useState((settings.adminEmails || []).join(', '));
   const [headerLinks, setHeaderLinks] = useState<NavLink[]>(settings.headerLinks || []);
   const [homeLinkBlocks, setHomeLinkBlocks] = useState<HomeLinkBlock[]>(settings.homeLinkBlocks || []);
+  const [homepageBlockOrder, setHomepageBlockOrder] = useState<string[]>(
+    settings.homepageBlockOrder || defaultHomepageBlockOrder
+  );
   const [exploreFilterTags, setExploreFilterTags] = useState((settings.exploreFilterTags || []).join(', '));
   const [exploreFilterItems, setExploreFilterItems] = useState<FilterRailItem[]>(
     settings.exploreFilterItems || tagsToRailItems(settings.exploreFilterTags || [])
@@ -455,7 +510,7 @@ export default function Admin() {
     }
   );
 
-  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools'>('general');
+  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'homepage' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools'>('general');
   const [markdownMode, setMarkdownMode] = useState<'edit' | 'preview'>('edit');
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
   const [isBackfillingModels, setIsBackfillingModels] = useState(false);
@@ -474,6 +529,7 @@ export default function Admin() {
     if (settings.adminEmails !== undefined) setAdminEmailsStr((settings.adminEmails || []).join(', '));
     if (settings.headerLinks !== undefined) setHeaderLinks(settings.headerLinks || []);
     if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocks(settings.homeLinkBlocks || []);
+    if (settings.homepageBlockOrder !== undefined) setHomepageBlockOrder(settings.homepageBlockOrder || defaultHomepageBlockOrder);
     if (settings.exploreFilterTags !== undefined) setExploreFilterTags((settings.exploreFilterTags || []).join(', '));
     if (settings.exploreFilterItems !== undefined || settings.exploreFilterTags !== undefined) {
       setExploreFilterItems(settings.exploreFilterItems || tagsToRailItems(settings.exploreFilterTags || []));
@@ -492,6 +548,37 @@ export default function Admin() {
 
   // Get custom sections for assignment
   const customSections = sections.filter(s => s.type === 'custom');
+  const publicPosts = getPublicPosts(posts);
+  const featuredPosts = publicPosts.filter(post => post.featured);
+  const currentPromptOfDay = featuredPosts[0] || publicPosts[0];
+  const homepagePostSections = sections
+    .filter(section => section.visible && (section.location || 'homepage') === 'homepage')
+    .sort((a, b) => a.order - b.order);
+  const orderedHomepageBlocks = [
+    ...homepageBlockOrder.filter(key => defaultHomepageBlockOrder.includes(key as any)),
+    ...defaultHomepageBlockOrder.filter(key => !homepageBlockOrder.includes(key)),
+  ];
+  const autoExploreItems = getAutoExploreItems(posts);
+  const savedExploreItems = cleanRailItems(exploreFilterItems);
+  const liveExploreItems = savedExploreItems.length > 0 ? savedExploreItems : autoExploreItems;
+  const autoCreativeItems = getAutoCreativeItems(posts);
+  const savedCreativeItems = cleanRailItems(creativeDirectionItems);
+  const liveCreativeItems = savedCreativeItems.length > 0 ? savedCreativeItems : autoCreativeItems;
+  const supportedTools = Array.from(new Set(publicPosts.flatMap(post => getAllTools(post)).filter(Boolean)));
+  const getHomepageBlockDetail = (key: string) => {
+    if (key === 'howTo') return 'Fixed 3-step guidance block with clickable preview cards';
+    if (key === 'reviewProcess') return 'Fixed trust block about prompt checks and public quality';
+    if (key === 'promptOfDay') {
+      return currentPromptOfDay ? `${currentPromptOfDay.title} (${currentPromptOfDay.featured ? 'featured' : 'latest public'})` : 'No public post available';
+    }
+    if (key === 'supportedTools') {
+      return supportedTools.length > 0 ? supportedTools.slice(0, 5).join(', ') + (supportedTools.length > 5 ? ` +${supportedTools.length - 5}` : '') : 'No AI tools found in posts';
+    }
+    if (key === 'creativeDirections') return `${liveCreativeItems.length} ${savedCreativeItems.length > 0 ? 'saved' : 'auto'} cards`;
+    if (key === 'creatorFeedback') return 'Static creator-focused trust section';
+    if (key === 'newsletter') return 'Static newsletter capture section';
+    return 'Homepage block';
+  };
 
   const resetForm = () => {
     setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
@@ -900,6 +987,14 @@ export default function Admin() {
     setter(prev => prev.filter((_, i) => i !== index));
   };
 
+  const moveHomepageBlock = (index: number, direction: 'up' | 'down') => {
+    const nextIndex = direction === 'up' ? index - 1 : index + 1;
+    if (nextIndex < 0 || nextIndex >= orderedHomepageBlocks.length) return;
+    const next = [...orderedHomepageBlocks];
+    [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+    setHomepageBlockOrder(next);
+  };
+
   const updateFooterGroupTitle = (groupIndex: number, title: string) => {
     setFooterLinkGroups(prev => prev.map((group, i) => i === groupIndex ? { ...group, title } : group));
   };
@@ -927,6 +1022,10 @@ export default function Admin() {
       adminEmails: adminEmailsStr.split(',').map(e => e.trim()).filter(Boolean),
       headerLinks: cleanNavLinks(headerLinks),
       homeLinkBlocks: cleanHomeBlocks(homeLinkBlocks),
+      homepageBlockOrder: [
+        ...homepageBlockOrder.filter(key => defaultHomepageBlockOrder.includes(key as any)),
+        ...defaultHomepageBlockOrder.filter(key => !homepageBlockOrder.includes(key)),
+      ],
       exploreFilterTags: cleanCommaList(exploreFilterTags),
       exploreFilterItems: cleanRailItems(exploreFilterItems),
       creativeDirectionItems: cleanRailItems(creativeDirectionItems),
@@ -2298,6 +2397,7 @@ export default function Admin() {
           <div className="flex gap-2 mb-6 overflow-x-auto pb-1 border-b border-surface-200 dark:border-surface-800">
             {[
               { id: 'general', label: 'General' },
+              { id: 'homepage', label: 'Homepage' },
               { id: 'navigation', label: 'Navigation' },
               { id: 'footer', label: 'Footer Links' },
               { id: 'features', label: 'Features' },
@@ -2618,8 +2718,138 @@ export default function Admin() {
                   >
                     <Plus className="w-4 h-4" /> Add Header Link
                   </button>
+                  <button
+                    onClick={handleSaveSettings}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors"
+                  >
+                    <Save className="w-4 h-4" /> Save Navigation
+                  </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {settingsSubTab === 'homepage' && (
+            <div className="space-y-6">
+              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <LayoutTemplate className="w-4 h-4 text-primary-500" /> Homepage Hero
+                </h3>
+                <p className="text-xs text-surface-500 mb-4">
+                  Control the main homepage hero behavior and the library intro block above the slider.
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-700 dark:bg-surface-800/50">
+                    <input
+                      type="checkbox"
+                      checked={features.showHomepageLibraryHero ?? true}
+                      onChange={(e) => setFeatures(prev => ({ ...prev, showHomepageLibraryHero: e.target.checked }))}
+                      className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+                    />
+                    Show library hero intro
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-700 dark:bg-surface-800/50">
+                    <input
+                      type="checkbox"
+                      checked={heroEnabled}
+                      onChange={e => setHeroEnabled(e.target.checked)}
+                      className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+                    />
+                    Show hero slideshow
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-700 dark:bg-surface-800/50">
+                    <input
+                      type="checkbox"
+                      checked={heroAutoPlay}
+                      onChange={e => setHeroAutoPlay(e.target.checked)}
+                      className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+                    />
+                    Hero auto-play
+                  </label>
+                  <label className="block">
+                    <span className="block text-xs font-medium text-surface-500 mb-1.5">Hero Style</span>
+                    <select
+                      value={heroStyle}
+                      onChange={e => setHeroStyle(e.target.value as any)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    >
+                      <option value="v1">Default: Classic Slider</option>
+                      <option value="v9">Library Landing</option>
+                      <option value="v3">Current: Diagonal Cards</option>
+                      <option value="v4">Bento Feature Grid</option>
+                      <option value="v8">Cinematic Edge</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-primary-500" /> Homepage Sections Order
+                </h3>
+                <p className="text-xs text-surface-500 mb-4">
+                  Reorder the added homepage blocks. This order is used on the live homepage after the hero and quick cards.
+                </p>
+                <div className="space-y-2">
+                  {orderedHomepageBlocks.map((key, index) => {
+                    const option = homepageBlockOptions.find(item => item.key === key);
+                    if (!option) return null;
+                    const enabled = Boolean((features as any)[option.featureKey] ?? true);
+                    return (
+                      <div key={key} className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-[11px] font-black text-surface-500 dark:bg-surface-900 dark:text-surface-300">{index + 1}</span>
+                              <p className="text-sm font-bold text-surface-950 dark:text-white">{option.title}</p>
+                              <span className={`rounded-full px-2 py-1 text-[10px] font-black ${enabled ? 'bg-green-500/10 text-green-600 dark:text-green-300' : 'bg-surface-200 text-surface-500 dark:bg-surface-700 dark:text-surface-300'}`}>
+                                {enabled ? 'ON' : 'OFF'}
+                              </span>
+                            </div>
+                            <p className="mt-1 pl-8 text-[11px] leading-5 text-surface-500">{getHomepageBlockDetail(key)}</p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <button
+                              onClick={() => moveHomepageBlock(index, 'up')}
+                              disabled={index === 0}
+                              className="rounded-lg border border-surface-200 bg-white p-2 text-surface-500 hover:bg-surface-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-surface-700 dark:bg-surface-900 dark:hover:bg-surface-800"
+                              title="Move up"
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => moveHomepageBlock(index, 'down')}
+                              disabled={index === orderedHomepageBlocks.length - 1}
+                              className="rounded-lg border border-surface-200 bg-white p-2 text-surface-500 hover:bg-surface-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-surface-700 dark:bg-surface-900 dark:hover:bg-surface-800"
+                              title="Move down"
+                            >
+                              <ChevronDown className="h-4 w-4" />
+                            </button>
+                            <label className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-[11px] font-bold text-surface-600 dark:bg-surface-900 dark:text-surface-200">
+                              <input
+                                type="checkbox"
+                                checked={enabled}
+                                onChange={(e) => setFeatures(prev => ({ ...prev, [option.featureKey]: e.target.checked }))}
+                                className="h-4 w-4 rounded text-primary-500"
+                              />
+                              Show
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                    <p className="text-sm font-bold text-surface-950 dark:text-white">Regular homepage post sections</p>
+                    <p className="mt-1 text-[11px] leading-5 text-surface-500">
+                      {homepagePostSections.length > 0
+                        ? homepagePostSections.map(section => section.name).join(', ')
+                        : 'No visible homepage post sections. Manage these from the Sections tab.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                 <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
                   <Tag className="w-4 h-4 text-primary-500" /> Explore Filter Rail
@@ -2627,10 +2857,47 @@ export default function Admin() {
                 <p className="text-xs text-surface-500 mb-4">
                   Add custom chips for the Explore page. The title is what users see; the match value is the real post tag, category, or AI tool to filter by.
                 </p>
+                <div className="mb-4 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-bold uppercase tracking-wide text-surface-500">Current live rail</p>
+                    <span className="text-[11px] font-semibold text-surface-500">
+                      {savedExploreItems.length > 0 ? 'Using saved custom chips' : 'Using auto chips from posts'}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full bg-primary-600 px-3 py-1.5 text-xs font-black text-white">All</span>
+                    {liveExploreItems.slice(0, 14).map(item => (
+                      <span key={`${item.type}:${item.value}`} className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-surface-700 ring-1 ring-surface-200 dark:bg-surface-900 dark:text-surface-100 dark:ring-surface-700">
+                        {item.label}
+                      </span>
+                    ))}
+                    {liveExploreItems.length > 14 && (
+                      <span className="rounded-full bg-surface-200 px-3 py-1.5 text-xs font-bold text-surface-600 dark:bg-surface-700 dark:text-surface-200">
+                        +{liveExploreItems.length - 14} more
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setExploreFilterItems(autoExploreItems)}
+                      className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-2 text-xs font-bold text-white hover:bg-primary-700"
+                    >
+                      <Check className="h-3.5 w-3.5" /> Use current auto chips
+                    </button>
+                    {savedExploreItems.length > 0 && (
+                      <button
+                        onClick={() => setExploreFilterItems([])}
+                        className="inline-flex items-center gap-2 rounded-lg bg-surface-200 px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-300 dark:bg-surface-700 dark:text-surface-100 dark:hover:bg-surface-600"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" /> Reset to auto
+                      </button>
+                    )}
+                  </div>
+                </div>
                 <div className="space-y-3">
                   {exploreFilterItems.length === 0 && (
                     <div className="rounded-lg border border-dashed border-surface-300 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/40 p-4 text-xs text-surface-500">
-                      Leave empty to auto-use common post tags, or add custom chips like Anime | Tag | anime.
+                      No saved custom chips. The live rail above is auto-generated from current AI tools and common post tags.
                     </div>
                   )}
                   {exploreFilterItems.map((item, index) => (
@@ -2690,10 +2957,51 @@ export default function Admin() {
                 <p className="text-xs text-surface-500 mb-4">
                   Control the homepage Creative Directions cards. Leave empty to auto-generate from your most used tags and categories.
                 </p>
+                <div className="mb-4 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-bold uppercase tracking-wide text-surface-500">Current homepage cards</p>
+                    <span className="text-[11px] font-semibold text-surface-500">
+                      {savedCreativeItems.length > 0 ? 'Using saved custom cards' : 'Using auto cards from posts'}
+                    </span>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                    {liveCreativeItems.slice(0, 8).map(item => {
+                      const count = countRailMatches(posts, item);
+                      return (
+                        <div key={`${item.type}:${item.value}`} className="rounded-lg border border-surface-200 bg-white p-3 dark:border-surface-700 dark:bg-surface-900">
+                          <p className="text-sm font-bold text-surface-950 dark:text-white">{item.label}</p>
+                          <p className="mt-1 text-[11px] text-surface-500">{item.type} · {item.value}</p>
+                          <p className="mt-2 text-xs font-bold text-primary-600 dark:text-primary-300">{count} {count === 1 ? 'prompt' : 'prompts'}</p>
+                        </div>
+                      );
+                    })}
+                    {liveCreativeItems.length === 0 && (
+                      <div className="rounded-lg border border-dashed border-surface-300 p-3 text-xs text-surface-500 dark:border-surface-700">
+                        No post tags or categories found yet.
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setCreativeDirectionItems(autoCreativeItems)}
+                      className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-2 text-xs font-bold text-white hover:bg-primary-700"
+                    >
+                      <Check className="h-3.5 w-3.5" /> Use current auto cards
+                    </button>
+                    {savedCreativeItems.length > 0 && (
+                      <button
+                        onClick={() => setCreativeDirectionItems([])}
+                        className="inline-flex items-center gap-2 rounded-lg bg-surface-200 px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-300 dark:bg-surface-700 dark:text-surface-100 dark:hover:bg-surface-600"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" /> Reset to auto
+                      </button>
+                    )}
+                  </div>
+                </div>
                 <div className="space-y-3">
                   {creativeDirectionItems.length === 0 && (
                     <div className="rounded-lg border border-dashed border-surface-300 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/40 p-4 text-xs text-surface-500">
-                      No custom cards. The homepage will use real post tags/categories automatically.
+                      No saved custom cards. The homepage cards above are auto-generated from current post tags/categories.
                     </div>
                   )}
                   {creativeDirectionItems.map((item, index) => (
@@ -2889,7 +3197,7 @@ export default function Admin() {
                   onClick={handleSaveSettings}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-4"
                 >
-                  <Save className="w-4 h-4" /> Save Navigation
+                  <Save className="w-4 h-4" /> Save Homepage
                 </button>
               </div>
             </div>
@@ -3344,58 +3652,6 @@ export default function Admin() {
                     </label>
                   ))}
                 </div>
-              </div>
-
-              {/* Homepage Sections */}
-              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
-                <div className="mb-3">
-                  <span className="text-sm font-medium">Homepage Sections</span>
-                  <p className="mt-1 text-xs text-surface-500">Control optional homepage guidance blocks that are not part of your post sections.</p>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer text-sm">
-                  <input
-                    type="checkbox"
-                    checked={features.showHomepageLibraryHero ?? true}
-                    onChange={(e) => setFeatures(prev => ({ ...prev, showHomepageLibraryHero: e.target.checked }))}
-                    className="w-4 h-4 rounded text-primary-500"
-                  />
-                  Homepage library hero
-                </label>
-                <label className="mt-3 flex items-center gap-2 cursor-pointer text-sm">
-                  <input
-                    type="checkbox"
-                    checked={features.showHomepageHowTo ?? true}
-                    onChange={(e) => setFeatures(prev => ({ ...prev, showHomepageHowTo: e.target.checked }))}
-                    className="w-4 h-4 rounded text-primary-500"
-                  />
-                  Homepage how it works section
-                </label>
-                <label className="mt-3 flex items-center gap-2 cursor-pointer text-sm">
-                  <input
-                    type="checkbox"
-                    checked={features.showHomepageReviewProcess ?? true}
-                    onChange={(e) => setFeatures(prev => ({ ...prev, showHomepageReviewProcess: e.target.checked }))}
-                    className="w-4 h-4 rounded text-primary-500"
-                  />
-                  Homepage review process section
-                </label>
-                {[
-                  ['showHomepagePromptOfDay', 'Homepage prompt of the day'],
-                  ['showHomepageCreativeDirections', 'Homepage creative directions'],
-                  ['showHomepageSupportedTools', 'Homepage supported AI tools'],
-                  ['showHomepageNewsletter', 'Homepage newsletter section'],
-                  ['showHomepageCreatorFeedback', 'Homepage creator feedback section'],
-                ].map(([key, label]) => (
-                  <label key={key} className="mt-3 flex items-center gap-2 cursor-pointer text-sm">
-                    <input
-                      type="checkbox"
-                      checked={Boolean((features as any)[key] ?? true)}
-                      onChange={(e) => setFeatures(prev => ({ ...prev, [key]: e.target.checked }))}
-                      className="w-4 h-4 rounded text-primary-500"
-                    />
-                    {label}
-                  </label>
-                ))}
               </div>
 
               {/* Advanced Filtering */}

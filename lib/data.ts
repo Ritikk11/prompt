@@ -15,6 +15,15 @@ const defaultSettings: SiteSettings = {
   aiTools: ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
   headerLinks: [],
   homeLinkBlocks: [],
+  homepageBlockOrder: [
+    'howTo',
+    'reviewProcess',
+    'promptOfDay',
+    'supportedTools',
+    'creativeDirections',
+    'creatorFeedback',
+    'newsletter',
+  ],
   footerLinkGroups: [
     {
       title: 'Legal',
