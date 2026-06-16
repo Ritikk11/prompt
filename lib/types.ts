@@ -163,6 +163,7 @@ export interface SiteSettings {
   headerSections?: Section[];
   headerLinks?: NavLink[];
   homeLinkBlocks?: HomeLinkBlock[];
+  homepageBlockOrder?: string[];
   exploreFilterTags?: string[];
   exploreFilterItems?: FilterRailItem[];
   creativeDirectionItems?: FilterRailItem[];

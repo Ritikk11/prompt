@@ -1,5 +1,6 @@
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
+import type { ReactNode } from 'react';
 import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } from '@/lib/data';
 import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
@@ -13,6 +14,15 @@ import HomeSupportedTools from '@/components/HomeSupportedTools';
 import HomeNewsletter from '@/components/HomeNewsletter';
 import HomeCreatorFeedback from '@/components/HomeCreatorFeedback';
 
+const defaultHomepageBlockOrder = [
+  'howTo',
+  'reviewProcess',
+  'promptOfDay',
+  'supportedTools',
+  'creativeDirections',
+  'creatorFeedback',
+  'newsletter',
+];
 
 export default async function Home() {
   const sections = await fetchSections();
@@ -28,6 +38,19 @@ export default async function Home() {
   const sectionPostsData = await Promise.all(
     homepageSections.map(section => getPostsForSection(section, settings, allPosts))
   );
+  const homepageBlockOrder = [
+    ...(settings.homepageBlockOrder || []),
+    ...defaultHomepageBlockOrder.filter(key => !(settings.homepageBlockOrder || []).includes(key)),
+  ];
+  const homepageBlocks: Record<string, ReactNode> = {
+    howTo: (settings.features?.showHomepageHowTo ?? true) ? <HomeHowItWorks /> : null,
+    reviewProcess: (settings.features?.showHomepageReviewProcess ?? true) ? <HomeReviewProcess /> : null,
+    promptOfDay: (settings.features?.showHomepagePromptOfDay ?? true) ? <HomePromptOfDay post={featuredPosts[0] || allPosts[0]} /> : null,
+    supportedTools: (settings.features?.showHomepageSupportedTools ?? true) ? <HomeSupportedTools posts={allPosts} settings={settings} /> : null,
+    creativeDirections: (settings.features?.showHomepageCreativeDirections ?? true) ? <HomeCreativeDirections posts={allPosts} settings={settings} /> : null,
+    creatorFeedback: (settings.features?.showHomepageCreatorFeedback ?? true) ? <HomeCreatorFeedback /> : null,
+    newsletter: (settings.features?.showHomepageNewsletter ?? true) ? <HomeNewsletter /> : null,
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-1 py-0">
@@ -46,19 +69,9 @@ export default async function Home() {
 
       <HomeLinkBlocks blocks={settings.homeLinkBlocks} />
 
-      {(settings.features?.showHomepageHowTo ?? true) && <HomeHowItWorks />}
-
-      {(settings.features?.showHomepageReviewProcess ?? true) && <HomeReviewProcess />}
-
-      {(settings.features?.showHomepagePromptOfDay ?? true) && <HomePromptOfDay post={featuredPosts[0] || allPosts[0]} />}
-
-      {(settings.features?.showHomepageSupportedTools ?? true) && <HomeSupportedTools posts={allPosts} settings={settings} />}
-
-      {(settings.features?.showHomepageCreativeDirections ?? true) && <HomeCreativeDirections posts={allPosts} settings={settings} />}
-
-      {(settings.features?.showHomepageCreatorFeedback ?? true) && <HomeCreatorFeedback />}
-
-      {(settings.features?.showHomepageNewsletter ?? true) && <HomeNewsletter />}
+      {homepageBlockOrder.map(key => homepageBlocks[key] ? (
+        <div key={key}>{homepageBlocks[key]}</div>
+      ) : null)}
 
       {/* Main Content */}
       {homepageSections.map((section, idx) => (
