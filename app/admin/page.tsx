@@ -2100,9 +2100,21 @@ export default function Admin() {
                   <h3 className="font-semibold text-sm">{loc === 'homepage' ? 'Homepage Sections' : 'Header Menu Sections'}</h3>
                   <p className="text-xs text-surface-500 mt-1">
                     {loc === 'homepage'
-                      ? 'These render as content rows on the homepage.'
+                      ? 'Edit homepage post sections here. Reorder them with the full homepage layout in Settings -> Homepage.'
                       : 'These appear in the header menu and open their full section pages.'}
                   </p>
+                  {loc === 'homepage' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTab('settings');
+                        setSettingsSubTab('homepage');
+                      }}
+                      className="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary-500/10 px-3 py-2 text-xs font-bold text-primary-600 hover:bg-primary-500/15 dark:text-primary-300"
+                    >
+                      <Layers className="h-3.5 w-3.5" /> Open homepage order
+                    </button>
+                  )}
                 </div>
                 <div className="space-y-3">
                   {[...sections].filter(s => (s.location || 'homepage') === loc).sort((a, b) => a.order - b.order).map((section, idx, arr) => {
@@ -2118,25 +2130,31 @@ export default function Admin() {
                     {/* Main row */}
                     <div className="flex items-center gap-3 p-4">
                       {/* Reorder buttons */}
-                      <div className="flex flex-col gap-0.5 shrink-0">
-                        <button
-                          onClick={() => moveSection(section, 'up')}
-                          disabled={idx === 0}
-                          className="p-1 rounded hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-20 transition-colors"
-                        >
-                          <ChevronUp className="w-3.5 h-3.5" />
-                        </button>
-                        <div className="flex items-center justify-center">
+                      {loc === 'homepage' ? (
+                        <div className="flex w-8 shrink-0 items-center justify-center" title="Use Settings -> Homepage to reorder homepage sections with the rest of the homepage blocks.">
                           <GripVertical className="w-3.5 h-3.5 text-surface-300" />
                         </div>
-                        <button
-                          onClick={() => moveSection(section, 'down')}
-                          disabled={idx === arr.length - 1}
-                          className="p-1 rounded hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-20 transition-colors"
-                        >
-                          <ChevronDown className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      ) : (
+                        <div className="flex flex-col gap-0.5 shrink-0">
+                          <button
+                            onClick={() => moveSection(section, 'up')}
+                            disabled={idx === 0}
+                            className="p-1 rounded hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-20 transition-colors"
+                          >
+                            <ChevronUp className="w-3.5 h-3.5" />
+                          </button>
+                          <div className="flex items-center justify-center">
+                            <GripVertical className="w-3.5 h-3.5 text-surface-300" />
+                          </div>
+                          <button
+                            onClick={() => moveSection(section, 'down')}
+                            disabled={idx === arr.length - 1}
+                            className="p-1 rounded hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-20 transition-colors"
+                          >
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
 
                       {/* Section info */}
                       <div className="flex-1 min-w-0">
