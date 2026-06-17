@@ -583,7 +583,8 @@ export default function Admin() {
   const customSections = sections.filter(s => s.type === 'custom');
   const publicPosts = getPublicPosts(posts);
   const featuredPosts = publicPosts.filter(post => post.featured);
-  const pinnedPromptOfDayId = homepageContent.promptOfDay?.pinnedPostId;
+  const promptOfDayContent = homepageContent.promptOfDay || {};
+  const pinnedPromptOfDayId = promptOfDayContent.pinnedPostId;
   const currentPromptOfDay = publicPosts.find(post => post.id === pinnedPromptOfDayId || post.slug === pinnedPromptOfDayId) || featuredPosts[0] || publicPosts[0];
   const homepagePostSections = sections
     .filter(section => (section.location || 'homepage') === 'homepage')
@@ -1239,6 +1240,13 @@ export default function Admin() {
     { key: 'seo-pages', label: 'SEO Pages', icon: <LayoutTemplate className="w-4 h-4" /> },
     { key: 'static-pages', label: 'Static Pages', icon: <FileText className="w-4 h-4" /> },
   ];
+  const sidebarGroups = [
+    { label: 'Overview', items: tabs.filter(item => item.key === 'dashboard') },
+    { label: 'Content', items: tabs.filter(item => ['posts', 'sections', 'seo-pages', 'static-pages'].includes(item.key)) },
+    { label: 'Moderation', items: tabs.filter(item => ['submissions', 'comments'].includes(item.key)) },
+    { label: 'Audience', items: tabs.filter(item => item.key === 'users') },
+    { label: 'Website', items: tabs.filter(item => item.key === 'settings') },
+  ];
 
   if (authLoading || adminChecking) {
     return <div className="flex h-[50vh] items-center justify-center text-surface-400">Loading admin...</div>;
@@ -1379,6 +1387,41 @@ export default function Admin() {
         </div>
       </div>
 
+      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+        <aside className="lg:sticky lg:top-6 lg:self-start">
+          <div className="rounded-xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900">
+            <p className="mb-3 px-2 text-[11px] font-black uppercase tracking-wide text-surface-400">Admin workspace</p>
+            <div className="space-y-4">
+              {sidebarGroups.map(group => (
+                <div key={group.label}>
+                  <p className="mb-1 px-2 text-[10px] font-black uppercase tracking-wide text-surface-400">{group.label}</p>
+                  <div className="space-y-1">
+                    {group.items.map(item => (
+                      <button
+                        key={item.key}
+                        onClick={() => setTab(item.key)}
+                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-bold transition-colors ${
+                          tab === item.key
+                            ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
+                            : 'text-surface-600 hover:bg-surface-100 dark:text-surface-200 dark:hover:bg-surface-800'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">{item.icon} {item.label}</span>
+                        {item.count !== undefined && (
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] ${tab === item.key ? 'bg-white/20 text-white' : 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-300'}`}>
+                            {item.count}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        <main className="min-w-0">
       {/* Stats Overview */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <div className="p-4 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
@@ -1397,21 +1440,6 @@ export default function Admin() {
           <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{posts.reduce((acc, p) => acc + p.images.length, 0)}</p>
           <p className="text-xs text-surface-500 mt-1">Total Prompts</p>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-2 mb-8 overflow-x-auto pb-1">
-        {tabs.map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
-              tab === t.key ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25' : 'bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700'
-            }`}
-          >
-            {t.icon} {t.label} {t.count !== undefined && `(${t.count})`}
-          </button>
-        ))}
       </div>
 
       {/* ===== POSTS TAB ===== */}
@@ -2544,7 +2572,7 @@ export default function Admin() {
                 </h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium text-surface-400 mb-1">Admin Emails (Comma separated. Leave blank to allow any logged in user)</label>
+                    <label className="block text-xs font-medium text-surface-400 mb-1">Admin Emails (comma separated). Blank means only server-configured owner emails can access admin.</label>
                     <input
                       value={adminEmailsStr}
                       onChange={e => setAdminEmailsStr(e.target.value)}
@@ -2898,6 +2926,56 @@ export default function Admin() {
                       <option value="v8">Cinematic Edge</option>
                     </select>
                   </label>
+                </div>
+              </div>
+
+              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                      <Star className="w-4 h-4 text-primary-500" /> Prompt of the Day
+                    </h3>
+                    <p className="text-xs text-surface-500">
+                      Pick the exact post used by the featured Prompt of the Day homepage block.
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-primary-500/10 px-3 py-1.5 text-[11px] font-bold text-primary-600 dark:text-primary-300">
+                    {pinnedPromptOfDayId ? 'Pinned post' : 'Auto fallback'}
+                  </span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-[1fr_1.4fr]">
+                  <div className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-surface-400">Current live choice</p>
+                    <p className="mt-2 text-sm font-bold text-surface-950 dark:text-white">{currentPromptOfDay?.title || 'No public post available'}</p>
+                    <p className="mt-1 text-xs text-surface-500">
+                      {currentPromptOfDay ? (pinnedPromptOfDayId ? 'Selected manually from admin.' : currentPromptOfDay.featured ? 'Using first featured post.' : 'Using latest public post.') : 'Create or publish a post first.'}
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    <select
+                      value={promptOfDayContent.pinnedPostId || ''}
+                      onChange={e => updateHomepageContent('promptOfDay', 'pinnedPostId', e.target.value)}
+                      className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                    >
+                      <option value="">Auto: first featured, then latest public post</option>
+                      {publicPosts.map(post => (
+                        <option key={post.id} value={post.id}>{post.featured ? 'Featured - ' : ''}{post.title}</option>
+                      ))}
+                    </select>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <input value={promptOfDayContent.badge || ''} onChange={e => updateHomepageContent('promptOfDay', 'badge', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Badge / eyebrow" />
+                      <input value={promptOfDayContent.ctaLabel || ''} onChange={e => updateHomepageContent('promptOfDay', 'ctaLabel', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Button label" />
+                      <input value={promptOfDayContent.title || ''} onChange={e => updateHomepageContent('promptOfDay', 'title', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Heading" />
+                      <textarea value={promptOfDayContent.description || ''} onChange={e => updateHomepageContent('promptOfDay', 'description', e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Description" />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSaveSettings}
+                      className="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-4 py-2 text-sm font-bold text-white hover:bg-primary-600"
+                    >
+                      <Save className="h-4 w-4" /> Save Prompt of the Day
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -4317,6 +4395,8 @@ export default function Admin() {
           />
         </div>
       )}
+        </main>
+      </div>
     </div>
   );
 }
