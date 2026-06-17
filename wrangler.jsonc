@@ -20,6 +20,7 @@
     }
   ],
   "vars": {
+    "ADMIN_EMAILS": "ritikkewat11@gmail.com",
     "NEXT_PUBLIC_SITE_URL": "https://aipromptmatrix.in",
     "NEXT_PUBLIC_SUPABASE_URL": "https://fcmmcgyqovqbxbqfeaho.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_Yhl5uQjZqnfZWVadDvuspg_G8mMdZ35"
