@@ -58,7 +58,7 @@ export default async function Home() {
   const homepageBlocks: Record<string, ReactNode> = {
     howTo: (settings.features?.showHomepageHowTo ?? true) ? <HomeHowItWorks settings={settings} /> : null,
     reviewProcess: (settings.features?.showHomepageReviewProcess ?? true) ? <HomeReviewProcess settings={settings} /> : null,
-    promptOfDay: (settings.features?.showHomepagePromptOfDay ?? true) ? <HomePromptOfDay post={featuredPosts[0] || allPosts[0]} /> : null,
+    promptOfDay: (settings.features?.showHomepagePromptOfDay ?? true) ? <HomePromptOfDay post={featuredPosts[0] || allPosts[0]} settings={settings} /> : null,
     supportedTools: (settings.features?.showHomepageSupportedTools ?? true) ? <HomeSupportedTools posts={allPosts} settings={settings} /> : null,
     creativeDirections: (settings.features?.showHomepageCreativeDirections ?? true) ? <HomeCreativeDirections posts={allPosts} settings={settings} /> : null,
     creatorFeedback: (settings.features?.showHomepageCreatorFeedback ?? true) ? <HomeCreatorFeedback settings={settings} /> : null,

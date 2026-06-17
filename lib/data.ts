@@ -37,6 +37,12 @@ const defaultSettings: SiteSettings = {
       ctaLabel: 'Submit a prompt',
       ctaHref: '/submit',
     },
+    promptOfDay: {
+      badge: 'Prompt of the Day',
+      title: "Today's Featured Prompt",
+      description: 'Handpicked from your published featured prompts',
+      ctaLabel: 'View This Prompt',
+    },
     supportedTools: {
       badge: 'Supported AI tools',
       title: 'Prompts for Every Major AI Tool',
@@ -165,10 +171,24 @@ function sanitizeSettings(settings: SiteSettings): SiteSettings {
         ])
       )
     : undefined;
+  const savedHomepageContent = settings.homepageContent || {};
+  const homepageContent = {
+    ...savedHomepageContent,
+    ...Object.fromEntries(
+      Object.entries(defaultSettings.homepageContent || {}).map(([key, content]) => [
+        key,
+        {
+          ...content,
+          ...(savedHomepageContent[key] || {}),
+        },
+      ])
+    ),
+  };
 
   return {
     ...settings,
     siteLogo: isInlineImage(settings.siteLogo) ? '' : settings.siteLogo,
+    homepageContent,
     toolDetails,
   };
 }

@@ -48,7 +48,7 @@ export default function HomeCreativeDirections({ posts, settings }: { posts: Pos
 
   const customDirections = settings?.creativeDirectionItems?.filter(item => item.label && item.value) || [];
   const directions = customDirections.length > 0
-    ? customDirections.map(item => [item, countMatches(posts, item)] as const).filter(([, count]) => count > 0).slice(0, 8)
+    ? customDirections.slice(0, 8).map(item => [item, countMatches(posts, item)] as const)
     : Array.from(counts.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, 8)

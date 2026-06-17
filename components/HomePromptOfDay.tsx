@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Crown, Heart, Tag, Wand2 } from 'lucide-react';
-import type { Post } from '@/lib/types';
+import type { Post, SiteSettings } from '@/lib/types';
 import { getAllTools } from '@/lib/constants';
 
-export default function HomePromptOfDay({ post }: { post?: Post }) {
+export default function HomePromptOfDay({ post, settings }: { post?: Post; settings?: SiteSettings }) {
   if (!post) return null;
 
+  const content = settings?.homepageContent?.promptOfDay || {};
   const prompt = post.images?.[0]?.prompt || post.description;
   const tools = getAllTools(post).slice(0, 3);
   const category = post.category || post.categories?.[0] || post.tags?.[0] || 'Creative prompt';
@@ -18,10 +19,10 @@ export default function HomePromptOfDay({ post }: { post?: Post }) {
       <div className="relative mx-auto max-w-6xl text-center">
         <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-amber-200 backdrop-blur-md">
           <Crown className="h-4 w-4" />
-          Prompt of the Day
+          {content.badge || 'Prompt of the Day'}
         </div>
-        <h2 className="text-3xl font-black tracking-normal sm:text-4xl">Today&apos;s Featured Prompt</h2>
-        <p className="mt-3 text-sm text-white/80">Handpicked from your published featured prompts</p>
+        <h2 className="text-3xl font-black tracking-normal sm:text-4xl">{content.title || "Today's Featured Prompt"}</h2>
+        <p className="mt-3 text-sm text-white/80">{content.description || 'Handpicked from your published featured prompts'}</p>
 
         <div className={`mx-auto mt-8 grid overflow-hidden rounded-[32px] border border-white/15 bg-white/10 text-left shadow-2xl backdrop-blur-md ${imageUrl ? 'lg:grid-cols-[0.9fr_1.1fr]' : 'max-w-4xl'}`}>
           {imageUrl && (
@@ -58,7 +59,7 @@ export default function HomePromptOfDay({ post }: { post?: Post }) {
               <span className="inline-flex items-center gap-2"><Heart className="h-4 w-4" /> {post.likes || 0} likes</span>
             </div>
             <Link href={`/${post.slug || post.id}`} className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-5 py-4 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5">
-              View This Prompt
+              {content.ctaLabel || 'View This Prompt'}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
