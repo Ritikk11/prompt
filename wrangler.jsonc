@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "aipromptmatrix-opennext-staging",
+  "account_id": "782cdf2aa31f278ca25d0cedfb54a3af",
+  "main": ".open-next/worker.js",
+  "workers_dev": true,
+  "compatibility_date": "2026-05-25",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "aipromptmatrix-opennext-staging"
+    }
+  ],
+  "vars": {
+    "ADMIN_EMAILS": "ritikkewat11@gmail.com",
+    "NEXT_PUBLIC_SITE_URL": "https://aipromptmatrix.in",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://fcmmcgyqovqbxbqfeaho.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_Yhl5uQjZqnfZWVadDvuspg_G8mMdZ35"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
