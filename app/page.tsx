@@ -36,6 +36,8 @@ export default async function Home() {
   const homepageSections = sections
     .filter(s => s.visible && (s.location || 'homepage') === 'homepage')
     .sort((a, b) => a.order - b.order);
+  const pinnedPromptOfDayId = settings.homepageContent?.promptOfDay?.pinnedPostId;
+  const promptOfDayPost = allPosts.find(post => post.id === pinnedPromptOfDayId || post.slug === pinnedPromptOfDayId) || featuredPosts[0] || allPosts[0];
 
   // Pre-fetch posts for each section on the server
   const sectionPostsData = await Promise.all(
@@ -58,7 +60,7 @@ export default async function Home() {
   const homepageBlocks: Record<string, ReactNode> = {
     howTo: (settings.features?.showHomepageHowTo ?? true) ? <HomeHowItWorks settings={settings} /> : null,
     reviewProcess: (settings.features?.showHomepageReviewProcess ?? true) ? <HomeReviewProcess settings={settings} /> : null,
-    promptOfDay: (settings.features?.showHomepagePromptOfDay ?? true) ? <HomePromptOfDay post={featuredPosts[0] || allPosts[0]} settings={settings} /> : null,
+    promptOfDay: (settings.features?.showHomepagePromptOfDay ?? true) ? <HomePromptOfDay post={promptOfDayPost} settings={settings} /> : null,
     supportedTools: (settings.features?.showHomepageSupportedTools ?? true) ? <HomeSupportedTools posts={allPosts} settings={settings} /> : null,
     creativeDirections: (settings.features?.showHomepageCreativeDirections ?? true) ? <HomeCreativeDirections posts={allPosts} settings={settings} /> : null,
     creatorFeedback: (settings.features?.showHomepageCreatorFeedback ?? true) ? <HomeCreatorFeedback settings={settings} /> : null,
