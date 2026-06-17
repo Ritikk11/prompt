@@ -146,6 +146,18 @@ export interface FilterRailItem {
   value: string;
 }
 
+export interface HomepageBlockContent {
+  badge?: string;
+  title?: string;
+  description?: string;
+  itemDescription?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  inputPlaceholder?: string;
+  successText?: string;
+  helperText?: string;
+}
+
 export interface SiteSettings {
   siteTitle: string;
   siteDescription: string;
@@ -164,6 +176,7 @@ export interface SiteSettings {
   headerLinks?: NavLink[];
   homeLinkBlocks?: HomeLinkBlock[];
   homepageBlockOrder?: string[];
+  homepageContent?: Record<string, HomepageBlockContent>;
   exploreFilterTags?: string[];
   exploreFilterItems?: FilterRailItem[];
   creativeDirectionItems?: FilterRailItem[];

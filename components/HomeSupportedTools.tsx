@@ -12,6 +12,7 @@ const toolNotes: Record<string, string[]> = {
 };
 
 export default function HomeSupportedTools({ posts, settings }: { posts: Post[]; settings: SiteSettings }) {
+  const content = settings.homepageContent?.supportedTools || {};
   const toolCounts = new Map<string, number>();
   posts.forEach(post => getAllTools(post).forEach(tool => toolCounts.set(tool, (toolCounts.get(tool) || 0) + 1)));
   const tools = (settings.aiTools || Array.from(toolCounts.keys())).filter(Boolean).slice(0, 4);
@@ -24,11 +25,11 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
       <div className="text-center">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-300">
           <Zap className="h-4 w-4" />
-          Supported AI tools
+          {content.badge || 'Supported AI tools'}
         </div>
-        <h2 className="text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white">Prompts for Every Major AI Tool</h2>
+        <h2 className="text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white">{content.title || 'Prompts for Every Major AI Tool'}</h2>
         <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-surface-600 dark:text-surface-300">
-          Browse prompt collections prepared for the tools your visitors already use.
+          {content.description || 'Browse prompt collections prepared for the tools your visitors already use.'}
         </p>
       </div>
 

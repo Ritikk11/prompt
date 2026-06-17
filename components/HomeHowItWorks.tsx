@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Check, Copy, Heart, Search, Wand2 } from 'lucide-react';
+import type { SiteSettings } from '@/lib/types';
 
 const steps = [
   {
@@ -38,7 +39,8 @@ const steps = [
   },
 ];
 
-export default function HomeHowItWorks() {
+export default function HomeHowItWorks({ settings }: { settings?: SiteSettings }) {
+  const content = settings?.homepageContent?.howTo || {};
   const [activeIndex, setActiveIndex] = useState(1);
   const active = steps[activeIndex];
   const ActiveIcon = active.icon;
@@ -49,13 +51,13 @@ export default function HomeHowItWorks() {
         <div className="mb-10 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-50 px-4 py-2 text-xs font-bold text-primary-700">
             <Wand2 className="h-4 w-4" />
-            How It Works
+            {content.badge || 'How It Works'}
           </div>
           <h2 className="text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white sm:text-4xl">
-            Create better AI images in 4 simple steps
+            {content.title || 'Create better AI images in 4 simple steps'}
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-surface-600 dark:text-surface-300">
-            From browsing prompts to generating finished artwork, this workflow keeps the process simple and repeatable.
+            {content.description || 'From browsing prompts to generating finished artwork, this workflow keeps the process simple and repeatable.'}
           </p>
         </div>
 

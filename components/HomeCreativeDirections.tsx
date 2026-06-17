@@ -39,6 +39,7 @@ function itemHref(item: FilterRailItem) {
 }
 
 export default function HomeCreativeDirections({ posts, settings }: { posts: Post[]; settings?: SiteSettings }) {
+  const content = settings?.homepageContent?.creativeDirections || {};
   const counts = new Map<string, number>();
   posts.forEach(post => {
     const values = [...(post.categories || []), post.category, ...(post.tags || [])].filter(Boolean) as string[];
@@ -61,11 +62,11 @@ export default function HomeCreativeDirections({ posts, settings }: { posts: Pos
       <div className="text-center">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-4 py-2 text-xs font-bold text-blue-600 dark:text-blue-300">
           <Grid3X3 className="h-4 w-4" />
-          Browse by style
+          {content.badge || 'Browse by style'}
         </div>
-        <h2 className="text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white">Explore Creative Directions</h2>
+        <h2 className="text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white">{content.title || 'Explore Creative Directions'}</h2>
         <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-surface-600 dark:text-surface-300">
-          Jump into prompt collections by subject, genre, and visual direction using your real post tags.
+          {content.description || 'Jump into prompt collections by subject, genre, and visual direction using your real post tags.'}
         </p>
       </div>
 
@@ -78,7 +79,7 @@ export default function HomeCreativeDirections({ posts, settings }: { posts: Pos
                 <Icon className="h-5 w-5" />
               </span>
               <h3 className="mt-5 font-extrabold text-surface-950 dark:text-white">{item.label}</h3>
-              <p className="mt-2 text-sm text-surface-500 dark:text-surface-400">Curated prompt direction</p>
+              <p className="mt-2 text-sm text-surface-500 dark:text-surface-400">{content.itemDescription || 'Curated prompt direction'}</p>
               <p className="mt-4 text-sm font-bold text-primary-600 dark:text-primary-300">{count} {count === 1 ? 'prompt' : 'prompts'}</p>
             </Link>
           );

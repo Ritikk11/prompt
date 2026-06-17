@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { Mail, Send } from 'lucide-react';
+import type { SiteSettings } from '@/lib/types';
 
-export default function HomeNewsletter() {
+export default function HomeNewsletter({ settings }: { settings?: SiteSettings }) {
+  const content = settings?.homepageContent?.newsletter || {};
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -23,26 +25,26 @@ export default function HomeNewsletter() {
       <div className="relative mx-auto max-w-3xl text-center">
         <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-100/80 px-4 py-2 text-xs font-bold text-primary-700 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-violet-100">
           <Mail className="h-4 w-4" />
-          Stay updated
+          {content.badge || 'Stay updated'}
         </div>
-        <h2 className="text-3xl font-black tracking-normal sm:text-4xl">Get Weekly Prompt Collections</h2>
+        <h2 className="text-3xl font-black tracking-normal sm:text-4xl">{content.title || 'Get Weekly Prompt Collections'}</h2>
         <p className="mt-4 text-sm leading-7 text-surface-600 dark:text-surface-300">
-          Subscribe to receive curated prompt packs for ChatGPT, Gemini, Grok, and Qwen.
+          {content.description || 'Subscribe to receive curated prompt packs for ChatGPT, Gemini, Grok, and Qwen.'}
         </p>
         <form onSubmit={handleSubmit} className="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row">
           <input
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder="Enter your email"
+            placeholder={content.inputPlaceholder || 'Enter your email'}
             className="min-h-12 flex-1 rounded-xl border border-surface-200 bg-white/80 px-5 text-sm text-surface-900 outline-none shadow-sm backdrop-blur-md placeholder:text-surface-400 focus:border-primary-300 dark:border-white/15 dark:bg-white/10 dark:text-white dark:placeholder:text-white/60 dark:focus:border-white/40"
           />
           <button type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-6 text-sm font-bold text-white shadow-[0_16px_36px_rgba(168,85,247,0.28)] transition hover:-translate-y-0.5">
             <Send className="h-4 w-4" />
-            Subscribe
+            {content.ctaLabel || 'Subscribe'}
           </button>
         </form>
-        <p className="mt-4 text-xs text-surface-500 dark:text-white/70">{submitted ? 'Saved. Email provider connection can be added later.' : 'No spam. Unsubscribe anytime once email delivery is connected.'}</p>
+        <p className="mt-4 text-xs text-surface-500 dark:text-white/70">{submitted ? (content.successText || 'Saved. Email provider connection can be added later.') : (content.helperText || 'No spam. Unsubscribe anytime once email delivery is connected.')}</p>
       </div>
     </section>
   );
