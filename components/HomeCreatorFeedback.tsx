@@ -1,4 +1,5 @@
 import { MessageSquareText, Star } from 'lucide-react';
+import type { SiteSettings } from '@/lib/types';
 
 const feedback = [
   {
@@ -19,18 +20,19 @@ const feedback = [
   },
 ];
 
-export default function HomeCreatorFeedback() {
+export default function HomeCreatorFeedback({ settings }: { settings?: SiteSettings }) {
+  const content = settings?.homepageContent?.creatorFeedback || {};
   return (
     <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-white px-5 py-16 dark:bg-surface-950 sm:px-8">
       <div className="mx-auto max-w-6xl">
       <div className="text-center">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-pink-500/10 px-4 py-2 text-xs font-bold text-pink-600 dark:text-pink-300">
           <MessageSquareText className="h-4 w-4" />
-          Creator-focused
+          {content.badge || 'Creator-focused'}
         </div>
-        <h2 className="text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white">Built for Creators Who Need Usable Prompts</h2>
+        <h2 className="text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white">{content.title || 'Built for Creators Who Need Usable Prompts'}</h2>
         <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-surface-600 dark:text-surface-300">
-          These blocks explain why the library is useful without relying on fake testimonials.
+          {content.description || 'These blocks explain why the library is useful without relying on fake testimonials.'}
         </p>
       </div>
 

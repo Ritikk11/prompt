@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, FileCheck2, SearchCheck, ShieldCheck } from 'lucide-react';
+import type { SiteSettings } from '@/lib/types';
 
 const reviewSteps = [
   {
@@ -28,7 +29,8 @@ const reviewSteps = [
   },
 ];
 
-export default function HomeReviewProcess() {
+export default function HomeReviewProcess({ settings }: { settings?: SiteSettings }) {
+  const content = settings?.homepageContent?.reviewProcess || {};
   return (
     <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-surface-50 px-5 py-16 dark:bg-surface-950 sm:px-8">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
@@ -36,19 +38,19 @@ export default function HomeReviewProcess() {
         <div>
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-300">
             <ShieldCheck className="h-4 w-4" />
-            Review process
+            {content.badge || 'Review process'}
           </div>
           <h2 className="max-w-xl text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white sm:text-4xl">
-            How prompts are reviewed before they go live
+            {content.title || 'How prompts are reviewed before they go live'}
           </h2>
           <p className="mt-4 max-w-xl text-base leading-7 text-surface-600 dark:text-surface-300">
-            Every public prompt is checked for clarity, useful examples, model context, and clean organization before it appears in the library.
+            {content.description || 'Every public prompt is checked for clarity, useful examples, model context, and clean organization before it appears in the library.'}
           </p>
           <Link
-            href="/submit"
+            href={content.ctaHref || '/submit'}
             className="mt-7 inline-flex items-center gap-2 rounded-full bg-surface-950 px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-primary-600 dark:bg-white dark:text-surface-950 dark:hover:bg-primary-100"
           >
-            Submit a prompt
+            {content.ctaLabel || 'Submit a prompt'}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

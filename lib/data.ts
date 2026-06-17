@@ -24,6 +24,45 @@ const defaultSettings: SiteSettings = {
     'creatorFeedback',
     'newsletter',
   ],
+  homepageContent: {
+    howTo: {
+      badge: 'How It Works',
+      title: 'Create better AI images in 4 simple steps',
+      description: 'From browsing prompts to generating finished artwork, this workflow keeps the process simple and repeatable.',
+    },
+    reviewProcess: {
+      badge: 'Review process',
+      title: 'How prompts are reviewed before they go live',
+      description: 'Every public prompt is checked for clarity, useful examples, model context, and clean organization before it appears in the library.',
+      ctaLabel: 'Submit a prompt',
+      ctaHref: '/submit',
+    },
+    supportedTools: {
+      badge: 'Supported AI tools',
+      title: 'Prompts for Every Major AI Tool',
+      description: 'Browse prompt collections prepared for the tools your visitors already use.',
+    },
+    creativeDirections: {
+      badge: 'Browse by style',
+      title: 'Explore Creative Directions',
+      description: 'Jump into prompt collections by subject, genre, and visual direction using your real post tags.',
+      itemDescription: 'Curated prompt direction',
+    },
+    creatorFeedback: {
+      badge: 'Creator-focused',
+      title: 'Built for Creators Who Need Usable Prompts',
+      description: 'These blocks explain why the library is useful without relying on fake testimonials.',
+    },
+    newsletter: {
+      badge: 'Stay updated',
+      title: 'Get Weekly Prompt Collections',
+      description: 'Subscribe to receive curated prompt packs for ChatGPT, Gemini, Grok, and Qwen.',
+      inputPlaceholder: 'Enter your email',
+      ctaLabel: 'Subscribe',
+      successText: 'Saved. Email provider connection can be added later.',
+      helperText: 'No spam. Unsubscribe anytime once email delivery is connected.',
+    },
+  },
   footerLinkGroups: [
     {
       title: 'Legal',

@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
-import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, NavLink, AdminUserSummary, FilterRailItem } from '@/lib/types';
+import type { Post, Section, ImagePrompt, AdSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, NavLink, AdminUserSummary, FilterRailItem } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
@@ -445,6 +445,7 @@ export default function Admin() {
   const [adminEmailsStr, setAdminEmailsStr] = useState((settings.adminEmails || []).join(', '));
   const [headerLinks, setHeaderLinks] = useState<NavLink[]>(settings.headerLinks || []);
   const [homeLinkBlocks, setHomeLinkBlocks] = useState<HomeLinkBlock[]>(settings.homeLinkBlocks || []);
+  const [homepageContent, setHomepageContent] = useState<Record<string, HomepageBlockContent>>(settings.homepageContent || {});
   const [homepageBlockOrder, setHomepageBlockOrder] = useState<string[]>(
     (settings.homepageBlockOrder || defaultHomepageBlockOrder).map(normalizeHomepageOrderToken)
   );
@@ -533,6 +534,7 @@ export default function Admin() {
     if (settings.adminEmails !== undefined) setAdminEmailsStr((settings.adminEmails || []).join(', '));
     if (settings.headerLinks !== undefined) setHeaderLinks(settings.headerLinks || []);
     if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocks(settings.homeLinkBlocks || []);
+    if (settings.homepageContent !== undefined) setHomepageContent(settings.homepageContent || {});
     if (settings.homepageBlockOrder !== undefined) {
       setHomepageBlockOrder((settings.homepageBlockOrder || defaultHomepageBlockOrder).map(normalizeHomepageOrderToken));
     }
@@ -987,6 +989,16 @@ export default function Admin() {
     setHomeLinkBlocks(prev => prev.map((block, i) => i === index ? { ...block, [field]: value } : block));
   };
 
+  const updateHomepageContent = (key: string, field: keyof HomepageBlockContent, value: string) => {
+    setHomepageContent(prev => ({
+      ...prev,
+      [key]: {
+        ...(prev[key] || {}),
+        [field]: value,
+      },
+    }));
+  };
+
   const updateRailItem = (list: 'explore' | 'creative', index: number, field: keyof FilterRailItem, value: string) => {
     const setter = list === 'explore' ? setExploreFilterItems : setCreativeDirectionItems;
     setter(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
@@ -1037,6 +1049,7 @@ export default function Admin() {
       adminEmails: adminEmailsStr.split(',').map(e => e.trim()).filter(Boolean),
       headerLinks: cleanNavLinks(headerLinks),
       homeLinkBlocks: cleanHomeBlocks(homeLinkBlocks),
+      homepageContent,
       homepageBlockOrder: orderedHomepageItems,
       exploreFilterTags: cleanCommaList(exploreFilterTags),
       exploreFilterItems: cleanRailItems(exploreFilterItems),
@@ -1222,7 +1235,7 @@ export default function Admin() {
               required
               minLength={6}
               className="w-full px-4 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50 focus:ring-2 focus:ring-primary-500 outline-none transition-all"
-              placeholder="••••••••"
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
             />
           </div>
           <button
@@ -1389,12 +1402,12 @@ export default function Admin() {
                       <div className="flex items-center gap-3 mt-1 text-xs text-surface-400">
                         <span>{post.images.length} images</span>
                         <span>{post.views.toLocaleString()} views</span>
-                        {post.featured && <span className="text-yellow-500 font-semibold">⭐ Featured</span>}
-                        {post.status === 'draft' && <span className="text-orange-500 font-semibold">🖋️ Draft</span>}
-                        {post.visibility === 'private' && <span className="text-red-500 font-semibold">🔒 Private</span>}
+                        {post.featured && <span className="text-yellow-500 font-semibold">â­ Featured</span>}
+                        {post.status === 'draft' && <span className="text-orange-500 font-semibold">ðŸ–‹ï¸ Draft</span>}
+                        {post.visibility === 'private' && <span className="text-red-500 font-semibold">ðŸ”’ Private</span>}
                         {sections.filter(s => s.type === 'custom' && s.postIds?.includes(post.id)).length > 0 && (
                           <span className="text-primary-500 font-semibold">
-                            📂 {sections.filter(s => s.type === 'custom' && s.postIds?.includes(post.id)).length} sections
+                            ðŸ“‚ {sections.filter(s => s.type === 'custom' && s.postIds?.includes(post.id)).length} sections
                           </span>
                         )}
                       </div>
@@ -2830,8 +2843,9 @@ export default function Admin() {
                     const enabled = section ? section.visible : Boolean((features as any)[option!.featureKey] ?? true);
                     const title = section?.name || option!.title;
                     const detail = section
-                      ? `${section.type} section · ${getSectionPath(section)} · Limit: ${section.limit}`
+                      ? `${section.type} section - ${getSectionPath(section)} - Limit: ${section.limit}`
                       : getHomepageBlockDetail(blockKey);
+                    const blockContent = homepageContent[blockKey] || {};
                     return (
                       <div key={token} className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -2865,6 +2879,15 @@ export default function Admin() {
                             >
                               <ChevronDown className="h-4 w-4" />
                             </button>
+                            {section && (
+                              <button
+                                onClick={() => editingSectionId === section.id ? setEditingSectionId(null) : startEditSection(section)}
+                                className="rounded-lg border border-surface-200 bg-white p-2 text-primary-500 hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-900 dark:hover:bg-surface-800"
+                                title="Edit section"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </button>
+                            )}
                             <label className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-[11px] font-bold text-surface-600 dark:bg-surface-900 dark:text-surface-200">
                               <input
                                 type="checkbox"
@@ -2879,6 +2902,53 @@ export default function Admin() {
                             </label>
                           </div>
                         </div>
+                        {section && editingSectionId === section.id && (
+                          <div className="mt-4 rounded-lg border border-surface-200 bg-white p-4 dark:border-surface-700 dark:bg-surface-900">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                              <input value={editSectionName} onChange={e => setEditSectionName(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Section title" />
+                              <input value={editSectionSlug} onChange={e => setEditSectionSlug(slugify(e.target.value))} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Slug" />
+                              <input type="number" min={1} max={50} value={editSectionLimit} onChange={e => setEditSectionLimit(parseInt(e.target.value) || 8)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Post limit" />
+                              <select value={editSectionCardStyle} onChange={e => setEditSectionCardStyle(e.target.value as Section['cardStyle'] | '')} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                                <option value="">Global card style</option>
+                                <option value="v1">v1 Hover Overlay</option>
+                                <option value="v2">v2 Floating Image</option>
+                                <option value="v3">v3 Compact Editorial</option>
+                                <option value="v4">v4 Social Card</option>
+                                <option value="v5">v5 Brutalist</option>
+                                <option value="v6">v6 Gradient Overlay</option>
+                                <option value="v7">v7 Polaroid</option>
+                                <option value="v8">v8 Glass Panel</option>
+                              </select>
+                              <input value={editSectionFilterTags} onChange={e => setEditSectionFilterTags(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Filter rail tags: anime, realistic" />
+                              <input value={editSectionSeoTitle} onChange={e => setEditSectionSeoTitle(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="SEO title" />
+                              <textarea value={editSectionSeoDescription} onChange={e => setEditSectionSeoDescription(e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="SEO description" />
+                              <textarea value={editSectionIntroContent} onChange={e => setEditSectionIntroContent(e.target.value)} rows={3} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Intro content" />
+                            </div>
+                            <div className="mt-3 flex gap-2">
+                              <button onClick={() => saveEditSection(section)} className="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-4 py-2 text-sm font-bold text-white hover:bg-primary-600"><Check className="h-4 w-4" /> Save section</button>
+                              <button onClick={() => setEditingSectionId(null)} className="inline-flex items-center gap-2 rounded-lg bg-surface-100 px-4 py-2 text-sm font-bold text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-200 dark:hover:bg-surface-700"><X className="h-4 w-4" /> Cancel</button>
+                            </div>
+                          </div>
+                        )}
+                        {!section && option && (
+                          <div className="mt-4 rounded-lg border border-surface-200 bg-white p-4 dark:border-surface-700 dark:bg-surface-900">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                              <input value={blockContent.badge || ''} onChange={e => updateHomepageContent(blockKey, 'badge', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Badge / eyebrow" />
+                              {(blockKey === 'reviewProcess' || blockKey === 'newsletter') && <input value={blockContent.ctaLabel || ''} onChange={e => updateHomepageContent(blockKey, 'ctaLabel', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Button label" />}
+                              <input value={blockContent.title || ''} onChange={e => updateHomepageContent(blockKey, 'title', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Heading" />
+                              <textarea value={blockContent.description || ''} onChange={e => updateHomepageContent(blockKey, 'description', e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Description" />
+                              {blockKey === 'creativeDirections' && <input value={blockContent.itemDescription || ''} onChange={e => updateHomepageContent(blockKey, 'itemDescription', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Card description line" />}
+                              {blockKey === 'reviewProcess' && <input value={blockContent.ctaHref || ''} onChange={e => updateHomepageContent(blockKey, 'ctaHref', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Button URL" />}
+                              {blockKey === 'newsletter' && (
+                                <>
+                                  <input value={blockContent.inputPlaceholder || ''} onChange={e => updateHomepageContent(blockKey, 'inputPlaceholder', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Input placeholder" />
+                                  <input value={blockContent.helperText || ''} onChange={e => updateHomepageContent(blockKey, 'helperText', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Helper text" />
+                                  <input value={blockContent.successText || ''} onChange={e => updateHomepageContent(blockKey, 'successText', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Success text" />
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -3011,7 +3081,7 @@ export default function Admin() {
                       return (
                         <div key={`${item.type}:${item.value}`} className="rounded-lg border border-surface-200 bg-white p-3 dark:border-surface-700 dark:bg-surface-900">
                           <p className="text-sm font-bold text-surface-950 dark:text-white">{item.label}</p>
-                          <p className="mt-1 text-[11px] text-surface-500">{item.type} · {item.value}</p>
+                          <p className="mt-1 text-[11px] text-surface-500">{item.type} Â· {item.value}</p>
                           <p className="mt-2 text-xs font-bold text-primary-600 dark:text-primary-300">{count} {count === 1 ? 'prompt' : 'prompts'}</p>
                         </div>
                       );
@@ -3820,7 +3890,7 @@ export default function Admin() {
                         className="w-20 px-2 py-1 rounded border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm" 
                       />
                     </div>
-                    <p className="text-xs text-surface-500">Formula: (Views × weight) + (Likes × weight) = Trending Score</p>
+                    <p className="text-xs text-surface-500">Formula: (Views Ã— weight) + (Likes Ã— weight) = Trending Score</p>
                   </div>
                 )}
               </div>
@@ -4103,3 +4173,4 @@ export default function Admin() {
     </div>
   );
 }
+
