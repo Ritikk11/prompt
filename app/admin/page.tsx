@@ -68,6 +68,13 @@ const homepageBlockOptions = [
   { key: 'newsletter', featureKey: 'showHomepageNewsletter', title: 'Newsletter' },
 ] as const;
 const defaultHomepageBlockOrder = homepageBlockOptions.map(item => item.key);
+const homepageBlockStaticHints: Record<string, string> = {
+  howTo: 'Step cards are hardcoded. Only the badge, heading, and intro text are editable here.',
+  reviewProcess: 'Review cards are hardcoded. Only the badge, heading, intro text, and CTA are editable here.',
+  supportedTools: 'Tool cards are generated from your AI tool settings and posts. Only the section heading copy is editable here.',
+  creativeDirections: 'Card order is controlled in Browse by Style Cards. Icons and colors are automatic.',
+  creatorFeedback: 'Feedback cards are hardcoded. Only the badge, heading, and intro text are editable here.',
+};
 
 function normalizeHomepageOrderToken(key: string) {
   return key.startsWith('block:') || key.startsWith('section:') ? key : `block:${key}`;
@@ -420,6 +427,7 @@ export default function Admin() {
   const [newSectionCardStyle, setNewSectionCardStyle] = useState<Section['cardStyle'] | ''>('');
   const [newSectionFilterTags, setNewSectionFilterTags] = useState('');
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const [expandedHomepageBlock, setExpandedHomepageBlock] = useState<string | null>(null);
   const [editSectionName, setEditSectionName] = useState('');
   const [editSectionSlug, setEditSectionSlug] = useState('');
   const [editSectionLimit, setEditSectionLimit] = useState(8);
@@ -430,6 +438,7 @@ export default function Admin() {
   const [editSectionIntroContent, setEditSectionIntroContent] = useState('');
   const [pickingPostsForSection, setPickingPostsForSection] = useState<string | null>(null);
   const [postPickerSearch, setPostPickerSearch] = useState('');
+  const [sectionPostSearch, setSectionPostSearch] = useState('');
 
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [aiPromptInstruction, setAiPromptInstruction] = useState('');
@@ -559,9 +568,10 @@ export default function Admin() {
   const customSections = sections.filter(s => s.type === 'custom');
   const publicPosts = getPublicPosts(posts);
   const featuredPosts = publicPosts.filter(post => post.featured);
-  const currentPromptOfDay = featuredPosts[0] || publicPosts[0];
+  const pinnedPromptOfDayId = homepageContent.promptOfDay?.pinnedPostId;
+  const currentPromptOfDay = publicPosts.find(post => post.id === pinnedPromptOfDayId || post.slug === pinnedPromptOfDayId) || featuredPosts[0] || publicPosts[0];
   const homepagePostSections = sections
-    .filter(section => section.visible && (section.location || 'homepage') === 'homepage')
+    .filter(section => (section.location || 'homepage') === 'homepage')
     .sort((a, b) => a.order - b.order);
   const homepageSectionTokens = homepagePostSections.map(section => `section:${section.id}`);
   const defaultHomepageOrder = [
@@ -587,7 +597,7 @@ export default function Admin() {
     if (key === 'howTo') return 'Fixed 3-step guidance block with clickable preview cards';
     if (key === 'reviewProcess') return 'Fixed trust block about prompt checks and public quality';
     if (key === 'promptOfDay') {
-      return currentPromptOfDay ? `${currentPromptOfDay.title} (${currentPromptOfDay.featured ? 'featured' : 'latest public'})` : 'No public post available';
+      return currentPromptOfDay ? `${currentPromptOfDay.title} (${pinnedPromptOfDayId ? 'pinned' : currentPromptOfDay.featured ? 'featured' : 'latest public'})` : 'No public post available';
     }
     if (key === 'supportedTools') {
       return supportedTools.length > 0 ? supportedTools.slice(0, 5).join(', ') + (supportedTools.length > 5 ? ` +${supportedTools.length - 5}` : '') : 'No AI tools found in posts';
@@ -932,6 +942,8 @@ export default function Admin() {
 
   const startEditSection = (section: Section) => {
     setEditingSectionId(section.id);
+    setExpandedHomepageBlock(null);
+    setSectionPostSearch('');
     setEditSectionName(section.name);
     setEditSectionSlug(section.slug || '');
     setEditSectionLimit(section.limit);
@@ -943,8 +955,9 @@ export default function Admin() {
   };
 
   const saveEditSection = (section: Section) => {
+    const latestSection = sections.find(item => item.id === section.id) || section;
     updateSection({
-      ...section,
+      ...latestSection,
       name: editSectionName,
       slug: editSectionSlug || slugify(editSectionName),
       limit: editSectionLimit,
@@ -998,6 +1011,21 @@ export default function Admin() {
         [field]: value,
       },
     }));
+  };
+
+  const resetHomepageContentBlock = (key: string) => {
+    setHomepageContent(prev => ({
+      ...prev,
+      [key]: {},
+    }));
+  };
+
+  const addPostToCustomSection = (section: Section, postId: string) => {
+    if (!postId || section.type !== 'custom') return;
+    const currentIds = section.postIds || [];
+    if (currentIds.includes(postId)) return;
+    updateSection({ ...section, postIds: [...currentIds, postId] });
+    setSectionPostSearch('');
   };
 
   const updateRailItem = (list: 'explore' | 'creative', index: number, field: keyof FilterRailItem, value: string) => {
@@ -2245,6 +2273,32 @@ export default function Admin() {
                             className="w-full px-3 py-1.5 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs resize-y"
                             placeholder="Intro content shown on the section page. Markdown supported."
                           />
+                          {section.type === 'custom' && (
+                            <div className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-surface-500">Add posts by title</p>
+                              <div className="flex flex-col gap-2 sm:flex-row">
+                                <input
+                                  value={sectionPostSearch}
+                                  onChange={e => setSectionPostSearch(e.target.value)}
+                                  className="flex-1 rounded-lg border border-surface-200 bg-white px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                                  placeholder="Search published posts..."
+                                />
+                                <select
+                                  value=""
+                                  onChange={e => addPostToCustomSection(section, e.target.value)}
+                                  className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 sm:w-80"
+                                >
+                                  <option value="">Choose a post to add...</option>
+                                  {publicPosts
+                                    .filter(post => !(section.postIds || []).includes(post.id))
+                                    .filter(post => !sectionPostSearch || post.title.toLowerCase().includes(sectionPostSearch.toLowerCase()))
+                                    .slice(0, 20)
+                                    .map(post => <option key={post.id} value={post.id}>{post.title}</option>)}
+                                </select>
+                              </div>
+                              <p className="mt-2 text-[11px] text-surface-500">{section.postIds?.length || 0} posts selected. The picker below can still be used for detailed ordering.</p>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <>
@@ -2834,6 +2888,16 @@ export default function Admin() {
                 <p className="text-xs text-surface-500 mb-4">
                   Reorder the added homepage blocks. This order is used on the live homepage after the hero and quick cards.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTab('sections');
+                    setNewSectionLocation('homepage');
+                  }}
+                  className="mb-4 inline-flex items-center gap-2 rounded-lg bg-primary-500/10 px-3 py-2 text-xs font-bold text-primary-600 hover:bg-primary-500/15 dark:text-primary-300"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Add New Section
+                </button>
                 <div className="space-y-2">
                   {orderedHomepageItems.map((token, index) => {
                     const isSection = token.startsWith('section:');
@@ -2847,8 +2911,9 @@ export default function Admin() {
                       ? `${section.type} section - ${getSectionPath(section)} - Limit: ${section.limit}`
                       : getHomepageBlockDetail(blockKey);
                     const blockContent = homepageContent[blockKey] || {};
+                    const blockHint = !section ? homepageBlockStaticHints[blockKey] : '';
                     return (
-                      <div key={token} className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                      <div key={token} className={`rounded-lg border border-surface-200 bg-surface-50 p-3 transition dark:border-surface-700 dark:bg-surface-800/50 ${section && !section.visible ? 'opacity-55' : ''}`}>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
@@ -2889,6 +2954,18 @@ export default function Admin() {
                                 <Edit3 className="h-4 w-4" />
                               </button>
                             )}
+                            {!section && option && (
+                              <button
+                                onClick={() => {
+                                  setEditingSectionId(null);
+                                  setExpandedHomepageBlock(expandedHomepageBlock === blockKey ? null : blockKey);
+                                }}
+                                className={`rounded-lg border border-surface-200 bg-white p-2 hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-900 dark:hover:bg-surface-800 ${expandedHomepageBlock === blockKey ? 'text-primary-500' : 'text-surface-500'}`}
+                                title={expandedHomepageBlock === blockKey ? 'Collapse block controls' : 'Edit block content'}
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </button>
+                            )}
                             <label className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-[11px] font-bold text-surface-600 dark:bg-surface-900 dark:text-surface-200">
                               <input
                                 type="checkbox"
@@ -2925,17 +3002,66 @@ export default function Admin() {
                               <textarea value={editSectionSeoDescription} onChange={e => setEditSectionSeoDescription(e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="SEO description" />
                               <textarea value={editSectionIntroContent} onChange={e => setEditSectionIntroContent(e.target.value)} rows={3} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Intro content" />
                             </div>
+                            {section.type === 'custom' && (
+                              <div className="mt-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                                <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-surface-500">Add posts by title</p>
+                                <div className="flex flex-col gap-2 sm:flex-row">
+                                  <input
+                                    value={sectionPostSearch}
+                                    onChange={e => setSectionPostSearch(e.target.value)}
+                                    className="flex-1 rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                                    placeholder="Search published posts..."
+                                  />
+                                  <select
+                                    value=""
+                                    onChange={e => addPostToCustomSection(section, e.target.value)}
+                                    className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 sm:w-80"
+                                  >
+                                    <option value="">Choose a post to add...</option>
+                                    {publicPosts
+                                      .filter(post => !(section.postIds || []).includes(post.id))
+                                      .filter(post => !sectionPostSearch || post.title.toLowerCase().includes(sectionPostSearch.toLowerCase()))
+                                      .slice(0, 20)
+                                      .map(post => <option key={post.id} value={post.id}>{post.title}</option>)}
+                                  </select>
+                                </div>
+                                <p className="mt-2 text-[11px] text-surface-500">{section.postIds?.length || 0} posts selected. Use the section picker in the Sections tab for detailed ordering.</p>
+                              </div>
+                            )}
                             <div className="mt-3 flex gap-2">
                               <button onClick={() => saveEditSection(section)} className="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-4 py-2 text-sm font-bold text-white hover:bg-primary-600"><Check className="h-4 w-4" /> Save section</button>
                               <button onClick={() => setEditingSectionId(null)} className="inline-flex items-center gap-2 rounded-lg bg-surface-100 px-4 py-2 text-sm font-bold text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-200 dark:hover:bg-surface-700"><X className="h-4 w-4" /> Cancel</button>
                             </div>
                           </div>
                         )}
-                        {!section && option && (
+                        {!section && option && expandedHomepageBlock === blockKey && (
                           <div className="mt-4 rounded-lg border border-surface-200 bg-white p-4 dark:border-surface-700 dark:bg-surface-900">
+                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-xs font-bold text-surface-600 dark:text-surface-200">Edit {option.title}</p>
+                              <button
+                                type="button"
+                                onClick={() => resetHomepageContentBlock(blockKey)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-surface-100 px-3 py-1.5 text-[11px] font-bold text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-200 dark:hover:bg-surface-700"
+                              >
+                                <RotateCcw className="h-3.5 w-3.5" /> Reset to defaults
+                              </button>
+                            </div>
+                            {blockHint && (
+                              <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-[11px] font-semibold leading-5 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                                {blockHint}
+                              </p>
+                            )}
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                               <input value={blockContent.badge || ''} onChange={e => updateHomepageContent(blockKey, 'badge', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Badge / eyebrow" />
                               {(blockKey === 'reviewProcess' || blockKey === 'promptOfDay' || blockKey === 'newsletter') && <input value={blockContent.ctaLabel || ''} onChange={e => updateHomepageContent(blockKey, 'ctaLabel', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Button label" />}
+                              {blockKey === 'promptOfDay' && (
+                                <select value={blockContent.pinnedPostId || ''} onChange={e => updateHomepageContent(blockKey, 'pinnedPostId', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2">
+                                  <option value="">Auto: first featured, then latest public post</option>
+                                  {publicPosts.map(post => (
+                                    <option key={post.id} value={post.id}>{post.featured ? 'Featured - ' : ''}{post.title}</option>
+                                  ))}
+                                </select>
+                              )}
                               <input value={blockContent.title || ''} onChange={e => updateHomepageContent(blockKey, 'title', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Heading" />
                               <textarea value={blockContent.description || ''} onChange={e => updateHomepageContent(blockKey, 'description', e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Description" />
                               {blockKey === 'creativeDirections' && <input value={blockContent.itemDescription || ''} onChange={e => updateHomepageContent(blockKey, 'itemDescription', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Card description line" />}
