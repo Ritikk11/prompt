@@ -148,6 +148,7 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
       if (data.settings) setSettings(data.settings);
     } catch (e) {
       console.error('Error loading admin data', e);
+      throw e;
     } finally {
       setLoading(false);
     }
