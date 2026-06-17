@@ -1,13 +1,21 @@
 export const runtime = 'edge';
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/admin-auth";
 
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth.error) return auth.error;
+
     const { images, existingPosts, promptInstruction } = await req.json();
+
+    if (!Array.isArray(images) || images.length === 0 || images.length > 12) {
+      return NextResponse.json({ error: 'Invalid image prompt count' }, { status: 400 });
+    }
 
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
@@ -18,14 +26,17 @@ export async function POST(req: NextRequest) {
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     
-    const formattedImages = images.map((img: any, idx: number) => `Image ${idx + 1} Prompt: ${img.prompt}`).join('\n');
-    const recentPostsText = existingPosts?.length 
+    const formattedImages = images
+      .map((img: any, idx: number) => `Image ${idx + 1} Prompt: ${String(img?.prompt || '').slice(0, 4000)}`)
+      .join('\n');
+    const safeExistingPosts = Array.isArray(existingPosts) ? existingPosts.slice(0, 30) : [];
+    const recentPostsText = safeExistingPosts.length 
       ? `\nHere are some titles and descriptions from my existing posts to understand my style (use humanized, engaging language):\n` + 
-        existingPosts.map((p: any) => `- Title: ${p.title}\n  Description: ${p.description}`).join('\n')
+        safeExistingPosts.map((p: any) => `- Title: ${String(p?.title || '').slice(0, 180)}\n  Description: ${String(p?.description || '').slice(0, 500)}`).join('\n')
       : '';
 
     const customInstructionText = promptInstruction 
-      ? `\nSpecial User Instructions: ${promptInstruction}\n`
+      ? `\nSpecial User Instructions: ${String(promptInstruction).slice(0, 2000)}\n`
       : '';
 
     const systemPrompt = `You are an expert copywriter and SEO specialist for an AI image prompt gallery.

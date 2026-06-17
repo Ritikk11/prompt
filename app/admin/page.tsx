@@ -225,41 +225,51 @@ export default function Admin() {
   const [user, setUser] = useState<User | null>(null);
   const [adminUsers, setAdminUsers] = useState<AdminUserSummary[]>([]);
   const [authLoading, setAuthLoading] = useState(true);
+  const [adminChecking, setAdminChecking] = useState(false);
+  const [adminAccessDenied, setAdminAccessDenied] = useState(false);
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   
-  const isAdmin = !settings.adminEmails || settings.adminEmails.length === 0 || (user && user.email && settings.adminEmails.includes(user.email));
+  const isAdmin = Boolean(user && !adminAccessDenied);
 
   const initialDataLoaded = useRef(false);
 
   useEffect(() => {
-    if (user && isAdmin && !initialDataLoaded.current) {
-      loadAdminData();
+    if (user && !initialDataLoaded.current) {
+      setAdminChecking(true);
       const loadUsers = async () => {
         try {
+          await loadAdminData();
           const supabase = createSupabaseClient();
           const { data: { session } } = await supabase.auth.getSession();
           const res = await fetch('/api/admin', {
             headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
           });
           const json = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(json.error || 'Admin request failed');
           if (res.ok && Array.isArray(json.users)) setAdminUsers(json.users);
+          setAdminAccessDenied(false);
         } catch (error) {
-          console.error('Failed to load users', error);
+          console.error('Failed to load admin data', error);
+          setAdminAccessDenied(true);
+        } finally {
+          initialDataLoaded.current = true;
+          setAdminChecking(false);
         }
       };
       loadUsers();
-      initialDataLoaded.current = true;
     }
-  }, [user, isAdmin, loadAdminData]);
+  }, [user, loadAdminData]);
 
   useEffect(() => {
     const supabase = createSupabaseClient();
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      initialDataLoaded.current = false;
+      setAdminAccessDenied(false);
       setAuthLoading(false);
       
       // Check if we just completed a password reset
@@ -297,11 +307,15 @@ export default function Admin() {
             if (error) {
               setAuthError('Failed to establish session: ' + error.message);
             } else {
+              initialDataLoaded.current = false;
+              setAdminAccessDenied(false);
               setUser(data.user);
             }
           });
         } else {
           supabase.auth.getSession().then(({ data: { session } }) => {
+            initialDataLoaded.current = false;
+            setAdminAccessDenied(false);
             setUser(session?.user ?? null);
           });
         }
@@ -314,6 +328,8 @@ export default function Admin() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      initialDataLoaded.current = false;
+      setAdminAccessDenied(false);
       setAuthLoading(false);
       
       if (event === 'PASSWORD_RECOVERY') {
@@ -785,10 +801,15 @@ export default function Admin() {
     try {
       // Get last 5 posts for style context
       const existingPostsContext = posts.slice(0, 5).map(p => ({ title: p.title, description: p.description }));
+      const supabase = createSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
       
       const res = await fetch('/api/generate-post', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({
           images: usedImages,
           existingPosts: existingPostsContext,
@@ -1220,7 +1241,7 @@ export default function Admin() {
     { key: 'static-pages', label: 'Static Pages', icon: <FileText className="w-4 h-4" /> },
   ];
 
-  if (authLoading) {
+  if (authLoading || adminChecking) {
     return <div className="flex h-[50vh] items-center justify-center text-surface-400">Loading admin...</div>;
   }
 

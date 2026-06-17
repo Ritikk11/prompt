@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient as createUserClient } from '@/lib/supabase-server';
-import { createAdminClient } from '@/lib/supabase-admin';
+import { requireAdmin } from '@/lib/admin-auth';
 import { seedPosts, seedSections } from '@/lib/data/seedData';
+import type { Post, Section, SiteSettings } from '@/lib/types';
 
 const resources = new Set(['posts', 'sections', 'settings', 'seopages']);
 const tableForResource: Record<string, string> = {
@@ -11,31 +11,58 @@ const tableForResource: Record<string, string> = {
   seopages: 'seoPages',
 };
 
-async function getRequestUser(request: Request) {
-  const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
-  if (token) {
-    const admin = createAdminClient();
-    return admin.auth.getUser(token);
-  }
-
-  const userClient = await createUserClient();
-  return userClient.auth.getUser();
+function isPlainObject(value: unknown): value is Record<string, any> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
-async function requireAdmin(request: Request) {
-  const { data: { user }, error } = await getRequestUser(request);
-  if (error || !user?.email) {
-    return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  }
+function isValidId(value: unknown) {
+  return typeof value === 'string' && value.length > 0 && value.length <= 160 && /^[a-zA-Z0-9_:/.-]+$/.test(value);
+}
 
-  const admin = createAdminClient();
-  const { data } = await admin.from('settings').select('data').eq('id', 'global').maybeSingle();
-  const adminEmails = ((data?.data as any)?.adminEmails || []) as string[];
-  if (adminEmails.length > 0 && !adminEmails.includes(user.email)) {
-    return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) };
-  }
+function cleanText(value: unknown, max = 500) {
+  return typeof value === 'string' ? value.trim().slice(0, max) : '';
+}
 
-  return { admin, user };
+function validatePost(data: unknown): data is Post {
+  if (!isPlainObject(data)) return false;
+  if (!isValidId(data.id) || !cleanText(data.title, 180) || !cleanText(data.description, 2000)) return false;
+  if (!Array.isArray(data.images) || data.images.length > 30) return false;
+  if (data.status && !['published', 'pending', 'draft'].includes(data.status)) return false;
+  if (data.visibility && !['public', 'private'].includes(data.visibility)) return false;
+  return true;
+}
+
+function validateSection(data: unknown): data is Section {
+  if (!isPlainObject(data)) return false;
+  if (!isValidId(data.id) || !cleanText(data.name, 180)) return false;
+  if (!['ai-tool', 'latest', 'popular', 'custom', 'trending', 'tag', 'category'].includes(data.type)) return false;
+  if (data.location && !['homepage', 'header'].includes(data.location)) return false;
+  if (typeof data.order !== 'number' || typeof data.visible !== 'boolean' || typeof data.limit !== 'number') return false;
+  if (data.limit < 1 || data.limit > 50) return false;
+  return true;
+}
+
+function validateSettings(data: unknown): data is SiteSettings {
+  if (!isPlainObject(data)) return false;
+  if (!cleanText(data.siteTitle, 180) || !cleanText(data.siteDescription, 2000)) return false;
+  if (!Array.isArray(data.aiTools) || data.aiTools.length > 80) return false;
+  if (data.adminEmails && (!Array.isArray(data.adminEmails) || data.adminEmails.some((email: unknown) => typeof email !== 'string' || email.length > 254))) return false;
+  return true;
+}
+
+function validateSeoPage(data: unknown) {
+  if (!isPlainObject(data)) return false;
+  if (!isValidId(data.id) || !cleanText(data.title, 180)) return false;
+  if (data.slug && !isValidId(data.slug)) return false;
+  return true;
+}
+
+function validateResourceData(resource: string, data: unknown) {
+  if (resource === 'posts') return validatePost(data);
+  if (resource === 'sections') return validateSection(data);
+  if (resource === 'settings') return validateSettings(data);
+  if (resource === 'seopages') return validateSeoPage(data);
+  return false;
 }
 
 export async function GET(request: Request) {
@@ -103,6 +130,9 @@ export async function POST(request: Request) {
   if (action === 'upsert') {
     const rowId = id || data?.id || (resource === 'settings' ? 'global' : undefined);
     if (!rowId || !data) return NextResponse.json({ error: 'Missing data' }, { status: 400 });
+    if (!isValidId(rowId)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+    if (resource === 'settings' && rowId !== 'global') return NextResponse.json({ error: 'Settings can only be saved to global' }, { status: 400 });
+    if (!validateResourceData(resource, data)) return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     const { error } = await admin.from(table).upsert({ id: rowId, data });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
@@ -110,6 +140,8 @@ export async function POST(request: Request) {
 
   if (action === 'delete') {
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+    if (!isValidId(id)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+    if (resource === 'settings') return NextResponse.json({ error: 'Settings cannot be deleted' }, { status: 400 });
     const { error } = await admin.from(table).delete().eq('id', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });

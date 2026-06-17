@@ -193,6 +193,15 @@ function sanitizeSettings(settings: SiteSettings): SiteSettings {
   };
 }
 
+function sanitizePublicSettings(settings: SiteSettings): SiteSettings {
+  const sanitized = sanitizeSettings(settings);
+  return {
+    ...sanitized,
+    adminEmails: [],
+    imgbbApiKey: '',
+  };
+}
+
 function publicImageUrl(post: Post) {
   if (post.thumbnailUrl && !isInlineImage(post.thumbnailUrl)) return post.thumbnailUrl;
   const remoteImage = post.images?.find((image) => image.url && !isInlineImage(image.url));
@@ -281,16 +290,16 @@ export async function fetchSettings() {
     const { data, error } = await supabase.from('settings').select('data').eq('id', 'global').maybeSingle();
     if (error) {
       console.error('Supabase settings fetch error:', error);
-      return defaultSettings;
+      return sanitizePublicSettings(defaultSettings);
     }
     if (data && data.data) {
-      return sanitizeSettings({ ...defaultSettings, ...(data.data as Partial<SiteSettings>) });
+      return sanitizePublicSettings({ ...defaultSettings, ...(data.data as Partial<SiteSettings>) });
     }
   } catch (error) {
     if (isNextDynamicServerError(error)) throw error;
     console.error('Supabase settings fetch error:', error);
   }
-  return defaultSettings;
+  return sanitizePublicSettings(defaultSettings);
 }
 
 export async function getPostBySlugOrId(idOrSlug: string) {
