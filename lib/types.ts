@@ -131,6 +131,46 @@ export interface NavLink {
   href: string;
 }
 
+export type ShareTarget = 'whatsapp' | 'x' | 'instagram' | 'copy' | 'facebook' | 'pinterest';
+
+export interface ShareSettings {
+  targets: ShareTarget[];
+  position: 'below-prompt' | 'bottom' | 'floating-sidebar';
+}
+
+export interface SeoSettings {
+  metaTitleTemplate?: string;
+  defaultMetaDescription?: string;
+  defaultOgImage?: string;
+  twitterHandle?: string;
+  googleVerification?: string;
+  bingVerification?: string;
+  pinterestVerification?: string;
+  robotsText?: string;
+  sitemapInclude?: {
+    posts?: boolean;
+    sections?: boolean;
+    tags?: boolean;
+    tools?: boolean;
+    staticPages?: boolean;
+  };
+  enableJsonLd?: boolean;
+  schemaType?: 'Article' | 'CreativeWork' | 'HowTo';
+  enableBreadcrumbList?: boolean;
+  enableSitelinksSearchbox?: boolean;
+  redirects?: { from: string; to: string; status: 301 | 302 }[];
+}
+
+export interface StaticPageSettings {
+  title?: string;
+  subtitle?: string;
+  body?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  ogImage?: string;
+  visible?: boolean;
+}
+
 export interface HomeLinkBlock {
   title: string;
   href: string;
@@ -187,6 +227,17 @@ export interface SiteSettings {
   exploreFilterItems?: FilterRailItem[];
   creativeDirectionItems?: FilterRailItem[];
   footerLinkGroups?: FooterLinkGroup[];
+  footerDescription?: string;
+  copyrightText?: string;
+  contactEmail?: string;
+  socialLinks?: {
+    twitter?: string;
+    instagram?: string;
+    youtube?: string;
+  };
+  shareSettings?: ShareSettings;
+  seoSettings?: SeoSettings;
+  staticPages?: Record<string, StaticPageSettings>;
   ads?: AdSettings;
   imgbbApiKey?: string;
   imageProvider?: 'imgbb' | 'cloudinary' | 'supabase';

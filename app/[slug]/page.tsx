@@ -28,18 +28,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   if (seoPage) {
+    const settings = await fetchSettings();
+    const seoSettings = settings.seoSettings;
     return {
       title: seoPage.seoTitle || seoPage.title,
-      description: seoPage.seoDescription || `Discover best prompts for ${seoPage.title}`,
+      description: seoPage.seoDescription || seoSettings?.defaultMetaDescription || `Discover best prompts for ${seoPage.title}`,
+      openGraph: seoSettings?.defaultOgImage ? {
+        title: seoPage.seoTitle || seoPage.title,
+        description: seoPage.seoDescription || seoSettings?.defaultMetaDescription || `Discover best prompts for ${seoPage.title}`,
+        images: [{ url: seoSettings.defaultOgImage }],
+      } : undefined,
     };
   }
 
+  const settings = await fetchSettings();
+  const seoSettings = settings.seoSettings;
   const firstImageUrl = post!.images[0]?.url || '';
   const isBase64 = firstImageUrl.startsWith('data:');
 
-  const metaTitle = post!.seoTitle || `${post!.title} | AI Prompts - AI PromptMatrix`;
-  const metaDescription = post!.seoDescription || post!.description;
+  const templateTitle = (seoSettings?.metaTitleTemplate || '%post_title% | AI PromptMatrix')
+    .replace(/%post_title%/g, post!.title)
+    .replace(/%site_title%/g, settings.siteTitle || 'AI PromptMatrix');
+  const metaTitle = post!.seoTitle || templateTitle;
+  const metaDescription = post!.seoDescription || post!.description || seoSettings?.defaultMetaDescription || settings.siteDescription;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+  const ogImage = isBase64 ? `${siteUrl}/placeholder-image.png` : firstImageUrl || seoSettings?.defaultOgImage || `${siteUrl}/placeholder-image.png`;
 
   return {
     title: metaTitle,
@@ -55,7 +68,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: `${siteUrl}/${slug}`,
       images: [
         {
-          url: isBase64 ? `${siteUrl}/placeholder-image.png` : firstImageUrl,
+          url: ogImage,
           width: 1200,
           height: 630,
           alt: post!.title,
@@ -66,7 +79,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: metaTitle,
       description: metaDescription,
-      images: isBase64 ? [] : [firstImageUrl],
+      site: seoSettings?.twitterHandle || undefined,
+      images: ogImage ? [ogImage] : [],
     },
   };
 }
@@ -134,9 +148,10 @@ export default async function PostPage({ params }: Props) {
     .slice(0, 4);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+  const schemaType = settings.seoSettings?.schemaType || 'HowTo';
   const howToJsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'HowTo',
+    '@type': schemaType,
     name: `How to use ${post.title}`,
     description: post.description,
     step: [
@@ -155,7 +170,7 @@ export default async function PostPage({ params }: Props) {
 
   return (
     <>
-      {(settings.features?.showFaqSchema ?? true) && (
+      {(settings.seoSettings?.enableJsonLd ?? settings.features?.showFaqSchema ?? true) && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}

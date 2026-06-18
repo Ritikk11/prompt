@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit3, X, Save } from 'lucide-react';
 import { createClient } from '@/lib/supabase-client';
+import type { SeoSettings, SiteSettings } from '@/lib/types';
 
 async function adminRequest(payload?: any) {
   const supabase = createClient();
@@ -20,7 +21,24 @@ async function adminRequest(payload?: any) {
   return json;
 }
 
-export default function SeoPagesTab() {
+const defaultSeoSettings: SeoSettings = {
+  metaTitleTemplate: '%post_title% | AI PromptMatrix',
+  defaultMetaDescription: '',
+  defaultOgImage: '',
+  twitterHandle: '',
+  googleVerification: '',
+  bingVerification: '',
+  pinterestVerification: '',
+  robotsText: 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\n\nSitemap: https://aipromptmatrix.in/sitemap.xml',
+  sitemapInclude: { posts: true, sections: true, tags: true, tools: true, staticPages: true },
+  enableJsonLd: true,
+  schemaType: 'HowTo',
+  enableBreadcrumbList: true,
+  enableSitelinksSearchbox: true,
+  redirects: [],
+};
+
+export default function SeoPagesTab({ settings, updateSettings }: { settings?: SiteSettings; updateSettings?: (s: SiteSettings) => void }) {
   const [seoPages, setSeoPages] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -35,6 +53,22 @@ export default function SeoPagesTab() {
   const [aiToolsStr, setAiToolsStr] = useState('');
   const [filterTagsStr, setFilterTagsStr] = useState('');
   const [cardStyle, setCardStyle] = useState('');
+  const seoSettings = { ...defaultSeoSettings, ...(settings?.seoSettings || {}) };
+
+  const updateSeoSettings = (patch: Partial<SeoSettings>) => {
+    if (!settings || !updateSettings) return;
+    updateSettings({
+      ...settings,
+      seoSettings: {
+        ...seoSettings,
+        ...patch,
+        sitemapInclude: {
+          ...seoSettings.sitemapInclude,
+          ...(patch.sitemapInclude || {}),
+        },
+      },
+    });
+  };
 
   useEffect(() => {
     const fetchPages = async () => {
@@ -172,6 +206,168 @@ export default function SeoPagesTab() {
 
   return (
     <div>
+      {settings && updateSettings && (
+        <div className="mb-8 space-y-5 rounded-xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
+          <div>
+            <h2 className="text-xl font-bold">Global SEO</h2>
+            <p className="mt-1 text-sm text-surface-500">Default metadata, verification tags, sitemap rules, robots text, structured data, and redirects.</p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="block text-xs font-medium text-surface-500 mb-1">Default meta title template</label>
+              <input
+                value={seoSettings.metaTitleTemplate || ''}
+                onChange={e => updateSeoSettings({ metaTitleTemplate: e.target.value })}
+                className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                placeholder="%post_title% | AI PromptMatrix"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-surface-500 mb-1">Twitter handle</label>
+              <input
+                value={seoSettings.twitterHandle || ''}
+                onChange={e => updateSeoSettings({ twitterHandle: e.target.value })}
+                className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                placeholder="@username"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-medium text-surface-500 mb-1">Default meta description</label>
+              <textarea
+                value={seoSettings.defaultMetaDescription || ''}
+                onChange={e => updateSeoSettings({ defaultMetaDescription: e.target.value })}
+                rows={2}
+                className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-medium text-surface-500 mb-1">Default OG image</label>
+              <input
+                value={seoSettings.defaultOgImage || ''}
+                onChange={e => updateSeoSettings({ defaultOgImage: e.target.value })}
+                className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              ['googleVerification', 'Google Search Console'],
+              ['bingVerification', 'Bing Webmaster'],
+              ['pinterestVerification', 'Pinterest domain verify'],
+            ].map(([key, label]) => (
+              <div key={key}>
+                <label className="block text-xs font-medium text-surface-500 mb-1">{label}</label>
+                <input
+                  value={(seoSettings as any)[key] || ''}
+                  onChange={e => updateSeoSettings({ [key]: e.target.value } as Partial<SeoSettings>)}
+                  className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                  placeholder="verification token"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-800 dark:bg-surface-800/50">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold">Sitemap</p>
+                <p className="text-xs text-surface-500">Readonly URL: aipromptmatrix.in/sitemap.xml</p>
+              </div>
+              <button type="button" onClick={() => window.open('/sitemap.xml', '_blank')} className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-primary-600 dark:bg-surface-900">Open Sitemap</button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              {[
+                ['posts', 'Posts'],
+                ['sections', 'Sections'],
+                ['tags', 'Tags'],
+                ['tools', 'Tool pages'],
+                ['staticPages', 'Static pages'],
+              ].map(([key, label]) => (
+                <label key={key} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={Boolean((seoSettings.sitemapInclude as any)?.[key] ?? true)}
+                    onChange={e => updateSeoSettings({ sitemapInclude: { [key]: e.target.checked } as any })}
+                    className="h-4 w-4 rounded text-primary-500"
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-surface-500 mb-1">Robots.txt</label>
+            <textarea
+              value={seoSettings.robotsText || ''}
+              onChange={e => updateSeoSettings({ robotsText: e.target.value })}
+              rows={6}
+              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 font-mono text-xs outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+            />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={seoSettings.enableJsonLd ?? true} onChange={e => updateSeoSettings({ enableJsonLd: e.target.checked })} className="h-4 w-4 rounded text-primary-500" />
+              Enable JSON-LD on post pages
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={seoSettings.enableBreadcrumbList ?? true} onChange={e => updateSeoSettings({ enableBreadcrumbList: e.target.checked })} className="h-4 w-4 rounded text-primary-500" />
+              Enable BreadcrumbList
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={seoSettings.enableSitelinksSearchbox ?? true} onChange={e => updateSeoSettings({ enableSitelinksSearchbox: e.target.checked })} className="h-4 w-4 rounded text-primary-500" />
+              Enable WebSite sitelinks searchbox
+            </label>
+            <div>
+              <label className="block text-xs font-medium text-surface-500 mb-1">Schema type</label>
+              <select
+                value={seoSettings.schemaType || 'HowTo'}
+                onChange={e => updateSeoSettings({ schemaType: e.target.value as SeoSettings['schemaType'] })}
+                className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+              >
+                <option value="Article">Article</option>
+                <option value="CreativeWork">CreativeWork</option>
+                <option value="HowTo">HowTo</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-800 dark:bg-surface-800/50">
+            <p className="mb-3 text-sm font-bold">Redirects</p>
+            <div className="space-y-2">
+              {(seoSettings.redirects || []).map((redirect, index) => (
+                <div key={`${redirect.from}-${index}`} className="grid gap-2 md:grid-cols-[1fr_1fr_90px_auto]">
+                  <input value={redirect.from} onChange={e => {
+                    const redirects = [...(seoSettings.redirects || [])];
+                    redirects[index] = { ...redirect, from: e.target.value };
+                    updateSeoSettings({ redirects });
+                  }} className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm dark:border-surface-700 dark:bg-surface-900" placeholder="/old-path" />
+                  <input value={redirect.to} onChange={e => {
+                    const redirects = [...(seoSettings.redirects || [])];
+                    redirects[index] = { ...redirect, to: e.target.value };
+                    updateSeoSettings({ redirects });
+                  }} className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm dark:border-surface-700 dark:bg-surface-900" placeholder="/new-path" />
+                  <select value={redirect.status} onChange={e => {
+                    const redirects = [...(seoSettings.redirects || [])];
+                    redirects[index] = { ...redirect, status: Number(e.target.value) as 301 | 302 };
+                    updateSeoSettings({ redirects });
+                  }} className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm dark:border-surface-700 dark:bg-surface-900">
+                    <option value={301}>301</option>
+                    <option value={302}>302</option>
+                  </select>
+                  <button type="button" onClick={() => updateSeoSettings({ redirects: (seoSettings.redirects || []).filter((_, itemIndex) => itemIndex !== index) })} className="rounded-lg px-3 py-2 text-sm font-bold text-red-500">Remove</button>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={() => updateSeoSettings({ redirects: [...(seoSettings.redirects || []), { from: '', to: '', status: 301 }] })} className="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-bold text-primary-600 dark:bg-surface-900">+ Add redirect</button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">SEO Pages</h2>
         <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors">

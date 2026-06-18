@@ -3,7 +3,7 @@ export const runtime = 'edge';
 import { useState, useEffect, useRef } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
-import type { Post, Section, ImagePrompt, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, NavLink, AdminUserSummary, FilterRailItem } from '@/lib/types';
+import type { Post, Section, ImagePrompt, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, NavLink, AdminUserSummary, FilterRailItem, ShareTarget } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
@@ -96,6 +96,14 @@ const homeCardStyles = [
   { value: 'clean', label: 'Clean', description: 'Balanced card with a top accent line.' },
   { value: 'compact', label: 'Compact', description: 'Short utility row for denser pages.' },
 ] as const;
+const shareTargetOptions: { id: ShareTarget; label: string }[] = [
+  { id: 'whatsapp', label: 'WhatsApp' },
+  { id: 'x', label: 'X (Twitter)' },
+  { id: 'instagram', label: 'Instagram' },
+  { id: 'copy', label: 'Copy Link' },
+  { id: 'facebook', label: 'Facebook' },
+  { id: 'pinterest', label: 'Pinterest' },
+];
 const homepageBlockOptions = [
   { key: 'howTo', featureKey: 'showHomepageHowTo', title: 'How it works' },
   { key: 'reviewProcess', featureKey: 'showHomepageReviewProcess', title: 'Review process' },
@@ -5023,8 +5031,52 @@ export default function Admin() {
                   />
                 </label>
                 <div className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-800 dark:bg-surface-800/50">
-                  <p className="text-sm font-bold">Active live targets</p>
-                  <p className="mt-1 text-xs text-surface-500">Copy Link and available social targets are rendered by the post page component. Per-network controls still need a matching live implementation before they become editable here.</p>
+                  <p className="text-sm font-bold">Show these share targets</p>
+                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {shareTargetOptions.map(target => {
+                      const activeTargets: ShareTarget[] = settings.shareSettings?.targets?.length ? settings.shareSettings.targets : ['whatsapp', 'x', 'instagram', 'copy'];
+                      return (
+                        <label key={target.id} className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={activeTargets.includes(target.id)}
+                            onChange={e => {
+                              const nextTargets = e.target.checked
+                                ? Array.from(new Set([...activeTargets, target.id]))
+                                : activeTargets.filter(item => item !== target.id);
+                              updateSettings({
+                                ...settings,
+                                shareSettings: {
+                                  targets: nextTargets.length > 0 ? nextTargets : (['copy'] as ShareTarget[]),
+                                  position: settings.shareSettings?.position || 'floating-sidebar',
+                                },
+                              });
+                            }}
+                            className="h-4 w-4 rounded text-primary-500"
+                          />
+                          {target.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-surface-400 mb-1">Position</label>
+                  <select
+                    value={settings.shareSettings?.position || 'floating-sidebar'}
+                    onChange={e => updateSettings({
+                      ...settings,
+                      shareSettings: {
+                        targets: settings.shareSettings?.targets?.length ? settings.shareSettings.targets : ['whatsapp', 'x', 'instagram', 'copy'],
+                        position: e.target.value as 'below-prompt' | 'bottom' | 'floating-sidebar',
+                      },
+                    })}
+                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                  >
+                    <option value="below-prompt">Below prompt</option>
+                    <option value="bottom">Bottom of page</option>
+                    <option value="floating-sidebar">Floating sidebar</option>
+                  </select>
                 </div>
               </div>
               <button
@@ -5232,7 +5284,7 @@ export default function Admin() {
       {/* ===== SEO TAB ===== */}
       {tab === 'seo' && (
         <div className="max-w-4xl">
-          <SeoPagesTab />
+          <SeoPagesTab settings={settings} updateSettings={updateSettings} />
         </div>
       )}
 
