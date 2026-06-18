@@ -4,7 +4,7 @@ import { ArrowRight, Check, Zap } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 import { getAllTools, getDefaultImageModel, getToolInfo } from '@/lib/constants';
 
-const toolNotes: Record<string, string[]> = {
+const defaultToolNotes: Record<string, string[]> = {
   ChatGPT: ['Strong text rendering', 'Reference image workflows', 'Detailed prompt structure'],
   Gemini: ['Fast image ideation', 'Reference-aware prompts', 'Creative variations'],
   Grok: ['Photoreal direction', 'Cinematic scenes', 'Social-first ideas'],
@@ -13,9 +13,24 @@ const toolNotes: Record<string, string[]> = {
 
 export default function HomeSupportedTools({ posts, settings }: { posts: Post[]; settings: SiteSettings }) {
   const content = settings.homepageContent?.supportedTools || {};
+  const toolNotes = Object.fromEntries(
+    (content.items || []).map(item => [
+      item.title,
+      item.checks?.length ? item.checks : item.text.split(',').map(note => note.trim()).filter(Boolean),
+    ])
+  ) as Record<string, string[]>;
   const toolCounts = new Map<string, number>();
   posts.forEach(post => getAllTools(post).forEach(tool => toolCounts.set(tool, (toolCounts.get(tool) || 0) + 1)));
   const tools = (settings.aiTools || Array.from(toolCounts.keys())).filter(Boolean).slice(0, 4);
+  const getNotesForTool = (tool: string) => {
+    const normalizedTool = tool.toLowerCase();
+    const matchedCustomNotes = Object.entries(toolNotes).find(([name]) => {
+      const normalizedName = name.toLowerCase();
+      return normalizedName === normalizedTool || normalizedTool.includes(normalizedName) || normalizedName.includes(normalizedTool);
+    })?.[1];
+
+    return matchedCustomNotes || defaultToolNotes[tool] || ['Organized prompt format', 'Model notes', 'Reusable examples'];
+  };
 
   if (tools.length === 0) return null;
 
@@ -37,7 +52,7 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
         {tools.map((tool, index) => {
           const info = getToolInfo(tool, settings.toolDetails);
           const model = getDefaultImageModel(tool) || 'Image prompts';
-          const notes = toolNotes[tool] || ['Organized prompt format', 'Model notes', 'Reusable examples'];
+          const notes = getNotesForTool(tool);
           return (
             <Link key={tool} href={`/tool/${encodeURIComponent(tool)}`} className="group rounded-2xl border border-surface-200 bg-surface-50 p-5 transition hover:-translate-y-1 hover:shadow-xl dark:border-surface-800 dark:bg-surface-900/70">
               <div className={`h-1 rounded-full ${['bg-emerald-500', 'bg-blue-500', 'bg-orange-500', 'bg-fuchsia-500'][index % 4]}`} />

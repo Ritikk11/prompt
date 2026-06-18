@@ -29,6 +29,28 @@ const defaultSettings: SiteSettings = {
       badge: 'How It Works',
       title: 'Create better AI images in 4 simple steps',
       description: 'From browsing prompts to generating finished artwork, this workflow keeps the process simple and repeatable.',
+      items: [
+        {
+          title: 'Browse & Discover',
+          text: 'Explore curated AI prompts organized by tool, style, mood, and use case. Find the right direction before you generate.',
+          checks: ['Filter by AI tool', 'Check trending prompts', 'Open curated collections'],
+        },
+        {
+          title: 'Copy the Prompt',
+          text: 'Found the perfect prompt? Click the copy button to instantly copy it to your clipboard with model-specific notes.',
+          checks: ['One-click copy', 'Includes model notes', 'Collection copy when available'],
+        },
+        {
+          title: 'Paste & Generate',
+          text: 'Open your preferred AI tool, paste the prompt, attach reference images when needed, and adjust settings as needed.',
+          checks: ['Works with major image tools', 'Adjust aspect ratios', 'Fine-tune prompt details'],
+        },
+        {
+          title: 'Create & Save',
+          text: 'Generate the result, save prompts you want to revisit, and keep useful ideas ready for your next artwork.',
+          checks: ['Save favorite prompts', 'Share useful collections', 'Return from your profile'],
+        },
+      ],
     },
     reviewProcess: {
       badge: 'Review process',
@@ -36,6 +58,12 @@ const defaultSettings: SiteSettings = {
       description: 'Every public prompt is checked for clarity, useful examples, model context, and clean organization before it appears in the library.',
       ctaLabel: 'Submit a prompt',
       ctaHref: '/submit',
+      items: [
+        { title: 'Submission check', text: 'Prompts are checked for a clear title, useful example image, model label, and complete prompt text before publishing.' },
+        { title: 'Prompt quality pass', text: 'We look for prompts that are reusable, specific enough to help creators, and organized with the right tools, categories, and tags.' },
+        { title: 'Safety and clarity', text: 'Public posts should avoid misleading claims, unsafe instructions, broken images, and confusing placeholders.' },
+        { title: 'Publish and improve', text: 'Approved prompts can be updated later with better descriptions, FAQs, model notes, and richer usage guidance.' },
+      ],
     },
     promptOfDay: {
       badge: 'Prompt of the Day',
@@ -47,6 +75,12 @@ const defaultSettings: SiteSettings = {
       badge: 'Supported AI tools',
       title: 'Prompts for Every Major AI Tool',
       description: 'Browse prompt collections prepared for the tools your visitors already use.',
+      items: [
+        { title: 'ChatGPT', text: 'Strong text rendering, Reference image workflows, Detailed prompt structure' },
+        { title: 'Gemini', text: 'Fast image ideation, Reference-aware prompts, Creative variations' },
+        { title: 'Grok', text: 'Photoreal direction, Cinematic scenes, Social-first ideas' },
+        { title: 'Qwen', text: 'Typography prompts, Poster layouts, Graphic design details' },
+      ],
     },
     creativeDirections: {
       badge: 'Browse by style',
@@ -58,6 +92,12 @@ const defaultSettings: SiteSettings = {
       badge: 'Creator-focused',
       title: 'Built for Creators Who Need Usable Prompts',
       description: 'These blocks explain why the library is useful without relying on fake testimonials.',
+      items: [
+        { title: 'Faster prompt browsing', text: 'Visitors can move through image prompt ideas by tool, style, and intent instead of guessing which post is useful.' },
+        { title: 'Clear model context', text: 'Prompt pages show the AI tool and model labels, so creators know where each prompt is meant to be used.' },
+        { title: 'Reusable collections', text: 'Multi-prompt posts, copy actions, and workflow notes make prompts easier to test and revisit later.' },
+        { title: 'Better organized library', text: 'Sections, tags, search, and custom pages help the site feel like a curated resource instead of a raw feed.' },
+      ],
     },
     newsletter: {
       badge: 'Stay updated',
@@ -65,8 +105,8 @@ const defaultSettings: SiteSettings = {
       description: 'Subscribe to receive curated prompt packs for ChatGPT, Gemini, Grok, and Qwen.',
       inputPlaceholder: 'Enter your email',
       ctaLabel: 'Subscribe',
-      successText: 'Saved. Email provider connection can be added later.',
-      helperText: 'No spam. Unsubscribe anytime once email delivery is connected.',
+      successText: "Subscribed. You're on the list.",
+      helperText: 'No spam. Unsubscribe anytime.',
     },
   },
   footerLinkGroups: [
