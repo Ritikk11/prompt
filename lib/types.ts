@@ -59,7 +59,7 @@ export interface Section {
   seoDescription?: string;
   introContent?: string;
   type: 'ai-tool' | 'latest' | 'popular' | 'custom' | 'trending' | 'tag' | 'category';
-  location?: 'homepage' | 'header';
+  location?: 'homepage' | 'header' | 'footer';
   aiTool?: string;
   tag?: string;
   filterTags?: string[];

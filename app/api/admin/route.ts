@@ -36,7 +36,7 @@ function validateSection(data: unknown): data is Section {
   if (!isPlainObject(data)) return false;
   if (!isValidId(data.id) || !cleanText(data.name, 180)) return false;
   if (!['ai-tool', 'latest', 'popular', 'custom', 'trending', 'tag', 'category'].includes(data.type)) return false;
-  if (data.location && !['homepage', 'header'].includes(data.location)) return false;
+  if (data.location && !['homepage', 'header', 'footer'].includes(data.location)) return false;
   if (typeof data.order !== 'number' || typeof data.visible !== 'boolean' || typeof data.limit !== 'number') return false;
   if (data.limit < 1 || data.limit > 50) return false;
   return true;
