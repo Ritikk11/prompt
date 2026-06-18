@@ -236,6 +236,7 @@ export default function Admin() {
   const isAdmin = Boolean(user && !adminAccessDenied);
 
   const initialDataLoaded = useRef(false);
+  const lastAuthUserId = useRef<string | null>(null);
 
   useEffect(() => {
     if (user && !initialDataLoaded.current) {
@@ -266,11 +267,20 @@ export default function Admin() {
 
   useEffect(() => {
     const supabase = createSupabaseClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      initialDataLoaded.current = false;
-      setAdminAccessDenied(false);
+    const applyAuthSession = (nextUser: User | null) => {
+      const nextUserId = nextUser?.id ?? null;
+      const userChanged = lastAuthUserId.current !== nextUserId;
+      lastAuthUserId.current = nextUserId;
+      setUser(nextUser);
+      if (userChanged) {
+        initialDataLoaded.current = false;
+        setAdminAccessDenied(false);
+      }
       setAuthLoading(false);
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      applyAuthSession(session?.user ?? null);
       
       // Check if we just completed a password reset
       if (typeof window !== 'undefined') {
@@ -309,14 +319,12 @@ export default function Admin() {
             } else {
               initialDataLoaded.current = false;
               setAdminAccessDenied(false);
-              setUser(data.user);
+              applyAuthSession(data.user);
             }
           });
         } else {
           supabase.auth.getSession().then(({ data: { session } }) => {
-            initialDataLoaded.current = false;
-            setAdminAccessDenied(false);
-            setUser(session?.user ?? null);
+            applyAuthSession(session?.user ?? null);
           });
         }
       } else if (event.data?.type === 'OAUTH_AUTH_ERROR') {
@@ -327,10 +335,7 @@ export default function Admin() {
     window.addEventListener('message', handleOauthMessage);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      initialDataLoaded.current = false;
-      setAdminAccessDenied(false);
-      setAuthLoading(false);
+      applyAuthSession(session?.user ?? null);
       
       if (event === 'PASSWORD_RECOVERY') {
         const newPassword = prompt('Enter your new password:');
@@ -455,6 +460,7 @@ export default function Admin() {
   const [pickingPostsForSection, setPickingPostsForSection] = useState<string | null>(null);
   const [postPickerSearch, setPostPickerSearch] = useState('');
   const [sectionPostSearch, setSectionPostSearch] = useState('');
+  const [promptOfDayPickerSearch, setPromptOfDayPickerSearch] = useState('');
 
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [aiPromptInstruction, setAiPromptInstruction] = useState('');
@@ -588,6 +594,21 @@ export default function Admin() {
   const pinnedPromptOfDayId = promptOfDayContent.pinnedPostId;
   const currentPromptOfDay = publicPosts.find(post => post.id === pinnedPromptOfDayId || post.slug === pinnedPromptOfDayId) || featuredPosts[0] || publicPosts[0];
   const currentPromptOfDayImage = currentPromptOfDay?.thumbnailUrl || currentPromptOfDay?.images?.[0]?.url || '';
+  const promptOfDayPickerPosts = publicPosts
+    .filter(post => {
+      const query = promptOfDayPickerSearch.trim().toLowerCase();
+      if (!query) return true;
+      const values = [
+        post.title,
+        post.description,
+        post.category || '',
+        ...(post.categories || []),
+        ...(post.tags || []),
+        ...getAllTools(post),
+      ];
+      return values.some(value => value.toLowerCase().includes(query));
+    })
+    .slice(0, 24);
   const homepagePostSections = sections
     .filter(section => (section.location || 'homepage') === 'homepage')
     .sort((a, b) => a.order - b.order);
@@ -1261,14 +1282,6 @@ export default function Admin() {
     { key: 'seo-pages', label: 'SEO Pages', icon: <LayoutTemplate className="w-4 h-4" /> },
     { key: 'static-pages', label: 'Static Pages', icon: <FileText className="w-4 h-4" /> },
   ];
-  const sidebarGroups = [
-    { label: 'Overview', items: tabs.filter(item => item.key === 'dashboard') },
-    { label: 'Content', items: tabs.filter(item => ['posts', 'sections', 'seo-pages', 'static-pages'].includes(item.key)) },
-    { label: 'Moderation', items: tabs.filter(item => ['submissions', 'comments'].includes(item.key)) },
-    { label: 'Audience', items: tabs.filter(item => item.key === 'users') },
-    { label: 'Website', items: tabs.filter(item => item.key === 'settings') },
-  ];
-
   if (authLoading || adminChecking) {
     return <div className="flex h-[50vh] items-center justify-center text-surface-400">Loading admin...</div>;
   }
@@ -1408,41 +1421,31 @@ export default function Admin() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="lg:sticky lg:top-6 lg:self-start">
-          <div className="rounded-xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900">
-            <p className="mb-3 px-2 text-[11px] font-black uppercase tracking-wide text-surface-400">Admin workspace</p>
-            <div className="space-y-4">
-              {sidebarGroups.map(group => (
-                <div key={group.label}>
-                  <p className="mb-1 px-2 text-[10px] font-black uppercase tracking-wide text-surface-400">{group.label}</p>
-                  <div className="space-y-1">
-                    {group.items.map(item => (
-                      <button
-                        key={item.key}
-                        onClick={() => setTab(item.key)}
-                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-bold transition-colors ${
-                          tab === item.key
-                            ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
-                            : 'text-surface-600 hover:bg-surface-100 dark:text-surface-200 dark:hover:bg-surface-800'
-                        }`}
-                      >
-                        <span className="flex items-center gap-2">{item.icon} {item.label}</span>
-                        {item.count !== undefined && (
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] ${tab === item.key ? 'bg-white/20 text-white' : 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-300'}`}>
-                            {item.count}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
+      {/* Tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-8 scrollbar-hide">
+        {tabs.map(item => (
+          <button
+            key={item.key}
+            onClick={() => setTab(item.key)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+              tab === item.key 
+                ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25' 
+                : 'bg-surface-50 dark:bg-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700'
+            }`}
+          >
+            {item.icon}
+            {item.label}
+            {item.count !== undefined && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                tab === item.key ? 'bg-white/20 text-white' : 'bg-surface-200 dark:bg-surface-700 text-surface-500'
+              }`}>
+                {item.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
 
-        <main className="min-w-0">
       {/* Stats Overview */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <div className="p-4 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
@@ -2985,16 +2988,62 @@ export default function Admin() {
                     </p>
                   </div>
                   <div className="space-y-3">
-                    <select
-                      value={promptOfDayContent.pinnedPostId || ''}
-                      onChange={e => updateHomepageContent('promptOfDay', 'pinnedPostId', e.target.value)}
-                      className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                    >
-                      <option value="">Auto: first featured, then latest public post</option>
-                      {publicPosts.map(post => (
-                        <option key={post.id} value={post.id}>{post.featured ? 'Featured - ' : ''}{post.title}</option>
-                      ))}
-                    </select>
+                    <div className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">Custom post picker</p>
+                        <button
+                          type="button"
+                          onClick={() => updateHomepageContent('promptOfDay', 'pinnedPostId', '')}
+                          className="self-start rounded-lg bg-white px-3 py-1.5 text-[11px] font-bold text-surface-600 hover:bg-surface-100 dark:bg-surface-900 dark:text-surface-200 dark:hover:bg-surface-800 sm:self-auto"
+                        >
+                          Use auto fallback
+                        </button>
+                      </div>
+                      <input
+                        value={promptOfDayPickerSearch}
+                        onChange={e => setPromptOfDayPickerSearch(e.target.value)}
+                        className="mb-3 w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                        placeholder="Search any published post by title, tag, category, or AI tool..."
+                      />
+                      <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+                        {promptOfDayPickerPosts.map(post => {
+                          const imageUrl = post.thumbnailUrl || post.images?.[0]?.url || '';
+                          const selected = pinnedPromptOfDayId === post.id || pinnedPromptOfDayId === post.slug;
+                          return (
+                            <button
+                              key={post.id}
+                              type="button"
+                              onClick={() => updateHomepageContent('promptOfDay', 'pinnedPostId', post.id)}
+                              className={`flex w-full items-center gap-3 rounded-lg border p-2 text-left transition ${
+                                selected
+                                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10'
+                                  : 'border-surface-200 bg-white hover:border-primary-300 dark:border-surface-700 dark:bg-surface-900 dark:hover:border-primary-500'
+                              }`}
+                            >
+                              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-surface-200 dark:bg-surface-800">
+                                {imageUrl ? (
+                                  <Image src={imageUrl} alt="" fill className="object-cover" sizes="56px" referrerPolicy="no-referrer" />
+                                ) : (
+                                  <div className="flex h-full items-center justify-center text-[10px] font-bold text-surface-400">No img</div>
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-bold text-surface-950 dark:text-white">{post.title}</p>
+                                <p className="mt-1 truncate text-[11px] text-surface-500">
+                                  {post.featured ? 'Featured - ' : ''}{getAllTools(post).join(', ') || post.category || 'Published post'}
+                                </p>
+                              </div>
+                              <span className={`rounded-full px-2 py-1 text-[10px] font-black ${selected ? 'bg-primary-500 text-white' : 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-300'}`}>
+                                {selected ? 'Selected' : 'Pick'}
+                              </span>
+                            </button>
+                          );
+                        })}
+                        {promptOfDayPickerPosts.length === 0 && (
+                          <p className="rounded-lg bg-white px-3 py-4 text-center text-xs text-surface-500 dark:bg-surface-900">No published posts match that search.</p>
+                        )}
+                      </div>
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <input value={promptOfDayContent.badge || ''} onChange={e => updateHomepageContent('promptOfDay', 'badge', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Badge / eyebrow" />
                       <input value={promptOfDayContent.ctaLabel || ''} onChange={e => updateHomepageContent('promptOfDay', 'ctaLabel', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Button label" />
@@ -3202,13 +3251,42 @@ export default function Admin() {
                                     )}
                                   </div>
                                   <div>
-                                    <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-surface-500">Custom post picker</p>
-                                    <select value={blockContent.pinnedPostId || ''} onChange={e => updateHomepageContent(blockKey, 'pinnedPostId', e.target.value)} className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900">
-                                      <option value="">Auto: first featured, then latest public post</option>
-                                      {publicPosts.map(post => (
-                                        <option key={post.id} value={post.id}>{post.featured ? 'Featured - ' : ''}{post.title}</option>
-                                      ))}
-                                    </select>
+                                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                                      <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">Custom post picker</p>
+                                      <button
+                                        type="button"
+                                        onClick={() => updateHomepageContent(blockKey, 'pinnedPostId', '')}
+                                        className="rounded-md bg-white px-2 py-1 text-[10px] font-bold text-surface-600 hover:bg-surface-100 dark:bg-surface-900 dark:text-surface-200 dark:hover:bg-surface-800"
+                                      >
+                                        Auto fallback
+                                      </button>
+                                    </div>
+                                    <input
+                                      value={promptOfDayPickerSearch}
+                                      onChange={e => setPromptOfDayPickerSearch(e.target.value)}
+                                      className="mb-2 w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                                      placeholder="Search published posts..."
+                                    />
+                                    <div className="max-h-44 space-y-1 overflow-y-auto pr-1">
+                                      {promptOfDayPickerPosts.slice(0, 10).map(post => {
+                                        const selected = blockContent.pinnedPostId === post.id || blockContent.pinnedPostId === post.slug;
+                                        return (
+                                          <button
+                                            key={post.id}
+                                            type="button"
+                                            onClick={() => updateHomepageContent(blockKey, 'pinnedPostId', post.id)}
+                                            className={`flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-xs ${
+                                              selected
+                                                ? 'bg-primary-500 text-white'
+                                                : 'bg-white text-surface-700 hover:bg-surface-100 dark:bg-surface-900 dark:text-surface-200 dark:hover:bg-surface-800'
+                                            }`}
+                                          >
+                                            <span className="truncate">{post.featured ? 'Featured - ' : ''}{post.title}</span>
+                                            <span className="shrink-0 text-[10px] font-black">{selected ? 'Selected' : 'Pick'}</span>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
                                     <p className="mt-2 text-[11px] text-surface-500">{currentPromptOfDay ? `Current: ${currentPromptOfDay.title}` : 'Publish a post first.'}</p>
                                   </div>
                                 </div>
@@ -4486,8 +4564,6 @@ export default function Admin() {
           />
         </div>
       )}
-        </main>
-      </div>
     </div>
   );
 }
