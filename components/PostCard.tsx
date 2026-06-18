@@ -42,7 +42,7 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
   );
 };
 
-export default function PostCard({ post: initialPost, index, aspect, cardStyleOverride }: { post: Post; index?: number; aspect?: string; cardStyleOverride?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' }) {
+export default function PostCard({ post: initialPost, index, aspect, cardStyleOverride, badgeStyleOverride }: { post: Post; index?: number; aspect?: string; cardStyleOverride?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8'; badgeStyleOverride?: string }) {
   const { settings, posts } = useData();
   const post = posts.find(p => p.id === initialPost.id) || initialPost;
   
@@ -51,7 +51,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
   const toolInfo = getToolInfo(primaryTool, settings?.toolDetails);
   
   const cardStyle = cardStyleOverride || settings?.cardStyle || 'v1';
-  const badgeStyle = settings?.badgeStyle || 'v1';
+  const badgeStyle = badgeStyleOverride || settings?.badgeStyle || 'v1';
   const showSkeleton = settings.features?.skeletonLoaders ?? true;
 
   const renderBadges = (className = "") => (
