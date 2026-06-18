@@ -555,6 +555,12 @@ export default function Admin() {
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [showPostForm, setShowPostForm] = useState(false);
   const [postSearch, setPostSearch] = useState('');
+  const [postToolFilter, setPostToolFilter] = useState('');
+  const [postTagFilter, setPostTagFilter] = useState('');
+  const [postStatusFilter, setPostStatusFilter] = useState('');
+  const [postFeaturedFilter, setPostFeaturedFilter] = useState('');
+  const [postSort, setPostSort] = useState<'newest' | 'oldest' | 'views' | 'likes' | 'title'>('newest');
+  const [selectedPostIds, setSelectedPostIds] = useState<string[]>([]);
 
   // Post form state
   const [title, setTitle] = useState('');
@@ -581,13 +587,14 @@ export default function Admin() {
   const [newSectionName, setNewSectionName] = useState('');
   const [newSectionSlug, setNewSectionSlug] = useState('');
   const [newSectionType, setNewSectionType] = useState<Section['type']>('ai-tool');
-  const [newSectionLocation, setNewSectionLocation] = useState<'homepage' | 'header'>('homepage');
+  const [newSectionLocation, setNewSectionLocation] = useState<'homepage' | 'header' | 'footer'>('homepage');
   const [newSectionTool, setNewSectionTool] = useState('');
   const [newSectionTag, setNewSectionTag] = useState('');
   const [newSectionCategory, setNewSectionCategory] = useState('');
   const [newSectionLimit, setNewSectionLimit] = useState(8);
   const [newSectionCardStyle, setNewSectionCardStyle] = useState<Section['cardStyle'] | ''>('');
   const [newSectionFilterTags, setNewSectionFilterTags] = useState('');
+  const [showNewSectionForm, setShowNewSectionForm] = useState(false);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [expandedHomepageBlock, setExpandedHomepageBlock] = useState<string | null>(null);
   const [editSectionName, setEditSectionName] = useState('');
@@ -1099,7 +1106,7 @@ export default function Admin() {
       tag: newSectionType === 'tag' ? newSectionTag : undefined,
       category: newSectionType === 'category' ? newSectionCategory : undefined,
       postIds: newSectionType === 'custom' ? [] : undefined,
-      order: sections.filter(s => s.location === newSectionLocation).length,
+      order: sections.filter(s => (s.location || 'homepage') === newSectionLocation).length,
       visible: true,
       limit: newSectionLimit,
       cardStyle: newSectionCardStyle || undefined,
@@ -1113,6 +1120,54 @@ export default function Admin() {
     setNewSectionCategory('');
     setNewSectionCardStyle('');
     setNewSectionFilterTags('');
+    setShowNewSectionForm(false);
+  };
+
+  const startNewSection = (location: 'homepage' | 'header' | 'footer' = 'homepage') => {
+    setNewSectionLocation(location);
+    setShowNewSectionForm(true);
+    window.requestAnimationFrame(() => {
+      document.getElementById('add-section-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  const duplicatePost = async (post: Post) => {
+    const id = generateId();
+    const duplicated: Post = {
+      ...JSON.parse(JSON.stringify(post)),
+      id,
+      slug: `${post.slug || slugify(post.title)}-${id.slice(0, 4)}`,
+      title: `${post.title} Copy`,
+      featured: false,
+      views: 0,
+      likes: 0,
+      likedBy: [],
+      bookmarkedBy: [],
+      comments: [],
+      status: 'draft',
+      visibility: 'private',
+      createdAt: new Date().toISOString(),
+    };
+    await addPost(duplicated);
+  };
+
+  const togglePostSelection = (id: string) => {
+    setSelectedPostIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+  };
+
+  const applyBulkPostAction = async (action: 'feature' | 'unfeature' | 'publish' | 'unpublish' | 'delete') => {
+    const selected = posts.filter(post => selectedPostIds.includes(post.id));
+    if (selected.length === 0) return;
+    if (action === 'delete' && !confirm(`Delete ${selected.length} selected posts?`)) return;
+
+    for (const post of selected) {
+      if (action === 'delete') await deletePost(post.id);
+      if (action === 'feature') await updatePost({ ...post, featured: true });
+      if (action === 'unfeature') await updatePost({ ...post, featured: false });
+      if (action === 'publish') await updatePost({ ...post, status: 'published', visibility: 'public' });
+      if (action === 'unpublish') await updatePost({ ...post, status: 'draft', visibility: 'private' });
+    }
+    setSelectedPostIds([]);
   };
 
   const moveSection = (section: Section, dir: 'up' | 'down') => {
@@ -1406,14 +1461,33 @@ export default function Admin() {
     }
   };
 
-  const filteredPosts = postSearch
-    ? posts.filter(p =>
-        p.title.toLowerCase().includes(postSearch.toLowerCase()) ||
-        p.tags.some(t => t.toLowerCase().includes(postSearch.toLowerCase()))
-      )
-    : [...posts];
-    
-  filteredPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const postToolOptions = Array.from(new Set(posts.flatMap(post => getAllTools(post)).filter(Boolean))).sort();
+  const postTagOptions = Array.from(new Set(posts.flatMap(post => post.tags || []).filter(Boolean))).sort();
+  const filteredPosts = posts
+    .filter(post => {
+      const query = postSearch.trim().toLowerCase();
+      if (!query) return true;
+      return post.title.toLowerCase().includes(query) ||
+        post.description.toLowerCase().includes(query) ||
+        (post.tags || []).some(tag => tag.toLowerCase().includes(query));
+    })
+    .filter(post => !postToolFilter || getAllTools(post).includes(postToolFilter))
+    .filter(post => !postTagFilter || (post.tags || []).includes(postTagFilter))
+    .filter(post => !postStatusFilter || (post.status || 'published') === postStatusFilter)
+    .filter(post => {
+      if (postFeaturedFilter === 'featured') return post.featured;
+      if (postFeaturedFilter === 'not-featured') return !post.featured;
+      if (postFeaturedFilter === 'private') return post.visibility === 'private';
+      return true;
+    });
+
+  filteredPosts.sort((a, b) => {
+    if (postSort === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    if (postSort === 'views') return (b.views || 0) - (a.views || 0);
+    if (postSort === 'likes') return (b.likes || 0) - (a.likes || 0);
+    if (postSort === 'title') return a.title.localeCompare(b.title);
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 
   const pendingSubmissionCount = posts.filter(p => p.status === 'pending').length;
   const pendingCommentCount = posts.reduce((count, post) => count + (post.comments || []).filter(comment => comment.status === 'pending').length, 0);
@@ -1635,11 +1709,63 @@ export default function Admin() {
                   />
                 </div>
               </div>
+              <div className="mb-4 grid gap-2 md:grid-cols-5">
+                <select value={postToolFilter} onChange={e => setPostToolFilter(e.target.value)} className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                  <option value="">All tools</option>
+                  {postToolOptions.map(tool => <option key={tool} value={tool}>{tool}</option>)}
+                </select>
+                <select value={postTagFilter} onChange={e => setPostTagFilter(e.target.value)} className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                  <option value="">All tags</option>
+                  {postTagOptions.map(tag => <option key={tag} value={tag}>{tag}</option>)}
+                </select>
+                <select value={postStatusFilter} onChange={e => setPostStatusFilter(e.target.value)} className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                  <option value="">All status</option>
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                  <option value="pending">Pending</option>
+                </select>
+                <select value={postFeaturedFilter} onChange={e => setPostFeaturedFilter(e.target.value)} className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                  <option value="">All visibility</option>
+                  <option value="featured">Featured</option>
+                  <option value="not-featured">Not featured</option>
+                  <option value="private">Private</option>
+                </select>
+                <select value={postSort} onChange={e => setPostSort(e.target.value as typeof postSort)} className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="views">Most views</option>
+                  <option value="likes">Most likes</option>
+                  <option value="title">Title A-Z</option>
+                </select>
+              </div>
+              <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-surface-200 bg-white p-3 text-xs dark:border-surface-800 dark:bg-surface-900">
+                <label className="flex items-center gap-2 font-bold text-surface-600 dark:text-surface-200">
+                  <input
+                    type="checkbox"
+                    checked={filteredPosts.length > 0 && filteredPosts.every(post => selectedPostIds.includes(post.id))}
+                    onChange={e => setSelectedPostIds(e.target.checked ? filteredPosts.map(post => post.id) : [])}
+                    className="h-4 w-4 rounded text-primary-500"
+                  />
+                  Select visible
+                </label>
+                <span className="text-surface-400">{selectedPostIds.length} selected</span>
+                <button disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('feature')} className="rounded-lg bg-surface-100 px-3 py-1.5 font-bold text-surface-600 disabled:opacity-40 dark:bg-surface-800 dark:text-surface-200">Feature</button>
+                <button disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('unfeature')} className="rounded-lg bg-surface-100 px-3 py-1.5 font-bold text-surface-600 disabled:opacity-40 dark:bg-surface-800 dark:text-surface-200">Unfeature</button>
+                <button disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('publish')} className="rounded-lg bg-green-50 px-3 py-1.5 font-bold text-green-700 disabled:opacity-40 dark:bg-green-500/10 dark:text-green-300">Publish</button>
+                <button disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('unpublish')} className="rounded-lg bg-surface-100 px-3 py-1.5 font-bold text-surface-600 disabled:opacity-40 dark:bg-surface-800 dark:text-surface-200">Unpublish</button>
+                <button disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('delete')} className="rounded-lg bg-red-50 px-3 py-1.5 font-bold text-red-600 disabled:opacity-40 dark:bg-red-500/10 dark:text-red-300">Delete</button>
+              </div>
 
               {/* Posts list */}
               <div className="grid gap-3">
                 {filteredPosts.map(post => (
                   <div key={post.id} className="flex items-center gap-4 p-4 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 hover:shadow-md transition-shadow">
+                    <input
+                      type="checkbox"
+                      checked={selectedPostIds.includes(post.id)}
+                      onChange={() => togglePostSelection(post.id)}
+                      className="h-4 w-4 shrink-0 rounded text-primary-500"
+                    />
                     <div className="relative w-20 h-16 rounded-lg overflow-hidden shrink-0 bg-surface-100 dark:bg-surface-800">
                       {post.images[0]?.url && (
                         <Image src={post.images[0].url} alt="" fill className="object-cover" sizes="80px" referrerPolicy="no-referrer" />
@@ -1652,7 +1778,7 @@ export default function Admin() {
                         <span>{post.views.toLocaleString()} views</span>
                         {post.featured && <span className="inline-flex items-center gap-1 text-yellow-500 font-semibold"><Star className="h-3.5 w-3.5 fill-yellow-500" /> Featured</span>}
                         {post.status === 'draft' && <span className="inline-flex items-center gap-1 text-orange-500 font-semibold"><FileText className="h-3.5 w-3.5" /> Draft</span>}
-                        {post.visibility === 'private' && <span className="inline-flex items-center gap-1 text-red-500 font-semibold"><EyeOff className="h-3.5 w-3.5" /> Private</span>}
+                        {post.visibility === 'private' && <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2 py-0.5 font-semibold text-surface-500 dark:bg-surface-800 dark:text-surface-300"><EyeOff className="h-3.5 w-3.5" /> Private</span>}
                         {sections.filter(s => s.type === 'custom' && s.postIds?.includes(post.id)).length > 0 && (
                           <span className="text-primary-500 font-semibold">
                             {sections.filter(s => s.type === 'custom' && s.postIds?.includes(post.id)).length} sections
@@ -1685,6 +1811,13 @@ export default function Admin() {
                         title={post.featured ? 'Remove from hero' : 'Add to hero'}
                       >
                         {post.featured ? <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> : <StarOff className="w-4 h-4 text-surface-400" />}
+                      </button>
+                      <button
+                        onClick={() => duplicatePost(post)}
+                        className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                        title="Duplicate as private draft"
+                      >
+                        <FileText className="w-4 h-4 text-surface-400" />
                       </button>
                       <button
                         onClick={() => startEdit(post)}
@@ -2234,10 +2367,25 @@ export default function Admin() {
       {tab === 'sections' && (
         <div className="max-w-3xl">
           {/* Add new section */}
-          <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 mb-6">
-            <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-              <Plus className="w-4 h-4 text-primary-500" /> Add New Section
-            </h3>
+          <div id="add-section-form" className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 mb-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-primary-500" /> Add New Section
+                </h3>
+                <p className="mt-1 text-xs text-surface-500">Collapsed by default so the section list stays easy to scan.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => startNewSection('homepage')} className="rounded-lg bg-primary-500 px-3 py-2 text-xs font-bold text-white hover:bg-primary-600">+ Homepage</button>
+                <button onClick={() => startNewSection('header')} className="rounded-lg bg-surface-100 px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-200 dark:hover:bg-surface-700">+ Header</button>
+                <button onClick={() => startNewSection('footer')} className="rounded-lg bg-surface-100 px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-200 dark:hover:bg-surface-700">+ Footer</button>
+                <button onClick={() => setShowNewSectionForm(prev => !prev)} className="rounded-lg border border-surface-200 px-3 py-2 text-xs font-bold text-surface-600 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-200 dark:hover:bg-surface-800">
+                  {showNewSectionForm ? 'Collapse' : 'Open form'}
+                </button>
+              </div>
+            </div>
+            {showNewSectionForm && (
+              <div className="mt-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
               <input
                 value={newSectionName}
@@ -2256,11 +2404,12 @@ export default function Admin() {
               />
               <select
                 value={newSectionLocation}
-                onChange={e => setNewSectionLocation(e.target.value as 'homepage' | 'header')}
+                onChange={e => setNewSectionLocation(e.target.value as 'homepage' | 'header' | 'footer')}
                 className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
               >
                 <option value="homepage">Homepage</option>
                 <option value="header">Header Menu Link</option>
+                <option value="footer">Footer Section</option>
               </select>
               <select
                 value={newSectionType}
@@ -2357,18 +2506,31 @@ export default function Admin() {
             >
               Add Section
             </button>
+              </div>
+            )}
           </div>
 
           {/* Sections Lists by Location */}
           <div className="space-y-8">
-            {(['homepage', 'header'] as const).map(loc => (
+            {(['homepage', 'header', 'footer'] as const).map(loc => (
               <div key={loc} className="mb-4">
                 <div className="mb-4">
-                  <h3 className="font-semibold text-sm">{loc === 'homepage' ? 'Homepage Sections' : 'Header Menu Sections'}</h3>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="font-semibold text-sm">{loc === 'homepage' ? 'Homepage Sections' : loc === 'header' ? 'Header Menu Sections' : 'Footer Sections'}</h3>
+                    <button
+                      type="button"
+                      onClick={() => startNewSection(loc)}
+                      className="inline-flex items-center gap-1 rounded-lg bg-primary-500/10 px-2.5 py-1.5 text-[11px] font-bold text-primary-600 hover:bg-primary-500/15 dark:text-primary-300"
+                    >
+                      <Plus className="h-3 w-3" /> Add {loc === 'homepage' ? 'homepage' : loc === 'header' ? 'header' : 'footer'} section
+                    </button>
+                  </div>
                   <p className="text-xs text-surface-500 mt-1">
                     {loc === 'homepage'
                       ? 'Edit homepage post sections here. Reorder them with the full homepage layout in Settings -> Homepage.'
-                      : 'These appear in the header menu and open their full section pages.'}
+                      : loc === 'header'
+                        ? 'These appear in the header menu and open their full section pages.'
+                        : 'Footer sections are ready for future footer placement and organization.'}
                   </p>
                   {loc === 'homepage' && (
                     <button

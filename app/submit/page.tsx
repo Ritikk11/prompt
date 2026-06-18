@@ -6,6 +6,7 @@ import { useData } from '@/components/context/DataContext';
 import { createClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Upload, Plus, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { ImagePrompt } from '@/lib/types';
@@ -31,9 +32,6 @@ export default function SubmitPage() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setAuthLoading(false);
-      if (!settings.features?.userSubmissions) {
-         navigate.push('/');
-      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -44,8 +42,24 @@ export default function SubmitPage() {
     return () => subscription.unsubscribe();
   }, [navigate, settings]);
 
-  if (!settings.features?.userSubmissions) return null;
   if (authLoading || loading) return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div></div>;
+
+  if (!settings.features?.userSubmissions) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-20 text-center">
+        <div className="rounded-3xl border border-surface-200 bg-white p-8 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+          <h1 className="text-2xl font-black text-surface-950 dark:text-white">Prompt submissions are currently closed</h1>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-surface-600 dark:text-surface-300">
+            The submission form is disabled by the site admin right now. You can still contact the team if you want to suggest a prompt or request access.
+          </p>
+          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/contact" className="rounded-xl bg-primary-500 px-5 py-3 text-sm font-bold text-white hover:bg-primary-600">Contact Us</Link>
+            <Link href="/explore" className="rounded-xl border border-surface-200 px-5 py-3 text-sm font-bold text-surface-700 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-200 dark:hover:bg-surface-800">Explore Prompts</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
