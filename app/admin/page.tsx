@@ -215,6 +215,202 @@ function countRailMatches(posts: Post[], item: FilterRailItem) {
   }).length;
 }
 
+function cardStyleName(value: string) {
+  const names: Record<string, string> = {
+    v1: 'Hover Overlay',
+    v2: 'Floating Image',
+    v3: 'Compact Editorial',
+    v4: 'Social Card',
+    v5: 'Brutalist',
+    v6: 'Gradient Overlay',
+    v7: 'Polaroid',
+    v8: 'Glass Panel',
+  };
+  return names[value] || 'Global card style';
+}
+
+function CardStylePreview({ style, badgeStyle = 'v1', label = 'Live preview' }: { style: string; badgeStyle?: string; label?: string }) {
+  const activeStyle = style || 'v1';
+  const badgeClass = badgeStyle === 'v2'
+    ? 'bg-black/35 text-white border border-white/30 backdrop-blur-md'
+    : badgeStyle === 'v5'
+      ? 'bg-transparent text-primary-600 border border-primary-300 dark:text-primary-300 dark:border-primary-500/40'
+      : badgeStyle === 'v10'
+        ? 'bg-primary-500 text-white -skew-x-12'
+        : 'bg-white/90 text-surface-800 border border-white/60';
+
+  return (
+    <div className="rounded-xl border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">{label}</p>
+        <span className="rounded-full bg-primary-500/10 px-2 py-1 text-[10px] font-black text-primary-600 dark:text-primary-300">{cardStyleName(activeStyle)}</span>
+      </div>
+      <div className="relative mx-auto aspect-[4/3] max-w-[260px] overflow-hidden rounded-xl border border-surface-200 bg-white shadow-sm dark:border-surface-700 dark:bg-surface-900">
+        {activeStyle === 'v5' ? (
+          <div className="flex h-full flex-col justify-between border-2 border-surface-950 bg-yellow-50 p-4 text-surface-950 dark:border-white dark:bg-surface-900 dark:text-white">
+            <div className="h-20 border-2 border-surface-950 bg-pink-200 dark:border-white dark:bg-primary-500/30" />
+            <div>
+              <span className="inline-flex rounded-none bg-surface-950 px-2 py-1 text-[10px] font-black uppercase text-white dark:bg-white dark:text-surface-950">ChatGPT</span>
+              <p className="mt-2 text-sm font-black uppercase">Anime poster prompt</p>
+            </div>
+          </div>
+        ) : activeStyle === 'v7' ? (
+          <div className="h-full bg-white p-3 dark:bg-surface-100">
+            <div className="h-28 rounded-sm bg-gradient-to-br from-pink-300 via-orange-200 to-cyan-200" />
+            <p className="mt-3 text-sm font-bold italic text-surface-900">Anime poster prompt</p>
+            <p className="text-[11px] text-surface-500">Polaroid layout</p>
+          </div>
+        ) : activeStyle === 'v8' ? (
+          <div className="h-full bg-gradient-to-br from-surface-900 via-primary-950 to-surface-800 p-4 text-white">
+            <div className="rounded-xl border border-white/20 bg-white/15 p-4 shadow-xl backdrop-blur-md">
+              <span className={`inline-flex rounded-lg px-2 py-1 text-[10px] font-bold ${badgeClass}`}>ChatGPT</span>
+              <p className="mt-8 text-sm font-black">Anime poster prompt</p>
+              <p className="mt-1 text-[11px] text-white/70">Glass panel card</p>
+            </div>
+          </div>
+        ) : activeStyle === 'v6' ? (
+          <div className="flex h-full flex-col justify-end bg-gradient-to-br from-violet-500 via-fuchsia-500 to-orange-400 p-4 text-white">
+            <span className={`mb-2 inline-flex w-fit rounded-lg px-2 py-1 text-[10px] font-bold ${badgeClass}`}>ChatGPT</span>
+            <p className="text-sm font-black">Anime poster prompt</p>
+            <p className="text-[11px] text-white/80">Gradient overlay</p>
+          </div>
+        ) : activeStyle === 'v4' ? (
+          <div className="h-full p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-primary-500" />
+              <div><p className="text-xs font-bold">Prompt creator</p><p className="text-[10px] text-surface-500">Social card</p></div>
+            </div>
+            <div className="h-24 rounded-xl bg-gradient-to-br from-pink-300 to-orange-200" />
+            <p className="mt-3 text-sm font-black">Anime poster prompt</p>
+          </div>
+        ) : activeStyle === 'v3' ? (
+          <div className="grid h-full grid-cols-[0.9fr_1.1fr]">
+            <div className="bg-gradient-to-br from-pink-300 to-orange-200" />
+            <div className="flex flex-col justify-center p-4">
+              <span className={`mb-2 inline-flex w-fit rounded-lg px-2 py-1 text-[10px] font-bold ${badgeClass}`}>ChatGPT</span>
+              <p className="text-sm font-black">Anime poster prompt</p>
+              <p className="mt-1 text-[11px] text-surface-500">Compact editorial</p>
+            </div>
+          </div>
+        ) : activeStyle === 'v2' ? (
+          <div className="h-full p-4">
+            <div className="h-24 rounded-xl border-4 border-white bg-gradient-to-br from-pink-300 to-orange-200 shadow-lg dark:border-surface-800" />
+            <span className={`mt-3 inline-flex rounded-lg px-2 py-1 text-[10px] font-bold ${badgeClass}`}>ChatGPT</span>
+            <p className="mt-2 text-sm font-black">Anime poster prompt</p>
+          </div>
+        ) : (
+          <div className="flex h-full flex-col justify-end bg-gradient-to-br from-pink-300 via-orange-200 to-cyan-200 p-4">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+            <div className="relative text-white">
+              <span className={`mb-2 inline-flex rounded-lg px-2 py-1 text-[10px] font-bold ${badgeClass}`}>ChatGPT</span>
+              <p className="text-sm font-black">Anime poster prompt</p>
+              <p className="text-[11px] text-white/80">Hover overlay</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HomepageBlockPreview({
+  blockKey,
+  title,
+  content,
+  currentPromptTitle,
+  currentPromptImage,
+}: {
+  blockKey: string;
+  title: string;
+  content: HomepageBlockContent;
+  currentPromptTitle?: string;
+  currentPromptImage?: string;
+}) {
+  const badge = content.badge || title;
+  const heading = content.title || title;
+  const description = content.description || 'Section description appears here.';
+  const items = content.items || [];
+
+  const previewItems = items.length > 0
+    ? items.slice(0, blockKey === 'howTo' ? 3 : 4)
+    : [
+        { title: 'Card title', text: 'Card description appears here.' },
+        { title: 'Second card', text: 'Another inner card preview.' },
+      ];
+
+  return (
+    <div className="rounded-xl border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">Live block preview</p>
+        <span className="rounded-full bg-primary-500/10 px-2 py-1 text-[10px] font-black text-primary-600 dark:text-primary-300">{title}</span>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-surface-200 bg-white text-surface-950 shadow-sm dark:border-surface-700 dark:bg-surface-900 dark:text-white">
+        <div className="border-b border-surface-100 p-4 text-center dark:border-surface-800">
+          <span className="inline-flex rounded-full bg-primary-500/10 px-3 py-1 text-[10px] font-black text-primary-600 dark:text-primary-300">{badge}</span>
+          <h4 className="mt-3 text-base font-black leading-tight">{heading}</h4>
+          <p className="mt-2 text-[11px] leading-5 text-surface-500 dark:text-surface-300">{description}</p>
+        </div>
+
+        {blockKey === 'promptOfDay' ? (
+          <div className="p-4">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-surface-200 dark:bg-surface-800">
+              {currentPromptImage ? (
+                <Image src={currentPromptImage} alt="" fill className="object-cover" sizes="300px" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-xs font-bold text-surface-400">Selected post image</div>
+              )}
+            </div>
+            <p className="mt-3 text-sm font-black">{currentPromptTitle || 'Selected post title'}</p>
+            <button type="button" className="mt-3 rounded-lg bg-primary-500 px-3 py-2 text-[11px] font-bold text-white">{content.ctaLabel || 'View This Prompt'}</button>
+          </div>
+        ) : blockKey === 'newsletter' ? (
+          <div className="p-4">
+            <div className="flex gap-2">
+              <div className="min-h-10 flex-1 rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-[11px] text-surface-400 dark:border-surface-700 dark:bg-surface-800">
+                {content.inputPlaceholder || 'Enter your email'}
+              </div>
+              <button type="button" className="rounded-lg bg-primary-500 px-3 text-[11px] font-bold text-white">{content.ctaLabel || 'Subscribe'}</button>
+            </div>
+            <p className="mt-2 text-[11px] text-surface-500">{content.helperText || 'No spam. Unsubscribe anytime.'}</p>
+          </div>
+        ) : blockKey === 'creativeDirections' ? (
+          <div className="grid grid-cols-2 gap-2 p-4">
+            {['Anime', 'Poster', 'GTA', 'Japanese'].map((item, index) => (
+              <div key={item} className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800">
+                <div className={`mb-3 h-8 w-8 rounded-lg ${['bg-pink-500', 'bg-orange-500', 'bg-blue-500', 'bg-violet-500'][index]}`} />
+                <p className="text-xs font-black">{item}</p>
+                <p className="mt-1 text-[10px] text-surface-500">{content.itemDescription || 'Curated prompt direction'}</p>
+              </div>
+            ))}
+          </div>
+        ) : blockKey === 'supportedTools' ? (
+          <div className="grid grid-cols-2 gap-2 p-4">
+            {previewItems.map(item => (
+              <div key={item.title} className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800">
+                <p className="text-xs font-black">{item.title}</p>
+                <p className="mt-1 text-[10px] leading-4 text-surface-500">{item.text}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-2 p-4">
+            {previewItems.map((item, index) => (
+              <div key={`${item.title}-${index}`} className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800">
+                <p className="text-xs font-black">{item.title}</p>
+                <p className="mt-1 text-[10px] leading-4 text-surface-500">{item.text}</p>
+                {blockKey === 'howTo' && item.checks?.length ? (
+                  <p className="mt-2 text-[10px] font-bold text-emerald-600">{item.checks[0]}</p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
   const {
     posts, sections, settings, addPost, updatePost, deletePost,
@@ -2166,23 +2362,30 @@ export default function Admin() {
                   className="w-20 px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
                 />
               </div>
-              <div>
-                <select
-                  value={newSectionCardStyle}
-                  onChange={e => setNewSectionCardStyle(e.target.value as Section['cardStyle'] | '')}
-                  className="w-full px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                  title="Card style for this section"
-                >
-                  <option value="">Use global card style</option>
-                  <option value="v1">v1 - Hover Overlay</option>
-                  <option value="v2">v2 - Floating Image</option>
-                  <option value="v3">v3 - Compact Editorial</option>
-                  <option value="v4">v4 - Social Card</option>
-                  <option value="v5">v5 - Brutalist</option>
-                  <option value="v6">v6 - Gradient Overlay</option>
-                  <option value="v7">v7 - Polaroid</option>
-                  <option value="v8">v8 - Glass Panel</option>
-                </select>
+              <div className="sm:col-span-2 grid gap-3 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+                <div>
+                  <label className="block text-xs text-surface-400 mb-1">Card style override</label>
+                  <select
+                    value={newSectionCardStyle}
+                    onChange={e => setNewSectionCardStyle(e.target.value as Section['cardStyle'] | '')}
+                    className="w-full px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    title="Card style for this section"
+                  >
+                    <option value="">Use global card style</option>
+                    <option value="v1">v1 - Hover Overlay</option>
+                    <option value="v2">v2 - Floating Image</option>
+                    <option value="v3">v3 - Compact Editorial</option>
+                    <option value="v4">v4 - Social Card</option>
+                    <option value="v5">v5 - Brutalist</option>
+                    <option value="v6">v6 - Gradient Overlay</option>
+                    <option value="v7">v7 - Polaroid</option>
+                    <option value="v8">v8 - Glass Panel</option>
+                  </select>
+                  <p className="mt-1 text-[11px] text-surface-500">
+                    {newSectionCardStyle ? 'This section will ignore the global card style.' : `Using global card style: ${cardStyleName(cardStyle)}`}
+                  </p>
+                </div>
+                <CardStylePreview style={newSectionCardStyle || cardStyle} badgeStyle={badgeStyle} label={newSectionCardStyle ? 'Section override preview' : 'Global style preview'} />
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-xs text-surface-400 mb-1">Optional filter tags</label>
@@ -2770,31 +2973,36 @@ export default function Admin() {
                   <option value="v8">Floating Card</option>
                 </select>
               </div>
-              <div className="mt-3">
-                <label className="block text-sm font-medium mb-1.5">Card Style</label>
-                <select
-                  value={cardStyle}
-                  onChange={e => setCardStyle(e.target.value as any)}
-                  className="w-full sm:w-1/2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                >
-                  <option value="v1">Default: Hover Overlay</option>
-                  <option value="v2">Current: Floating Image with Border</option>
-                  <option value="v6">Editorial Gradient Overlay</option>
-                  <option value="v8">Glass Panel Card</option>
-                </select>
-              </div>
-              <div className="mt-3">
-                <label className="block text-sm font-medium mb-1.5">Badge Style</label>
-                <select
-                  value={badgeStyle}
-                  onChange={e => setBadgeStyle(e.target.value as any)}
-                  className="w-full sm:w-1/2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                >
-                  <option value="v1">Default: Subtle & Clean</option>
-                  <option value="v2">Glass Blur</option>
-                  <option value="v5">Minimalist Tag</option>
-                  <option value="v10">Angled Accent</option>
-                </select>
+              <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Card Style</label>
+                    <select
+                      value={cardStyle}
+                      onChange={e => setCardStyle(e.target.value as any)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    >
+                      <option value="v1">Default: Hover Overlay</option>
+                      <option value="v2">Current: Floating Image with Border</option>
+                      <option value="v6">Editorial Gradient Overlay</option>
+                      <option value="v8">Glass Panel Card</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Badge Style</label>
+                    <select
+                      value={badgeStyle}
+                      onChange={e => setBadgeStyle(e.target.value as any)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    >
+                      <option value="v1">Default: Subtle & Clean</option>
+                      <option value="v2">Glass Blur</option>
+                      <option value="v5">Minimalist Tag</option>
+                      <option value="v10">Angled Accent</option>
+                    </select>
+                  </div>
+                </div>
+                <CardStylePreview style={cardStyle} badgeStyle={badgeStyle} label="Global card preview" />
               </div>
               <button
                 onClick={handleSaveSettings}
@@ -3165,17 +3373,26 @@ export default function Admin() {
                               <input value={editSectionName} onChange={e => setEditSectionName(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Section title" />
                               <input value={editSectionSlug} onChange={e => setEditSectionSlug(slugify(e.target.value))} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Slug" />
                               <input type="number" min={1} max={50} value={editSectionLimit} onChange={e => setEditSectionLimit(parseInt(e.target.value) || 8)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Post limit" />
-                              <select value={editSectionCardStyle} onChange={e => setEditSectionCardStyle(e.target.value as Section['cardStyle'] | '')} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
-                                <option value="">Global card style</option>
-                                <option value="v1">v1 Hover Overlay</option>
-                                <option value="v2">v2 Floating Image</option>
-                                <option value="v3">v3 Compact Editorial</option>
-                                <option value="v4">v4 Social Card</option>
-                                <option value="v5">v5 Brutalist</option>
-                                <option value="v6">v6 Gradient Overlay</option>
-                                <option value="v7">v7 Polaroid</option>
-                                <option value="v8">v8 Glass Panel</option>
-                              </select>
+                              <div className="grid gap-3 sm:col-span-2 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+                                <div>
+                                  <label className="block text-xs text-surface-400 mb-1">Card style override</label>
+                                  <select value={editSectionCardStyle} onChange={e => setEditSectionCardStyle(e.target.value as Section['cardStyle'] | '')} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                                    <option value="">Use global card style</option>
+                                    <option value="v1">v1 Hover Overlay</option>
+                                    <option value="v2">v2 Floating Image</option>
+                                    <option value="v3">v3 Compact Editorial</option>
+                                    <option value="v4">v4 Social Card</option>
+                                    <option value="v5">v5 Brutalist</option>
+                                    <option value="v6">v6 Gradient Overlay</option>
+                                    <option value="v7">v7 Polaroid</option>
+                                    <option value="v8">v8 Glass Panel</option>
+                                  </select>
+                                  <p className="mt-1 text-[11px] text-surface-500">
+                                    {editSectionCardStyle ? 'This section will ignore the global card style.' : `Using global card style: ${cardStyleName(cardStyle)}`}
+                                  </p>
+                                </div>
+                                <CardStylePreview style={editSectionCardStyle || cardStyle} badgeStyle={badgeStyle} label={editSectionCardStyle ? 'Section override preview' : 'Global style preview'} />
+                              </div>
                               <input value={editSectionFilterTags} onChange={e => setEditSectionFilterTags(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Filter rail tags: anime, realistic" />
                               <input value={editSectionSeoTitle} onChange={e => setEditSectionSeoTitle(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="SEO title" />
                               <textarea value={editSectionSeoDescription} onChange={e => setEditSectionSeoDescription(e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="SEO description" />
@@ -3230,11 +3447,12 @@ export default function Admin() {
                                 {blockHint}
                               </p>
                             )}
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                              <input value={blockContent.badge || ''} onChange={e => updateHomepageContent(blockKey, 'badge', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Badge / eyebrow" />
-                              {(blockKey === 'reviewProcess' || blockKey === 'promptOfDay' || blockKey === 'newsletter') && <input value={blockContent.ctaLabel || ''} onChange={e => updateHomepageContent(blockKey, 'ctaLabel', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Button label" />}
-                              {blockKey === 'promptOfDay' && (
-                                <div className="grid gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50 sm:col-span-2 sm:grid-cols-[120px_1fr]">
+                            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <input value={blockContent.badge || ''} onChange={e => updateHomepageContent(blockKey, 'badge', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Badge / eyebrow" />
+                                {(blockKey === 'reviewProcess' || blockKey === 'promptOfDay' || blockKey === 'newsletter') && <input value={blockContent.ctaLabel || ''} onChange={e => updateHomepageContent(blockKey, 'ctaLabel', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Button label" />}
+                                {blockKey === 'promptOfDay' && (
+                                  <div className="grid gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50 sm:col-span-2 sm:grid-cols-[120px_1fr]">
                                   <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-white dark:bg-surface-900">
                                     {currentPromptOfDay && currentPromptOfDayImage ? (
                                       <Image
@@ -3289,11 +3507,11 @@ export default function Admin() {
                                     <p className="mt-2 text-[11px] text-surface-500">{currentPromptOfDay ? `Current: ${currentPromptOfDay.title}` : 'Publish a post first.'}</p>
                                   </div>
                                 </div>
-                              )}
-                              <input value={blockContent.title || ''} onChange={e => updateHomepageContent(blockKey, 'title', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Heading" />
-                              <textarea value={blockContent.description || ''} onChange={e => updateHomepageContent(blockKey, 'description', e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Description" />
-                              {['howTo', 'reviewProcess', 'supportedTools', 'creatorFeedback'].includes(blockKey) && (
-                                <div className="space-y-3 sm:col-span-2">
+                                )}
+                                <input value={blockContent.title || ''} onChange={e => updateHomepageContent(blockKey, 'title', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Heading" />
+                                <textarea value={blockContent.description || ''} onChange={e => updateHomepageContent(blockKey, 'description', e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Description" />
+                                {['howTo', 'reviewProcess', 'supportedTools', 'creatorFeedback'].includes(blockKey) && (
+                                  <div className="space-y-3 sm:col-span-2">
                                   <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">Inner cards</p>
                                   {(blockContent.items || []).map((item, itemIndex) => (
                                     <div key={`${blockKey}-${itemIndex}`} className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
@@ -3329,16 +3547,24 @@ export default function Admin() {
                                     </p>
                                   )}
                                 </div>
-                              )}
-                              {blockKey === 'creativeDirections' && <input value={blockContent.itemDescription || ''} onChange={e => updateHomepageContent(blockKey, 'itemDescription', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Card description line" />}
-                              {blockKey === 'reviewProcess' && <input value={blockContent.ctaHref || ''} onChange={e => updateHomepageContent(blockKey, 'ctaHref', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Button URL" />}
-                              {blockKey === 'newsletter' && (
-                                <>
-                                  <input value={blockContent.inputPlaceholder || ''} onChange={e => updateHomepageContent(blockKey, 'inputPlaceholder', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Input placeholder" />
-                                  <input value={blockContent.helperText || ''} onChange={e => updateHomepageContent(blockKey, 'helperText', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Helper text" />
-                                  <input value={blockContent.successText || ''} onChange={e => updateHomepageContent(blockKey, 'successText', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Success text" />
-                                </>
-                              )}
+                                )}
+                                {blockKey === 'creativeDirections' && <input value={blockContent.itemDescription || ''} onChange={e => updateHomepageContent(blockKey, 'itemDescription', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Card description line" />}
+                                {blockKey === 'reviewProcess' && <input value={blockContent.ctaHref || ''} onChange={e => updateHomepageContent(blockKey, 'ctaHref', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Button URL" />}
+                                {blockKey === 'newsletter' && (
+                                  <>
+                                    <input value={blockContent.inputPlaceholder || ''} onChange={e => updateHomepageContent(blockKey, 'inputPlaceholder', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Input placeholder" />
+                                    <input value={blockContent.helperText || ''} onChange={e => updateHomepageContent(blockKey, 'helperText', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Helper text" />
+                                    <input value={blockContent.successText || ''} onChange={e => updateHomepageContent(blockKey, 'successText', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Success text" />
+                                  </>
+                                )}
+                              </div>
+                              <HomepageBlockPreview
+                                blockKey={blockKey}
+                                title={option.title}
+                                content={blockContent}
+                                currentPromptTitle={currentPromptOfDay?.title}
+                                currentPromptImage={currentPromptOfDayImage}
+                              />
                             </div>
                           </div>
                         )}
