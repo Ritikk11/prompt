@@ -31,6 +31,11 @@ const reviewSteps = [
 
 export default function HomeReviewProcess({ settings }: { settings?: SiteSettings }) {
   const content = settings?.homepageContent?.reviewProcess || {};
+  const editableSteps = content.items?.length ? reviewSteps.map((step, index) => ({
+    ...step,
+    title: content.items?.[index]?.title || step.title,
+    text: content.items?.[index]?.text || step.text,
+  })) : reviewSteps;
   return (
     <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-surface-50 px-5 py-16 dark:bg-surface-950 sm:px-8">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
@@ -56,7 +61,7 @@ export default function HomeReviewProcess({ settings }: { settings?: SiteSetting
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          {reviewSteps.map(step => {
+          {editableSteps.map(step => {
             const Icon = step.icon;
             return (
               <div key={step.number} className="rounded-2xl border border-surface-200 bg-surface-50 p-5 transition hover:-translate-y-0.5 hover:border-emerald-300 dark:border-surface-800 dark:bg-surface-900/70 dark:hover:border-emerald-500/50">

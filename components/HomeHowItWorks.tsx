@@ -41,8 +41,14 @@ const steps = [
 
 export default function HomeHowItWorks({ settings }: { settings?: SiteSettings }) {
   const content = settings?.homepageContent?.howTo || {};
+  const editableSteps = content.items?.length ? steps.map((step, index) => ({
+    ...step,
+    title: content.items?.[index]?.title || step.title,
+    text: content.items?.[index]?.text || step.text,
+    checks: content.items?.[index]?.checks?.length ? content.items[index].checks! : step.checks,
+  })) : steps;
   const [activeIndex, setActiveIndex] = useState(1);
-  const active = steps[activeIndex];
+  const active = editableSteps[activeIndex] || editableSteps[0];
   const ActiveIcon = active.icon;
 
   return (
@@ -63,7 +69,7 @@ export default function HomeHowItWorks({ settings }: { settings?: SiteSettings }
 
         <div className="grid gap-10 lg:grid-cols-[1fr_0.92fr] lg:items-center">
           <div className="space-y-4">
-            {steps.map((step, index) => {
+            {editableSteps.map((step, index) => {
               const Icon = step.icon;
               const isActive = activeIndex === index;
 

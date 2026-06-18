@@ -22,6 +22,7 @@ const feedback = [
 
 export default function HomeCreatorFeedback({ settings }: { settings?: SiteSettings }) {
   const content = settings?.homepageContent?.creatorFeedback || {};
+  const items = content.items?.length ? content.items : feedback;
   return (
     <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-white px-5 py-16 dark:bg-surface-950 sm:px-8">
       <div className="mx-auto max-w-6xl">
@@ -37,7 +38,7 @@ export default function HomeCreatorFeedback({ settings }: { settings?: SiteSetti
       </div>
 
       <div className="mx-auto mt-9 grid max-w-5xl gap-5 md:grid-cols-2">
-        {feedback.map(item => (
+        {items.map(item => (
           <div key={item.title} className="rounded-2xl border border-surface-200 bg-surface-50 p-6 dark:border-surface-800 dark:bg-surface-900/70">
             <div className="mb-4 flex gap-1 text-amber-400">
               {Array.from({ length: 5 }).map((_, index) => <Star key={index} className="h-4 w-4 fill-current" />)}

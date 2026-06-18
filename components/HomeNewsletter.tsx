@@ -8,14 +8,32 @@ export default function HomeNewsletter({ settings }: { settings?: SiteSettings }
   const content = settings?.homepageContent?.newsletter || {};
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!email.trim()) return;
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail || isSubmitting) return;
+    setIsSubmitting(true);
+    setError('');
     try {
-      localStorage.setItem('aipm-newsletter-email', email.trim());
-    } catch {}
-    setSubmitted(true);
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || 'Could not subscribe right now.');
+      }
+      setSubmitted(true);
+      setEmail('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not subscribe right now.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -35,16 +53,22 @@ export default function HomeNewsletter({ settings }: { settings?: SiteSettings }
           <input
             type="email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => {
+              setEmail(event.target.value);
+              setError('');
+            }}
             placeholder={content.inputPlaceholder || 'Enter your email'}
+            disabled={isSubmitting}
             className="min-h-12 flex-1 rounded-xl border border-surface-200 bg-white/80 px-5 text-sm text-surface-900 outline-none shadow-sm backdrop-blur-md placeholder:text-surface-400 focus:border-primary-300 dark:border-white/15 dark:bg-white/10 dark:text-white dark:placeholder:text-white/60 dark:focus:border-white/40"
           />
-          <button type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-6 text-sm font-bold text-white shadow-[0_16px_36px_rgba(168,85,247,0.28)] transition hover:-translate-y-0.5">
+          <button type="submit" disabled={isSubmitting} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-6 text-sm font-bold text-white shadow-[0_16px_36px_rgba(168,85,247,0.28)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-65 disabled:hover:translate-y-0">
             <Send className="h-4 w-4" />
-            {content.ctaLabel || 'Subscribe'}
+            {isSubmitting ? 'Saving...' : (content.ctaLabel || 'Subscribe')}
           </button>
         </form>
-        <p className="mt-4 text-xs text-surface-500 dark:text-white/70">{submitted ? (content.successText || 'Saved. Email provider connection can be added later.') : (content.helperText || 'No spam. Unsubscribe anytime once email delivery is connected.')}</p>
+        <p className={`mt-4 text-xs ${error ? 'text-red-500 dark:text-red-300' : 'text-surface-500 dark:text-white/70'}`}>
+          {error || (submitted ? (content.successText || "Subscribed. You're on the list.") : (content.helperText || 'No spam. Unsubscribe anytime.'))}
+        </p>
       </div>
     </section>
   );

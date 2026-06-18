@@ -69,11 +69,11 @@ const homepageBlockOptions = [
 ] as const;
 const defaultHomepageBlockOrder = homepageBlockOptions.map(item => item.key);
 const homepageBlockStaticHints: Record<string, string> = {
-  howTo: 'Step cards are hardcoded. Only the badge, heading, and intro text are editable here.',
-  reviewProcess: 'Review cards are hardcoded. Only the badge, heading, intro text, and CTA are editable here.',
-  supportedTools: 'Tool cards are generated from your AI tool settings and posts. Only the section heading copy is editable here.',
+  howTo: 'Edit the step titles, descriptions, and checklist lines below. Icons and colors stay fixed for layout consistency.',
+  reviewProcess: 'Edit the review card titles and descriptions below. Icons stay fixed for layout consistency.',
+  supportedTools: 'Edit tool note lines below. Tool cards still come from your AI tool settings and published posts.',
   creativeDirections: 'Card order is controlled in Browse by Style Cards. Icons and colors are automatic.',
-  creatorFeedback: 'Feedback cards are hardcoded. Only the badge, heading, and intro text are editable here.',
+  creatorFeedback: 'Edit the feedback card titles and descriptions below. Star styling stays fixed for layout consistency.',
 };
 
 function normalizeHomepageOrderToken(key: string) {
@@ -587,6 +587,7 @@ export default function Admin() {
   const promptOfDayContent = homepageContent.promptOfDay || {};
   const pinnedPromptOfDayId = promptOfDayContent.pinnedPostId;
   const currentPromptOfDay = publicPosts.find(post => post.id === pinnedPromptOfDayId || post.slug === pinnedPromptOfDayId) || featuredPosts[0] || publicPosts[0];
+  const currentPromptOfDayImage = currentPromptOfDay?.thumbnailUrl || currentPromptOfDay?.images?.[0]?.url || '';
   const homepagePostSections = sections
     .filter(section => (section.location || 'homepage') === 'homepage')
     .sort((a, b) => a.order - b.order);
@@ -1033,6 +1034,25 @@ export default function Admin() {
         [field]: value,
       },
     }));
+  };
+
+  const updateHomepageItem = (key: string, index: number, field: 'title' | 'text' | 'checks', value: string) => {
+    setHomepageContent(prev => {
+      const current = prev[key] || {};
+      const items = [...(current.items || [])];
+      const item = items[index] || { title: '', text: '' };
+      items[index] = {
+        ...item,
+        [field]: field === 'checks' ? value.split('\n').map(line => line.trim()).filter(Boolean) : value,
+      };
+      return {
+        ...prev,
+        [key]: {
+          ...current,
+          items,
+        },
+      };
+    });
   };
 
   const resetHomepageContentBlock = (key: string) => {
@@ -2947,6 +2967,18 @@ export default function Admin() {
                 <div className="grid gap-3 sm:grid-cols-[1fr_1.4fr]">
                   <div className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
                     <p className="text-[11px] font-bold uppercase tracking-wide text-surface-400">Current live choice</p>
+                    {currentPromptOfDay && currentPromptOfDayImage && (
+                      <div className="relative mt-3 aspect-[4/3] overflow-hidden rounded-lg bg-surface-200 dark:bg-surface-800">
+                        <Image
+                          src={currentPromptOfDayImage}
+                          alt={currentPromptOfDay.title}
+                          fill
+                          className="object-cover"
+                          sizes="260px"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    )}
                     <p className="mt-2 text-sm font-bold text-surface-950 dark:text-white">{currentPromptOfDay?.title || 'No public post available'}</p>
                     <p className="mt-1 text-xs text-surface-500">
                       {currentPromptOfDay ? (pinnedPromptOfDayId ? 'Selected manually from admin.' : currentPromptOfDay.featured ? 'Using first featured post.' : 'Using latest public post.') : 'Create or publish a post first.'}
@@ -3154,15 +3186,73 @@ export default function Admin() {
                               <input value={blockContent.badge || ''} onChange={e => updateHomepageContent(blockKey, 'badge', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Badge / eyebrow" />
                               {(blockKey === 'reviewProcess' || blockKey === 'promptOfDay' || blockKey === 'newsletter') && <input value={blockContent.ctaLabel || ''} onChange={e => updateHomepageContent(blockKey, 'ctaLabel', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Button label" />}
                               {blockKey === 'promptOfDay' && (
-                                <select value={blockContent.pinnedPostId || ''} onChange={e => updateHomepageContent(blockKey, 'pinnedPostId', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2">
-                                  <option value="">Auto: first featured, then latest public post</option>
-                                  {publicPosts.map(post => (
-                                    <option key={post.id} value={post.id}>{post.featured ? 'Featured - ' : ''}{post.title}</option>
-                                  ))}
-                                </select>
+                                <div className="grid gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50 sm:col-span-2 sm:grid-cols-[120px_1fr]">
+                                  <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-white dark:bg-surface-900">
+                                    {currentPromptOfDay && currentPromptOfDayImage ? (
+                                      <Image
+                                        src={currentPromptOfDayImage}
+                                        alt={currentPromptOfDay.title}
+                                        fill
+                                        className="object-cover"
+                                        sizes="120px"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                    ) : (
+                                      <div className="flex h-full items-center justify-center text-[11px] font-bold text-surface-400">No image</div>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-surface-500">Custom post picker</p>
+                                    <select value={blockContent.pinnedPostId || ''} onChange={e => updateHomepageContent(blockKey, 'pinnedPostId', e.target.value)} className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900">
+                                      <option value="">Auto: first featured, then latest public post</option>
+                                      {publicPosts.map(post => (
+                                        <option key={post.id} value={post.id}>{post.featured ? 'Featured - ' : ''}{post.title}</option>
+                                      ))}
+                                    </select>
+                                    <p className="mt-2 text-[11px] text-surface-500">{currentPromptOfDay ? `Current: ${currentPromptOfDay.title}` : 'Publish a post first.'}</p>
+                                  </div>
+                                </div>
                               )}
                               <input value={blockContent.title || ''} onChange={e => updateHomepageContent(blockKey, 'title', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Heading" />
                               <textarea value={blockContent.description || ''} onChange={e => updateHomepageContent(blockKey, 'description', e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Description" />
+                              {['howTo', 'reviewProcess', 'supportedTools', 'creatorFeedback'].includes(blockKey) && (
+                                <div className="space-y-3 sm:col-span-2">
+                                  <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">Inner cards</p>
+                                  {(blockContent.items || []).map((item, itemIndex) => (
+                                    <div key={`${blockKey}-${itemIndex}`} className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                                      <div className="grid gap-2 sm:grid-cols-2">
+                                        <input
+                                          value={item.title || ''}
+                                          onChange={e => updateHomepageItem(blockKey, itemIndex, 'title', e.target.value)}
+                                          className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                                          placeholder={blockKey === 'supportedTools' ? 'Tool name, e.g. ChatGPT' : 'Card title'}
+                                        />
+                                        <textarea
+                                          value={item.text || ''}
+                                          onChange={e => updateHomepageItem(blockKey, itemIndex, 'text', e.target.value)}
+                                          rows={2}
+                                          className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                                          placeholder={blockKey === 'supportedTools' ? 'Comma-separated note lines' : 'Card text'}
+                                        />
+                                        {blockKey === 'howTo' && (
+                                          <textarea
+                                            value={(item.checks || []).join('\n')}
+                                            onChange={e => updateHomepageItem(blockKey, itemIndex, 'checks', e.target.value)}
+                                            rows={3}
+                                            className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 sm:col-span-2"
+                                            placeholder="One checklist item per line"
+                                          />
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {(!blockContent.items || blockContent.items.length === 0) && (
+                                    <p className="rounded-lg bg-surface-100 px-3 py-2 text-[11px] text-surface-500 dark:bg-surface-800">
+                                      Reset defaults will repopulate this block after save/reload.
+                                    </p>
+                                  )}
+                                </div>
+                              )}
                               {blockKey === 'creativeDirections' && <input value={blockContent.itemDescription || ''} onChange={e => updateHomepageContent(blockKey, 'itemDescription', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Card description line" />}
                               {blockKey === 'reviewProcess' && <input value={blockContent.ctaHref || ''} onChange={e => updateHomepageContent(blockKey, 'ctaHref', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Button URL" />}
                               {blockKey === 'newsletter' && (

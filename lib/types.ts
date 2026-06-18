@@ -152,6 +152,11 @@ export interface HomepageBlockContent {
   description?: string;
   itemDescription?: string;
   pinnedPostId?: string;
+  items?: {
+    title: string;
+    text: string;
+    checks?: string[];
+  }[];
   ctaLabel?: string;
   ctaHref?: string;
   inputPlaceholder?: string;
