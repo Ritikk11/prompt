@@ -1,5 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { SiteSettings } from '@/lib/types';
 import { Info, Save } from 'lucide-react';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
@@ -17,7 +18,12 @@ Put important notes here.
 
 Inline styles: {mark:highlight}, {primary:primary}, {green:good}, {red:avoid}.`;
 
+const pageKeys = ['about', 'contact', 'privacy', 'terms', 'dmca', 'disclaimer'] as const;
+type PageKey = typeof pageKeys[number];
+
 export default function StaticPagesTab({ settings, updateSettings }: { settings: SiteSettings, updateSettings: (s: SiteSettings) => void }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [pageAbout, setPageAbout] = useState(settings.pageAbout || '');
   const [pagePrivacy, setPagePrivacy] = useState(settings.pagePrivacy || '');
   const [pageTerms, setPageTerms] = useState(settings.pageTerms || '');
@@ -25,9 +31,26 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
   const [pageDisclaimer, setPageDisclaimer] = useState(settings.pageDisclaimer || '');
   const [pageContact, setPageContact] = useState(settings.pageContact || '');
 
-  const [activeTab, setActiveTab] = useState<'about' | 'privacy' | 'terms' | 'dmca' | 'disclaimer' | 'contact'>('about');
+  const initialPage = pageKeys.includes(searchParams.get('page') as PageKey) ? searchParams.get('page') as PageKey : 'about';
+  const [activeTab, setActiveTabState] = useState<PageKey>(initialPage);
   const [mode, setMode] = useState<'edit' | 'preview'>('edit');
   const [showHelp, setShowHelp] = useState(false);
+
+  const setActiveTab = (nextPage: PageKey) => {
+    setActiveTabState(nextPage);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', 'pages');
+    params.set('page', nextPage);
+    router.push(`/admin?${params.toString()}`, { scroll: false });
+  };
+
+  useEffect(() => {
+    const nextPage = searchParams.get('page') as PageKey;
+    if (pageKeys.includes(nextPage)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActiveTabState(nextPage);
+    }
+  }, [searchParams]);
 
   const handleSave = () => {
     updateSettings({
@@ -44,11 +67,11 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
 
   const textareas = {
     about: { label: 'About Us', value: pageAbout, set: setPageAbout },
+    contact: { label: 'Contact', value: pageContact, set: setPageContact },
     privacy: { label: 'Privacy Policy', value: pagePrivacy, set: setPagePrivacy },
     terms: { label: 'Terms of Service', value: pageTerms, set: setPageTerms },
     dmca: { label: 'DMCA', value: pageDmca, set: setPageDmca },
-    disclaimer: { label: 'Disclaimer', value: pageDisclaimer, set: setPageDisclaimer },
-    contact: { label: 'Contact Us', value: pageContact, set: setPageContact }
+    disclaimer: { label: 'Disclaimer', value: pageDisclaimer, set: setPageDisclaimer }
   };
 
   return (
