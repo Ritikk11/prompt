@@ -42,6 +42,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
       <head>
+        {initialSettings.seoSettings?.googleVerification && (
+          <meta name="google-site-verification" content={initialSettings.seoSettings.googleVerification} />
+        )}
+        {initialSettings.seoSettings?.bingVerification && (
+          <meta name="msvalidate.01" content={initialSettings.seoSettings.bingVerification} />
+        )}
+        {initialSettings.seoSettings?.pinterestVerification && (
+          <meta name="p:domain_verify" content={initialSettings.seoSettings.pinterestVerification} />
+        )}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
