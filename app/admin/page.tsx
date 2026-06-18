@@ -1521,7 +1521,7 @@ export default function Admin() {
               required
               minLength={6}
               className="w-full px-4 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50 focus:ring-2 focus:ring-primary-500 outline-none transition-all"
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+              placeholder="Password"
             />
           </div>
           <button
@@ -1698,12 +1698,12 @@ export default function Admin() {
                       <div className="flex items-center gap-3 mt-1 text-xs text-surface-400">
                         <span>{post.images.length} images</span>
                         <span>{post.views.toLocaleString()} views</span>
-                        {post.featured && <span className="text-yellow-500 font-semibold">â­ Featured</span>}
-                        {post.status === 'draft' && <span className="text-orange-500 font-semibold">ðŸ–‹ï¸ Draft</span>}
-                        {post.visibility === 'private' && <span className="text-red-500 font-semibold">ðŸ”’ Private</span>}
+                        {post.featured && <span className="inline-flex items-center gap-1 text-yellow-500 font-semibold"><Star className="h-3.5 w-3.5 fill-yellow-500" /> Featured</span>}
+                        {post.status === 'draft' && <span className="inline-flex items-center gap-1 text-orange-500 font-semibold"><FileText className="h-3.5 w-3.5" /> Draft</span>}
+                        {post.visibility === 'private' && <span className="inline-flex items-center gap-1 text-red-500 font-semibold"><EyeOff className="h-3.5 w-3.5" /> Private</span>}
                         {sections.filter(s => s.type === 'custom' && s.postIds?.includes(post.id)).length > 0 && (
                           <span className="text-primary-500 font-semibold">
-                            ðŸ“‚ {sections.filter(s => s.type === 'custom' && s.postIds?.includes(post.id)).length} sections
+                            {sections.filter(s => s.type === 'custom' && s.postIds?.includes(post.id)).length} sections
                           </span>
                         )}
                       </div>
@@ -3700,7 +3700,7 @@ export default function Admin() {
                       return (
                         <div key={`${item.type}:${item.value}`} className="rounded-lg border border-surface-200 bg-white p-3 dark:border-surface-700 dark:bg-surface-900">
                           <p className="text-sm font-bold text-surface-950 dark:text-white">{item.label}</p>
-                          <p className="mt-1 text-[11px] text-surface-500">{item.type} Â· {item.value}</p>
+                          <p className="mt-1 text-[11px] text-surface-500">{item.type} - {item.value}</p>
                           <p className="mt-2 text-xs font-bold text-primary-600 dark:text-primary-300">{count} {count === 1 ? 'prompt' : 'prompts'}</p>
                         </div>
                       );
