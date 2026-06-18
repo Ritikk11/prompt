@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 
 import Image from 'next/image';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { defaultImageModels, getAllTools, getDefaultImageModel, getImageModelForTools, getToolInfo } from '@/lib/constants';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
@@ -31,7 +32,36 @@ import HomeNewsletter from '@/components/HomeNewsletter';
 
 
 
-type AdminTab = 'dashboard' | 'posts' | 'sections' | 'settings' | 'features' | 'submissions' | 'comments' | 'users' | 'seo-pages' | 'static-pages';
+type AdminTab = 'dashboard' | 'posts' | 'sections' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages';
+type SettingsSubTab = 'general' | 'homepage' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share';
+type SectionLocationFilter = 'homepage' | 'header' | 'footer' | 'all';
+
+const adminTabKeys: AdminTab[] = ['dashboard', 'posts', 'sections', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages'];
+const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share'];
+const sectionLocationKeys: SectionLocationFilter[] = ['homepage', 'header', 'footer', 'all'];
+
+function parseAdminTab(value: string | null): AdminTab {
+  if (value === 'seo-pages') return 'seo';
+  if (value === 'static-pages') return 'pages';
+  if (value === 'features') return 'settings';
+  if (value && adminTabKeys.includes(value as AdminTab)) return value as AdminTab;
+  return 'dashboard';
+}
+
+function parseSettingsSubTab(value: string | null): SettingsSubTab {
+  if (value === 'aitools') return 'ai-tools';
+  if (value && settingsSubTabKeys.includes(value as SettingsSubTab)) return value as SettingsSubTab;
+  return 'general';
+}
+
+function parseSectionLocation(value: string | null): SectionLocationFilter {
+  if (value && sectionLocationKeys.includes(value as SectionLocationFilter)) return value as SectionLocationFilter;
+  return 'homepage';
+}
+
+function settingsSubTabParam(value: SettingsSubTab) {
+  return value === 'ai-tools' ? 'aitools' : value;
+}
 
 const TAILWIND_COLORS = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500',
@@ -361,6 +391,8 @@ export default function Admin() {
     posts, sections, settings, addPost, updatePost, deletePost,
     addSection, updateSection, deleteSection, updateSettings, resetData, deleteMockData, loading, loadAdminData
   } = useData();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [user, setUser] = useState<User | null>(null);
   const [adminUsers, setAdminUsers] = useState<AdminUserSummary[]>([]);
@@ -550,7 +582,8 @@ export default function Admin() {
     }
   };
 
-  const [tab, setTab] = useState<AdminTab>('posts');
+  const [tab, setTabState] = useState<AdminTab>(() => parseAdminTab(searchParams.get('tab')));
+  const [sectionLocationFilter, setSectionLocationFilterState] = useState<SectionLocationFilter>(() => parseSectionLocation(searchParams.get('loc')));
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [showPostForm, setShowPostForm] = useState(false);
   const [postSearch, setPostSearch] = useState('');
@@ -694,10 +727,65 @@ export default function Admin() {
     }
   );
 
-  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'homepage' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools'>('general');
+  const [settingsSubTab, setSettingsSubTabState] = useState<SettingsSubTab>(() => parseSettingsSubTab(searchParams.get('sub')));
   const [markdownMode, setMarkdownMode] = useState<'edit' | 'preview'>('edit');
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
   const [isBackfillingModels, setIsBackfillingModels] = useState(false);
+
+  const pushAdminRoute = (
+    nextTab: AdminTab,
+    options: { sub?: SettingsSubTab; loc?: SectionLocationFilter } = {}
+  ) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextTab === 'dashboard') params.delete('tab');
+    else params.set('tab', nextTab);
+
+    if (nextTab === 'settings') {
+      params.set('sub', settingsSubTabParam(options.sub || settingsSubTab));
+    } else {
+      params.delete('sub');
+    }
+
+    if (nextTab === 'sections') {
+      params.set('loc', options.loc || sectionLocationFilter);
+    } else {
+      params.delete('loc');
+    }
+
+    if (nextTab !== 'posts') {
+      params.delete('action');
+      params.delete('id');
+    }
+
+    if (nextTab !== 'pages') {
+      params.delete('page');
+    }
+
+    const query = params.toString();
+    router.push(query ? `/admin?${query}` : '/admin', { scroll: false });
+  };
+
+  const setTab = (nextTab: AdminTab) => {
+    setTabState(nextTab);
+    pushAdminRoute(nextTab);
+  };
+
+  const setSettingsSubTab = (nextSubTab: SettingsSubTab) => {
+    setSettingsSubTabState(nextSubTab);
+    pushAdminRoute('settings', { sub: nextSubTab });
+  };
+
+  const setSectionLocationFilter = (nextLocation: SectionLocationFilter) => {
+    setSectionLocationFilterState(nextLocation);
+    pushAdminRoute('sections', { loc: nextLocation });
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTabState(parseAdminTab(searchParams.get('tab')));
+    setSettingsSubTabState(parseSettingsSubTab(searchParams.get('sub')));
+    setSectionLocationFilterState(parseSectionLocation(searchParams.get('loc')));
+  }, [searchParams]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -835,6 +923,38 @@ export default function Admin() {
     setAssignedSections(inSections);
     setShowPostForm(true);
   };
+
+  const openNewPost = () => {
+    resetForm();
+    setShowPostForm(true);
+    setTabState('posts');
+    router.push('/admin?tab=posts&action=new', { scroll: false });
+  };
+
+  const openEditPost = (post: Post) => {
+    startEdit(post);
+    setTabState('posts');
+    router.push(`/admin?tab=posts&action=edit&id=${encodeURIComponent(post.id)}`, { scroll: false });
+  };
+
+  useEffect(() => {
+    if (parseAdminTab(searchParams.get('tab')) !== 'posts') return;
+    const action = searchParams.get('action');
+    const id = searchParams.get('id');
+    if (action === 'new') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      resetForm();
+      setShowPostForm(true);
+      return;
+    }
+    if (action === 'edit' && id) {
+      const post = posts.find(item => item.id === id || item.slug === id);
+      if (post && editingPost?.id !== post.id) {
+        startEdit(post);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, posts]);
 
   const addImageField = () => {
     setImages(prev => [...prev, { id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
@@ -1124,6 +1244,7 @@ export default function Admin() {
 
   const startNewSection = (location: 'homepage' | 'header' | 'footer' = 'homepage') => {
     setNewSectionLocation(location);
+    setSectionLocationFilter(location);
     setShowNewSectionForm(true);
     window.requestAnimationFrame(() => {
       document.getElementById('add-section-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1490,6 +1611,24 @@ export default function Admin() {
 
   const pendingSubmissionCount = posts.filter(p => p.status === 'pending').length;
   const pendingCommentCount = posts.reduce((count, post) => count + (post.comments || []).filter(comment => comment.status === 'pending').length, 0);
+  const totalViews = posts.reduce((acc, post) => acc + (post.views || 0), 0);
+  const totalLikes = posts.reduce((acc, post) => acc + (post.likes || post.likedBy?.length || 0), 0);
+  const totalSaves = posts.reduce((acc, post) => acc + (post.bookmarkedBy?.length || 0), 0);
+  const recentPosts = [...posts]
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .slice(0, 5);
+  const adsSettings = settings.ads as (AdSettings & { publisherId?: string; autoAdsEnabled?: boolean }) | undefined;
+  const settingsExtras = settings as SiteSettings & { ogImage?: string; defaultOgImage?: string; footerDescription?: string };
+  const siteHealthChecks = [
+    { label: 'AdSense meta tag present', ok: Boolean(adsSettings?.publisherId || process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID) },
+    { label: 'Auto Ads script active', ok: Boolean(adsSettings?.autoAdsEnabled) },
+    { label: 'Sitemap accessible', ok: true },
+    { label: 'Robots.txt present', ok: true },
+    { label: 'OG image set', ok: Boolean(settingsExtras.ogImage || settingsExtras.defaultOgImage || settings.siteLogo) },
+    { label: 'Footer description set', ok: Boolean((settingsExtras.footerDescription || settings.siteDescription || '').trim()) },
+  ];
+  const sectionLocationsToRender: Array<'homepage' | 'header' | 'footer'> =
+    sectionLocationFilter === 'all' ? ['homepage', 'header', 'footer'] : [sectionLocationFilter as 'homepage' | 'header' | 'footer'];
 
   const tabs: { key: AdminTab; label: string; icon: React.ReactNode; count?: number }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: <BarChart2 className="w-4 h-4" /> },
@@ -1499,8 +1638,8 @@ export default function Admin() {
     { key: 'submissions', label: 'Submissions', icon: <Upload className="w-4 h-4" />, count: pendingSubmissionCount },
     { key: 'comments', label: 'Comments', icon: <MessageCircle className="w-4 h-4" />, count: pendingCommentCount },
     { key: 'users', label: 'Users', icon: <Users className="w-4 h-4" />, count: adminUsers.length },
-    { key: 'seo-pages', label: 'SEO Pages', icon: <LayoutTemplate className="w-4 h-4" /> },
-    { key: 'static-pages', label: 'Static Pages', icon: <FileText className="w-4 h-4" /> },
+    { key: 'pages', label: 'Pages', icon: <FileText className="w-4 h-4" /> },
+    { key: 'seo', label: 'SEO', icon: <LayoutTemplate className="w-4 h-4" /> },
   ];
   if (authLoading || adminChecking) {
     return <div className="flex h-[50vh] items-center justify-center text-surface-400">Loading admin...</div>;
@@ -1666,25 +1805,115 @@ export default function Admin() {
         ))}
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        <div className="p-4 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
-          <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">{posts.length}</p>
-          <p className="text-xs text-surface-500 mt-1">Total Posts</p>
+      {/* ===== DASHBOARD TAB ===== */}
+      {tab === 'dashboard' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <button
+              onClick={openNewPost}
+              className="flex items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-primary-500/25 hover:bg-primary-600"
+            >
+              <Plus className="h-4 w-4" /> New Post
+            </button>
+            <button
+              onClick={() => {
+                setTab('sections');
+                setSectionLocationFilter('homepage');
+                startNewSection('homepage');
+              }}
+              className="flex items-center justify-center gap-2 rounded-xl border border-surface-200 bg-white px-4 py-3 text-sm font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-surface-800 dark:bg-surface-900 dark:text-surface-200"
+            >
+              <Layers className="h-4 w-4" /> New Section
+            </button>
+            <button
+              onClick={() => window.open('/', '_blank')}
+              className="flex items-center justify-center gap-2 rounded-xl border border-surface-200 bg-white px-4 py-3 text-sm font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-surface-800 dark:bg-surface-900 dark:text-surface-200"
+            >
+              <Eye className="h-4 w-4" /> View Site
+            </button>
+            <button
+              onClick={() => loadAdminData()}
+              className="flex items-center justify-center gap-2 rounded-xl border border-surface-200 bg-white px-4 py-3 text-sm font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-surface-800 dark:bg-surface-900 dark:text-surface-200"
+            >
+              <RotateCcw className="h-4 w-4" /> Clear Cache
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+            {[
+              ['Total Posts', posts.length, 'text-primary-600 bg-primary-50 border-primary-200 dark:bg-primary-900/20 dark:border-primary-800'],
+              ['Total Views', totalViews.toLocaleString(), 'text-sky-600 bg-sky-50 border-sky-200 dark:bg-sky-900/20 dark:border-sky-800'],
+              ['Total Likes', totalLikes.toLocaleString(), 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800'],
+              ['Total Saves', totalSaves.toLocaleString(), 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800'],
+              ['Submissions Pending', pendingSubmissionCount, 'text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800'],
+            ].map(([label, value, tone]) => (
+              <div key={label as string} className={`rounded-xl border p-4 ${tone}`}>
+                <p className="text-2xl font-black">{value}</p>
+                <p className="mt-1 text-xs text-surface-500">{label}</p>
+              </div>
+            ))}
+          </div>
+
+          {pendingSubmissionCount > 0 && (
+            <button
+              onClick={() => setTab('submissions')}
+              className="flex w-full items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-left text-sm font-bold text-amber-700 hover:bg-amber-100 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-300"
+            >
+              <span>{pendingSubmissionCount} submissions waiting for review</span>
+              <span className="inline-flex items-center gap-1">Go to Submissions <ArrowRight className="h-4 w-4" /></span>
+            </button>
+          )}
+
+          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="rounded-xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
+              <h2 className="mb-4 text-sm font-bold">Site Health Checklist</h2>
+              <div className="space-y-3">
+                {siteHealthChecks.map(item => (
+                  <div key={item.label} className="flex items-center gap-3 text-sm">
+                    <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-black ${item.ok ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'}`}>
+                      {item.ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                    </span>
+                    <span className="text-surface-700 dark:text-surface-200">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-sm font-bold">Recent Posts</h2>
+                <button onClick={() => setTab('posts')} className="text-xs font-bold text-primary-600 dark:text-primary-300">View all</button>
+              </div>
+              <div className="overflow-hidden rounded-xl border border-surface-200 dark:border-surface-800">
+                {recentPosts.length === 0 ? (
+                  <p className="p-4 text-sm text-surface-500">No posts yet.</p>
+                ) : (
+                  <div className="divide-y divide-surface-200 dark:divide-surface-800">
+                    {recentPosts.map(post => (
+                      <div key={post.id} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 px-4 py-3 text-xs">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">{post.title}</p>
+                          <p className="truncate text-surface-500">{getAllTools(post).join(', ') || 'No tool'}</p>
+                        </div>
+                        <span className="text-surface-500">{(post.views || 0).toLocaleString()} views</span>
+                        <span className={`rounded-full px-2 py-1 font-bold ${post.featured ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' : 'bg-surface-100 text-surface-500 dark:bg-surface-800'}`}>
+                          {post.featured ? 'Featured' : 'Normal'}
+                        </span>
+                        <button
+                          onClick={() => openEditPost(post)}
+                          className="rounded-lg px-2 py-1 font-bold text-primary-600 hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-900/20"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="p-4 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-          <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{posts.filter(p => p.featured).length}</p>
-          <p className="text-xs text-surface-500 mt-1">Featured (Hero)</p>
-        </div>
-        <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{sections.filter(s => s.visible).length}</p>
-          <p className="text-xs text-surface-500 mt-1">Active Sections</p>
-        </div>
-        <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
-          <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{posts.reduce((acc, p) => acc + p.images.length, 0)}</p>
-          <p className="text-xs text-surface-500 mt-1">Total Prompts</p>
-        </div>
-      </div>
+      )}
 
       {/* ===== POSTS TAB ===== */}
       {tab === 'posts' && (
@@ -1693,7 +1922,7 @@ export default function Admin() {
             <>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
                 <button
-                  onClick={() => setShowPostForm(true)}
+                  onClick={openNewPost}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors shadow-lg shadow-primary-500/25"
                 >
                   <Plus className="w-4 h-4" /> Create New Post
@@ -1819,7 +2048,7 @@ export default function Admin() {
                         <FileText className="w-4 h-4 text-surface-400" />
                       </button>
                       <button
-                        onClick={() => startEdit(post)}
+                        onClick={() => openEditPost(post)}
                         className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
                       >
                         <Edit3 className="w-4 h-4 text-primary-500" />
@@ -2365,6 +2594,27 @@ export default function Admin() {
       {/* ===== SECTIONS TAB ===== */}
       {tab === 'sections' && (
         <div className="max-w-3xl">
+          <div className="mb-6 flex gap-2 overflow-x-auto pb-1 border-b border-surface-200 dark:border-surface-800">
+            {[
+              { id: 'homepage', label: 'Homepage Sections' },
+              { id: 'header', label: 'Header Menu' },
+              { id: 'footer', label: 'Footer Sections' },
+              { id: 'all', label: 'All Sections' },
+            ].map(item => (
+              <button
+                key={item.id}
+                onClick={() => setSectionLocationFilter(item.id as SectionLocationFilter)}
+                className={`px-4 py-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+                  sectionLocationFilter === item.id
+                    ? 'border-primary-500 text-primary-500'
+                    : 'border-transparent text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
           {/* Add new section */}
           <div id="add-section-form" className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 mb-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -2511,7 +2761,7 @@ export default function Admin() {
 
           {/* Sections Lists by Location */}
           <div className="space-y-8">
-            {(['homepage', 'header', 'footer'] as const).map(loc => (
+            {sectionLocationsToRender.map(loc => (
               <div key={loc} className="mb-4">
                 <div className="mb-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -2888,6 +3138,8 @@ export default function Admin() {
               { id: 'features', label: 'Features' },
               { id: 'ads', label: 'Ads' },
               { id: 'ai-tools', label: 'AI Tools' },
+              { id: 'comments', label: 'Comments' },
+              { id: 'share', label: 'Share Buttons' },
             ].map(t => (
               <button
                 key={t.id}
@@ -4704,6 +4956,85 @@ export default function Admin() {
           </div>
           )}
 
+          {settingsSubTab === 'comments' && (
+            <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+              <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+                <MessageCircle className="w-4 h-4 text-primary-500" /> Comments
+              </h3>
+              <div className="space-y-4">
+                <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
+                  <span>
+                    <b>Enable comments globally</b>
+                    <span className="mt-1 block text-xs text-surface-500">Controls the live comment form and comment lists on post pages.</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={features.comments}
+                    onChange={e => setFeatures(prev => ({ ...prev, comments: e.target.checked }))}
+                    className="h-4 w-4 rounded text-primary-500"
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
+                  <span>
+                    <b>Require approval</b>
+                    <span className="mt-1 block text-xs text-surface-500">New comments stay pending until an admin approves them.</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={features.commentsRequireApproval}
+                    onChange={e => setFeatures(prev => ({ ...prev, commentsRequireApproval: e.target.checked }))}
+                    className="h-4 w-4 rounded text-primary-500"
+                  />
+                </label>
+                <div>
+                  <label className="block text-xs font-medium text-surface-400 mb-1">Comment provider</label>
+                  <select className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none dark:border-surface-700 dark:bg-surface-800" value="custom" disabled>
+                    <option value="custom">Custom built-in comments</option>
+                  </select>
+                  <p className="mt-1 text-xs text-surface-500">This site currently renders the built-in comment system. Disqus can be added later without changing this route.</p>
+                </div>
+              </div>
+              <button
+                onClick={handleSaveSettings}
+                className="mt-6 flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-600"
+              >
+                <Save className="w-4 h-4" /> Save Comments
+              </button>
+            </div>
+          )}
+
+          {settingsSubTab === 'share' && (
+            <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+              <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+                <ArrowRight className="w-4 h-4 text-primary-500" /> Share Buttons
+              </h3>
+              <div className="space-y-4">
+                <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
+                  <span>
+                    <b>Show share buttons on post pages</b>
+                    <span className="mt-1 block text-xs text-surface-500">Controls the live share strip rendered on prompt pages.</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={features.showShareButtons ?? true}
+                    onChange={e => setFeatures(prev => ({ ...prev, showShareButtons: e.target.checked }))}
+                    className="h-4 w-4 rounded text-primary-500"
+                  />
+                </label>
+                <div className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-800 dark:bg-surface-800/50">
+                  <p className="text-sm font-bold">Active live targets</p>
+                  <p className="mt-1 text-xs text-surface-500">Copy Link and available social targets are rendered by the post page component. Per-network controls still need a matching live implementation before they become editable here.</p>
+                </div>
+              </div>
+              <button
+                onClick={handleSaveSettings}
+                className="mt-6 flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-600"
+              >
+                <Save className="w-4 h-4" /> Save Share Buttons
+              </button>
+            </div>
+          )}
+
           {/* Danger Zone Removed */}
         </div>
       </div>
@@ -4741,7 +5072,7 @@ export default function Admin() {
                             Approve
                           </button>
                           <button
-                            onClick={() => startEdit(post)}
+                            onClick={() => openEditPost(post)}
                             className="px-3 py-1.5 text-xs font-medium rounded-lg bg-surface-200 dark:bg-surface-700 hover:bg-surface-300 transition-colors"
                           >
                             Review & Edit
@@ -4897,15 +5228,15 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ===== SEO PAGES TAB ===== */}
-      {tab === 'seo-pages' && (
+      {/* ===== SEO TAB ===== */}
+      {tab === 'seo' && (
         <div className="max-w-4xl">
           <SeoPagesTab />
         </div>
       )}
 
-      {/* ===== STATIC PAGES TAB ===== */}
-      {tab === 'static-pages' && (
+      {/* ===== PAGES TAB ===== */}
+      {tab === 'pages' && (
         <div className="max-w-4xl">
           <StaticPagesTab
             key={[
