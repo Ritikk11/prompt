@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 
 import Image from 'next/image';
@@ -11,7 +12,7 @@ import TemplatePrompt from '@/components/TemplatePrompt';
 import { createClient } from '@/lib/supabase-client';
 import { getAuthRedirectTo } from '@/lib/auth-redirect';
 import type { User } from '@supabase/supabase-js';
-import type { Post } from '@/lib/types';
+import type { Post, ShareTarget } from '@/lib/types';
 
 import CopyButton from '@/components/CopyButton';
 import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
@@ -41,6 +42,18 @@ const InstagramLogo = ({ className = '' }: { className?: string }) => (
     <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="2" />
     <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
     <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" />
+  </svg>
+);
+
+const FacebookLogo = ({ className = '' }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
+    <path d="M14 8.3V6.9c0-.7.46-.86.78-.86h1.98V3.02L14.03 3C11 3 10.3 5.26 10.3 6.7v1.6H8v3.1h2.3V21H14v-9.6h2.5l.34-3.1H14Z" />
+  </svg>
+);
+
+const PinterestLogo = ({ className = '' }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
+    <path d="M12.04 2C6.58 2 3 5.75 3 10.45c0 2.18 1.22 4.9 3.17 5.76.3.14.46.08.53-.2.05-.22.32-1.29.44-1.79.04-.16.02-.3-.11-.45-.64-.76-1.15-2.14-1.15-3.43 0-3.28 2.48-6.45 6.7-6.45 3.65 0 6.2 2.48 6.2 6.03 0 4.01-2.03 6.79-4.67 6.79-1.46 0-2.55-1.2-2.2-2.67.42-1.76 1.23-3.65 1.23-4.92 0-1.13-.61-2.08-1.87-2.08-1.48 0-2.67 1.53-2.67 3.58 0 1.31.44 2.19.44 2.19l-1.79 7.56c-.3 1.27-.18 3.05-.05 4.2.06.51.72.63.95.18.6-1.09 1.57-2.88 1.91-4.13.13-.49.68-2.58.68-2.58.53 1.01 2.06 1.86 3.69 1.86 4.85 0 8.35-4.46 8.35-9.99C22.78 5.35 18.73 2 12.04 2Z" />
   </svg>
 );
 
@@ -260,7 +273,23 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     }
   };
 
-  const handleShare = async (target: 'whatsapp' | 'x' | 'instagram' | 'copy') => {
+  const configuredShareTargets = settings.shareSettings?.targets?.length
+    ? settings.shareSettings.targets
+    : ['whatsapp', 'x', 'instagram', 'copy'] as ShareTarget[];
+  const shareTargets = configuredShareTargets.filter((target, index, list) => list.indexOf(target) === index);
+  const sharePosition = settings.shareSettings?.position || 'floating-sidebar';
+  const showInlineShareButtons = showShareButtons && (sharePosition === 'below-prompt' || sharePosition === 'bottom');
+  const showSidebarShareButtons = showShareButtons && sharePosition === 'floating-sidebar';
+  const shareButtonMeta: Record<ShareTarget, { label: string; title: string; className: string; icon: ReactNode }> = {
+    whatsapp: { label: 'WhatsApp', title: 'Share on WhatsApp', className: 'text-green-500 hover:bg-green-500 hover:text-white', icon: <WhatsAppLogo className="h-4 w-4" /> },
+    x: { label: 'X', title: 'Share on X', className: 'hover:bg-black hover:text-white', icon: <XLogo className="h-4 w-4" /> },
+    instagram: { label: 'Instagram', title: 'Copy caption for Instagram', className: 'text-pink-500 hover:bg-pink-500 hover:text-white', icon: <InstagramLogo className="h-4 w-4" /> },
+    copy: { label: 'Copy link', title: 'Copy link', className: 'hover:bg-primary-500 hover:text-white', icon: <LinkIcon className="h-4 w-4" /> },
+    facebook: { label: 'Facebook', title: 'Share on Facebook', className: 'text-blue-600 hover:bg-blue-600 hover:text-white', icon: <FacebookLogo className="h-4 w-4" /> },
+    pinterest: { label: 'Pinterest', title: 'Share on Pinterest', className: 'text-red-600 hover:bg-red-600 hover:text-white', icon: <PinterestLogo className="h-4 w-4" /> },
+  };
+
+  const handleShare = async (target: ShareTarget) => {
     const text = `${post.title} - ${pageUrl}`;
     trackEvent('share_clicked', { target });
     if (target === 'copy') {
@@ -276,9 +305,14 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
       return;
     }
+    const imageUrl = post.thumbnailUrl || post.images?.[0]?.url || '';
     const url = target === 'whatsapp'
       ? `https://wa.me/?text=${encodeURIComponent(text)}`
-      : `https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(pageUrl)}`;
+      : target === 'facebook'
+        ? `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`
+        : target === 'pinterest'
+          ? `https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(pageUrl)}&description=${encodeURIComponent(post.title)}&media=${encodeURIComponent(imageUrl)}`
+          : `https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(pageUrl)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
@@ -967,20 +1001,13 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         </div>
       </div>
 
-      {showShareButtons && (
-        <div className="mb-10 flex flex-wrap items-center gap-2 lg:hidden">
-          <button onClick={() => handleShare('whatsapp')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
-            <WhatsAppLogo className="h-4 w-4 text-green-500" /> WhatsApp
-          </button>
-          <button onClick={() => handleShare('x')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
-            <XLogo className="h-4 w-4" /> X
-          </button>
-          <button onClick={() => handleShare('instagram')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
-            <InstagramLogo className="h-4 w-4 text-pink-500" /> Instagram
-          </button>
-          <button onClick={() => handleShare('copy')} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
-            <LinkIcon className="h-4 w-4" /> Copy link
-          </button>
+      {showInlineShareButtons && (
+        <div className={`mb-10 flex flex-wrap items-center gap-2 ${sharePosition === 'bottom' ? '' : 'lg:hidden'}`}>
+          {shareTargets.map(target => (
+            <button key={target} onClick={() => handleShare(target)} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
+              {shareButtonMeta[target].icon} {shareButtonMeta[target].label}
+            </button>
+          ))}
         </div>
       )}
 
@@ -1045,24 +1072,22 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         {showPostSidebar && (
           <aside className="hidden lg:block">
             <div className="sticky top-20 space-y-4">
-              {showShareButtons && (
+              {showSidebarShareButtons && (
                 <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
                   <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-surface-900 dark:text-white">
                     <Share2 className="h-4 w-4 text-primary-500" /> Share
                   </h3>
                   <div className="grid grid-cols-4 gap-2">
-                    <button onClick={() => handleShare('whatsapp')} className="flex items-center justify-center rounded-xl bg-surface-100 p-2 text-green-500 hover:bg-green-500 hover:text-white dark:bg-surface-800" title="Share on WhatsApp">
-                      <WhatsAppLogo className="h-4 w-4" />
-                    </button>
-                    <button onClick={() => handleShare('x')} className="flex items-center justify-center rounded-xl bg-surface-100 p-2 hover:bg-black hover:text-white dark:bg-surface-800" title="Share on X">
-                      <XLogo className="h-4 w-4" />
-                    </button>
-                    <button onClick={() => handleShare('instagram')} className="flex items-center justify-center rounded-xl bg-surface-100 p-2 text-pink-500 hover:bg-pink-500 hover:text-white dark:bg-surface-800" title="Copy caption for Instagram">
-                      <InstagramLogo className="h-4 w-4" />
-                    </button>
-                    <button onClick={() => handleShare('copy')} className="rounded-xl bg-surface-100 p-2 text-xs font-bold hover:bg-primary-500 hover:text-white dark:bg-surface-800">
-                      <LinkIcon className="mx-auto h-4 w-4" />
-                    </button>
+                    {shareTargets.map(target => (
+                      <button
+                        key={target}
+                        onClick={() => handleShare(target)}
+                        className={`flex items-center justify-center rounded-xl bg-surface-100 p-2 dark:bg-surface-800 ${shareButtonMeta[target].className}`}
+                        title={shareButtonMeta[target].title}
+                      >
+                        {shareButtonMeta[target].icon}
+                      </button>
+                    ))}
                   </div>
                   {(shareFeedback || tryFeedback) && (
                     <p className="mt-3 text-[11px] font-bold text-primary-500">{shareFeedback || tryFeedback}</p>
