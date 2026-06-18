@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import type { SiteSettings } from '@/lib/types';
+import type { SiteSettings, StaticPageSettings } from '@/lib/types';
 import { Info, Save } from 'lucide-react';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 
@@ -20,16 +20,36 @@ Inline styles: {mark:highlight}, {primary:primary}, {green:good}, {red:avoid}.`;
 
 const pageKeys = ['about', 'contact', 'privacy', 'terms', 'dmca', 'disclaimer'] as const;
 type PageKey = typeof pageKeys[number];
+const pageLabels: Record<PageKey, string> = {
+  about: 'About Us',
+  contact: 'Contact',
+  privacy: 'Privacy Policy',
+  terms: 'Terms of Service',
+  dmca: 'DMCA',
+  disclaimer: 'Disclaimer',
+};
+function pageDefaults(key: PageKey): StaticPageSettings {
+  return {
+    title: pageLabels[key],
+    subtitle: '',
+    body: '',
+    metaTitle: `${pageLabels[key]} | AI PromptMatrix`,
+    metaDescription: '',
+    ogImage: '',
+    visible: true,
+  };
+}
 
 export default function StaticPagesTab({ settings, updateSettings }: { settings: SiteSettings, updateSettings: (s: SiteSettings) => void }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [pageAbout, setPageAbout] = useState(settings.pageAbout || '');
-  const [pagePrivacy, setPagePrivacy] = useState(settings.pagePrivacy || '');
-  const [pageTerms, setPageTerms] = useState(settings.pageTerms || '');
-  const [pageDmca, setPageDmca] = useState(settings.pageDmca || '');
-  const [pageDisclaimer, setPageDisclaimer] = useState(settings.pageDisclaimer || '');
-  const [pageContact, setPageContact] = useState(settings.pageContact || '');
+  const [pageAbout, setPageAbout] = useState(settings.staticPages?.about?.body || settings.pageAbout || '');
+  const [pagePrivacy, setPagePrivacy] = useState(settings.staticPages?.privacy?.body || settings.pagePrivacy || '');
+  const [pageTerms, setPageTerms] = useState(settings.staticPages?.terms?.body || settings.pageTerms || '');
+  const [pageDmca, setPageDmca] = useState(settings.staticPages?.dmca?.body || settings.pageDmca || '');
+  const [pageDisclaimer, setPageDisclaimer] = useState(settings.staticPages?.disclaimer?.body || settings.pageDisclaimer || '');
+  const [pageContact, setPageContact] = useState(settings.staticPages?.contact?.body || settings.pageContact || '');
+  const [staticPages, setStaticPages] = useState<Record<string, StaticPageSettings>>(() => settings.staticPages || {});
 
   const initialPage = pageKeys.includes(searchParams.get('page') as PageKey) ? searchParams.get('page') as PageKey : 'about';
   const [activeTab, setActiveTabState] = useState<PageKey>(initialPage);
@@ -53,6 +73,24 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
   }, [searchParams]);
 
   const handleSave = () => {
+    const bodyByPage = {
+      about: pageAbout,
+      contact: pageContact,
+      privacy: pagePrivacy,
+      terms: pageTerms,
+      dmca: pageDmca,
+      disclaimer: pageDisclaimer,
+    };
+    const nextStaticPages = Object.fromEntries(
+      pageKeys.map(key => [
+        key,
+        {
+          ...pageDefaults(key),
+          ...(staticPages[key] || {}),
+          body: bodyByPage[key],
+        },
+      ])
+    ) as Record<string, StaticPageSettings>;
     updateSettings({
       ...settings,
       pageAbout,
@@ -60,18 +98,31 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
       pageTerms,
       pageDmca,
       pageDisclaimer,
-      pageContact
+      pageContact,
+      staticPages: nextStaticPages,
     });
-    alert('Static pages updated effectively.');
+    setStaticPages(nextStaticPages);
+    alert('Pages updated.');
   };
 
   const textareas = {
-    about: { label: 'About Us', value: pageAbout, set: setPageAbout },
-    contact: { label: 'Contact', value: pageContact, set: setPageContact },
-    privacy: { label: 'Privacy Policy', value: pagePrivacy, set: setPagePrivacy },
-    terms: { label: 'Terms of Service', value: pageTerms, set: setPageTerms },
-    dmca: { label: 'DMCA', value: pageDmca, set: setPageDmca },
-    disclaimer: { label: 'Disclaimer', value: pageDisclaimer, set: setPageDisclaimer }
+    about: { label: pageLabels.about, value: pageAbout, set: setPageAbout },
+    contact: { label: pageLabels.contact, value: pageContact, set: setPageContact },
+    privacy: { label: pageLabels.privacy, value: pagePrivacy, set: setPagePrivacy },
+    terms: { label: pageLabels.terms, value: pageTerms, set: setPageTerms },
+    dmca: { label: pageLabels.dmca, value: pageDmca, set: setPageDmca },
+    disclaimer: { label: pageLabels.disclaimer, value: pageDisclaimer, set: setPageDisclaimer }
+  };
+  const currentPage = { ...pageDefaults(activeTab), ...(staticPages[activeTab] || {}) };
+  const updateCurrentPage = (patch: StaticPageSettings) => {
+    setStaticPages(prev => ({
+      ...prev,
+      [activeTab]: {
+        ...pageDefaults(activeTab),
+        ...(prev[activeTab] || {}),
+        ...patch,
+      },
+    }));
   };
 
   return (
@@ -99,6 +150,73 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
       </div>
 
       <div className="rounded-2xl border border-surface-200 bg-surface-50/70 p-3 dark:border-surface-800 dark:bg-surface-950/40 sm:p-4">
+        <div className="mb-4 grid gap-3 rounded-xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900 md:grid-cols-2">
+          <div>
+            <label className="block text-xs font-medium text-surface-500 mb-1">Page title (H1)</label>
+            <input
+              value={currentPage.title || ''}
+              onChange={e => updateCurrentPage({ title: e.target.value })}
+              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+              placeholder={textareas[activeTab].label}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-surface-500 mb-1">OG image</label>
+            <input
+              value={currentPage.ogImage || ''}
+              onChange={e => updateCurrentPage({ ogImage: e.target.value })}
+              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+              placeholder="https://..."
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-xs font-medium text-surface-500 mb-1">Hero subtitle / intro text</label>
+            <textarea
+              value={currentPage.subtitle || ''}
+              onChange={e => updateCurrentPage({ subtitle: e.target.value })}
+              rows={2}
+              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-surface-500 mb-1">Meta title</label>
+            <input
+              value={currentPage.metaTitle || ''}
+              onChange={e => updateCurrentPage({ metaTitle: e.target.value.slice(0, 80) })}
+              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+            />
+            <p className="mt-1 text-[11px] text-surface-500">{(currentPage.metaTitle || '').length}/80</p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-surface-500 mb-1">Meta description</label>
+            <textarea
+              value={currentPage.metaDescription || ''}
+              onChange={e => updateCurrentPage({ metaDescription: e.target.value.slice(0, 170) })}
+              rows={2}
+              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+            />
+            <p className="mt-1 text-[11px] text-surface-500">{(currentPage.metaDescription || '').length}/170</p>
+          </div>
+          <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-3">
+            <label className="inline-flex items-center gap-2 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={currentPage.visible !== false}
+                onChange={e => updateCurrentPage({ visible: e.target.checked })}
+                className="h-4 w-4 rounded text-primary-500"
+              />
+              Show this page publicly
+            </label>
+            <button
+              type="button"
+              onClick={() => window.open(`/${activeTab}`, '_blank')}
+              className="rounded-lg bg-surface-100 px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-200"
+            >
+              Preview
+            </button>
+          </div>
+        </div>
+
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <label className="text-sm font-medium">{textareas[activeTab].label} (Markdown Format)</label>
           <div className="flex flex-wrap gap-2">
