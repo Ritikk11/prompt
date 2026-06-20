@@ -301,6 +301,30 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     pinterest: { label: 'Pinterest', title: 'Share on Pinterest', className: 'text-red-600 hover:bg-red-600 hover:text-white', icon: <PinterestLogo className="h-4 w-4" /> },
   };
 
+  const renderShareCard = (className = '') => (
+    <div className={`rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900 ${className}`}>
+      <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-surface-900 dark:text-white">
+        <Share2 className="h-4 w-4 text-primary-500" /> Share
+      </h3>
+      <div className="grid grid-cols-4 gap-2">
+        {shareTargets.map(target => (
+          <button
+            key={target}
+            onClick={() => handleShare(target)}
+            className={`flex items-center justify-center rounded-xl bg-surface-100 p-2 dark:bg-surface-800 ${shareButtonMeta[target].className}`}
+            title={shareButtonMeta[target].title}
+            aria-label={shareButtonMeta[target].title}
+          >
+            {shareButtonMeta[target].icon}
+          </button>
+        ))}
+      </div>
+      {(shareFeedback || tryFeedback) && (
+        <p className="mt-3 text-[11px] font-bold text-primary-500">{shareFeedback || tryFeedback}</p>
+      )}
+    </div>
+  );
+
   const handleShare = async (target: ShareTarget) => {
     const text = `${post.title} - ${pageUrl}`;
     trackEvent('share_clicked', { target });
@@ -447,21 +471,21 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   };
 
   const renderMetaInfo = () => {
-    const isV2 = postHeroStyle === 'v2';
-    const containerClasses = isV2
-      ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md'
-      : 'bg-white/35 text-surface-800 border-white/40 shadow-lg shadow-surface-900/10 backdrop-blur-xl dark:bg-black/40 dark:text-white/90 dark:border-white/10';
+    const isImageOverlayHero = ['v1', 'v2', 'v7', 'v8'].includes(postHeroStyle);
+    const containerClasses = isImageOverlayHero
+      ? 'bg-black/45 border-white/15 text-white shadow-xl shadow-black/20 backdrop-blur-xl'
+      : 'bg-white/80 text-surface-800 border-surface-200 shadow-lg shadow-surface-900/10 backdrop-blur-xl dark:bg-black/40 dark:text-white/90 dark:border-white/10';
     
     return (
       <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium py-3 px-6 rounded-full border transition-colors ${containerClasses}`}>
         <span className="flex items-center gap-1.5">
-          <Eye className={`w-4.5 h-4.5 ${isV2 ? 'text-white' : 'text-primary-500'}`} /> {(post.views || 0).toLocaleString()} <span className="hidden sm:inline">views</span>
+          <Eye className={`w-4.5 h-4.5 ${isImageOverlayHero ? 'text-primary-300' : 'text-primary-500'}`} /> {(post.views || 0).toLocaleString()} <span className="hidden sm:inline">views</span>
         </span>
-        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-600/30 dark:bg-white/30'}`} />
+        <span className={`w-1 h-1 rounded-full ${isImageOverlayHero ? 'bg-white/35' : 'bg-surface-600/30 dark:bg-white/30'}`} />
         <button
           onClick={() => toggleLike(post.id, initialPost)}
           className={`flex items-center gap-1.5 transition-colors ${
-            post.likedByUser ? 'text-red-500' : isV2 ? 'hover:text-red-400' : 'hover:text-red-500'
+            post.likedByUser ? 'text-red-400' : isImageOverlayHero ? 'hover:text-red-300' : 'hover:text-red-500'
           }`}
         >
           <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop text-red-500' : ''}`} /> {(post.likes || 0).toLocaleString()} <span className="hidden sm:inline">likes</span>
@@ -469,13 +493,13 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         <button
           onClick={handleBookmark}
           className={`flex items-center gap-1.5 transition-colors ${
-            post.bookmarkedByUser ? 'text-primary-500' : isV2 ? 'hover:text-primary-300' : 'hover:text-primary-500'
+            post.bookmarkedByUser ? 'text-primary-300' : isImageOverlayHero ? 'hover:text-primary-200' : 'hover:text-primary-500'
           }`}
         >
           <Bookmark className={`w-4.5 h-4.5 ${post.bookmarkedByUser ? 'fill-current' : ''}`} />
           <span className="hidden sm:inline">{post.bookmarkedByUser ? 'saved' : 'save'}</span>
         </button>
-        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-600/30 dark:bg-white/30'}`} />
+        <span className={`w-1 h-1 rounded-full ${isImageOverlayHero ? 'bg-white/35' : 'bg-surface-600/30 dark:bg-white/30'}`} />
         <span className="flex items-center gap-1.5">
           <Clock className="w-4.5 h-4.5" /> {formatDate(post.createdAt)}
         </span>
@@ -1028,13 +1052,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       </div>
 
       {showInlineShareButtons && (
-        <div className={`mb-10 flex flex-wrap items-center gap-2 ${sharePosition === 'floating-sidebar' ? 'lg:hidden' : ''}`}>
-          {shareTargets.map(target => (
-            <button key={target} onClick={() => handleShare(target)} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
-              {shareButtonMeta[target].icon} {shareButtonMeta[target].label}
-            </button>
-          ))}
-        </div>
+        renderShareCard(`mb-10 ${sharePosition === 'floating-sidebar' ? 'lg:hidden' : ''}`)
       )}
 
       {/* Copy All Prompts CTA */}
@@ -1099,26 +1117,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           <aside className="hidden lg:block">
             <div className="sticky top-20 space-y-4">
               {showSidebarShareButtons && (
-                <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
-                  <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-surface-900 dark:text-white">
-                    <Share2 className="h-4 w-4 text-primary-500" /> Share
-                  </h3>
-                  <div className="grid grid-cols-4 gap-2">
-                    {shareTargets.map(target => (
-                      <button
-                        key={target}
-                        onClick={() => handleShare(target)}
-                        className={`flex items-center justify-center rounded-xl bg-surface-100 p-2 dark:bg-surface-800 ${shareButtonMeta[target].className}`}
-                        title={shareButtonMeta[target].title}
-                      >
-                        {shareButtonMeta[target].icon}
-                      </button>
-                    ))}
-                  </div>
-                  {(shareFeedback || tryFeedback) && (
-                    <p className="mt-3 text-[11px] font-bold text-primary-500">{shareFeedback || tryFeedback}</p>
-                  )}
-                </div>
+                renderShareCard()
               )}
 
               <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
