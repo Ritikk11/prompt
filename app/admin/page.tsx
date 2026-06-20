@@ -3,7 +3,7 @@ export const runtime = 'edge';
 import { useState, useEffect, useRef } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
-import type { Post, Section, ImagePrompt, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, NavLink, AdminUserSummary, FilterRailItem, ShareTarget } from '@/lib/types';
+import type { Post, Section, ImagePrompt, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, ShareTarget } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
@@ -178,6 +178,18 @@ const defaultFooterLinkGroups: FooterLinkGroup[] = [
   },
 ];
 
+const defaultKeepExploring: Required<KeepExploringSettings> = {
+  title: 'Keep exploring',
+  description: 'Browse more prompt pages with examples, model notes, and copy-ready creative workflows.',
+  links: [
+    { label: 'Image prompt library', href: '/explore', icon: 'image' },
+    { label: 'Poster and portrait ideas', href: '/tag/poster', icon: 'layers' },
+    { label: 'Copy-ready creative workflows', href: '/search?q=workflow', icon: 'clipboard' },
+  ],
+  ctaLabel: 'Open prompt library',
+  ctaHref: '/explore',
+};
+
 function cleanNavLinks(links: NavLink[] = []) {
   return links.map(link => ({
     label: link.label.trim(),
@@ -194,6 +206,22 @@ function cleanHomeBlocks(blocks: HomeLinkBlock[] = []) {
     accent: block.accent,
     style: block.style,
   })).filter(block => block.title && block.href);
+}
+
+function cleanKeepExploring(settings: KeepExploringSettings): KeepExploringSettings {
+  const links = (settings.links || []).map(link => ({
+    label: link.label.trim(),
+    href: link.href.trim(),
+    icon: link.icon || 'image',
+  })).filter(link => link.label && link.href);
+
+  return {
+    title: settings.title?.trim() || defaultKeepExploring.title,
+    description: settings.description?.trim() || defaultKeepExploring.description,
+    links: links.length ? links : defaultKeepExploring.links,
+    ctaLabel: settings.ctaLabel?.trim() || defaultKeepExploring.ctaLabel,
+    ctaHref: settings.ctaHref?.trim() || defaultKeepExploring.ctaHref,
+  };
 }
 
 function cleanFooterGroups(groups: FooterLinkGroup[] = []) {
@@ -612,6 +640,7 @@ export default function Admin() {
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
+  const [faqs, setFaqs] = useState<PostFaq[]>([]);
   const [tagsStr, setTagsStr] = useState('');
   const [category, setCategory] = useState('');
   const [categoriesStr, setCategoriesStr] = useState('');
@@ -667,6 +696,11 @@ export default function Admin() {
   const [headerLinks, setHeaderLinks] = useState<NavLink[]>(settings.headerLinks || []);
   const [homeLinkBlocks, setHomeLinkBlocks] = useState<HomeLinkBlock[]>(settings.homeLinkBlocks || []);
   const [homepageContent, setHomepageContent] = useState<Record<string, HomepageBlockContent>>(settings.homepageContent || {});
+  const [keepExploring, setKeepExploring] = useState<KeepExploringSettings>({
+    ...defaultKeepExploring,
+    ...(settings.keepExploring || {}),
+    links: settings.keepExploring?.links?.length ? settings.keepExploring.links : defaultKeepExploring.links,
+  });
   const [homepageBlockOrder, setHomepageBlockOrder] = useState<string[]>(
     (settings.homepageBlockOrder || defaultHomepageBlockOrder).map(normalizeHomepageOrderToken)
   );
@@ -811,6 +845,13 @@ export default function Admin() {
     if (settings.headerLinks !== undefined) setHeaderLinks(settings.headerLinks || []);
     if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocks(settings.homeLinkBlocks || []);
     if (settings.homepageContent !== undefined) setHomepageContent(settings.homepageContent || {});
+    if (settings.keepExploring !== undefined) {
+      setKeepExploring({
+        ...defaultKeepExploring,
+        ...(settings.keepExploring || {}),
+        links: settings.keepExploring?.links?.length ? settings.keepExploring.links : defaultKeepExploring.links,
+      });
+    }
     if (settings.homepageBlockOrder !== undefined) {
       setHomepageBlockOrder((settings.homepageBlockOrder || defaultHomepageBlockOrder).map(normalizeHomepageOrderToken));
     }
@@ -898,7 +939,7 @@ export default function Admin() {
   };
 
   const resetForm = () => {
-    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
+    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setFaqs([]); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
     setStatus('published'); setVisibility('public');
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
@@ -914,6 +955,7 @@ export default function Admin() {
     setReferenceImages(post.referenceImages || []);
     setSeoTitle(post.seoTitle || '');
     setSeoDescription(post.seoDescription || '');
+    setFaqs(post.faqs || []);
     setTagsStr(post.tags.join(', '));
     setCategory(post.category || '');
     setCategoriesStr(post.categories?.join(', ') || '');
@@ -1174,6 +1216,9 @@ export default function Admin() {
       title: title || 'Untitled Post',
       description: description || '',
       extendedDescription: extendedDescription || '',
+      faqs: faqs
+        .map(item => ({ question: item.question.trim(), answer: item.answer.trim() }))
+        .filter(item => item.question && item.answer),
       thumbnailUrl,
       referenceImages: referenceImages.filter(Boolean),
       images: images.filter(i => i.url || i.prompt || i.aiTool),
@@ -1378,6 +1423,18 @@ export default function Admin() {
     setHomeLinkBlocks(prev => prev.map((block, i) => i === index ? { ...block, [field]: value } : block));
   };
 
+  const updateKeepExploringLink = (
+    index: number,
+    field: 'label' | 'href' | 'icon',
+    value: string,
+  ) => {
+    setKeepExploring(prev => {
+      const links = [...(prev.links || defaultKeepExploring.links)];
+      links[index] = { ...(links[index] || { label: '', href: '', icon: 'image' }), [field]: value };
+      return { ...prev, links };
+    });
+  };
+
   const updateHomepageContent = (key: string, field: keyof HomepageBlockContent, value: string) => {
     setHomepageContent(prev => ({
       ...prev,
@@ -1473,6 +1530,7 @@ export default function Admin() {
       headerLinks: cleanNavLinks(headerLinks),
       homeLinkBlocks: cleanHomeBlocks(homeLinkBlocks),
       homepageContent,
+      keepExploring: cleanKeepExploring(keepExploring),
       homepageBlockOrder: orderedHomepageItems,
       exploreFilterTags: cleanCommaList(exploreFilterTags),
       exploreFilterItems: cleanRailItems(exploreFilterItems),
@@ -2135,6 +2193,62 @@ export default function Admin() {
                       <option value="private">Private</option>
                     </select>
                   </div>
+                </div>
+
+                <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
+                  <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h4 className="text-sm font-bold">FAQs</h4>
+                      <p className="mt-1 text-xs text-surface-500">Questions shown on the post page and used for FAQ structured data.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFaqs(prev => [...prev, { question: '', answer: '' }])}
+                      className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-3 py-2 text-xs font-bold text-white hover:bg-primary-600"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Add FAQ
+                    </button>
+                  </div>
+
+                  {faqs.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-surface-200 bg-surface-50 p-4 text-sm text-surface-500 dark:border-surface-700 dark:bg-surface-800/50">
+                      No FAQs added yet.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {faqs.map((faq, index) => {
+                        const duplicate = faq.question.trim() && faqs.some((item, itemIndex) => itemIndex !== index && item.question.trim().toLowerCase() === faq.question.trim().toLowerCase());
+                        return (
+                          <div key={index} className="rounded-xl border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                            <div className="mb-2 flex items-center justify-between gap-3">
+                              <span className="text-xs font-black uppercase tracking-wide text-surface-400">FAQ #{index + 1}</span>
+                              <button
+                                type="button"
+                                onClick={() => setFaqs(prev => prev.filter((_, itemIndex) => itemIndex !== index))}
+                                className="text-xs font-bold text-red-500 hover:text-red-600"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                            <input
+                              value={faq.question}
+                              onChange={e => setFaqs(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, question: e.target.value } : item))}
+                              className="mb-2 w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                              placeholder="Question"
+                            />
+                            {duplicate && <p className="mb-2 text-xs font-bold text-amber-600">Duplicate question warning.</p>}
+                            <textarea
+                              value={faq.answer}
+                              onChange={e => setFaqs(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, answer: e.target.value } : item))}
+                              rows={3}
+                              className="w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                              placeholder="Answer"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -3137,7 +3251,7 @@ export default function Admin() {
 
       {/* ===== SETTINGS TAB ===== */}
       {tab === 'settings' && (
-        <div className="max-w-3xl">
+        <div className={settingsSubTab === 'homepage' ? 'max-w-7xl' : 'max-w-3xl'}>
           <div className="flex gap-2 mb-6 overflow-x-auto pb-1 border-b border-surface-200 dark:border-surface-800">
             {[
               { id: 'general', label: 'General' },
@@ -3485,8 +3599,8 @@ export default function Admin() {
           )}
 
           {settingsSubTab === 'homepage' && (
-            <div className="grid gap-6 2xl:grid-cols-[minmax(0,760px)_minmax(360px,1fr)] 2xl:items-start">
-              <div className="space-y-6">
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,780px)_minmax(360px,1fr)] xl:items-start">
+              <div className="min-w-0 space-y-6">
               <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                 <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
                   <LayoutTemplate className="w-4 h-4 text-primary-500" /> Homepage Hero
@@ -4301,7 +4415,7 @@ export default function Admin() {
                 </button>
               </div>
             </div>
-              <aside className="hidden 2xl:block 2xl:sticky 2xl:top-24">
+              <aside className="hidden min-w-0 xl:block xl:sticky xl:top-24">
                 {activeHomepageBlockOption && activeHomepageBlockContent ? (
                   <HomepageBlockPreview
                     blockKey={activeHomepageBlockOption.key}
@@ -4774,6 +4888,88 @@ export default function Admin() {
                       {label}
                     </label>
                   ))}
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                <div className="mb-3">
+                  <span className="text-sm font-medium">Keep Exploring Block</span>
+                  <p className="mt-1 text-xs text-surface-500">Controls the card in the post sidebar and its mobile version.</p>
+                </div>
+                <div className="space-y-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="space-y-1">
+                      <span className="text-xs font-medium text-surface-500">Title</span>
+                      <input
+                        value={keepExploring.title || ''}
+                        onChange={e => setKeepExploring(prev => ({ ...prev, title: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm outline-none focus:border-primary-500"
+                        placeholder="Keep exploring"
+                      />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-xs font-medium text-surface-500">Main button label</span>
+                      <input
+                        value={keepExploring.ctaLabel || ''}
+                        onChange={e => setKeepExploring(prev => ({ ...prev, ctaLabel: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm outline-none focus:border-primary-500"
+                        placeholder="Open prompt library"
+                      />
+                    </label>
+                    <label className="space-y-1 sm:col-span-2">
+                      <span className="text-xs font-medium text-surface-500">Description</span>
+                      <textarea
+                        value={keepExploring.description || ''}
+                        onChange={e => setKeepExploring(prev => ({ ...prev, description: e.target.value }))}
+                        rows={2}
+                        className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm outline-none focus:border-primary-500 resize-y"
+                        placeholder="Short copy shown under the title"
+                      />
+                    </label>
+                    <label className="space-y-1 sm:col-span-2">
+                      <span className="text-xs font-medium text-surface-500">Main button link</span>
+                      <input
+                        value={keepExploring.ctaHref || ''}
+                        onChange={e => setKeepExploring(prev => ({ ...prev, ctaHref: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm outline-none focus:border-primary-500"
+                        placeholder="/explore"
+                      />
+                    </label>
+                  </div>
+                  <div className="space-y-2">
+                    {(keepExploring.links || defaultKeepExploring.links).map((link, index) => (
+                      <div key={index} className="grid gap-2 rounded-lg border border-surface-200 bg-white p-3 dark:border-surface-700 dark:bg-surface-900 sm:grid-cols-[1fr_1fr_130px]">
+                        <input
+                          value={link.label}
+                          onChange={e => updateKeepExploringLink(index, 'label', e.target.value)}
+                          className="px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 text-sm outline-none focus:border-primary-500"
+                          placeholder="Link title"
+                        />
+                        <input
+                          value={link.href}
+                          onChange={e => updateKeepExploringLink(index, 'href', e.target.value)}
+                          className="px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 text-sm outline-none focus:border-primary-500"
+                          placeholder="/tag/poster"
+                        />
+                        <select
+                          value={link.icon || 'image'}
+                          onChange={e => updateKeepExploringLink(index, 'icon', e.target.value)}
+                          className="px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 text-sm outline-none focus:border-primary-500"
+                        >
+                          <option value="image">Image</option>
+                          <option value="layers">Layers</option>
+                          <option value="clipboard">Clipboard</option>
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setKeepExploring(defaultKeepExploring)}
+                    className="inline-flex items-center gap-2 rounded-lg bg-surface-200 px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-300 dark:bg-surface-700 dark:text-surface-100 dark:hover:bg-surface-600"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" /> Reset Keep Exploring defaults
+                  </button>
                 </div>
               </div>
 
