@@ -325,51 +325,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     </div>
   );
 
-  const renderPromptDetailsCard = (className = '') => (
-    <div className={`rounded-[28px] border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 ${className}`}>
-      <div className="mb-4">
-        <p className="text-[11px] font-black uppercase tracking-[0.22em] text-primary-500">Prompt details</p>
-        <h3 className="mt-1 text-lg font-black leading-tight text-surface-950 dark:text-white">{post.title}</h3>
-        {post.description && (
-          <p className="mt-3 text-sm leading-6 text-surface-600 dark:text-surface-300">{post.description}</p>
-        )}
-      </div>
-      <div className="space-y-3 text-sm">
-        <div className="rounded-2xl bg-surface-50 p-3 dark:bg-surface-800/60">
-          <p className="text-[11px] font-black uppercase tracking-wide text-surface-400">Prompts</p>
-          <p className="mt-1 font-bold text-surface-900 dark:text-white">{post.images.length} prompt{post.images.length === 1 ? '' : 's'}</p>
-        </div>
-        <div className="rounded-2xl bg-surface-50 p-3 dark:bg-surface-800/60">
-          <p className="text-[11px] font-black uppercase tracking-wide text-surface-400">Tools</p>
-          <p className="mt-1 font-bold text-surface-900 dark:text-white">{heroTools.join(', ') || 'AI tool'}</p>
-        </div>
-        <div className="rounded-2xl bg-surface-50 p-3 dark:bg-surface-800/60">
-          <p className="text-[11px] font-black uppercase tracking-wide text-surface-400">Primary model</p>
-          <p className="mt-1 font-bold text-surface-900 dark:text-white">{post.images[0]?.model || getDefaultImageModel(post.images[0]?.aiTool || heroTools[0] || 'ChatGPT')}</p>
-        </div>
-      </div>
-      {post.tags?.length ? (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {post.tags.slice(0, 6).map(tag => (
-            <Link
-              key={tag}
-              href={`/tag/${encodeURIComponent(tag)}`}
-              className="rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold text-primary-600 hover:bg-primary-500 hover:text-white dark:text-primary-300"
-            >
-              #{tag}
-            </Link>
-          ))}
-        </div>
-      ) : null}
-      {firstPrompt && (
-        <div className="mt-5 space-y-3 border-t border-surface-200 pt-4 dark:border-surface-800">
-          <CopyButton text={firstPrompt} eventName="hero_prompt_copied" />
-          {renderTryButtonsForPrompt(heroTools, firstPrompt)}
-        </div>
-      )}
-    </div>
-  );
-
   const handleShare = async (target: ShareTarget) => {
     const text = `${post.title} - ${pageUrl}`;
     trackEvent('share_clicked', { target });
@@ -749,43 +704,40 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         );
       case 'v7': // Full Screen Hero
         return (
-          <div className="mb-12 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-stretch">
-            <div className="relative h-[68vh] min-h-[520px] overflow-hidden rounded-[42px] group lg:rounded-[48px]">
-               <LoadingImage
-                src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
-                alt={post.title}
-                fill
-                showSkeleton={showSkeleton}
-                className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                referrerPolicy="no-referrer"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-              <div className="absolute inset-0 flex flex-col items-center justify-end p-8 text-center md:p-12">
-                 <div className="flex flex-wrap gap-2 mb-6 justify-center">
-                   {heroTools.map(tool => {
-                     const info = getToolInfo(tool, settings?.toolDetails);
-                     return (
-                       <span key={tool} className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black text-white ${info.color}/80 backdrop-blur-md uppercase tracking-widest border border-white/20 shadow-xl`}>
-                         {info.logo && (
-                            <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                              <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                                <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                              </div>
+          <div className="relative w-full h-[80vh] min-h-[600px] mb-12 rounded-[48px] overflow-hidden group">
+             <LoadingImage 
+              src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+              alt={post.title} 
+              fill 
+              showSkeleton={showSkeleton}
+              className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+              referrerPolicy="no-referrer"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+            <div className="absolute inset-0 flex flex-col items-center justify-end p-8 md:p-16 text-center">
+               <div className="flex flex-wrap gap-2 mb-6 justify-center">
+                 {heroTools.map(tool => {
+                   const info = getToolInfo(tool, settings?.toolDetails);
+                   return (
+                     <span key={tool} className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black text-white ${info.color}/80 backdrop-blur-md uppercase tracking-widest border border-white/20 shadow-xl`}>
+                       {info.logo && (
+                          <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
+                            <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                              <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                             </div>
-                          )}
-                         {tool}
-                       </span>
-                     );
-                   })}
-                 </div>
-                 <h1 className="text-4xl md:text-6xl font-black text-white mb-6 max-w-4xl leading-tight">
-                   {post.title}
-                 </h1>
-                 <div className="mb-8 scale-100 lg:scale-105">{renderMetaInfo()}</div>
-              </div>
+                          </div>
+                        )}
+                       {tool}
+                     </span>
+                   );
+                 })}
+               </div>
+               <h1 className="text-4xl md:text-7xl font-black text-white mb-6 max-w-5xl leading-tight">
+                 {post.title}
+               </h1>
+               <div className="mb-10 scale-110">{renderMetaInfo()}</div>
             </div>
-            {renderPromptDetailsCard('hidden lg:flex lg:flex-col lg:justify-between')}
           </div>
         );
       case 'v8': // Floating Card
@@ -910,7 +862,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
       <AdSlot placement="postTop" />
 
-      <div className={showPostSidebar ? 'grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start' : ''}>
+      <div className={showPostSidebar ? 'grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_280px]' : ''}>
         <div className="min-w-0">
 
       {/* Reference Images */}
@@ -1167,6 +1119,15 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               {showSidebarShareButtons && (
                 renderShareCard()
               )}
+
+              <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                <h3 className="mb-3 text-sm font-black text-surface-900 dark:text-white">Prompt details</h3>
+                <div className="space-y-2 text-xs text-surface-500 dark:text-surface-400">
+                  <p><span className="font-bold text-surface-800 dark:text-surface-200">{post.images.length}</span> prompt{post.images.length === 1 ? '' : 's'}</p>
+                  <p><span className="font-bold text-surface-800 dark:text-surface-200">{heroTools.join(', ') || 'AI tool'}</span></p>
+                  <p>{(post.tags || []).slice(0, 4).map(tag => `#${tag}`).join(' ')}</p>
+                </div>
+              </div>
 
               {renderExploreAllPromptsBlock()}
 
