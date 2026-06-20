@@ -471,21 +471,21 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   };
 
   const renderMetaInfo = () => {
-    const isImageOverlayHero = ['v1', 'v2', 'v7', 'v8'].includes(postHeroStyle);
-    const containerClasses = isImageOverlayHero
-      ? 'bg-black/45 border-white/15 text-white shadow-xl shadow-black/20 backdrop-blur-xl'
-      : 'bg-white/80 text-surface-800 border-surface-200 shadow-lg shadow-surface-900/10 backdrop-blur-xl dark:bg-black/40 dark:text-white/90 dark:border-white/10';
+    const isV2 = postHeroStyle === 'v2';
+    const containerClasses = isV2
+      ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md'
+      : 'bg-white/35 text-surface-800 border-white/40 shadow-lg shadow-surface-900/10 backdrop-blur-xl dark:bg-black/40 dark:text-white/90 dark:border-white/10';
     
     return (
       <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium py-3 px-6 rounded-full border transition-colors ${containerClasses}`}>
         <span className="flex items-center gap-1.5">
-          <Eye className={`w-4.5 h-4.5 ${isImageOverlayHero ? 'text-primary-300' : 'text-primary-500'}`} /> {(post.views || 0).toLocaleString()} <span className="hidden sm:inline">views</span>
+          <Eye className={`w-4.5 h-4.5 ${isV2 ? 'text-white' : 'text-primary-500'}`} /> {(post.views || 0).toLocaleString()} <span className="hidden sm:inline">views</span>
         </span>
-        <span className={`w-1 h-1 rounded-full ${isImageOverlayHero ? 'bg-white/35' : 'bg-surface-600/30 dark:bg-white/30'}`} />
+        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-600/30 dark:bg-white/30'}`} />
         <button
           onClick={() => toggleLike(post.id, initialPost)}
           className={`flex items-center gap-1.5 transition-colors ${
-            post.likedByUser ? 'text-red-400' : isImageOverlayHero ? 'hover:text-red-300' : 'hover:text-red-500'
+            post.likedByUser ? 'text-red-500' : isV2 ? 'hover:text-red-400' : 'hover:text-red-500'
           }`}
         >
           <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop text-red-500' : ''}`} /> {(post.likes || 0).toLocaleString()} <span className="hidden sm:inline">likes</span>
@@ -493,13 +493,13 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         <button
           onClick={handleBookmark}
           className={`flex items-center gap-1.5 transition-colors ${
-            post.bookmarkedByUser ? 'text-primary-300' : isImageOverlayHero ? 'hover:text-primary-200' : 'hover:text-primary-500'
+            post.bookmarkedByUser ? 'text-primary-500' : isV2 ? 'hover:text-primary-300' : 'hover:text-primary-500'
           }`}
         >
           <Bookmark className={`w-4.5 h-4.5 ${post.bookmarkedByUser ? 'fill-current' : ''}`} />
           <span className="hidden sm:inline">{post.bookmarkedByUser ? 'saved' : 'save'}</span>
         </button>
-        <span className={`w-1 h-1 rounded-full ${isImageOverlayHero ? 'bg-white/35' : 'bg-surface-600/30 dark:bg-white/30'}`} />
+        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-600/30 dark:bg-white/30'}`} />
         <span className="flex items-center gap-1.5">
           <Clock className="w-4.5 h-4.5" /> {formatDate(post.createdAt)}
         </span>
@@ -507,7 +507,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     );
   };
 
-  const renderHero = () => {
+  const renderSelectedHeroStyle = () => {
     switch (postHeroStyle) {
       case 'v2': // Immersive Blur Background
         return (
@@ -841,6 +841,127 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         );
     }
   };
+
+  const renderDesktopSplitHero = () => {
+    const heroImage = post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600';
+    const primaryModel = post.images[0]?.model || getDefaultImageModel(post.images[0]?.aiTool || heroTools[0] || 'ChatGPT');
+
+    return (
+      <div className="mb-12 grid min-h-[560px] w-full grid-cols-[minmax(0,3fr)_minmax(340px,2fr)] gap-6">
+        <div className="relative overflow-hidden rounded-[44px] bg-surface-100 shadow-xl dark:bg-surface-900">
+          <LoadingImage
+            src={heroImage}
+            alt={post.title}
+            fill
+            showSkeleton={showSkeleton}
+            className="object-cover"
+            referrerPolicy="no-referrer"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+          <div className="absolute left-6 top-6 z-20 flex flex-wrap gap-2">
+            {heroTools.map(tool => {
+              const info = getToolInfo(tool, settings?.toolDetails);
+              return (
+                <span key={tool} className={`inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-white shadow-xl backdrop-blur-md ${info.color}/80`}>
+                  {info.logo && (
+                    <span className="relative flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-[1px] shadow-sm">
+                      <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
+                    </span>
+                  )}
+                  {tool}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex flex-col justify-between rounded-[32px] border border-surface-200 bg-white p-6 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+          <div>
+            <p className="mb-3 text-[11px] font-black uppercase tracking-[0.22em] text-primary-500">Prompt details</p>
+            <h1 className="text-4xl font-black leading-tight tracking-tight text-surface-950 dark:text-white">
+              {post.title}
+            </h1>
+            {post.description && (
+              <p className="mt-4 text-sm leading-6 text-surface-600 dark:text-surface-300">
+                {post.description}
+              </p>
+            )}
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-surface-50 p-3 dark:bg-surface-800/60">
+                <p className="text-[10px] font-black uppercase tracking-wide text-surface-400">Views</p>
+                <p className="mt-1 flex items-center gap-2 text-sm font-bold text-surface-900 dark:text-white">
+                  <Eye className="h-4 w-4 text-primary-500" /> {(post.views || 0).toLocaleString()}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-surface-50 p-3 dark:bg-surface-800/60">
+                <p className="text-[10px] font-black uppercase tracking-wide text-surface-400">Date</p>
+                <p className="mt-1 flex items-center gap-2 text-sm font-bold text-surface-900 dark:text-white">
+                  <Clock className="h-4 w-4 text-primary-500" /> {formatDate(post.createdAt)}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-surface-50 p-3 dark:bg-surface-800/60">
+                <p className="text-[10px] font-black uppercase tracking-wide text-surface-400">Prompts</p>
+                <p className="mt-1 text-sm font-bold text-surface-900 dark:text-white">{post.images.length} prompt{post.images.length === 1 ? '' : 's'}</p>
+              </div>
+              <div className="rounded-2xl bg-surface-50 p-3 dark:bg-surface-800/60">
+                <p className="text-[10px] font-black uppercase tracking-wide text-surface-400">Model</p>
+                <p className="mt-1 truncate text-sm font-bold text-surface-900 dark:text-white">{primaryModel}</p>
+              </div>
+            </div>
+
+            {post.tags?.length ? (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {post.tags.slice(0, 6).map(tag => (
+                  <Link
+                    key={tag}
+                    href={`/tag/${encodeURIComponent(tag)}`}
+                    className="rounded-full bg-primary-500/10 px-3 py-1.5 text-[11px] font-bold text-primary-600 hover:bg-primary-500 hover:text-white dark:text-primary-300"
+                  >
+                    #{tag}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-6 space-y-3 border-t border-surface-200 pt-5 dark:border-surface-800">
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => toggleLike(post.id, initialPost)}
+                className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition-colors ${
+                  post.likedByUser
+                    ? 'bg-red-500 text-white'
+                    : 'bg-surface-100 text-surface-800 hover:bg-red-500 hover:text-white dark:bg-surface-800 dark:text-surface-100'
+                }`}
+              >
+                <Heart className={`h-4 w-4 ${post.likedByUser ? 'fill-current' : ''}`} /> {(post.likes || 0).toLocaleString()}
+              </button>
+              <button
+                onClick={handleBookmark}
+                className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition-colors ${
+                  post.bookmarkedByUser
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-surface-100 text-surface-800 hover:bg-primary-500 hover:text-white dark:bg-surface-800 dark:text-surface-100'
+                }`}
+              >
+                <Bookmark className={`h-4 w-4 ${post.bookmarkedByUser ? 'fill-current' : ''}`} /> {post.bookmarkedByUser ? 'Saved' : 'Save'}
+              </button>
+            </div>
+            {firstPrompt && renderTryButtonsForPrompt(heroTools, firstPrompt)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderHero = () => (
+    <>
+      <div className="hidden lg:block">{renderDesktopSplitHero()}</div>
+      <div className="lg:hidden">{renderSelectedHeroStyle()}</div>
+    </>
+  );
 
   return (
     <div className="max-w-6xl mx-auto px-1 py-4 sm:py-6 fade-in">
