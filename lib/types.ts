@@ -7,6 +7,11 @@ export interface ImagePrompt {
   model?: string;
 }
 
+export interface PostFaq {
+  question: string;
+  answer: string;
+}
+
 export interface Post {
   id: string;
   slug: string;
@@ -16,6 +21,7 @@ export interface Post {
   seoTitle?: string;
   seoDescription?: string;
   seoKeywords?: string[];
+  faqs?: PostFaq[];
   thumbnailUrl?: string;
   referenceImages?: string[];
   images: ImagePrompt[];
@@ -204,6 +210,18 @@ export interface HomepageBlockContent {
   helperText?: string;
 }
 
+export interface KeepExploringSettings {
+  title?: string;
+  description?: string;
+  links?: {
+    label: string;
+    href: string;
+    icon?: 'image' | 'layers' | 'clipboard';
+  }[];
+  ctaLabel?: string;
+  ctaHref?: string;
+}
+
 export interface SiteSettings {
   siteTitle: string;
   siteDescription: string;
@@ -236,6 +254,7 @@ export interface SiteSettings {
     youtube?: string;
   };
   shareSettings?: ShareSettings;
+  keepExploring?: KeepExploringSettings;
   seoSettings?: SeoSettings;
   staticPages?: Record<string, StaticPageSettings>;
   ads?: AdSettings;

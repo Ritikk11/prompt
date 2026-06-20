@@ -166,14 +166,36 @@ export default async function PostPage({ params }: Props) {
     })),
     url: `${siteUrl}/${post.slug || post.id}`,
   };
+  const faqJsonLd = post.faqs?.length ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: post.faqs
+      .filter(faq => faq.question?.trim() && faq.answer?.trim())
+      .map(faq => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: faq.answer,
+        },
+      })),
+  } : null;
 
   return (
     <>
       {(settings.seoSettings?.enableJsonLd ?? settings.features?.showFaqSchema ?? true) && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
-        />
+        <>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+          />
+          {faqJsonLd && (
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+            />
+          )}
+        </>
       )}
       <PostContent post={post} relatedPosts={relatedPosts} />
     </>

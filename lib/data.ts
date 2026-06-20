@@ -132,6 +132,17 @@ const defaultSettings: SiteSettings = {
     targets: ['whatsapp', 'x', 'instagram', 'copy'],
     position: 'floating-sidebar',
   },
+  keepExploring: {
+    title: 'Keep exploring',
+    description: 'Browse more prompt pages with examples, model notes, and copy-ready creative workflows.',
+    links: [
+      { label: 'Image prompt library', href: '/explore', icon: 'image' },
+      { label: 'Poster and portrait ideas', href: '/tag/poster', icon: 'layers' },
+      { label: 'Copy-ready creative workflows', href: '/search?q=workflow', icon: 'clipboard' },
+    ],
+    ctaLabel: 'Open prompt library',
+    ctaHref: '/explore',
+  },
   seoSettings: {
     metaTitleTemplate: '%post_title% | AI PromptMatrix',
     defaultMetaDescription: 'Discover curated AI image prompts, prompt collections, and creative workflows.',
@@ -255,6 +266,11 @@ function sanitizeSettings(settings: SiteSettings): SiteSettings {
     ...settings,
     siteLogo: isInlineImage(settings.siteLogo) ? '' : settings.siteLogo,
     homepageContent,
+    keepExploring: {
+      ...(defaultSettings.keepExploring || {}),
+      ...(settings.keepExploring || {}),
+      links: settings.keepExploring?.links?.length ? settings.keepExploring.links : defaultSettings.keepExploring?.links,
+    },
     toolDetails,
   };
 }
