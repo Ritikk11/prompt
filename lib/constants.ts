@@ -44,6 +44,13 @@ export const defaultImageModels: Record<string, string> = {
   Qwen: 'Qwen-Image'
 };
 
+export const imageModelOptions: Record<string, string[]> = {
+  ChatGPT: ['GPT Image 2'],
+  Gemini: ['Nano Banana 2', 'Nano Banana Pro'],
+  Grok: ['Grok Imagine Image Quality'],
+  Qwen: ['Qwen-Image']
+};
+
 const defaultImageModelLookup = new Map(
   Object.entries(defaultImageModels).map(([tool, model]) => [tool.toLowerCase(), model])
 );
@@ -56,13 +63,24 @@ export function getDefaultImageModel(tool?: string) {
 export function isDefaultImageModel(model?: string) {
   if (!model) return false;
   const normalizedModel = model.trim().toLowerCase();
-  return Object.values(defaultImageModels).some(defaultModel => defaultModel.toLowerCase() === normalizedModel);
+  return Object.values(imageModelOptions).flat().some(option => option.toLowerCase() === normalizedModel);
 }
 
 export function getImageModelForTools(tools: string[], currentModel?: string) {
   const defaultModel = getDefaultImageModel(tools[0]);
   if (!defaultModel) return currentModel || '';
   return !currentModel?.trim() || isDefaultImageModel(currentModel) ? defaultModel : currentModel;
+}
+export function getToolForImageModel(model?: string) {
+  const normalizedModel = model?.trim().toLowerCase();
+  if (!normalizedModel) return '';
+  const defaultMatch = Object.entries(imageModelOptions).find(([, models]) => models.some(option => option.toLowerCase() === normalizedModel));
+  if (defaultMatch) return defaultMatch[0];
+  if (normalizedModel.includes('gpt') || normalizedModel.includes('dall-e')) return 'ChatGPT';
+  if (normalizedModel.includes('gemini') || normalizedModel.includes('nano banana')) return 'Gemini';
+  if (normalizedModel.includes('grok')) return 'Grok';
+  if (normalizedModel.includes('qwen')) return 'Qwen';
+  return '';
 }
 
 export function getAllTools(post: any): string[] {
