@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 export const runtime = 'edge';
 import { useState, useEffect, useRef } from 'react';
 import { useData } from '@/components/context/DataContext';
@@ -15,7 +15,7 @@ import {
 
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { defaultImageModels, getAllTools, getDefaultImageModel, getImageModelForTools, getToolInfo } from '@/lib/constants';
+import { imageModelOptions, getAllTools, getDefaultImageModel, getImageModelForTools, getToolInfo } from '@/lib/constants';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
@@ -72,7 +72,7 @@ const TAILWIND_COLORS = [
   'bg-rose-500', 'bg-primary-500', 'bg-surface-800', 'bg-black', 'bg-white'
 ];
 
-const DEFAULT_MODEL_OPTIONS = Object.values(defaultImageModels);
+const DEFAULT_MODEL_OPTIONS = Array.from(new Set(Object.values(imageModelOptions).flat()));
 const CUSTOM_MODEL_VALUE = '__custom';
 const AUTO_MODEL_VALUE = '__auto';
 const homeCardIcons = [

@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Wand2, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle, Layers, ClipboardCheck } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
-import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
+import { getDefaultImageModel, getToolInfo, getAllTools, getToolForImageModel } from '@/lib/constants';
 import TemplatePrompt from '@/components/TemplatePrompt';
 import { createClient } from '@/lib/supabase-client';
 import { getAuthRedirectTo } from '@/lib/auth-redirect';
@@ -278,7 +278,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     : ['whatsapp', 'x', 'instagram', 'copy'] as ShareTarget[];
   const shareTargets = configuredShareTargets.filter((target, index, list) => list.indexOf(target) === index);
   const sharePosition = settings.shareSettings?.position || 'floating-sidebar';
-  const showInlineShareButtons = showShareButtons && (sharePosition === 'below-prompt' || sharePosition === 'bottom');
+  const showInlineShareButtons = showShareButtons;
   const showSidebarShareButtons = showShareButtons && sharePosition === 'floating-sidebar';
   const shareButtonMeta: Record<ShareTarget, { label: string; title: string; className: string; icon: ReactNode }> = {
     whatsapp: { label: 'WhatsApp', title: 'Share on WhatsApp', className: 'text-green-500 hover:bg-green-500 hover:text-white', icon: <WhatsAppLogo className="h-4 w-4" /> },
@@ -391,6 +391,11 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     </div>
   );
 
+  const getTryToolsForImage = (image: Post['images'][number]) => {
+    const tools = image.aiTools || [image.aiTool].filter(Boolean);
+    const modelTool = getToolForImageModel(image.model);
+    return modelTool && tools.some(tool => tool.toLowerCase() === modelTool.toLowerCase()) ? [modelTool] : tools;
+  };
   const renderTryButtonsForPrompt = (tools: string[], prompt: string, className = '') => {
     const uniqueTools = Array.from(new Set(tools.filter(Boolean)));
     if (!showTryButtons || uniqueTools.length === 0 || !prompt.trim()) return null;
@@ -993,7 +998,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                     <Clock className="w-4 h-4 text-primary-500/50" />
                     Model: <span className="text-surface-600 dark:text-surface-200">{img.model || getDefaultImageModel(img.aiTool) || img.aiTool}</span>
                   </div>
-                  {renderTryButtonsForPrompt(img.aiTools || [img.aiTool].filter(Boolean), img.prompt, 'mt-4')}
+                  {renderTryButtonsForPrompt(getTryToolsForImage(img), img.prompt, 'mt-4')}
                 </div>
               </div>
             </div>
@@ -1002,7 +1007,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       </div>
 
       {showInlineShareButtons && (
-        <div className={`mb-10 flex flex-wrap items-center gap-2 ${sharePosition === 'bottom' ? '' : 'lg:hidden'}`}>
+        <div className={`mb-10 flex flex-wrap items-center gap-2 ${sharePosition === 'floating-sidebar' ? 'lg:hidden' : ''}`}>
           {shareTargets.map(target => (
             <button key={target} onClick={() => handleShare(target)} className="inline-flex items-center gap-2 rounded-xl bg-surface-100 px-3 py-2 text-xs font-bold dark:bg-surface-800">
               {shareButtonMeta[target].icon} {shareButtonMeta[target].label}
