@@ -510,141 +510,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     );
   };
 
-  const renderDesktopSplitHero = () => {
-    const heroImage = post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600';
-    const primaryModel = post.images[0]?.model || getDefaultImageModel(post.images[0]?.aiTool || heroTools[0] || 'ChatGPT');
-
-    return (
-      <div className="mb-12 grid min-h-[560px] w-full grid-cols-[minmax(0,3fr)_minmax(340px,2fr)] gap-6">
-        <div className="relative overflow-hidden rounded-[44px] bg-surface-100 shadow-xl dark:bg-surface-900">
-          <LoadingImage
-            src={heroImage}
-            alt={post.title}
-            fill
-            showSkeleton={showSkeleton}
-            className="object-cover"
-            referrerPolicy="no-referrer"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-          <div className="absolute left-6 top-6 z-20 flex flex-wrap gap-2">
-            {heroTools.map(tool => {
-              const info = getToolInfo(tool, settings?.toolDetails);
-              return (
-                <span key={tool} className={`inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-white shadow-xl backdrop-blur-md ${info.color}/80`}>
-                  {info.logo && (
-                    <span className="relative flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-[1px] shadow-sm">
-                      <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                    </span>
-                  )}
-                  {tool}
-                </span>
-              );
-            })}
-          </div>
-          <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center px-8 pb-10 text-center">
-            <h1 className="mb-6 max-w-4xl text-4xl font-black leading-tight text-white md:text-6xl">
-              {post.title}
-            </h1>
-            {renderMetaInfo()}
-          </div>
-        </div>
-
-        <div className="flex flex-col justify-between rounded-[32px] border border-surface-200 bg-white p-6 shadow-sm dark:border-surface-800 dark:bg-surface-900">
-      <div>
-        <div className="mb-5 flex flex-wrap gap-2">
-          {heroTools.map(tool => {
-            const info = getToolInfo(tool, settings?.toolDetails);
-            return (
-              <span key={tool} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-white shadow-md ${info.color}/90`}>
-                {info.logo && (
-                  <span className="relative flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/20 p-[1px]">
-                    <span className="relative h-full w-full overflow-hidden rounded-full bg-white shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                      <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                    </span>
-                  </span>
-                )}
-                {tool}
-              </span>
-            );
-          })}
-        </div>
-        <p className="mb-3 text-[11px] font-black uppercase tracking-[0.22em] text-primary-500">Prompt details</p>
-        {post.description && (
-          <p className="text-sm leading-6 text-surface-600 dark:text-surface-300">
-            {post.description}
-          </p>
-        )}
-
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-surface-50 p-3 dark:bg-surface-800/60">
-            <p className="text-[10px] font-black uppercase tracking-wide text-surface-400">Views</p>
-            <p className="mt-1 flex items-center gap-2 text-sm font-bold text-surface-900 dark:text-white">
-              <Eye className="h-4 w-4 text-primary-500" /> {(post.views || 0).toLocaleString()}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-surface-50 p-3 dark:bg-surface-800/60">
-            <p className="text-[10px] font-black uppercase tracking-wide text-surface-400">Date</p>
-            <p className="mt-1 flex items-center gap-2 text-sm font-bold text-surface-900 dark:text-white">
-              <Clock className="h-4 w-4 text-primary-500" /> {formatDate(post.createdAt)}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-surface-50 p-3 dark:bg-surface-800/60">
-            <p className="text-[10px] font-black uppercase tracking-wide text-surface-400">Prompts</p>
-            <p className="mt-1 text-sm font-bold text-surface-900 dark:text-white">{post.images.length} prompt{post.images.length === 1 ? '' : 's'}</p>
-          </div>
-          <div className="rounded-2xl bg-surface-50 p-3 dark:bg-surface-800/60">
-            <p className="text-[10px] font-black uppercase tracking-wide text-surface-400">Model</p>
-            <p className="mt-1 truncate text-sm font-bold text-surface-900 dark:text-white">{primaryModel}</p>
-          </div>
-        </div>
-
-        {post.tags?.length ? (
-          <div className="mt-5 flex flex-wrap gap-2">
-            {post.tags.slice(0, 6).map(tag => (
-              <Link
-                key={tag}
-                href={`/tag/${encodeURIComponent(tag)}`}
-                className="rounded-full bg-primary-500/10 px-3 py-1.5 text-[11px] font-bold text-primary-600 hover:bg-primary-500 hover:text-white dark:text-primary-300"
-              >
-                #{tag}
-              </Link>
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      <div className="mt-6 space-y-3 border-t border-surface-200 pt-5 dark:border-surface-800">
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => toggleLike(post.id, initialPost)}
-            className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition-colors ${
-              post.likedByUser
-                ? 'bg-red-500 text-white'
-                : 'bg-surface-100 text-surface-800 hover:bg-red-500 hover:text-white dark:bg-surface-800 dark:text-surface-100'
-            }`}
-          >
-            <Heart className={`h-4 w-4 ${post.likedByUser ? 'fill-current' : ''}`} /> {(post.likes || 0).toLocaleString()}
-          </button>
-          <button
-            onClick={handleBookmark}
-            className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition-colors ${
-              post.bookmarkedByUser
-                ? 'bg-primary-500 text-white'
-                : 'bg-surface-100 text-surface-800 hover:bg-primary-500 hover:text-white dark:bg-surface-800 dark:text-surface-100'
-            }`}
-          >
-            <Bookmark className={`h-4 w-4 ${post.bookmarkedByUser ? 'fill-current' : ''}`} /> {post.bookmarkedByUser ? 'Saved' : 'Save'}
-          </button>
-        </div>
-        {firstPrompt && renderTryButtonsForPrompt(heroTools, firstPrompt)}
-      </div>
-    </div>
-      </div>
-    );
-  };
-
-  const renderSelectedHeroStyle = () => {
+  const renderHero = () => {
     switch (postHeroStyle) {
       case 'v2': // Immersive Blur Background
         return (
@@ -853,27 +719,27 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
             <div className="absolute inset-0 flex flex-col items-center justify-end p-8 md:p-16 text-center">
-                 <div className="flex flex-wrap gap-2 mb-6 justify-center">
-                   {heroTools.map(tool => {
-                     const info = getToolInfo(tool, settings?.toolDetails);
-                     return (
-                       <span key={tool} className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black text-white ${info.color}/80 backdrop-blur-md uppercase tracking-widest border border-white/20 shadow-xl`}>
-                         {info.logo && (
-                            <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                              <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                                <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                              </div>
+               <div className="flex flex-wrap gap-2 mb-6 justify-center">
+                 {heroTools.map(tool => {
+                   const info = getToolInfo(tool, settings?.toolDetails);
+                   return (
+                     <span key={tool} className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black text-white ${info.color}/80 backdrop-blur-md uppercase tracking-widest border border-white/20 shadow-xl`}>
+                       {info.logo && (
+                          <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
+                            <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                              <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
                             </div>
-                          )}
-                         {tool}
-                       </span>
-                     );
-                   })}
-                 </div>
-                 <h1 className="text-4xl md:text-7xl lg:text-5xl font-black text-white mb-6 max-w-5xl leading-tight">
-                   {post.title}
-                 </h1>
-                 <div className="mb-10 scale-110 lg:scale-100">{renderMetaInfo()}</div>
+                          </div>
+                        )}
+                       {tool}
+                     </span>
+                   );
+                 })}
+               </div>
+               <h1 className="text-4xl md:text-7xl font-black text-white mb-6 max-w-5xl leading-tight">
+                 {post.title}
+               </h1>
+               <div className="mb-10 scale-110">{renderMetaInfo()}</div>
             </div>
           </div>
         );
@@ -979,13 +845,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     }
   };
 
-  const renderHero = () => (
-    <>
-      <div className="hidden lg:block">{renderDesktopSplitHero()}</div>
-      <div className="lg:hidden">{renderSelectedHeroStyle()}</div>
-    </>
-  );
-
   return (
     <div className="max-w-6xl mx-auto px-1 py-4 sm:py-6 fade-in">
       {(shareFeedback || tryFeedback) && (
@@ -1065,10 +924,10 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Image + Prompt layout */}
-              <div className="grid grid-cols-1 items-start gap-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-5">
+              <div className="grid grid-cols-1 items-start gap-0 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-6">
                 {/* Image — no cropping, natural display */}
-                <div className="relative self-start p-3 sm:p-4">
-                  <div className="relative mx-auto w-full max-w-[640px] overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-2 shadow-sm transition-transform duration-500 group-hover:scale-[1.005] dark:border-surface-700/70 dark:bg-surface-800/60 group/img">
+                <div className="relative self-start p-3 sm:p-5">
+                  <div className="relative mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-2 shadow-sm transition-transform duration-500 group-hover:scale-[1.005] dark:border-surface-700/70 dark:bg-surface-800/60 group/img">
                     <div className="relative flex w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-900" onClick={() => setLightboxImage({ url: img.url || '', index, tools: img.aiTools || [img.aiTool].filter(Boolean) })}>
                       <LoadingImg
                         src={img.url || 'https://picsum.photos/seed/placeholder/800/600'}
