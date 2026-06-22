@@ -437,9 +437,12 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   };
 
   const getTryToolsForImage = (image: Post['images'][number]) => {
-    const tools = image.aiTools || [image.aiTool].filter(Boolean);
+    const selectedTools = (image.aiTools || []).filter(Boolean);
+    if (selectedTools.length > 0) return selectedTools;
+
+    const fallbackTools = [image.aiTool].filter(Boolean);
     const modelTool = getToolForImageModel(image.model);
-    return modelTool && tools.some(tool => tool.toLowerCase() === modelTool.toLowerCase()) ? [modelTool] : tools;
+    return modelTool && fallbackTools.some(tool => tool.toLowerCase() === modelTool.toLowerCase()) ? [modelTool] : fallbackTools;
   };
   const renderTryButtonsForPrompt = (tools: string[], prompt: string, className = '') => {
     const uniqueTools = Array.from(new Set(tools.filter(Boolean)));
@@ -471,21 +474,21 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   };
 
   const renderMetaInfo = () => {
-    const isImageOverlayHero = ['v1', 'v2', 'v7', 'v8'].includes(postHeroStyle);
-    const containerClasses = isImageOverlayHero
-      ? 'bg-black/45 border-white/15 text-white shadow-xl shadow-black/20 backdrop-blur-xl'
-      : 'bg-white/80 text-surface-800 border-surface-200 shadow-lg shadow-surface-900/10 backdrop-blur-xl dark:bg-black/40 dark:text-white/90 dark:border-white/10';
+    const isV2 = postHeroStyle === 'v2';
+    const containerClasses = isV2
+      ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md'
+      : 'bg-white/35 text-surface-800 border-white/40 shadow-lg shadow-surface-900/10 backdrop-blur-xl dark:bg-white/35 dark:text-surface-100 dark:border-white/40';
     
     return (
       <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium py-3 px-6 rounded-full border transition-colors ${containerClasses}`}>
         <span className="flex items-center gap-1.5">
-          <Eye className={`w-4.5 h-4.5 ${isImageOverlayHero ? 'text-primary-300' : 'text-primary-500'}`} /> {(post.views || 0).toLocaleString()} <span className="hidden sm:inline">views</span>
+          <Eye className={`w-4.5 h-4.5 ${isV2 ? 'text-white' : 'text-primary-500'}`} /> {(post.views || 0).toLocaleString()} <span className="hidden sm:inline">views</span>
         </span>
-        <span className={`w-1 h-1 rounded-full ${isImageOverlayHero ? 'bg-white/35' : 'bg-surface-600/30 dark:bg-white/30'}`} />
+        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-600/30 dark:bg-white/30'}`} />
         <button
           onClick={() => toggleLike(post.id, initialPost)}
           className={`flex items-center gap-1.5 transition-colors ${
-            post.likedByUser ? 'text-red-400' : isImageOverlayHero ? 'hover:text-red-300' : 'hover:text-red-500'
+            post.likedByUser ? 'text-red-500' : isV2 ? 'hover:text-red-400' : 'hover:text-red-500'
           }`}
         >
           <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop text-red-500' : ''}`} /> {(post.likes || 0).toLocaleString()} <span className="hidden sm:inline">likes</span>
@@ -493,13 +496,13 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         <button
           onClick={handleBookmark}
           className={`flex items-center gap-1.5 transition-colors ${
-            post.bookmarkedByUser ? 'text-primary-300' : isImageOverlayHero ? 'hover:text-primary-200' : 'hover:text-primary-500'
+            post.bookmarkedByUser ? 'text-primary-500' : isV2 ? 'hover:text-primary-300' : 'hover:text-primary-500'
           }`}
         >
           <Bookmark className={`w-4.5 h-4.5 ${post.bookmarkedByUser ? 'fill-current' : ''}`} />
           <span className="hidden sm:inline">{post.bookmarkedByUser ? 'saved' : 'save'}</span>
         </button>
-        <span className={`w-1 h-1 rounded-full ${isImageOverlayHero ? 'bg-white/35' : 'bg-surface-600/30 dark:bg-white/30'}`} />
+        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-600/30 dark:bg-white/30'}`} />
         <span className="flex items-center gap-1.5">
           <Clock className="w-4.5 h-4.5" /> {formatDate(post.createdAt)}
         </span>
