@@ -54,23 +54,42 @@ export default function LoadingImage({
 
   useEffect(() => {
     if (!enabled) return;
+    let completeCheck = 0;
+    let interval: number | undefined;
+    let timer: number | undefined;
+    const stopWatching = () => {
+      if (completeCheck) window.cancelAnimationFrame(completeCheck);
+      if (interval) window.clearInterval(interval);
+      if (timer) window.clearTimeout(timer);
+    };
     const markIfLoaded = () => {
       const image = imageRef.current;
       if (!image?.complete) return false;
       if (image.naturalWidth > 0) {
-        setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+        setImageState(prev => (
+          prev.src === srcValue && prev.loaded && !prev.failed && !prev.timedOut
+            ? prev
+            : { src: srcValue, loaded: true, failed: false, timedOut: false }
+        ));
+        stopWatching();
         return true;
       } else {
-        setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
+        setImageState(prev => (
+          prev.src === srcValue && prev.failed
+            ? prev
+            : { src: srcValue, loaded: false, failed: true, timedOut: false }
+        ));
+        stopWatching();
         return true;
       }
     };
-    const completeCheck = window.requestAnimationFrame(markIfLoaded);
-    const interval = window.setInterval(markIfLoaded, 500);
-    const timer = window.setTimeout(() => {
+    completeCheck = window.requestAnimationFrame(markIfLoaded);
+    interval = window.setInterval(markIfLoaded, 500);
+    timer = window.setTimeout(() => {
       const image = imageRef.current;
       if (image?.complete && image.naturalWidth > 0) {
         setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+        stopWatching();
         return;
       }
       setImageState(prev => (
@@ -78,12 +97,9 @@ export default function LoadingImage({
           ? prev
           : { src: srcValue, loaded: false, failed: false, timedOut: true }
       ));
+      stopWatching();
     }, IMAGE_WAIT_TIMEOUT_MS);
-    return () => {
-      window.cancelAnimationFrame(completeCheck);
-      window.clearInterval(interval);
-      window.clearTimeout(timer);
-    };
+    return stopWatching;
   }, [enabled, srcValue]);
 
   const settled = loaded || failed || timedOut;
@@ -157,23 +173,42 @@ export function LoadingImg({
 
   useEffect(() => {
     if (!showSkeleton) return;
+    let completeCheck = 0;
+    let interval: number | undefined;
+    let timer: number | undefined;
+    const stopWatching = () => {
+      if (completeCheck) window.cancelAnimationFrame(completeCheck);
+      if (interval) window.clearInterval(interval);
+      if (timer) window.clearTimeout(timer);
+    };
     const markIfLoaded = () => {
       const image = imageRef.current;
       if (!image?.complete) return false;
       if (image.naturalWidth > 0) {
-        setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+        setImageState(prev => (
+          prev.src === srcValue && prev.loaded && !prev.failed && !prev.timedOut
+            ? prev
+            : { src: srcValue, loaded: true, failed: false, timedOut: false }
+        ));
+        stopWatching();
         return true;
       } else {
-        setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
+        setImageState(prev => (
+          prev.src === srcValue && prev.failed
+            ? prev
+            : { src: srcValue, loaded: false, failed: true, timedOut: false }
+        ));
+        stopWatching();
         return true;
       }
     };
-    const completeCheck = window.requestAnimationFrame(markIfLoaded);
-    const interval = window.setInterval(markIfLoaded, 500);
-    const timer = window.setTimeout(() => {
+    completeCheck = window.requestAnimationFrame(markIfLoaded);
+    interval = window.setInterval(markIfLoaded, 500);
+    timer = window.setTimeout(() => {
       const image = imageRef.current;
       if (image?.complete && image.naturalWidth > 0) {
         setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+        stopWatching();
         return;
       }
       setImageState(prev => (
@@ -181,12 +216,9 @@ export function LoadingImg({
           ? prev
           : { src: srcValue, loaded: false, failed: false, timedOut: true }
       ));
+      stopWatching();
     }, IMAGE_WAIT_TIMEOUT_MS);
-    return () => {
-      window.cancelAnimationFrame(completeCheck);
-      window.clearInterval(interval);
-      window.clearTimeout(timer);
-    };
+    return stopWatching;
   }, [srcValue, showSkeleton]);
 
   const settled = loaded || failed || timedOut;
