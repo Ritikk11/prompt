@@ -477,14 +477,14 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     const isV2 = postHeroStyle === 'v2';
     const containerClasses = isV2
       ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md'
-      : 'bg-white/35 text-surface-800 border-white/40 shadow-lg shadow-surface-900/10 backdrop-blur-xl dark:bg-white/35 dark:text-surface-100 dark:border-white/40';
+      : 'bg-white/45 text-surface-800 border-white/50 shadow-lg shadow-surface-900/10 backdrop-blur-xl';
     
     return (
       <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium py-3 px-6 rounded-full border transition-colors ${containerClasses}`}>
         <span className="flex items-center gap-1.5">
           <Eye className={`w-4.5 h-4.5 ${isV2 ? 'text-white' : 'text-primary-500'}`} /> {(post.views || 0).toLocaleString()} <span className="hidden sm:inline">views</span>
         </span>
-        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-600/30 dark:bg-white/30'}`} />
+        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-600/30'}`} />
         <button
           onClick={() => toggleLike(post.id, initialPost)}
           className={`flex items-center gap-1.5 transition-colors ${
@@ -502,7 +502,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           <Bookmark className={`w-4.5 h-4.5 ${post.bookmarkedByUser ? 'fill-current' : ''}`} />
           <span className="hidden sm:inline">{post.bookmarkedByUser ? 'saved' : 'save'}</span>
         </button>
-        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-600/30 dark:bg-white/30'}`} />
+        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-600/30'}`} />
         <span className="flex items-center gap-1.5">
           <Clock className="w-4.5 h-4.5" /> {formatDate(post.createdAt)}
         </span>
