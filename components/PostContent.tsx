@@ -924,7 +924,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Image + Prompt layout */}
-              <div className="grid grid-cols-1 items-start gap-0 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+              <div className="grid grid-cols-1 items-start gap-0 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-6">
                 {/* Image — no cropping, natural display */}
                 <div className="relative self-start p-3 sm:p-5">
                   <div className="relative mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-2 shadow-sm transition-transform duration-500 group-hover:scale-[1.005] dark:border-surface-700/70 dark:bg-surface-800/60 group/img">
@@ -992,7 +992,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                 </div>
 
                 {/* Prompt */}
-                <div className="p-6 md:p-10 flex flex-col justify-between">
+                <div className="flex flex-col justify-between p-5 sm:p-6">
                   <div>
                     {settings.features?.premiumPrompts && post.isPremium && !user ? (
                        <div className="bg-surface-50 dark:bg-surface-800/50 rounded-2xl p-6 mb-6 text-center border border-surface-200/50 dark:border-surface-700/50 relative overflow-hidden group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
@@ -1020,14 +1020,14 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                        <TemplatePrompt originalPrompt={img.prompt} />
                     ) : (
                       <>
-                        <div className="flex items-center justify-between mb-6">
+                        <div className="mb-4 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-4 bg-primary-500 rounded-full" />
                             <h3 className="font-bold text-base tracking-tight">Prompt</h3>
                           </div>
                           <CopyButton text={img.prompt} />
                         </div>
-                        <div className={`mb-3 overflow-hidden rounded-2xl border border-surface-200/50 bg-surface-50 p-5 transition-colors group-hover:bg-primary-50/20 dark:border-surface-700/50 dark:bg-surface-800/50 dark:group-hover:bg-primary-900/10 sm:p-6 md:max-h-[460px] md:overflow-y-auto ${expandedPrompts[img.id] ? 'max-h-none md:max-h-[460px]' : 'max-h-[260px]'}`}>
+                        <div className={`mb-4 overflow-hidden rounded-2xl border border-surface-200/50 bg-surface-50 p-5 transition-colors group-hover:bg-primary-50/20 dark:border-surface-700/50 dark:bg-surface-800/50 dark:group-hover:bg-primary-900/10 sm:p-6 md:max-h-[460px] md:overflow-y-auto ${expandedPrompts[img.id] ? 'max-h-none md:max-h-[460px]' : 'max-h-[260px]'}`}>
                           <p className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-surface-700 dark:text-surface-300 md:text-base">
                             {img.prompt}
                           </p>
