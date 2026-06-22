@@ -477,7 +477,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     const isV2 = postHeroStyle === 'v2';
     const containerClasses = isV2
       ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md'
-      : 'bg-white/45 text-surface-800 border-white/50 shadow-lg shadow-surface-900/10 backdrop-blur-xl dark:bg-slate-950/45 dark:text-slate-300 dark:border-white/10 dark:shadow-black/20';
+      : 'bg-slate-100/55 text-slate-700 border-white/60 shadow-lg shadow-slate-900/10 ring-1 ring-slate-900/5 backdrop-blur-xl dark:bg-slate-950/45 dark:text-slate-300 dark:border-white/10 dark:ring-white/5 dark:shadow-black/20';
     
     return (
       <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium py-3 px-6 rounded-full border transition-colors ${containerClasses}`}>
