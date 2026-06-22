@@ -510,6 +510,72 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     );
   };
 
+  const renderHeroDetailsPanel = () => (
+    <aside className="hidden lg:flex h-full flex-col justify-between rounded-[32px] border border-surface-200 bg-white p-6 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+      <div>
+        <div className="mb-5 flex flex-wrap gap-2">
+          {heroTools.map(tool => {
+            const info = getToolInfo(tool, settings?.toolDetails);
+            return (
+              <span key={tool} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-white shadow-md ${info.color}/90`}>
+                {info.logo && (
+                  <span className="relative flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/20 p-[1px]">
+                    <span className="relative h-full w-full overflow-hidden rounded-full bg-white shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                      <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
+                    </span>
+                  </span>
+                )}
+                {tool}
+              </span>
+            );
+          })}
+        </div>
+        <h2 className="mb-3 text-xl font-black tracking-tight text-surface-900 dark:text-white">Prompt details</h2>
+        <p className="mb-6 text-sm leading-relaxed text-surface-600 dark:text-surface-300">
+          {post.description}
+        </p>
+        <div className="space-y-3 rounded-2xl border border-surface-200 bg-surface-50 p-4 text-sm dark:border-surface-800 dark:bg-surface-950/60">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-surface-500 dark:text-surface-400">Prompts</span>
+            <span className="font-bold text-surface-900 dark:text-white">{post.images.length}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-surface-500 dark:text-surface-400">Views</span>
+            <span className="font-bold text-surface-900 dark:text-white">{(post.views || 0).toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-surface-500 dark:text-surface-400">Published</span>
+            <span className="font-bold text-surface-900 dark:text-white">{formatDate(post.createdAt)}</span>
+          </div>
+        </div>
+      </div>
+      <div className="mt-6 grid grid-cols-2 gap-3">
+        <button
+          onClick={() => toggleLike(post.id, initialPost)}
+          className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold transition-colors ${
+            post.likedByUser
+              ? 'border-red-500 bg-red-500 text-white'
+              : 'border-surface-200 bg-surface-50 text-surface-700 hover:border-red-400 hover:text-red-500 dark:border-surface-800 dark:bg-surface-950 dark:text-surface-200'
+          }`}
+        >
+          <Heart className={`h-4 w-4 ${post.likedByUser ? 'fill-current' : ''}`} />
+          {(post.likes || 0).toLocaleString()}
+        </button>
+        <button
+          onClick={handleBookmark}
+          className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold transition-colors ${
+            post.bookmarkedByUser
+              ? 'border-primary-500 bg-primary-500 text-white'
+              : 'border-surface-200 bg-surface-50 text-surface-700 hover:border-primary-400 hover:text-primary-500 dark:border-surface-800 dark:bg-surface-950 dark:text-surface-200'
+          }`}
+        >
+          <Bookmark className={`h-4 w-4 ${post.bookmarkedByUser ? 'fill-current' : ''}`} />
+          {post.bookmarkedByUser ? 'Saved' : 'Save'}
+        </button>
+      </div>
+    </aside>
+  );
+
   const renderHero = () => {
     switch (postHeroStyle) {
       case 'v2': // Immersive Blur Background
@@ -707,40 +773,43 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         );
       case 'v7': // Full Screen Hero
         return (
-          <div className="relative w-full h-[80vh] min-h-[600px] mb-12 rounded-[48px] overflow-hidden group">
-             <LoadingImage 
-              src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
-              alt={post.title} 
-              fill 
-              showSkeleton={showSkeleton}
-              className="object-cover transition-transform duration-1000 group-hover:scale-105" 
-              referrerPolicy="no-referrer"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-            <div className="absolute inset-0 flex flex-col items-center justify-end p-8 md:p-16 text-center">
-               <div className="flex flex-wrap gap-2 mb-6 justify-center">
-                 {heroTools.map(tool => {
-                   const info = getToolInfo(tool, settings?.toolDetails);
-                   return (
-                     <span key={tool} className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black text-white ${info.color}/80 backdrop-blur-md uppercase tracking-widest border border-white/20 shadow-xl`}>
-                       {info.logo && (
-                          <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                            <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                              <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
+          <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(320px,2fr)] lg:items-stretch">
+            <div className="relative h-[80vh] min-h-[600px] w-full overflow-hidden rounded-[48px] bg-black group lg:h-[640px] lg:min-h-0">
+              <LoadingImage
+                src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+                alt={post.title}
+                fill
+                showSkeleton={showSkeleton}
+                className="object-contain transition-transform duration-1000 group-hover:scale-105"
+                referrerPolicy="no-referrer"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+              <div className="absolute inset-0 flex flex-col items-center justify-end p-8 text-center md:p-16 lg:p-10">
+                 <div className="flex flex-wrap gap-2 mb-6 justify-center">
+                   {heroTools.map(tool => {
+                     const info = getToolInfo(tool, settings?.toolDetails);
+                     return (
+                       <span key={tool} className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black text-white ${info.color}/80 backdrop-blur-md uppercase tracking-widest border border-white/20 shadow-xl`}>
+                         {info.logo && (
+                            <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
+                              <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                                <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
+                              </div>
                             </div>
-                          </div>
-                        )}
-                       {tool}
-                     </span>
-                   );
-                 })}
-               </div>
-               <h1 className="text-4xl md:text-7xl font-black text-white mb-6 max-w-5xl leading-tight">
-                 {post.title}
-               </h1>
-               <div className="mb-10 scale-110">{renderMetaInfo()}</div>
+                          )}
+                         {tool}
+                       </span>
+                     );
+                   })}
+                 </div>
+                 <h1 className="text-4xl md:text-7xl lg:text-5xl font-black text-white mb-6 max-w-5xl leading-tight">
+                   {post.title}
+                 </h1>
+                 <div className="mb-10 scale-110 lg:scale-100">{renderMetaInfo()}</div>
+              </div>
             </div>
+            {renderHeroDetailsPanel()}
           </div>
         );
       case 'v8': // Floating Card
