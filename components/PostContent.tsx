@@ -924,10 +924,10 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Image + Prompt layout */}
-              <div className="grid grid-cols-1 items-start gap-0 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-6">
+              <div className="grid grid-cols-1 items-start gap-0 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:gap-5">
                 {/* Image — no cropping, natural display */}
-                <div className="relative self-start p-3 sm:p-5">
-                  <div className="relative mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-2 shadow-sm transition-transform duration-500 group-hover:scale-[1.005] dark:border-surface-700/70 dark:bg-surface-800/60 group/img">
+                <div className="relative self-start p-3 sm:p-4">
+                  <div className="relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-2 shadow-sm transition-transform duration-500 group-hover:scale-[1.005] dark:border-surface-700/70 dark:bg-surface-800/60 group/img">
                     <div className="relative flex w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-900" onClick={() => setLightboxImage({ url: img.url || '', index, tools: img.aiTools || [img.aiTool].filter(Boolean) })}>
                       <LoadingImg
                         src={img.url || 'https://picsum.photos/seed/placeholder/800/600'}
