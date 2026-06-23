@@ -3,6 +3,7 @@ import type { Post, Section, SiteSettings } from './types';
 import { seedPosts, seedSections } from './data/seedData';
 import { filterPostsForSection } from './sections';
 import { getThumbnailImageUrl } from './image-url';
+import { getAuthors } from './authors';
 
 const defaultSettings: SiteSettings = {
   siteTitle: 'AI PromptMatrix',
@@ -128,6 +129,8 @@ const defaultSettings: SiteSettings = {
       ],
     },
   ],
+  authors: [],
+  defaultAuthorId: 'editorial-team',
   shareSettings: {
     targets: ['whatsapp', 'x', 'instagram', 'copy'],
     position: 'floating-sidebar',
@@ -265,6 +268,8 @@ function sanitizeSettings(settings: SiteSettings): SiteSettings {
   return {
     ...settings,
     siteLogo: isInlineImage(settings.siteLogo) ? '' : settings.siteLogo,
+    authors: getAuthors(settings),
+    defaultAuthorId: settings.defaultAuthorId || 'editorial-team',
     homepageContent,
     keepExploring: {
       ...(defaultSettings.keepExploring || {}),
@@ -328,6 +333,7 @@ export function toPostSummary(post: Post): Post {
     bookmarkedBy: undefined,
     isPremium: post.isPremium,
     isTemplate: post.isTemplate,
+    authorId: post.authorId,
     status: post.status,
     visibility: post.visibility,
     createdAt: post.createdAt,

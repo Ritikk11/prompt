@@ -46,6 +46,19 @@ export interface Post {
   createdAt: string;
 }
 
+export interface Author {
+  id: string;
+  slug: string;
+  name: string;
+  role?: string;
+  bio?: string;
+  avatarUrl?: string;
+  website?: string;
+  active?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface PostComment {
   id: string;
   postId: string;
@@ -253,6 +266,8 @@ export interface SiteSettings {
     instagram?: string;
     youtube?: string;
   };
+  authors?: Author[];
+  defaultAuthorId?: string;
   shareSettings?: ShareSettings;
   keepExploring?: KeepExploringSettings;
   seoSettings?: SeoSettings;

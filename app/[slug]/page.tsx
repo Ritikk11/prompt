@@ -10,6 +10,7 @@ import FilterChipRail from '@/components/FilterChipRail';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import type { Post } from '@/lib/types';
 import { matchesCategory, matchesTag, matchesTool } from '@/lib/sections';
+import { getAuthorForPost } from '@/lib/authors';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -138,6 +139,7 @@ export default async function PostPage({ params }: Props) {
 
   let relatedPosts: Post[] = [];
   const [allPosts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
+  const author = getAuthorForPost(post, settings);
   relatedPosts = allPosts
     .filter(p =>
       p.id !== post.id &&
@@ -154,6 +156,22 @@ export default async function PostPage({ params }: Props) {
     '@type': schemaType,
     name: `How to use ${post.title}`,
     description: post.description,
+    author: {
+      '@type': 'Person',
+      name: author.name,
+      url: `${siteUrl}/author/${author.slug}`,
+      description: author.bio || undefined,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: settings.siteTitle || 'AI PromptMatrix',
+      logo: settings.siteLogo ? {
+        '@type': 'ImageObject',
+        url: settings.siteLogo,
+      } : undefined,
+    },
+    datePublished: post.createdAt,
+    dateModified: post.createdAt,
     step: [
       'Open the AI tool listed with the prompt.',
       'Copy the prompt.',
