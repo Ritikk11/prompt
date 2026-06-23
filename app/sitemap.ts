@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { fetchPosts, fetchSeoPages, fetchSections, fetchSettings } from '@/lib/data';
 import { Post, Section } from '@/lib/types';
+import { getAuthors } from '@/lib/authors';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,6 +66,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         });
       });
     }
+
+    getAuthors(settings).filter(author => author.active !== false).forEach(author => {
+      sitemapEntries.push({
+        url: `${baseUrl}/author/${author.slug}`,
+        lastModified: author.updatedAt ? new Date(author.updatedAt) : new Date(),
+        changeFrequency: 'monthly',
+        priority: 0.6,
+      });
+    });
 
     // Add Homepage Sections (if they have slugs)
     if (include.sections ?? true) {

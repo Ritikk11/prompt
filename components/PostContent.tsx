@@ -8,6 +8,7 @@ import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight,
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
 import { getDefaultImageModel, getToolInfo, getAllTools, getToolForImageModel } from '@/lib/constants';
+import { getAuthorForPost } from '@/lib/authors';
 import TemplatePrompt from '@/components/TemplatePrompt';
 import { createClient } from '@/lib/supabase-client';
 import { getAuthRedirectTo } from '@/lib/auth-redirect';
@@ -200,6 +201,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   };
 
   const heroTools = post ? getAllTools(post) : [];
+  const author = getAuthorForPost(post, settings);
   const primaryHeroToolInfo = heroTools.length > 0 ? getToolInfo(heroTools[0], settings?.toolDetails) : { color: '', logo: '', logoScale: undefined };
   const heroToolInfo = primaryHeroToolInfo;
   const heroToolName = heroTools.join(' + ');
@@ -510,6 +512,27 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     );
   };
 
+  const renderAuthorByline = () => (
+    <Link
+      href={`/author/${author.slug}`}
+      className="mb-6 inline-flex items-center gap-3 rounded-2xl border border-surface-200 bg-white/80 px-4 py-3 text-left shadow-sm transition-colors hover:border-primary-300 hover:bg-white dark:border-surface-800 dark:bg-surface-900/80 dark:hover:border-primary-500/50"
+    >
+      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary-500/10">
+        {author.avatarUrl ? (
+          <Image src={author.avatarUrl} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-sm font-black text-primary-500">
+            {author.name.slice(0, 1).toUpperCase()}
+          </div>
+        )}
+      </div>
+      <div>
+        <p className="text-xs font-bold text-surface-500 dark:text-surface-400">Reviewed by</p>
+        <p className="text-sm font-black text-surface-900 dark:text-white">{author.name}</p>
+      </div>
+    </Link>
+  );
+
   const renderHero = () => {
     switch (postHeroStyle) {
       case 'v2': // Immersive Blur Background
@@ -802,6 +825,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         return (
           <>
             <div className="mb-6 flex flex-col items-center text-center">
+              {renderAuthorByline()}
               <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 tracking-tight leading-tight max-w-4xl">{post.title}</h1>
               <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg max-w-3xl leading-relaxed mb-6">{post.description}</p>
               {renderMetaInfo()}
@@ -862,6 +886,11 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
       {/* Post Header & Hero styles */}
       {renderHero()}
+      {postHeroStyle !== 'v1' && (
+        <div className="flex justify-center">
+          {renderAuthorByline()}
+        </div>
+      )}
 
       <AdSlot placement="postTop" />
 
@@ -1131,6 +1160,26 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   <p>{(post.tags || []).slice(0, 4).map(tag => `#${tag}`).join(' ')}</p>
                 </div>
               </div>
+
+              <Link href={`/author/${author.slug}`} className="block rounded-2xl border border-surface-200 bg-white p-4 shadow-sm transition-colors hover:border-primary-300 dark:border-surface-800 dark:bg-surface-900 dark:hover:border-primary-500/50">
+                <p className="mb-3 text-sm font-black text-surface-900 dark:text-white">Author</p>
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-primary-500/10">
+                    {author.avatarUrl ? (
+                      <Image src={author.avatarUrl} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-sm font-black text-primary-500">
+                        {author.name.slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-surface-900 dark:text-white">{author.name}</p>
+                    {author.role && <p className="text-xs text-surface-500 dark:text-surface-400">{author.role}</p>}
+                  </div>
+                </div>
+                {author.bio && <p className="line-clamp-4 text-xs leading-relaxed text-surface-500 dark:text-surface-400">{author.bio}</p>}
+              </Link>
 
               {renderExploreAllPromptsBlock()}
 

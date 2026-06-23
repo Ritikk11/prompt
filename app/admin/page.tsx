@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
-import type { Post, Section, ImagePrompt, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, ShareTarget } from '@/lib/types';
+import type { Post, Section, ImagePrompt, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, ShareTarget, Author } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
@@ -29,6 +29,7 @@ import HomeSupportedTools from '@/components/HomeSupportedTools';
 import HomeCreativeDirections from '@/components/HomeCreativeDirections';
 import HomeCreatorFeedback from '@/components/HomeCreatorFeedback';
 import HomeNewsletter from '@/components/HomeNewsletter';
+import { getAuthors, normalizeAuthor, slugifyAuthor } from '@/lib/authors';
 
 
 
@@ -644,6 +645,7 @@ export default function Admin() {
   const [category, setCategory] = useState('');
   const [categoriesStr, setCategoriesStr] = useState('');
   const [selectedAiTools, setSelectedAiTools] = useState<string[]>([]);
+  const [authorId, setAuthorId] = useState(settings.defaultAuthorId || getAuthors(settings)[0]?.id || 'editorial-team');
   const [featured, setFeatured] = useState(false);
   const [status, setStatus] = useState<'published' | 'pending' | 'draft'>('published');
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
@@ -692,6 +694,8 @@ export default function Admin() {
   const [cardStyle, setCardStyle] = useState(settings.cardStyle || 'v1');
   const [badgeStyle, setBadgeStyle] = useState(settings.badgeStyle || 'v1');
   const [adminEmailsStr, setAdminEmailsStr] = useState((settings.adminEmails || []).join(', '));
+  const [authors, setAuthors] = useState<Author[]>(getAuthors(settings));
+  const [defaultAuthorId, setDefaultAuthorId] = useState(settings.defaultAuthorId || getAuthors(settings)[0]?.id || 'editorial-team');
   const [headerLinks, setHeaderLinks] = useState<NavLink[]>(settings.headerLinks || []);
   const [homeLinkBlocks, setHomeLinkBlocks] = useState<HomeLinkBlock[]>(settings.homeLinkBlocks || []);
   const [homepageContent, setHomepageContent] = useState<Record<string, HomepageBlockContent>>(settings.homepageContent || {});
@@ -841,6 +845,12 @@ export default function Admin() {
     if (settings.cardStyle !== undefined) setCardStyle(settings.cardStyle);
     if (settings.badgeStyle !== undefined) setBadgeStyle(settings.badgeStyle);
     if (settings.adminEmails !== undefined) setAdminEmailsStr((settings.adminEmails || []).join(', '));
+    if (settings.authors !== undefined || settings.defaultAuthorId !== undefined) {
+      const nextAuthors = getAuthors(settings);
+      setAuthors(nextAuthors);
+      setDefaultAuthorId(settings.defaultAuthorId || nextAuthors[0]?.id || 'editorial-team');
+      setAuthorId(current => current || settings.defaultAuthorId || nextAuthors[0]?.id || 'editorial-team');
+    }
     if (settings.headerLinks !== undefined) setHeaderLinks(settings.headerLinks || []);
     if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocks(settings.homeLinkBlocks || []);
     if (settings.homepageContent !== undefined) setHomepageContent(settings.homepageContent || {});
@@ -939,6 +949,7 @@ export default function Admin() {
 
   const resetForm = () => {
     setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setFaqs([]); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
+    setAuthorId(defaultAuthorId || authors[0]?.id || 'editorial-team');
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
     setStatus('published'); setVisibility('public');
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
@@ -959,6 +970,7 @@ export default function Admin() {
     setCategory(post.category || '');
     setCategoriesStr(post.categories?.join(', ') || '');
     setSelectedAiTools(post.aiTools || []);
+    setAuthorId(post.authorId || defaultAuthorId || authors[0]?.id || 'editorial-team');
     setFeatured(post.featured);
     setStatus(post.status || 'published');
     setVisibility(post.visibility || 'public');
@@ -1225,6 +1237,7 @@ export default function Admin() {
       category: category || undefined,
       categories: categoriesStr.split(',').map(c => c.trim()).filter(Boolean),
       aiTools: selectedAiTools,
+      authorId: authorId || defaultAuthorId || authors[0]?.id || 'editorial-team',
       featured,
       views: editingPost?.views || 0,
       likes: editingPost?.likes || 0,
@@ -1240,7 +1253,7 @@ export default function Admin() {
       if (editingPost) {
         await updatePost(post);
       } else {
-        await addPost(post);
+        await updatePost(post);
       }
 
     // Update custom sections - add/remove post from sections
@@ -1321,7 +1334,7 @@ export default function Admin() {
       visibility: 'private',
       createdAt: new Date().toISOString(),
     };
-    await addPost(duplicated);
+    await updatePost(duplicated);
   };
 
   const togglePostSelection = (id: string) => {
@@ -1514,6 +1527,18 @@ export default function Admin() {
   };
 
   const handleSaveSettings = () => {
+    const cleanAuthors = authors
+      .map(author => normalizeAuthor({
+        ...author,
+        slug: author.slug || slugifyAuthor(author.name),
+        updatedAt: new Date().toISOString(),
+      }))
+      .filter(author => author.name.trim());
+    const resolvedAuthors = cleanAuthors.length ? cleanAuthors : getAuthors({ ...settings, siteTitle, siteLogo });
+    const resolvedDefaultAuthorId = resolvedAuthors.some(author => author.id === defaultAuthorId)
+      ? defaultAuthorId
+      : resolvedAuthors[0]?.id;
+
     updateSettings({
       ...settings,
       siteTitle,
@@ -1526,6 +1551,8 @@ export default function Admin() {
       cardStyle,
       badgeStyle,
       adminEmails: adminEmailsStr.split(',').map(e => e.trim()).filter(Boolean),
+      authors: resolvedAuthors,
+      defaultAuthorId: resolvedDefaultAuthorId,
       headerLinks: cleanNavLinks(headerLinks),
       homeLinkBlocks: cleanHomeBlocks(homeLinkBlocks),
       homepageContent,
@@ -2191,6 +2218,19 @@ export default function Admin() {
                       <option value="public">Public</option>
                       <option value="private">Private</option>
                     </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium mb-1.5">Author / Reviewer</label>
+                    <select
+                      value={authorId}
+                      onChange={e => setAuthorId(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    >
+                      {authors.filter(author => author.active !== false).map(author => (
+                        <option key={author.id} value={author.id}>{author.name}{author.role ? ` - ${author.role}` : ''}</option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-xs text-surface-500">Shown as the public reviewer/byline and used in structured data.</p>
                   </div>
                 </div>
 
@@ -3292,6 +3332,113 @@ export default function Admin() {
                       className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
                       placeholder="admin@example.com, owner@example.com"
                     />
+                  </div>
+                  <div className="rounded-2xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-800/40">
+                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <h4 className="text-sm font-bold text-surface-900 dark:text-white">Authors / Reviewers</h4>
+                        <p className="mt-1 text-xs text-surface-500">Public bylines, author pages, and post structured data for trust signals.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const id = `author-${generateId()}`;
+                          setAuthors(prev => [...prev, {
+                            id,
+                            slug: id,
+                            name: 'New Author',
+                            role: 'Reviewer',
+                            bio: '',
+                            avatarUrl: '',
+                            website: '',
+                            active: true,
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                          }]);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-3 py-2 text-xs font-bold text-white hover:bg-primary-600"
+                      >
+                        <Plus className="h-3.5 w-3.5" /> Add Author
+                      </button>
+                    </div>
+                    <div className="space-y-3">
+                      {authors.map((author, index) => (
+                        <div key={author.id} className="rounded-xl border border-surface-200 bg-white p-3 dark:border-surface-700 dark:bg-surface-900">
+                          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                            <label className="flex items-center gap-2 text-xs font-bold text-surface-600 dark:text-surface-300">
+                              <input
+                                type="radio"
+                                checked={defaultAuthorId === author.id}
+                                onChange={() => setDefaultAuthorId(author.id)}
+                                className="h-4 w-4 text-primary-500"
+                              />
+                              Default author
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <label className="flex items-center gap-2 text-xs font-bold text-surface-500">
+                                <input
+                                  type="checkbox"
+                                  checked={author.active !== false}
+                                  onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, active: e.target.checked } : item))}
+                                  className="h-4 w-4 rounded text-primary-500"
+                                />
+                                Active
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (authors.length <= 1) return alert('Keep at least one author.');
+                                  setAuthors(prev => prev.filter((_, itemIndex) => itemIndex !== index));
+                                  if (defaultAuthorId === author.id) setDefaultAuthorId(authors.find((_, itemIndex) => itemIndex !== index)?.id || '');
+                                }}
+                                className="text-xs font-bold text-red-500 hover:text-red-600"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <input
+                              value={author.name}
+                              onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, name: e.target.value, slug: slugifyAuthor(e.target.value) } : item))}
+                              className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                              placeholder="Author name"
+                            />
+                            <input
+                              value={author.role || ''}
+                              onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, role: e.target.value } : item))}
+                              className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                              placeholder="Role, e.g. Editorial Reviewer"
+                            />
+                            <input
+                              value={author.slug}
+                              onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, slug: slugifyAuthor(e.target.value) } : item))}
+                              className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                              placeholder="author-url-slug"
+                            />
+                            <input
+                              value={author.avatarUrl || ''}
+                              onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, avatarUrl: e.target.value } : item))}
+                              className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                              placeholder="Avatar URL"
+                            />
+                            <input
+                              value={author.website || ''}
+                              onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, website: e.target.value } : item))}
+                              className="sm:col-span-2 rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                              placeholder="Website URL"
+                            />
+                            <textarea
+                              value={author.bio || ''}
+                              onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, bio: e.target.value } : item))}
+                              rows={3}
+                              className="sm:col-span-2 min-h-[96px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                              placeholder="Short author bio shown on post pages and /author profile."
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                   <div>
                 <label className="block text-xs font-medium text-surface-400 mb-1">Site Title</label>
