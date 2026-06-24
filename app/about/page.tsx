@@ -13,23 +13,37 @@ export async function generateMetadata() {
 export default async function About() {
   const settings = await fetchSettings();
   
+  const contactEmail = settings.contactEmail || 'support@aipromptmatrix.in';
   const defaultContent = `
 # About Us
 
-We are dedicated to building the largest and most curated collection of AI engineering prompts to inspire creators, designers, and developers. Our mission is to empower individuals and teams by providing the ultimate foundation for AI-driven art, code, and textual generation.
+AI PromptMatrix is a curated prompt library for creators who want practical AI image prompts, real examples, model notes, and reusable creative workflows in one place.
 
-AI PromptMatrix originated from the realization that crafting the perfect prompt is half the battle; an AI tool is only as powerful as the given instructions. We meticulously test, refine, and categorize every prompt, ensuring you can focus on building and creating rather than trial and error.
+The site exists because prompt discovery is often messy. A useful prompt is not just a block of text. It needs context: which tool it was made for, what kind of image it produced, what tags or style direction it belongs to, and how someone can adapt it without starting from zero.
 
 ## Our Mission
 
-To democratize access to high-quality AI prompts. We believe that AI should be accessible to everyone, and a major barrier to entry is knowing how to talk to these models. By providing a curated library of battle-tested prompts, we aim to bridge the gap between human imagination and AI execution.
+Our mission is to make AI image prompting easier to understand, test, and reuse. We organize prompts by tools, tags, sections, and creative direction so visitors can move from inspiration to generation quickly.
 
 ## What Makes Us Different
 
-- **Meticulously Curated**: We don't just accept any prompt. Every submission goes through a review process to ensure it produces consistent, high-quality results across different generations.
-- **Ready to Use**: Our prompts come with clear instructions, variable placeholders, and example outputs so you can integrate them into your workflow immediately.
-- **Cross-Model Compatibility**: Where possible, we optimize prompts to work across multiple models, or clearly label which specific version a prompt is designed for.
-- **Community Driven**: We foster a community of creators who share their knowledge, refine each other's prompts, and discover new use cases together.
+- **Curated structure:** Prompts are grouped by tool, topic, style, and use case instead of being left as a raw feed.
+- **Clear model context:** Prompt pages show the intended AI tool and model where available.
+- **Example-first browsing:** Visual examples help visitors understand what a prompt is trying to create before they copy it.
+- **Reusable workflows:** Many pages include prompt text, notes, tags, related prompts, and follow-up discovery blocks.
+- **Editorial review:** Public pages are organized and reviewed so the library remains useful for creators, not just searchable.
+
+## How We Review Content
+
+Before a prompt is featured or organized into a section, we look for clear titles, useful descriptions, visible example images, correct tool labels, and clean tags. We also remove or avoid content that is misleading, broken, unsafe, or too vague to help visitors.
+
+## Who This Site Is For
+
+AI PromptMatrix is built for creators, designers, social media editors, prompt writers, students, and anyone experimenting with AI image generation. The goal is not to promise identical outputs every time. AI tools can vary. The goal is to give you a stronger starting point and a clearer direction.
+
+## Contact
+
+For corrections, copyright concerns, partnerships, or general questions, contact us at **${contactEmail}**.
 `;
   const page = getStaticPageContent(settings, 'about', settings.pageAbout, defaultContent);
   if (!page.visible) notFound();

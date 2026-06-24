@@ -2,14 +2,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
-import type { Post, Section, ImagePrompt, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, ShareTarget, Author } from '@/lib/types';
+import type { Post, Section, ImagePrompt, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, ShareTarget, Author, DiscoveryPageSettings } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
   Plus, Trash2, Edit3, Eye, EyeOff, ChevronUp, ChevronDown,
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload,
   Settings, Check, Search, RotateCcw, GripVertical, Image as ImageIcon,
-  Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3
+  Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass
 } from 'lucide-react';
 
 import Image from 'next/image';
@@ -34,11 +34,11 @@ import { getAuthors, normalizeAuthor, slugifyAuthor } from '@/lib/authors';
 
 
 type AdminTab = 'dashboard' | 'posts' | 'sections' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages';
-type SettingsSubTab = 'general' | 'homepage' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share';
+type SettingsSubTab = 'general' | 'homepage' | 'explore' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share';
 type SectionLocationFilter = 'homepage' | 'header' | 'footer' | 'all';
 
 const adminTabKeys: AdminTab[] = ['dashboard', 'posts', 'sections', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages'];
-const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share'];
+const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'explore', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share'];
 const sectionLocationKeys: SectionLocationFilter[] = ['homepage', 'header', 'footer', 'all'];
 
 function parseAdminTab(value: string | null): AdminTab {
@@ -188,6 +188,26 @@ const defaultKeepExploring: Required<KeepExploringSettings> = {
   ],
   ctaLabel: 'Open prompt library',
   ctaHref: '/explore',
+};
+
+const defaultDiscoveryPages: Required<DiscoveryPageSettings> = {
+  exploreBadge: 'Prompt Library',
+  exploreTitle: 'Explore curated AI image prompts',
+  exploreDescription: 'Browse %count% prompt collections by model, visual direction, and creative use case.',
+  toolTitleTemplate: '%tool% Prompts',
+  toolDescriptionTemplate: 'Browse %count% prompt collections organized for %tool%.',
+  tagTitleTemplate: '%tag% Prompts',
+  tagDescriptionTemplate: 'Showing %count% collections tagged with "%tag%".',
+  sectionDescriptionTemplate: 'Discover a curated collection of %count% prompts.',
+  exploreRailItems: [],
+  toolRailItems: [],
+  tagRailItems: [],
+  sectionRailItems: [],
+  useCustomRailOnExplore: true,
+  useCustomRailOnTools: false,
+  useCustomRailOnTags: false,
+  useCustomRailOnSections: false,
+  showHeroStats: true,
 };
 
 function cleanNavLinks(links: NavLink[] = []) {
@@ -699,6 +719,10 @@ export default function Admin() {
   const [headerLinks, setHeaderLinks] = useState<NavLink[]>(settings.headerLinks || []);
   const [homeLinkBlocks, setHomeLinkBlocks] = useState<HomeLinkBlock[]>(settings.homeLinkBlocks || []);
   const [homepageContent, setHomepageContent] = useState<Record<string, HomepageBlockContent>>(settings.homepageContent || {});
+  const [discoveryPages, setDiscoveryPages] = useState<DiscoveryPageSettings>({
+    ...defaultDiscoveryPages,
+    ...(settings.discoveryPages || {}),
+  });
   const [keepExploring, setKeepExploring] = useState<KeepExploringSettings>({
     ...defaultKeepExploring,
     ...(settings.keepExploring || {}),
@@ -709,8 +733,11 @@ export default function Admin() {
   );
   const [exploreFilterTags, setExploreFilterTags] = useState((settings.exploreFilterTags || []).join(', '));
   const [exploreFilterItems, setExploreFilterItems] = useState<FilterRailItem[]>(
-    settings.exploreFilterItems || tagsToRailItems(settings.exploreFilterTags || [])
+    settings.discoveryPages?.exploreRailItems || settings.exploreFilterItems || tagsToRailItems(settings.exploreFilterTags || [])
   );
+  const [toolRailItems, setToolRailItems] = useState<FilterRailItem[]>(settings.discoveryPages?.toolRailItems || []);
+  const [tagRailItems, setTagRailItems] = useState<FilterRailItem[]>(settings.discoveryPages?.tagRailItems || []);
+  const [sectionRailItems, setSectionRailItems] = useState<FilterRailItem[]>(settings.discoveryPages?.sectionRailItems || []);
   const [creativeDirectionItems, setCreativeDirectionItems] = useState<FilterRailItem[]>(
     settings.creativeDirectionItems || []
   );
@@ -854,6 +881,7 @@ export default function Admin() {
     if (settings.headerLinks !== undefined) setHeaderLinks(settings.headerLinks || []);
     if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocks(settings.homeLinkBlocks || []);
     if (settings.homepageContent !== undefined) setHomepageContent(settings.homepageContent || {});
+    if (settings.discoveryPages !== undefined) setDiscoveryPages({ ...defaultDiscoveryPages, ...(settings.discoveryPages || {}) });
     if (settings.keepExploring !== undefined) {
       setKeepExploring({
         ...defaultKeepExploring,
@@ -865,9 +893,12 @@ export default function Admin() {
       setHomepageBlockOrder((settings.homepageBlockOrder || defaultHomepageBlockOrder).map(normalizeHomepageOrderToken));
     }
     if (settings.exploreFilterTags !== undefined) setExploreFilterTags((settings.exploreFilterTags || []).join(', '));
-    if (settings.exploreFilterItems !== undefined || settings.exploreFilterTags !== undefined) {
-      setExploreFilterItems(settings.exploreFilterItems || tagsToRailItems(settings.exploreFilterTags || []));
+    if (settings.discoveryPages?.exploreRailItems !== undefined || settings.exploreFilterItems !== undefined || settings.exploreFilterTags !== undefined) {
+      setExploreFilterItems(settings.discoveryPages?.exploreRailItems || settings.exploreFilterItems || tagsToRailItems(settings.exploreFilterTags || []));
     }
+    if (settings.discoveryPages?.toolRailItems !== undefined) setToolRailItems(settings.discoveryPages.toolRailItems || []);
+    if (settings.discoveryPages?.tagRailItems !== undefined) setTagRailItems(settings.discoveryPages.tagRailItems || []);
+    if (settings.discoveryPages?.sectionRailItems !== undefined) setSectionRailItems(settings.discoveryPages.sectionRailItems || []);
     if (settings.creativeDirectionItems !== undefined) setCreativeDirectionItems(settings.creativeDirectionItems || []);
     if (settings.footerLinkGroups !== undefined) setFooterLinkGroups(settings.footerLinkGroups || defaultFooterLinkGroups);
     if (settings.imgbbApiKey !== undefined) setImgbbApiKey(settings.imgbbApiKey);
@@ -928,6 +959,12 @@ export default function Admin() {
   const autoExploreItems = getAutoExploreItems(posts);
   const savedExploreItems = cleanRailItems(exploreFilterItems);
   const liveExploreItems = savedExploreItems.length > 0 ? savedExploreItems : autoExploreItems;
+  const savedToolRailItems = cleanRailItems(toolRailItems);
+  const liveToolRailItems = savedToolRailItems.length > 0 ? savedToolRailItems : autoExploreItems;
+  const savedTagRailItems = cleanRailItems(tagRailItems);
+  const liveTagRailItems = savedTagRailItems.length > 0 ? savedTagRailItems : autoExploreItems;
+  const savedSectionRailItems = cleanRailItems(sectionRailItems);
+  const liveSectionRailItems = savedSectionRailItems.length > 0 ? savedSectionRailItems : autoExploreItems;
   const autoCreativeItems = getAutoCreativeItems(posts);
   const savedCreativeItems = cleanRailItems(creativeDirectionItems);
   const liveCreativeItems = savedCreativeItems.length > 0 ? savedCreativeItems : autoCreativeItems;
@@ -1491,18 +1528,28 @@ export default function Admin() {
     setSectionPostSearch('');
   };
 
-  const updateRailItem = (list: 'explore' | 'creative', index: number, field: keyof FilterRailItem, value: string) => {
-    const setter = list === 'explore' ? setExploreFilterItems : setCreativeDirectionItems;
+  type RailListKey = 'explore' | 'tool' | 'tag' | 'section' | 'creative';
+
+  const getRailSetter = (list: RailListKey) => {
+    if (list === 'explore') return setExploreFilterItems;
+    if (list === 'tool') return setToolRailItems;
+    if (list === 'tag') return setTagRailItems;
+    if (list === 'section') return setSectionRailItems;
+    return setCreativeDirectionItems;
+  };
+
+  const updateRailItem = (list: RailListKey, index: number, field: keyof FilterRailItem, value: string) => {
+    const setter = getRailSetter(list);
     setter(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
   };
 
-  const addRailItem = (list: 'explore' | 'creative') => {
-    const setter = list === 'explore' ? setExploreFilterItems : setCreativeDirectionItems;
+  const addRailItem = (list: RailListKey) => {
+    const setter = getRailSetter(list);
     setter(prev => [...prev, { label: '', type: 'tag', value: '' }]);
   };
 
-  const removeRailItem = (list: 'explore' | 'creative', index: number) => {
-    const setter = list === 'explore' ? setExploreFilterItems : setCreativeDirectionItems;
+  const removeRailItem = (list: RailListKey, index: number) => {
+    const setter = getRailSetter(list);
     setter(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -1556,6 +1603,13 @@ export default function Admin() {
       headerLinks: cleanNavLinks(headerLinks),
       homeLinkBlocks: cleanHomeBlocks(homeLinkBlocks),
       homepageContent,
+      discoveryPages: {
+        ...discoveryPages,
+        exploreRailItems: cleanRailItems(exploreFilterItems),
+        toolRailItems: cleanRailItems(toolRailItems),
+        tagRailItems: cleanRailItems(tagRailItems),
+        sectionRailItems: cleanRailItems(sectionRailItems),
+      },
       keepExploring: cleanKeepExploring(keepExploring),
       homepageBlockOrder: orderedHomepageItems,
       exploreFilterTags: cleanCommaList(exploreFilterTags),
@@ -3290,11 +3344,12 @@ export default function Admin() {
 
       {/* ===== SETTINGS TAB ===== */}
       {tab === 'settings' && (
-        <div className={settingsSubTab === 'homepage' ? 'max-w-7xl' : 'max-w-3xl'}>
+        <div className={settingsSubTab === 'homepage' || settingsSubTab === 'explore' ? 'max-w-7xl' : 'max-w-3xl'}>
           <div className="flex gap-2 mb-6 overflow-x-auto pb-1 border-b border-surface-200 dark:border-surface-800">
             {[
               { id: 'general', label: 'General' },
               { id: 'homepage', label: 'Homepage' },
+              { id: 'explore', label: 'Explore' },
               { id: 'navigation', label: 'Navigation' },
               { id: 'footer', label: 'Footer Links' },
               { id: 'features', label: 'Features' },
@@ -3652,6 +3707,185 @@ export default function Admin() {
           </div>
           )}
 
+          {settingsSubTab === 'explore' && (
+            <div className="space-y-6">
+              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <Compass className="w-4 h-4 text-primary-500" /> Explore Page Hero
+                </h3>
+                <p className="text-xs text-surface-500 mb-4">
+                  Controls the large hero used by Explore, tag, tool, and section listing pages. Use tokens like %count%, %tool%, %tag%, and %section%.
+                </p>
+                <div className="grid grid-cols-1 gap-3">
+                  <input
+                    value={discoveryPages.exploreBadge || ''}
+                    onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreBadge: e.target.value }))}
+                    className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                    placeholder="Explore badge"
+                  />
+                  <input
+                    value={discoveryPages.exploreTitle || ''}
+                    onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreTitle: e.target.value }))}
+                    className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                    placeholder="Explore page heading"
+                  />
+                  <textarea
+                    value={discoveryPages.exploreDescription || ''}
+                    onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreDescription: e.target.value }))}
+                    rows={2}
+                    className="min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                    placeholder="Explore page description"
+                  />
+                  <label className="flex items-center gap-2 rounded-xl bg-surface-50 px-3 py-2 text-sm font-medium dark:bg-surface-800">
+                    <input
+                      type="checkbox"
+                      checked={discoveryPages.showHeroStats ?? true}
+                      onChange={e => setDiscoveryPages(prev => ({ ...prev, showHeroStats: e.target.checked }))}
+                      className="h-4 w-4 rounded text-primary-500"
+                    />
+                    Show hero stat boxes
+                  </label>
+                </div>
+              </div>
+
+              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <LayoutGrid className="w-4 h-4 text-primary-500" /> Listing Page Templates
+                </h3>
+                <p className="text-xs text-surface-500 mb-4">
+                  These make tag, tool, and section pages use the same hero style while still showing page-specific text.
+                </p>
+                <div className="grid grid-cols-1 gap-3">
+                  <input value={discoveryPages.toolTitleTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, toolTitleTemplate: e.target.value }))} className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Tool title template: %tool% Prompts" />
+                  <textarea value={discoveryPages.toolDescriptionTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, toolDescriptionTemplate: e.target.value }))} rows={2} className="min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Tool description template" />
+                  <input value={discoveryPages.tagTitleTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, tagTitleTemplate: e.target.value }))} className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Tag title template: %tag% Prompts" />
+                  <textarea value={discoveryPages.tagDescriptionTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, tagDescriptionTemplate: e.target.value }))} rows={2} className="min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Tag description template" />
+                  <textarea value={discoveryPages.sectionDescriptionTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, sectionDescriptionTemplate: e.target.value }))} rows={2} className="min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Section description template" />
+                </div>
+              </div>
+
+              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
+                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-primary-500" /> Page-Specific Custom Rails
+                </h3>
+                <p className="text-xs text-surface-500 mb-4">
+                  Each page type has its own rail. Turn it on for the page type, then set the chips that should appear there.
+                </p>
+                <div className="mb-4 grid gap-2 sm:grid-cols-2">
+                  {[
+                    ['useCustomRailOnExplore', 'Use on Explore'],
+                    ['useCustomRailOnTools', 'Use on AI tool pages'],
+                    ['useCustomRailOnTags', 'Use on tag pages'],
+                    ['useCustomRailOnSections', 'Use on section pages'],
+                  ].map(([key, label]) => (
+                    <label key={key} className="flex items-center gap-2 rounded-xl bg-surface-50 px-3 py-2 text-sm font-medium dark:bg-surface-800">
+                      <input
+                        type="checkbox"
+                        checked={Boolean((discoveryPages as any)[key])}
+                        onChange={e => setDiscoveryPages(prev => ({ ...prev, [key]: e.target.checked }))}
+                        className="h-4 w-4 rounded text-primary-500"
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+                <div className="space-y-4">
+                  {[
+                    {
+                      key: 'explore' as RailListKey,
+                      title: 'Explore page rail',
+                      description: 'Used on /explore.',
+                      items: exploreFilterItems,
+                      liveItems: liveExploreItems,
+                      savedItems: savedExploreItems,
+                      setItems: setExploreFilterItems,
+                    },
+                    {
+                      key: 'tool' as RailListKey,
+                      title: 'AI tool page rail',
+                      description: 'Used on /tool/[tool] pages.',
+                      items: toolRailItems,
+                      liveItems: liveToolRailItems,
+                      savedItems: savedToolRailItems,
+                      setItems: setToolRailItems,
+                    },
+                    {
+                      key: 'tag' as RailListKey,
+                      title: 'Tag page rail',
+                      description: 'Used on /tag/[tag] pages.',
+                      items: tagRailItems,
+                      liveItems: liveTagRailItems,
+                      savedItems: savedTagRailItems,
+                      setItems: setTagRailItems,
+                    },
+                    {
+                      key: 'section' as RailListKey,
+                      title: 'Section page rail',
+                      description: 'Used on custom, popular, latest, and other /section/[slug] pages.',
+                      items: sectionRailItems,
+                      liveItems: liveSectionRailItems,
+                      savedItems: savedSectionRailItems,
+                      setItems: setSectionRailItems,
+                    },
+                  ].map(rail => (
+                    <div key={rail.key} className="rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-800/50">
+                      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-black">{rail.title}</p>
+                          <p className="text-xs text-surface-500">{rail.description}</p>
+                        </div>
+                        <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-surface-500 ring-1 ring-surface-200 dark:bg-surface-900 dark:ring-surface-700">
+                          {rail.savedItems.length > 0 ? `${rail.savedItems.length} custom chips` : 'Auto fallback preview'}
+                        </span>
+                      </div>
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-primary-600 px-3 py-1.5 text-xs font-black text-white">All</span>
+                        {rail.liveItems.slice(0, 12).map(item => (
+                          <span key={`${rail.key}:${item.type}:${item.value}`} className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-surface-700 ring-1 ring-surface-200 dark:bg-surface-900 dark:text-surface-100 dark:ring-surface-700">
+                            {item.label}
+                          </span>
+                        ))}
+                        {rail.liveItems.length > 12 && (
+                          <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-surface-500 ring-1 ring-surface-200 dark:bg-surface-900 dark:ring-surface-700">
+                            +{rail.liveItems.length - 12} more
+                          </span>
+                        )}
+                      </div>
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        <button onClick={() => rail.setItems(autoExploreItems)} className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-2 text-xs font-bold text-white hover:bg-primary-700">
+                          <Check className="h-3.5 w-3.5" /> Fill from current posts
+                        </button>
+                        <button onClick={() => rail.setItems([])} className="inline-flex items-center gap-2 rounded-lg bg-surface-200 px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-300 dark:bg-surface-700 dark:text-surface-100">
+                          <RotateCcw className="h-3.5 w-3.5" /> Clear custom chips
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        {rail.items.map((item, index) => (
+                          <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_140px_1fr_auto]">
+                            <input value={item.label} onChange={e => updateRailItem(rail.key, index, 'label', e.target.value)} className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm" placeholder="Visible title, e.g. Anime" />
+                            <select value={item.type} onChange={e => updateRailItem(rail.key, index, 'type', e.target.value)} className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm">
+                              <option value="tag">Tag</option>
+                              <option value="tool">AI Tool</option>
+                              <option value="category">Category</option>
+                            </select>
+                            <input value={item.value} onChange={e => updateRailItem(rail.key, index, 'value', e.target.value)} className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm" placeholder="Match value, e.g. anime" />
+                            <button onClick={() => removeRailItem(rail.key, index)} className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm">Remove</button>
+                          </div>
+                        ))}
+                        <button onClick={() => addRailItem(rail.key)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-surface-900 hover:bg-surface-100 dark:hover:bg-surface-700 text-sm font-medium">
+                          <Plus className="w-4 h-4" /> Add Chip
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={handleSaveSettings} className="mt-5 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors">
+                  <Save className="w-4 h-4" /> Save Explore Settings
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Ad Spaces Management */}
           {settingsSubTab === 'navigation' && (
             <div className="space-y-6">
@@ -3798,7 +4032,6 @@ export default function Admin() {
                   </label>
                 </div>
               </div>
-
               <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
@@ -4208,106 +4441,6 @@ export default function Admin() {
                     </div>
                   )}
                 </div>
-              </div>
-
-              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-primary-500" /> Explore Filter Rail
-                </h3>
-                <p className="text-xs text-surface-500 mb-4">
-                  Add custom chips for the Explore page. The title is what users see; the match value is the real post tag, category, or AI tool to filter by.
-                </p>
-                <div className="mb-4 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
-                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-xs font-bold uppercase tracking-wide text-surface-500">Current live rail</p>
-                    <span className="text-[11px] font-semibold text-surface-500">
-                      {savedExploreItems.length > 0 ? 'Using saved custom chips' : 'Using auto chips from posts'}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="rounded-full bg-primary-600 px-3 py-1.5 text-xs font-black text-white">All</span>
-                    {liveExploreItems.slice(0, 14).map(item => (
-                      <span key={`${item.type}:${item.value}`} className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-surface-700 ring-1 ring-surface-200 dark:bg-surface-900 dark:text-surface-100 dark:ring-surface-700">
-                        {item.label}
-                      </span>
-                    ))}
-                    {liveExploreItems.length > 14 && (
-                      <span className="rounded-full bg-surface-200 px-3 py-1.5 text-xs font-bold text-surface-600 dark:bg-surface-700 dark:text-surface-200">
-                        +{liveExploreItems.length - 14} more
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button
-                      onClick={() => setExploreFilterItems(autoExploreItems)}
-                      className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-2 text-xs font-bold text-white hover:bg-primary-700"
-                    >
-                      <Check className="h-3.5 w-3.5" /> Use current auto chips
-                    </button>
-                    {savedExploreItems.length > 0 && (
-                      <button
-                        onClick={() => setExploreFilterItems([])}
-                        className="inline-flex items-center gap-2 rounded-lg bg-surface-200 px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-300 dark:bg-surface-700 dark:text-surface-100 dark:hover:bg-surface-600"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5" /> Reset to auto
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {exploreFilterItems.length === 0 && (
-                    <div className="rounded-lg border border-dashed border-surface-300 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/40 p-4 text-xs text-surface-500">
-                      No saved custom chips. The live rail above is auto-generated from current AI tools and common post tags.
-                    </div>
-                  )}
-                  {exploreFilterItems.map((item, index) => (
-                    <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_140px_1fr_auto]">
-                      <input
-                        value={item.label}
-                        onChange={e => updateRailItem('explore', index, 'label', e.target.value)}
-                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                        placeholder="Visible title, e.g. Anime"
-                      />
-                      <select
-                        value={item.type}
-                        onChange={e => updateRailItem('explore', index, 'type', e.target.value)}
-                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                      >
-                        <option value="tag">Tag</option>
-                        <option value="tool">AI Tool</option>
-                        <option value="category">Category</option>
-                      </select>
-                      <input
-                        value={item.value}
-                        onChange={e => updateRailItem('explore', index, 'value', e.target.value)}
-                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                        placeholder="Match value, e.g. anime"
-                      />
-                      <button
-                        onClick={() => removeRailItem('explore', index)}
-                        className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    onClick={() => addRailItem('explore')}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-medium"
-                  >
-                    <Plus className="w-4 h-4" /> Add Explore Chip
-                  </button>
-                </div>
-                <details className="mt-4 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50 p-3">
-                  <summary className="cursor-pointer text-xs font-semibold text-surface-600 dark:text-surface-300">Legacy comma tags</summary>
-                  <p className="mt-2 text-[11px] text-surface-500">Fallback only. New custom chips above are preferred.</p>
-                  <input
-                    value={exploreFilterTags}
-                    onChange={e => setExploreFilterTags(e.target.value)}
-                    className="mt-2 w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                    placeholder="video, character, anime, realistic, illustration"
-                  />
-                </details>
               </div>
 
               <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">

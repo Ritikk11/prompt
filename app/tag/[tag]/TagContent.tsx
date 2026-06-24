@@ -2,12 +2,14 @@
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import SkeletonPostCard from '@/components/SkeletonPostCard';
 import { getGridClasses } from '@/lib/utils';
 import type { Post, SiteSettings } from '@/lib/types';
 import AdSlot from '@/components/AdSlot';
 
 import PostCard from '@/components/PostCard';
+import FilterChipRail from '@/components/FilterChipRail';
+import DiscoveryPageHero from '@/components/DiscoveryPageHero';
+import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
 
 export default function TagContent({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
   const params = useParams();
@@ -18,6 +20,9 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
   const [filterTool, setFilterTool] = useState('all');
   const showAdvancedFilters = settings.features?.advancedFiltering;
   const showTrending = settings.features?.trendingAlgorithm;
+  const discovery = settings.discoveryPages || {};
+  const useCustomRail = Boolean(discovery.useCustomRailOnTags);
+  const railItems = discovery.tagRailItems || [];
 
   // Filter public posts that include the tag (case insensitive)
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
@@ -26,8 +31,10 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
   );
 
   const tools = ['all', ...Array.from(new Set(filtered.flatMap(p => p.images.map(i => i.aiTool))))];
+  const heroTitle = fillDiscoveryTemplate(discovery.tagTitleTemplate || '%tag% Prompts', { tag, count: filtered.length });
+  const heroDescription = fillDiscoveryTemplate(discovery.tagDescriptionTemplate || 'Showing %count% collections tagged with "%tag%".', { tag, count: filtered.length });
 
-  if (showAdvancedFilters && filterTool !== 'all') {
+  if (!useCustomRail && showAdvancedFilters && filterTool !== 'all') {
     filtered = filtered.filter(p => p.aiTools?.includes(filterTool) || p.images.some(i => i.aiTools ? i.aiTools.includes(filterTool) : i.aiTool === filterTool));
   }
   
@@ -52,17 +59,15 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
           <span className="text-surface-900 dark:text-surface-100 font-medium capitalize">Tag: {tag}</span>
         </div>
 
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-3 capitalize">
-          {tag} <span className="text-surface-400 font-medium">Prompts</span>
-        </h1>
-        <p className="text-surface-500 dark:text-surface-400">
-          Showing {filtered.length} {filtered.length === 1 ? 'collection' : 'collections'} tagged with &quot;{tag}&quot;
-        </p>
-      </div>
+      <DiscoveryPageHero
+        badge="Tag"
+        title={heroTitle}
+        description={heroDescription}
+        stats={(discovery.showHeroStats ?? true) ? [{ label: 'Prompts', value: filtered.length }] : []}
+      />
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-8 p-4 rounded-xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
+      {!useCustomRail && <div className="flex flex-wrap gap-3 mb-8 p-4 rounded-xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-surface-400 uppercase tracking-wide">Sort:</span>
           <div className="flex rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700">
@@ -101,10 +106,19 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
             </select>
           </div>
         )}
-      </div>
+      </div>}
 
       {/* Grid */}
-      <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+      {useCustomRail ? (
+        <FilterChipRail
+          posts={filtered}
+          items={railItems}
+          tools={[]}
+          tags={[]}
+          settings={settings}
+          renderGrid
+        />
+      ) : <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
         {filtered.map((post, i) => (
           <React.Fragment key={post.id}>
             <div className="mb-1 inline-block w-full break-inside-avoid">
@@ -113,7 +127,7 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
             <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
           </React.Fragment>
         ))}
-      </div>
+      </div>}
 
       {filtered.length === 0 && (
         <div className="text-center py-20">

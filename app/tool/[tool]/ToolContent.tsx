@@ -1,15 +1,17 @@
 'use client';
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getGridClasses } from '@/lib/utils';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 import AdSlot from '@/components/AdSlot';
 import { getAllTools, getToolInfo } from '@/lib/constants';
 
 import PostCard from '@/components/PostCard';
+import FilterChipRail from '@/components/FilterChipRail';
+import DiscoveryPageHero from '@/components/DiscoveryPageHero';
+import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
 
 const toolHeroCopy: Record<string, string> = {
   chatgpt: 'Image prompts built for strong composition, clear subject control, and reliable GPT Image results.',
@@ -27,11 +29,18 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'trending'>('latest');
   const showTrending = settings.features?.trendingAlgorithm;
   const toolInfo = getToolInfo(tool, settings.toolDetails);
+  const discovery = settings.discoveryPages || {};
+  const useCustomRail = Boolean(discovery.useCustomRailOnTools);
+  const railItems = discovery.toolRailItems || [];
 
   // Filter public posts that include the aiTool (case insensitive)
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
   let filtered = publicPosts.filter(p => getAllTools(p).some(item => item.toLowerCase() === tool.toLowerCase()));
-  const heroCopy = toolHeroCopy[tool.toLowerCase()] || `Browse ${filtered.length} ${filtered.length === 1 ? 'prompt collection' : 'prompt collections'} organized for ${tool}.`;
+  const heroCopy = fillDiscoveryTemplate(
+    discovery.toolDescriptionTemplate || toolHeroCopy[tool.toLowerCase()] || `Browse %count% prompt collections organized for %tool%.`,
+    { tool, count: filtered.length }
+  );
+  const heroTitle = fillDiscoveryTemplate(discovery.toolTitleTemplate || '%tool% Prompts', { tool, count: filtered.length });
   
   if (sortBy === 'latest') {
     filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -54,34 +63,16 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
           <span className="text-surface-900 dark:text-surface-100 font-medium capitalize">{tool}</span>
         </div>
 
-      <section className="mb-10 overflow-hidden rounded-[30px] border border-surface-200 bg-white shadow-[0_22px_70px_rgba(15,23,42,0.08)] dark:border-surface-800 dark:bg-surface-950">
-        <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center lg:p-10">
-          <div>
-            <div className="mb-5 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-primary-100 text-primary-500 dark:bg-primary-900/30">
-              {toolInfo.logo ? (
-                <span className="relative h-11 w-11 overflow-hidden rounded-full bg-white shadow-sm" style={toolInfo.logoScale ? { transform: `scale(${toolInfo.logoScale})` } : undefined}>
-                  <Image src={toolInfo.logo} alt={`${tool} logo`} fill sizes="44px" className="rounded-full object-contain" referrerPolicy="no-referrer" />
-                </span>
-              ) : (
-                <Sparkles className="w-8 h-8" />
-              )}
-            </div>
-            <h1 className="text-4xl md:text-5xl font-black mb-4 capitalize text-surface-950 dark:text-white">
-              {tool} <span className="text-surface-400 font-medium">Prompts</span>
-            </h1>
-            <p className="max-w-2xl text-lg leading-8 text-surface-600 dark:text-surface-300">
-              {heroCopy}
-            </p>
-          </div>
-          <Link href="/explore" className="inline-flex items-center justify-center gap-2 rounded-full bg-surface-950 px-5 py-3 text-sm font-black text-white transition hover:-translate-y-0.5 dark:bg-white dark:text-surface-950">
-            Browse all prompts
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
+      <DiscoveryPageHero
+        badge={tool}
+        title={heroTitle}
+        description={heroCopy}
+        icon={toolInfo.logo ? { logo: toolInfo.logo, label: tool, logoScale: toolInfo.logoScale } : <Sparkles className="h-4 w-4" />}
+        stats={(discovery.showHeroStats ?? true) ? [{ label: 'Prompts', value: filtered.length }] : []}
+      />
 
       {/* Filters */}
-      <div className="mb-8 flex flex-wrap gap-3">
+      {!useCustomRail && <div className="mb-8 flex flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <div className="flex rounded-2xl overflow-hidden border border-surface-200 bg-surface-50 p-1 dark:border-surface-800 dark:bg-surface-900">
             <button
@@ -106,10 +97,19 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
             )}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Grid */}
-      <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+      {useCustomRail ? (
+        <FilterChipRail
+          posts={filtered}
+          items={railItems}
+          tools={[]}
+          tags={[]}
+          settings={settings}
+          renderGrid
+        />
+      ) : <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
         {filtered.map((post, i) => (
           <React.Fragment key={post.id}>
             <div className="mb-4 sm:mb-6 inline-block w-full break-inside-avoid">
@@ -118,7 +118,7 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
             <AdSlot placement="inFeed" inFeedIndex={i} className="mb-4 sm:mb-6 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
           </React.Fragment>
         ))}
-      </div>
+      </div>}
 
       {filtered.length === 0 && (
         <div className="text-center py-20">

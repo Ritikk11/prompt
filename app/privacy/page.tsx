@@ -11,6 +11,7 @@ export async function generateMetadata() {
 
 export default async function PrivacyPolicy() {
   const settings = await fetchSettings();
+  const contactEmail = settings.contactEmail || 'support@aipromptmatrix.in';
   
   const defaultContent = `
 # Privacy Policy
@@ -41,7 +42,7 @@ We use "cookies" to collect information and improve our services. You can instru
 
 ## 4. Contact Us
 
-If you have any questions about this Privacy Policy, please contact us.
+If you have any questions about this Privacy Policy, please contact us at ${contactEmail}.
 `;
   const page = getStaticPageContent(settings, 'privacy', settings.pagePrivacy, defaultContent);
   if (!page.visible) notFound();
