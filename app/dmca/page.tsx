@@ -14,6 +14,7 @@ export async function generateMetadata() {
 export default async function Dmca() {
   const settings = await fetchSettings();
   const siteTitle = settings.siteTitle || 'Our Platform';
+  const contactEmail = settings.contactEmail || 'support@aipromptmatrix.in';
   
   const defaultContent = `
 # DMCA Notice
@@ -40,7 +41,7 @@ Deliver this Notice, with all items completed, to our designated Copyright Agent
 
 **Copyright Agent**
 ${siteTitle} Legal Department
-Email: dmca@${typeof window !== 'undefined' ? window.location.hostname : 'example.com'}
+Email: ${contactEmail}
 
 ## Counter-Notice
 

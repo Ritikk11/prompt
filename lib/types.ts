@@ -235,6 +235,26 @@ export interface KeepExploringSettings {
   ctaHref?: string;
 }
 
+export interface DiscoveryPageSettings {
+  exploreBadge?: string;
+  exploreTitle?: string;
+  exploreDescription?: string;
+  toolTitleTemplate?: string;
+  toolDescriptionTemplate?: string;
+  tagTitleTemplate?: string;
+  tagDescriptionTemplate?: string;
+  sectionDescriptionTemplate?: string;
+  exploreRailItems?: FilterRailItem[];
+  toolRailItems?: FilterRailItem[];
+  tagRailItems?: FilterRailItem[];
+  sectionRailItems?: FilterRailItem[];
+  useCustomRailOnExplore?: boolean;
+  useCustomRailOnTools?: boolean;
+  useCustomRailOnTags?: boolean;
+  useCustomRailOnSections?: boolean;
+  showHeroStats?: boolean;
+}
+
 export interface SiteSettings {
   siteTitle: string;
   siteDescription: string;
@@ -256,6 +276,7 @@ export interface SiteSettings {
   homepageContent?: Record<string, HomepageBlockContent>;
   exploreFilterTags?: string[];
   exploreFilterItems?: FilterRailItem[];
+  discoveryPages?: DiscoveryPageSettings;
   creativeDirectionItems?: FilterRailItem[];
   footerLinkGroups?: FooterLinkGroup[];
   footerDescription?: string;

@@ -14,29 +14,33 @@ export async function generateMetadata() {
 export default async function Contact() {
   const settings = await fetchSettings();
   
+  const contactEmail = settings.contactEmail || 'support@aipromptmatrix.in';
   const defaultContent = `
 # Contact Us
 
-We would love to hear from you! Please feel free to reach out using any of the methods below.
+We read messages about corrections, copyright concerns, prompt submissions, partnerships, and site feedback.
 
-**Email**: hello@example.com  
-**Support Hours**: Monday - Friday, 9am - 5pm EST
+**Email:** [${contactEmail}](mailto:${contactEmail})  
+**Typical response time:** 2-5 business days
 
-## Frequently Asked Questions
+## What To Include
 
-Before reaching out, considering checking if your question is answered below:
+- The page URL if your message is about a specific prompt or image.
+- A short explanation of what needs to be fixed or reviewed.
+- For copyright or DMCA matters, include enough detail for us to identify the material.
+- For partnerships, include your website or public profile.
 
-### How do I submit a prompt?
+## Prompt Corrections
 
-You can submit an AI prompt by creating an account and navigating to the "Submit" section in the main menu. Make sure to adhere to our submission guidelines to get your prompt approved quickly.
+If a prompt has the wrong tool, model, tags, title, or image, send us the page link and the correction. We review correction requests and update pages when the change improves clarity.
 
-### An AI tool generated something unexpected, how do I fix it?
+## Copyright Or Removal Requests
 
-Different models behave differently even with the same text phrase. Consider adjusting the "seed" or exploring variations of the prompt keywords if the model is not providing the style you desire.
+For copyright notices, please use the DMCA Notice page and email the required details to **${contactEmail}**.
 
-## Media Inquiries
+## Submitting Prompts
 
-For press and media partnerships, please prefix your email subject with **[PRESS]**.
+If submissions are enabled, you can submit prompts from the Submit page. Approved submissions may be edited for formatting, tags, clarity, and page quality before publication.
 `;
   const page = getStaticPageContent(settings, 'contact', settings.pageContact, defaultContent);
   if (!page.visible) notFound();
