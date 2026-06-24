@@ -29,10 +29,91 @@ const pageLabels: Record<PageKey, string> = {
   disclaimer: 'Disclaimer',
 };
 function pageDefaults(key: PageKey): StaticPageSettings {
+  const defaultBodies: Record<PageKey, string> = {
+    about: `# About Us
+
+AI PromptMatrix is a curated prompt library for creators who want practical AI image prompts, real examples, model notes, and reusable creative workflows in one place.
+
+## Our Mission
+
+Our mission is to make AI image prompting easier to understand, test, and reuse. We organize prompts by tools, tags, sections, and creative direction so visitors can move from inspiration to generation quickly.
+
+## What Makes Us Different
+
+- Curated prompt collections instead of a raw feed.
+- Clear AI tool and model context where available.
+- Visual examples that show what each prompt is trying to create.
+- Editorial review for titles, tags, clarity, and usefulness.
+
+## Contact
+
+For corrections, copyright concerns, partnerships, or general questions, use the Contact page.`,
+    contact: `# Contact Us
+
+We read messages about corrections, copyright concerns, prompt submissions, partnerships, and site feedback.
+
+**Email:** support@aipromptmatrix.in
+
+## What To Include
+
+- The page URL if your message is about a specific prompt or image.
+- A short explanation of what needs to be fixed or reviewed.
+- For copyright or DMCA matters, include enough detail for us to identify the material.
+- For partnerships, include your website or public profile.`,
+    privacy: `# Privacy Policy
+
+This Privacy Policy explains how AI PromptMatrix collects, uses, and protects information when visitors use the website.
+
+## Information We Collect
+
+We may collect information you provide directly, basic usage information, and technical data needed to operate and improve the site.
+
+## How We Use Information
+
+We use information to operate the website, review submissions, improve content quality, respond to messages, and protect the platform.
+
+## Contact
+
+For privacy questions, contact us through the Contact page.`,
+    terms: `# Terms of Service
+
+By using AI PromptMatrix, you agree to use the website responsibly and only for lawful purposes.
+
+## Content
+
+Prompts, images, and examples are provided for creative and informational use. AI output can vary between tools, models, and sessions.
+
+## Acceptable Use
+
+Do not misuse the website, submit unlawful content, copy protected work without rights, or interfere with site operations.
+
+## Changes
+
+We may update these terms as the website changes.`,
+    dmca: `# DMCA Notice
+
+AI PromptMatrix respects intellectual property rights. If you believe content on this site infringes your copyright, send a notice with enough information for us to identify and review the material.
+
+## Include
+
+- The copyrighted work.
+- The URL of the allegedly infringing material.
+- Your contact information.
+- A good-faith statement and signature.
+
+Use the Contact page for copyright and removal requests.`,
+    disclaimer: `# Disclaimer
+
+AI PromptMatrix provides prompts, images, examples, and notes for general creative and informational purposes.
+
+AI-generated results can vary. We do not guarantee that using a prompt will reproduce the same image, style, quality, or result in every model.
+
+The website may link to third-party tools or services. We are not responsible for third-party content, policies, or outputs.`,
+  };
   return {
     title: pageLabels[key],
     subtitle: '',
-    body: '',
+    body: defaultBodies[key],
     metaTitle: `${pageLabels[key]} | AI PromptMatrix`,
     metaDescription: '',
     ogImage: '',
@@ -43,12 +124,12 @@ function pageDefaults(key: PageKey): StaticPageSettings {
 export default function StaticPagesTab({ settings, updateSettings }: { settings: SiteSettings, updateSettings: (s: SiteSettings) => void }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [pageAbout, setPageAbout] = useState(settings.staticPages?.about?.body || settings.pageAbout || '');
-  const [pagePrivacy, setPagePrivacy] = useState(settings.staticPages?.privacy?.body || settings.pagePrivacy || '');
-  const [pageTerms, setPageTerms] = useState(settings.staticPages?.terms?.body || settings.pageTerms || '');
-  const [pageDmca, setPageDmca] = useState(settings.staticPages?.dmca?.body || settings.pageDmca || '');
-  const [pageDisclaimer, setPageDisclaimer] = useState(settings.staticPages?.disclaimer?.body || settings.pageDisclaimer || '');
-  const [pageContact, setPageContact] = useState(settings.staticPages?.contact?.body || settings.pageContact || '');
+  const [pageAbout, setPageAbout] = useState(settings.staticPages?.about?.body || settings.pageAbout || pageDefaults('about').body || '');
+  const [pagePrivacy, setPagePrivacy] = useState(settings.staticPages?.privacy?.body || settings.pagePrivacy || pageDefaults('privacy').body || '');
+  const [pageTerms, setPageTerms] = useState(settings.staticPages?.terms?.body || settings.pageTerms || pageDefaults('terms').body || '');
+  const [pageDmca, setPageDmca] = useState(settings.staticPages?.dmca?.body || settings.pageDmca || pageDefaults('dmca').body || '');
+  const [pageDisclaimer, setPageDisclaimer] = useState(settings.staticPages?.disclaimer?.body || settings.pageDisclaimer || pageDefaults('disclaimer').body || '');
+  const [pageContact, setPageContact] = useState(settings.staticPages?.contact?.body || settings.pageContact || pageDefaults('contact').body || '');
   const [staticPages, setStaticPages] = useState<Record<string, StaticPageSettings>>(() => settings.staticPages || {});
 
   const initialPage = pageKeys.includes(searchParams.get('page') as PageKey) ? searchParams.get('page') as PageKey : 'about';
@@ -113,7 +194,11 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
     dmca: { label: pageLabels.dmca, value: pageDmca, set: setPageDmca },
     disclaimer: { label: pageLabels.disclaimer, value: pageDisclaimer, set: setPageDisclaimer }
   };
-  const currentPage = { ...pageDefaults(activeTab), ...(staticPages[activeTab] || {}) };
+  const currentPage = {
+    ...pageDefaults(activeTab),
+    ...(staticPages[activeTab] || {}),
+    body: (staticPages[activeTab]?.body || textareas[activeTab].value || pageDefaults(activeTab).body || ''),
+  };
   const updateCurrentPage = (patch: StaticPageSettings) => {
     setStaticPages(prev => ({
       ...prev,

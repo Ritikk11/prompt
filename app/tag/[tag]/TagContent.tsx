@@ -23,6 +23,7 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
   const discovery = settings.discoveryPages || {};
   const useCustomRail = Boolean(discovery.useCustomRailOnTags);
   const railItems = discovery.tagRailItems || [];
+  const showCustomRail = useCustomRail && railItems.length > 0;
 
   // Filter public posts that include the tag (case insensitive)
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
@@ -34,7 +35,7 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
   const heroTitle = fillDiscoveryTemplate(discovery.tagTitleTemplate || '%tag% Prompts', { tag, count: filtered.length });
   const heroDescription = fillDiscoveryTemplate(discovery.tagDescriptionTemplate || 'Showing %count% collections tagged with "%tag%".', { tag, count: filtered.length });
 
-  if (!useCustomRail && showAdvancedFilters && filterTool !== 'all') {
+  if (!showCustomRail && showAdvancedFilters && filterTool !== 'all') {
     filtered = filtered.filter(p => p.aiTools?.includes(filterTool) || p.images.some(i => i.aiTools ? i.aiTools.includes(filterTool) : i.aiTool === filterTool));
   }
   
@@ -67,7 +68,7 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
       />
 
       {/* Filters */}
-      {!useCustomRail && <div className="flex flex-wrap gap-3 mb-8 p-4 rounded-xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
+      {!showCustomRail && <div className="flex flex-wrap gap-3 mb-8 p-4 rounded-xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-surface-400 uppercase tracking-wide">Sort:</span>
           <div className="flex rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700">
@@ -109,7 +110,7 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
       </div>}
 
       {/* Grid */}
-      {useCustomRail ? (
+      {showCustomRail ? (
         <FilterChipRail
           posts={filtered}
           items={railItems}

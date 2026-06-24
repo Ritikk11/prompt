@@ -55,6 +55,7 @@ export default async function SectionPage({ params }: Props) {
   );
   const useCustomRail = Boolean(discovery.useCustomRailOnSections);
   const railItems = discovery.sectionRailItems || [];
+  const showCustomRail = useCustomRail && railItems.length > 0;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
@@ -83,7 +84,7 @@ export default async function SectionPage({ params }: Props) {
             Explore other prompts
           </Link>
         </div>
-      ) : useCustomRail ? (
+      ) : showCustomRail ? (
         <FilterChipRail
           posts={filteredPosts}
           items={railItems}

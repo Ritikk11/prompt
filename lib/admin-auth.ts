@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient as createUserClient } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 
+const DEFAULT_OWNER_EMAILS = ['ritikkewat11@gmail.com'];
+
 function parseEmailList(value?: string | string[]) {
   const source = Array.isArray(value) ? value.join(',') : value || '';
   return source
@@ -35,7 +37,7 @@ export async function requireAdmin(request: Request) {
 
   const settingsEmails = parseEmailList((data?.data as any)?.adminEmails || []);
   const envEmails = parseEmailList(process.env.ADMIN_EMAILS);
-  const adminEmails = Array.from(new Set([...settingsEmails, ...envEmails]));
+  const adminEmails = Array.from(new Set([...DEFAULT_OWNER_EMAILS, ...settingsEmails, ...envEmails]));
 
   if (adminEmails.length === 0) {
     return { error: NextResponse.json({ error: 'No admin owner is configured' }, { status: 403 }) };

@@ -239,6 +239,10 @@ export interface DiscoveryPageSettings {
   exploreBadge?: string;
   exploreTitle?: string;
   exploreDescription?: string;
+  exploreSlug?: string;
+  exploreSeoTitle?: string;
+  exploreSeoDescription?: string;
+  exploreOgImage?: string;
   toolTitleTemplate?: string;
   toolDescriptionTemplate?: string;
   tagTitleTemplate?: string;

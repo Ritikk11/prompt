@@ -196,6 +196,10 @@ const defaultDiscoveryPages: Required<DiscoveryPageSettings> = {
   exploreBadge: 'Prompt Library',
   exploreTitle: 'Explore curated AI image prompts',
   exploreDescription: 'Browse %count% prompt collections by model, visual direction, and creative use case.',
+  exploreSlug: '/explore',
+  exploreSeoTitle: 'Explore AI Image Prompts | AI PromptMatrix',
+  exploreSeoDescription: 'Browse curated AI image prompts by model, style, tag, and creative direction.',
+  exploreOgImage: '',
   toolTitleTemplate: '%tool% Prompts',
   toolDescriptionTemplate: 'Browse %count% prompt collections organized for %tool%.',
   tagTitleTemplate: '%tag% Prompts',
@@ -205,7 +209,7 @@ const defaultDiscoveryPages: Required<DiscoveryPageSettings> = {
   toolRailItems: [],
   tagRailItems: [],
   sectionRailItems: [],
-  useCustomRailOnExplore: true,
+  useCustomRailOnExplore: false,
   useCustomRailOnTools: false,
   useCustomRailOnTags: false,
   useCustomRailOnSections: false,
@@ -960,13 +964,13 @@ export default function Admin() {
     : undefined;
   const autoExploreItems = getAutoExploreItems(posts);
   const savedExploreItems = cleanRailItems(exploreFilterItems);
-  const liveExploreItems = savedExploreItems.length > 0 ? savedExploreItems : autoExploreItems;
+  const liveExploreItems = savedExploreItems;
   const savedToolRailItems = cleanRailItems(toolRailItems);
-  const liveToolRailItems = savedToolRailItems.length > 0 ? savedToolRailItems : autoExploreItems;
+  const liveToolRailItems = savedToolRailItems;
   const savedTagRailItems = cleanRailItems(tagRailItems);
-  const liveTagRailItems = savedTagRailItems.length > 0 ? savedTagRailItems : autoExploreItems;
+  const liveTagRailItems = savedTagRailItems;
   const savedSectionRailItems = cleanRailItems(sectionRailItems);
-  const liveSectionRailItems = savedSectionRailItems.length > 0 ? savedSectionRailItems : autoExploreItems;
+  const liveSectionRailItems = savedSectionRailItems;
   const autoCreativeItems = getAutoCreativeItems(posts);
   const savedCreativeItems = cleanRailItems(creativeDirectionItems);
   const liveCreativeItems = savedCreativeItems.length > 0 ? savedCreativeItems : autoCreativeItems;
@@ -3713,32 +3717,77 @@ export default function Admin() {
             <div className="space-y-6">
               <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                 <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <Compass className="w-4 h-4 text-primary-500" /> Discovery Page Heroes
+                  <Compass className="w-4 h-4 text-primary-500" /> Explore Page
                 </h3>
                 <p className="text-xs text-surface-500 mb-4">
-                  Controls the shared hero container used by Explore, AI tool, tag, and section listing pages. Use tokens like %count%, %tool%, %tag%, and %section%.
+                  Controls the public /explore listing page hero and SEO. The route is fixed unless a separate redirect/page route is added.
                 </p>
-                <div className="grid grid-cols-1 gap-3">
-                  <input
-                    value={discoveryPages.exploreBadge || ''}
-                    onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreBadge: e.target.value }))}
-                    className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                    placeholder="Explore page badge"
-                  />
-                  <input
-                    value={discoveryPages.exploreTitle || ''}
-                    onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreTitle: e.target.value }))}
-                    className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                    placeholder="Explore page heading"
-                  />
-                  <textarea
-                    value={discoveryPages.exploreDescription || ''}
-                    onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreDescription: e.target.value }))}
-                    rows={2}
-                    className="min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                    placeholder="Explore page description"
-                  />
-                  <label className="flex items-center gap-2 rounded-xl bg-surface-50 px-3 py-2 text-sm font-medium dark:bg-surface-800">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">Public path</span>
+                    <input
+                      value={discoveryPages.exploreSlug || '/explore'}
+                      readOnly
+                      className="w-full rounded-xl border border-surface-200 bg-surface-100 px-4 py-2.5 text-sm text-surface-500 outline-none dark:border-surface-700 dark:bg-surface-800"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">Hero badge</span>
+                    <input
+                      value={discoveryPages.exploreBadge || ''}
+                      onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreBadge: e.target.value }))}
+                      className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                      placeholder="Prompt Library"
+                    />
+                  </label>
+                  <label className="block lg:col-span-2">
+                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">Hero heading</span>
+                    <input
+                      value={discoveryPages.exploreTitle || ''}
+                      onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreTitle: e.target.value }))}
+                      className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                      placeholder="Explore curated AI image prompts"
+                    />
+                  </label>
+                  <label className="block lg:col-span-2">
+                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">Hero description</span>
+                    <textarea
+                      value={discoveryPages.exploreDescription || ''}
+                      onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreDescription: e.target.value }))}
+                      rows={2}
+                      className="min-h-[80px] w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                      placeholder="Browse %count% prompt collections..."
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">SEO title</span>
+                    <input
+                      value={discoveryPages.exploreSeoTitle || ''}
+                      onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreSeoTitle: e.target.value }))}
+                      className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                      placeholder="Explore AI Image Prompts | AI PromptMatrix"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">OG image</span>
+                    <input
+                      value={discoveryPages.exploreOgImage || ''}
+                      onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreOgImage: e.target.value }))}
+                      className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                      placeholder="https://..."
+                    />
+                  </label>
+                  <label className="block lg:col-span-2">
+                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">SEO description</span>
+                    <textarea
+                      value={discoveryPages.exploreSeoDescription || ''}
+                      onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreSeoDescription: e.target.value }))}
+                      rows={2}
+                      className="min-h-[72px] w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                      placeholder="Short search-result description"
+                    />
+                  </label>
+                  <label className="flex items-center gap-2 rounded-xl bg-surface-50 px-3 py-2 text-sm font-medium dark:bg-surface-800 lg:col-span-2">
                     <input
                       type="checkbox"
                       checked={discoveryPages.showHeroStats ?? true}
@@ -3774,30 +3823,13 @@ export default function Admin() {
                   <Tag className="w-4 h-4 text-primary-500" /> Page-Specific Custom Rails
                 </h3>
                 <p className="text-xs text-surface-500 mb-4">
-                  Each page type has its own rail. Turn it on for the page type, then set the chips that should appear there.
+                  Each page type has its own optional rail. Nothing renders on the public page unless the rail is enabled and at least one chip is saved.
                 </p>
-                <div className="mb-4 grid gap-2 sm:grid-cols-2">
-                  {[
-                    ['useCustomRailOnExplore', 'Use on Explore'],
-                    ['useCustomRailOnTools', 'Use on AI tool pages'],
-                    ['useCustomRailOnTags', 'Use on tag pages'],
-                    ['useCustomRailOnSections', 'Use on section pages'],
-                  ].map(([key, label]) => (
-                    <label key={key} className="flex items-center gap-2 rounded-xl bg-surface-50 px-3 py-2 text-sm font-medium dark:bg-surface-800">
-                      <input
-                        type="checkbox"
-                        checked={Boolean((discoveryPages as any)[key])}
-                        onChange={e => setDiscoveryPages(prev => ({ ...prev, [key]: e.target.checked }))}
-                        className="h-4 w-4 rounded text-primary-500"
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </div>
                 <div className="space-y-4">
                   {[
                     {
                       key: 'explore' as RailListKey,
+                      enabledKey: 'useCustomRailOnExplore' as keyof DiscoveryPageSettings,
                       title: 'Explore page rail',
                       description: 'Used on /explore.',
                       items: exploreFilterItems,
@@ -3807,6 +3839,7 @@ export default function Admin() {
                     },
                     {
                       key: 'tool' as RailListKey,
+                      enabledKey: 'useCustomRailOnTools' as keyof DiscoveryPageSettings,
                       title: 'AI tool page rail',
                       description: 'Used on /tool/[tool] pages.',
                       items: toolRailItems,
@@ -3816,6 +3849,7 @@ export default function Admin() {
                     },
                     {
                       key: 'tag' as RailListKey,
+                      enabledKey: 'useCustomRailOnTags' as keyof DiscoveryPageSettings,
                       title: 'Tag page rail',
                       description: 'Used on /tag/[tag] pages.',
                       items: tagRailItems,
@@ -3825,6 +3859,7 @@ export default function Admin() {
                     },
                     {
                       key: 'section' as RailListKey,
+                      enabledKey: 'useCustomRailOnSections' as keyof DiscoveryPageSettings,
                       title: 'Section page rail',
                       description: 'Used on custom, popular, latest, and other /section/[slug] pages.',
                       items: sectionRailItems,
@@ -3839,29 +3874,41 @@ export default function Admin() {
                           <p className="text-sm font-black">{rail.title}</p>
                           <p className="text-xs text-surface-500">{rail.description}</p>
                         </div>
-                        <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-surface-500 ring-1 ring-surface-200 dark:bg-surface-900 dark:ring-surface-700">
-                          {rail.savedItems.length > 0 ? `${rail.savedItems.length} custom chips` : 'Auto fallback preview'}
-                        </span>
+                        <label className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-surface-700 ring-1 ring-surface-200 dark:bg-surface-900 dark:text-surface-100 dark:ring-surface-700">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(discoveryPages[rail.enabledKey])}
+                            onChange={e => setDiscoveryPages(prev => ({ ...prev, [rail.enabledKey]: e.target.checked }))}
+                            className="h-4 w-4 rounded text-primary-500"
+                          />
+                          {discoveryPages[rail.enabledKey] ? 'Enabled' : 'Disabled'}
+                        </label>
                       </div>
+                      {rail.liveItems.length > 0 ? (
+                        <div className="mb-3 flex flex-wrap gap-2">
+                          <span className="rounded-full bg-primary-600 px-3 py-1.5 text-xs font-black text-white">All</span>
+                          {rail.liveItems.slice(0, 12).map(item => (
+                            <span key={`${rail.key}:${item.type}:${item.value}`} className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-surface-700 ring-1 ring-surface-200 dark:bg-surface-900 dark:text-surface-100 dark:ring-surface-700">
+                              {item.label}
+                            </span>
+                          ))}
+                          {rail.liveItems.length > 12 && (
+                            <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-surface-500 ring-1 ring-surface-200 dark:bg-surface-900 dark:ring-surface-700">
+                              +{rail.liveItems.length - 12} more
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mb-3 rounded-lg border border-dashed border-surface-300 bg-white p-3 text-xs text-surface-500 dark:border-surface-700 dark:bg-surface-900">
+                          No custom chips added. This rail will not render on the public page.
+                        </div>
+                      )}
                       <div className="mb-3 flex flex-wrap gap-2">
-                        <span className="rounded-full bg-primary-600 px-3 py-1.5 text-xs font-black text-white">All</span>
-                        {rail.liveItems.slice(0, 12).map(item => (
-                          <span key={`${rail.key}:${item.type}:${item.value}`} className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-surface-700 ring-1 ring-surface-200 dark:bg-surface-900 dark:text-surface-100 dark:ring-surface-700">
-                            {item.label}
-                          </span>
-                        ))}
-                        {rail.liveItems.length > 12 && (
-                          <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-surface-500 ring-1 ring-surface-200 dark:bg-surface-900 dark:ring-surface-700">
-                            +{rail.liveItems.length - 12} more
-                          </span>
-                        )}
-                      </div>
-                      <div className="mb-3 flex flex-wrap gap-2">
-                        <button onClick={() => rail.setItems(autoExploreItems)} className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-2 text-xs font-bold text-white hover:bg-primary-700">
-                          <Check className="h-3.5 w-3.5" /> Fill from current posts
+                        <button onClick={() => rail.setItems(autoExploreItems)} className="inline-flex items-center gap-2 rounded-lg bg-surface-900 px-3 py-2 text-xs font-bold text-white hover:bg-surface-800 dark:bg-surface-100 dark:text-surface-950">
+                          <Check className="h-3.5 w-3.5" /> Generate chips from current posts
                         </button>
                         <button onClick={() => rail.setItems([])} className="inline-flex items-center gap-2 rounded-lg bg-surface-200 px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-300 dark:bg-surface-700 dark:text-surface-100">
-                          <RotateCcw className="h-3.5 w-3.5" /> Clear custom chips
+                          <RotateCcw className="h-3.5 w-3.5" /> Clear all chips
                         </button>
                       </div>
                       <div className="space-y-3">
@@ -3885,7 +3932,7 @@ export default function Admin() {
                   ))}
                 </div>
                 <button onClick={handleSaveSettings} className="mt-5 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors">
-                  <Save className="w-4 h-4" /> Save Explore Settings
+                  <Save className="w-4 h-4" /> Save Discovery Settings
                 </button>
               </div>
             </div>
