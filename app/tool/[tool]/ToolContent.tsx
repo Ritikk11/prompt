@@ -32,6 +32,7 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
   const discovery = settings.discoveryPages || {};
   const useCustomRail = Boolean(discovery.useCustomRailOnTools);
   const railItems = discovery.toolRailItems || [];
+  const showCustomRail = useCustomRail && railItems.length > 0;
 
   // Filter public posts that include the aiTool (case insensitive)
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
@@ -72,7 +73,7 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
       />
 
       {/* Filters */}
-      {!useCustomRail && <div className="mb-8 flex flex-wrap gap-3">
+      {!showCustomRail && <div className="mb-8 flex flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <div className="flex rounded-2xl overflow-hidden border border-surface-200 bg-surface-50 p-1 dark:border-surface-800 dark:bg-surface-900">
             <button
@@ -100,7 +101,7 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
       </div>}
 
       {/* Grid */}
-      {useCustomRail ? (
+      {showCustomRail ? (
         <FilterChipRail
           posts={filtered}
           items={railItems}

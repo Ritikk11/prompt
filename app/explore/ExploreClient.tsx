@@ -23,8 +23,9 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
   const filterTags = settings.exploreFilterTags?.length ? settings.exploreFilterTags : getFilterTagsFromPosts(publicPosts);
   const discovery = settings.discoveryPages || {};
   const showTrending = settings.features?.trendingAlgorithm;
-  const useCustomRail = Boolean(discovery.useCustomRailOnExplore ?? true);
+  const useCustomRail = Boolean(discovery.useCustomRailOnExplore);
   const filterItems = discovery.exploreRailItems?.length ? discovery.exploreRailItems : (settings.exploreFilterItems || []);
+  const showCustomRail = useCustomRail && filterItems.length > 0;
 
   let filtered = [...publicPosts];
   if (sortBy === 'latest') {
@@ -100,13 +101,13 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
           </div>
         </div>
 
-        {useCustomRail && (
+        {showCustomRail && (
           <FilterChipRail posts={filtered} tools={tools} tags={filterTags} items={filterItems} settings={settings} renderGrid />
         )}
       </div>
 
       {/* Masonry layout like Pinterest */}
-      {!useCustomRail && (
+      {!showCustomRail && (
         <>
           <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
             {visiblePosts.map((post, i) => (
