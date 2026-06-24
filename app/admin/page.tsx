@@ -35,11 +35,11 @@ import { getAuthors, normalizeAuthor, slugifyAuthor } from '@/lib/authors';
 
 
 type AdminTab = 'dashboard' | 'posts' | 'sections' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages';
-type SettingsSubTab = 'general' | 'homepage' | 'explore' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share';
+type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share';
 type SectionLocationFilter = 'homepage' | 'header' | 'footer' | 'all';
 
 const adminTabKeys: AdminTab[] = ['dashboard', 'posts', 'sections', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages'];
-const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'explore', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share'];
+const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'discovery', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share'];
 const sectionLocationKeys: SectionLocationFilter[] = ['homepage', 'header', 'footer', 'all'];
 
 function parseAdminTab(value: string | null): AdminTab {
@@ -52,6 +52,7 @@ function parseAdminTab(value: string | null): AdminTab {
 
 function parseSettingsSubTab(value: string | null): SettingsSubTab {
   if (value === 'aitools') return 'ai-tools';
+  if (value === 'explore') return 'discovery';
   if (value && settingsSubTabKeys.includes(value as SettingsSubTab)) return value as SettingsSubTab;
   return 'general';
 }
@@ -3345,12 +3346,12 @@ export default function Admin() {
 
       {/* ===== SETTINGS TAB ===== */}
       {tab === 'settings' && (
-        <div className={settingsSubTab === 'homepage' || settingsSubTab === 'explore' ? 'max-w-7xl' : 'max-w-3xl'}>
+        <div className={settingsSubTab === 'homepage' || settingsSubTab === 'discovery' ? 'max-w-7xl' : 'max-w-3xl'}>
           <div className="flex gap-2 mb-6 overflow-x-auto pb-1 border-b border-surface-200 dark:border-surface-800">
             {[
               { id: 'general', label: 'General' },
               { id: 'homepage', label: 'Homepage' },
-              { id: 'explore', label: 'Explore' },
+              { id: 'discovery', label: 'Discovery Pages' },
               { id: 'navigation', label: 'Navigation' },
               { id: 'footer', label: 'Footer Links' },
               { id: 'features', label: 'Features' },
@@ -3708,21 +3709,21 @@ export default function Admin() {
           </div>
           )}
 
-          {settingsSubTab === 'explore' && (
+          {settingsSubTab === 'discovery' && (
             <div className="space-y-6">
               <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                 <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <Compass className="w-4 h-4 text-primary-500" /> Explore Page Hero
+                  <Compass className="w-4 h-4 text-primary-500" /> Discovery Page Heroes
                 </h3>
                 <p className="text-xs text-surface-500 mb-4">
-                  Controls the large hero used by Explore, tag, tool, and section listing pages. Use tokens like %count%, %tool%, %tag%, and %section%.
+                  Controls the shared hero container used by Explore, AI tool, tag, and section listing pages. Use tokens like %count%, %tool%, %tag%, and %section%.
                 </p>
                 <div className="grid grid-cols-1 gap-3">
                   <input
                     value={discoveryPages.exploreBadge || ''}
                     onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreBadge: e.target.value }))}
                     className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                    placeholder="Explore badge"
+                    placeholder="Explore page badge"
                   />
                   <input
                     value={discoveryPages.exploreTitle || ''}
@@ -3754,13 +3755,16 @@ export default function Admin() {
                   <LayoutGrid className="w-4 h-4 text-primary-500" /> Listing Page Templates
                 </h3>
                 <p className="text-xs text-surface-500 mb-4">
-                  These make tag, tool, and section pages use the same hero style while still showing page-specific text.
+                  These pages use the same hero container, but each page type can generate its own heading and description.
                 </p>
                 <div className="grid grid-cols-1 gap-3">
+                  <p className="text-[11px] font-black uppercase tracking-wide text-surface-500">AI tool pages</p>
                   <input value={discoveryPages.toolTitleTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, toolTitleTemplate: e.target.value }))} className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Tool title template: %tool% Prompts" />
                   <textarea value={discoveryPages.toolDescriptionTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, toolDescriptionTemplate: e.target.value }))} rows={2} className="min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Tool description template" />
+                  <p className="text-[11px] font-black uppercase tracking-wide text-surface-500">Tag pages</p>
                   <input value={discoveryPages.tagTitleTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, tagTitleTemplate: e.target.value }))} className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Tag title template: %tag% Prompts" />
                   <textarea value={discoveryPages.tagDescriptionTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, tagDescriptionTemplate: e.target.value }))} rows={2} className="min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Tag description template" />
+                  <p className="text-[11px] font-black uppercase tracking-wide text-surface-500">Section pages</p>
                   <textarea value={discoveryPages.sectionDescriptionTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, sectionDescriptionTemplate: e.target.value }))} rows={2} className="min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Section description template" />
                 </div>
               </div>
