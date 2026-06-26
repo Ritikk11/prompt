@@ -245,9 +245,15 @@ export interface DiscoveryPageSettings {
   exploreOgImage?: string;
   toolTitleTemplate?: string;
   toolDescriptionTemplate?: string;
+  toolSeoTitleTemplate?: string;
+  toolSeoDescriptionTemplate?: string;
   tagTitleTemplate?: string;
   tagDescriptionTemplate?: string;
+  tagSeoTitleTemplate?: string;
+  tagSeoDescriptionTemplate?: string;
   sectionDescriptionTemplate?: string;
+  sectionSeoTitleTemplate?: string;
+  sectionSeoDescriptionTemplate?: string;
   exploreRailItems?: FilterRailItem[];
   toolRailItems?: FilterRailItem[];
   tagRailItems?: FilterRailItem[];
@@ -298,6 +304,8 @@ export interface SiteSettings {
   seoSettings?: SeoSettings;
   staticPages?: Record<string, StaticPageSettings>;
   ads?: AdSettings;
+  adsensePublisherId?: string;
+  adsenseAutoAds?: boolean;
   imgbbApiKey?: string;
   imageProvider?: 'imgbb' | 'cloudinary' | 'supabase';
   cloudinaryCloudName?: string;

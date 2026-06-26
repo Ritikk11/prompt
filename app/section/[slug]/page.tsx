@@ -19,17 +19,31 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const section = await getSectionBySlug(slug);
+  const [section, allPosts, settings] = await Promise.all([
+    getSectionBySlug(slug),
+    fetchPostSummaries() as Promise<Post[]>,
+    fetchSettings(),
+  ]);
 
   if (!section) {
     return {
       title: 'Section Not Found',
     };
   }
+  const filteredPosts = filterPostsForSection(section, allPosts, settings, false);
+  const discovery = settings.discoveryPages || {};
+  const title = section.seoTitle || fillDiscoveryTemplate(
+    discovery.sectionSeoTitleTemplate || '%section% | AI PromptMatrix',
+    { section: section.name, count: filteredPosts.length }
+  );
+  const description = section.seoDescription || fillDiscoveryTemplate(
+    discovery.sectionSeoDescriptionTemplate || discovery.sectionDescriptionTemplate || 'Explore prompts from the %section% collection.',
+    { section: section.name, count: filteredPosts.length }
+  );
 
   return {
-    title: section.seoTitle || `${section.name} | AI PromptMatrix`,
-    description: section.seoDescription || `Explore all prompts in the ${section.name} section.`,
+    title,
+    description,
   };
 }
 

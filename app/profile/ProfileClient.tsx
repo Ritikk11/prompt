@@ -26,8 +26,8 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setAuthLoading(false);
-      // Optional: If features turned off, kick out
-      if (!settings.features?.userProfiles) {
+      // Private profile needs the account/bookmark feature. Public author profiles are controlled separately.
+      if (settings.features?.userProfiles === false) {
          navigate.push('/');
       }
     });
@@ -78,7 +78,7 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
     };
   }, [user]);
 
-  if (!settings.features?.userProfiles) {
+  if (settings.features?.userProfiles === false) {
     return null;
   }
 
