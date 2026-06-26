@@ -10,7 +10,7 @@ import {
   Plus, Trash2, Edit3, Eye, EyeOff, ChevronUp, ChevronDown,
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload,
   Settings, Check, Search, RotateCcw, GripVertical, Image as ImageIcon,
-  Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass
+  Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass, Menu
 } from 'lucide-react';
 
 import Image from 'next/image';
@@ -37,23 +37,34 @@ import { getAuthors, normalizeAuthor, slugifyAuthor } from '@/lib/authors';
 type AdminTab = 'dashboard' | 'posts' | 'sections' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages';
 type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share';
 type SectionLocationFilter = 'homepage' | 'header' | 'footer' | 'all';
+type SettingsGroup = 'Site' | 'Appearance' | 'Layout' | 'Capabilities' | 'Integrations';
+type PagesSubTab = 'static' | 'seo-pages';
+type DiscoverySubTab = 'explore' | 'tool' | 'tag' | 'section';
 
 const adminTabKeys: AdminTab[] = ['dashboard', 'posts', 'sections', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages'];
 const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'discovery', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share'];
 const sectionLocationKeys: SectionLocationFilter[] = ['homepage', 'header', 'footer', 'all'];
+const defaultOwnerEmails = ['ritikkewat11@gmail.com'];
+
+function isDefaultOwner(email?: string | null) {
+  return Boolean(email && defaultOwnerEmails.includes(email.trim().toLowerCase()));
+}
 
 function parseAdminTab(value: string | null): AdminTab {
   if (value === 'seo-pages') return 'seo';
   if (value === 'static-pages') return 'pages';
   if (value === 'features') return 'settings';
+  if (value === 'homepage' || value === 'discovery' || value === 'navigation' || value === 'footer' || value === 'ads' || value === 'aitools' || value === 'ai-tools' || value === 'comments' || value === 'share' || value === 'theme') return 'settings';
   if (value && adminTabKeys.includes(value as AdminTab)) return value as AdminTab;
   return 'dashboard';
 }
 
-function parseSettingsSubTab(value: string | null): SettingsSubTab {
-  if (value === 'aitools') return 'ai-tools';
-  if (value === 'explore') return 'discovery';
-  if (value && settingsSubTabKeys.includes(value as SettingsSubTab)) return value as SettingsSubTab;
+function parseSettingsSubTab(value: string | null, fallbackTab?: string | null): SettingsSubTab {
+  const candidate = value || fallbackTab;
+  if (candidate === 'aitools' || candidate === 'ai-tools') return 'ai-tools';
+  if (candidate === 'explore' || candidate === 'discovery') return 'discovery';
+  if (candidate === 'theme') return 'homepage';
+  if (candidate && settingsSubTabKeys.includes(candidate as SettingsSubTab)) return candidate as SettingsSubTab;
   return 'general';
 }
 
@@ -64,6 +75,34 @@ function parseSectionLocation(value: string | null): SectionLocationFilter {
 
 function settingsSubTabParam(value: SettingsSubTab) {
   return value === 'ai-tools' ? 'aitools' : value;
+}
+
+function ToggleSwitch({
+  checked,
+  onChange,
+  disabled = false,
+  label,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+  label?: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className="inline-flex items-center gap-2 text-xs font-bold disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <span className={`relative inline-flex h-6 w-11 rounded-full transition-colors ${checked ? 'bg-primary-500' : 'bg-surface-300 dark:bg-surface-700'}`}>
+        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`} />
+      </span>
+      {label && <span className={checked ? 'text-primary-600 dark:text-primary-300' : 'text-surface-500'}>{label}</span>}
+    </button>
+  );
 }
 
 const TAILWIND_COLORS = [
@@ -202,9 +241,15 @@ const defaultDiscoveryPages: Required<DiscoveryPageSettings> = {
   exploreOgImage: '',
   toolTitleTemplate: '%tool% Prompts',
   toolDescriptionTemplate: 'Browse %count% prompt collections organized for %tool%.',
+  toolSeoTitleTemplate: 'Best %tool% AI Prompts | AI PromptMatrix',
+  toolSeoDescriptionTemplate: 'Explore %count% curated AI prompts and image ideas for %tool%.',
   tagTitleTemplate: '%tag% Prompts',
   tagDescriptionTemplate: 'Showing %count% collections tagged with "%tag%".',
+  tagSeoTitleTemplate: '%tag% AI Prompts | AI PromptMatrix',
+  tagSeoDescriptionTemplate: 'Browse curated AI prompts for %tag%.',
   sectionDescriptionTemplate: 'Discover a curated collection of %count% prompts.',
+  sectionSeoTitleTemplate: '%section% | AI PromptMatrix',
+  sectionSeoDescriptionTemplate: 'Explore prompts from the %section% collection.',
   exploreRailItems: [],
   toolRailItems: [],
   tagRailItems: [],
@@ -468,7 +513,7 @@ export default function Admin() {
   const [authError, setAuthError] = useState('');
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   
-  const isAdmin = Boolean(user && !adminAccessDenied);
+  const isAdmin = Boolean(user && (isDefaultOwner(user.email) || !adminAccessDenied));
 
   const initialDataLoaded = useRef(false);
   const lastAuthUserId = useRef<string | null>(null);
@@ -490,7 +535,7 @@ export default function Admin() {
           setAdminAccessDenied(false);
         } catch (error) {
           console.error('Failed to load admin data', error);
-          setAdminAccessDenied(true);
+          setAdminAccessDenied(!isDefaultOwner(user.email));
         } finally {
           initialDataLoaded.current = true;
           setAdminChecking(false);
@@ -691,6 +736,9 @@ export default function Admin() {
   const [newSectionLimit, setNewSectionLimit] = useState(8);
   const [newSectionCardStyle, setNewSectionCardStyle] = useState<Section['cardStyle'] | ''>('');
   const [newSectionFilterTags, setNewSectionFilterTags] = useState('');
+  const [newSectionSeoTitle, setNewSectionSeoTitle] = useState('');
+  const [newSectionSeoDescription, setNewSectionSeoDescription] = useState('');
+  const [newSectionIntroContent, setNewSectionIntroContent] = useState('');
   const [showNewSectionForm, setShowNewSectionForm] = useState(false);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [expandedHomepageBlock, setExpandedHomepageBlock] = useState<string | null>(null);
@@ -760,6 +808,8 @@ export default function Admin() {
       postBottom: { enabled: false, code: '' },
     }
   );
+  const [adsensePublisherId, setAdsensePublisherId] = useState(settings.adsensePublisherId || '');
+  const [adsenseAutoAds, setAdsenseAutoAds] = useState(Boolean(settings.adsenseAutoAds));
   
   const [features, setFeatures] = useState<SiteFeatures>(
     settings.features || {
@@ -806,7 +856,10 @@ export default function Admin() {
     }
   );
 
-  const [settingsSubTab, setSettingsSubTabState] = useState<SettingsSubTab>(() => parseSettingsSubTab(searchParams.get('sub')));
+  const [settingsSubTab, setSettingsSubTabState] = useState<SettingsSubTab>(() => parseSettingsSubTab(searchParams.get('sub'), searchParams.get('tab')));
+  const [pagesSubTab, setPagesSubTab] = useState<PagesSubTab>('static');
+  const [discoverySubTab, setDiscoverySubTab] = useState<DiscoverySubTab>('explore');
+  const [adminNavOpen, setAdminNavOpen] = useState(false);
   const [markdownMode, setMarkdownMode] = useState<'edit' | 'preview'>('edit');
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
   const [isBackfillingModels, setIsBackfillingModels] = useState(false);
@@ -846,6 +899,7 @@ export default function Admin() {
 
   const setTab = (nextTab: AdminTab) => {
     setTabState(nextTab);
+    setAdminNavOpen(false);
     pushAdminRoute(nextTab);
   };
 
@@ -862,7 +916,7 @@ export default function Admin() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setTabState(parseAdminTab(searchParams.get('tab')));
-    setSettingsSubTabState(parseSettingsSubTab(searchParams.get('sub')));
+    setSettingsSubTabState(parseSettingsSubTab(searchParams.get('sub'), searchParams.get('tab')));
     setSectionLocationFilterState(parseSectionLocation(searchParams.get('loc')));
   }, [searchParams]);
 
@@ -1338,6 +1392,9 @@ export default function Admin() {
       visible: true,
       limit: newSectionLimit,
       cardStyle: newSectionCardStyle || undefined,
+      seoTitle: newSectionSeoTitle || undefined,
+      seoDescription: newSectionSeoDescription || undefined,
+      introContent: newSectionIntroContent || undefined,
       filterTags: cleanCommaList(newSectionFilterTags),
     });
     setNewSectionName('');
@@ -1348,6 +1405,9 @@ export default function Admin() {
     setNewSectionCategory('');
     setNewSectionCardStyle('');
     setNewSectionFilterTags('');
+    setNewSectionSeoTitle('');
+    setNewSectionSeoDescription('');
+    setNewSectionIntroContent('');
     setShowNewSectionForm(false);
   };
 
@@ -1624,6 +1684,8 @@ export default function Admin() {
       footerLinkGroups: cleanFooterGroups(footerLinkGroups),
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
       ads: adsConfig,
+      adsensePublisherId,
+      adsenseAutoAds,
       imgbbApiKey,
       imageProvider,
       cloudinaryCloudName,
@@ -1794,6 +1856,44 @@ export default function Admin() {
     { key: 'pages', label: 'Pages', icon: <FileText className="w-4 h-4" /> },
     { key: 'seo', label: 'SEO', icon: <LayoutTemplate className="w-4 h-4" /> },
   ];
+  const adminTabGroups: { label: string; items: AdminTab[] }[] = [
+    { label: 'Overview', items: ['dashboard'] },
+    { label: 'Content', items: ['posts', 'pages'] },
+    { label: 'Layout', items: ['sections'] },
+    { label: 'Moderation', items: ['submissions', 'comments'] },
+    { label: 'People', items: ['users'] },
+    { label: 'Settings', items: ['settings', 'seo'] },
+  ];
+  const adminTabDescriptions: Record<AdminTab, string> = {
+    dashboard: 'Site health, recent activity, and quick actions.',
+    posts: 'Create and manage prompt posts.',
+    sections: 'Homepage, header, footer, and custom section pages.',
+    pages: 'Static pages and SEO landing pages.',
+    submissions: 'Review user-submitted prompt ideas.',
+    comments: 'Moderate post comments.',
+    users: 'View registered users and activity.',
+    settings: 'Global site controls grouped by area.',
+    seo: 'Global SEO defaults, robots, sitemap, schema, and redirects.',
+  };
+  const activeTabMeta = tabs.find(item => item.key === tab) || tabs[0];
+  const settingsTabs: { id: SettingsSubTab; label: string; description: string; group: SettingsGroup; icon: React.ReactNode }[] = [
+    { id: 'general', label: 'General', description: 'Brand, admin access, authors, and upload settings.', group: 'Site', icon: <Settings className="h-4 w-4" /> },
+    { id: 'homepage', label: 'Homepage', description: 'Hero, prompt of the day, homepage blocks, cards, and order.', group: 'Appearance', icon: <LayoutTemplate className="h-4 w-4" /> },
+    { id: 'discovery', label: 'Discovery Pages', description: 'Explore, tool, tag, section listing heroes and custom rails.', group: 'Appearance', icon: <Compass className="h-4 w-4" /> },
+    { id: 'navigation', label: 'Navigation', description: 'Header links and homepage quick links.', group: 'Layout', icon: <ArrowRight className="h-4 w-4" /> },
+    { id: 'footer', label: 'Footer', description: 'Footer columns, labels, and URLs.', group: 'Layout', icon: <LayoutGrid className="h-4 w-4" /> },
+    { id: 'features', label: 'Features', description: 'Public UI feature toggles and behavior.', group: 'Capabilities', icon: <Eye className="h-4 w-4" /> },
+    { id: 'ads', label: 'Ads', description: 'AdSense and manual ad placements.', group: 'Integrations', icon: <Zap className="h-4 w-4" /> },
+    { id: 'ai-tools', label: 'AI Tools', description: 'Tool registry, labels, logos, and model defaults.', group: 'Integrations', icon: <Sparkles className="h-4 w-4" /> },
+    { id: 'share', label: 'Share', description: 'Enabled targets and share placement.', group: 'Capabilities', icon: <ArrowRight className="h-4 w-4" /> },
+    { id: 'comments', label: 'Comments', description: 'Comment moderation and display settings.', group: 'Capabilities', icon: <MessageCircle className="h-4 w-4" /> },
+  ];
+  const discoveryTabItems: { id: DiscoverySubTab; label: string; route: string; icon: React.ReactNode }[] = [
+    { id: 'explore', label: 'Explore Page', route: '/explore', icon: <Compass className="h-4 w-4" /> },
+    { id: 'tool', label: 'AI Tool Pages', route: '/tool/[tool]', icon: <Sparkles className="h-4 w-4" /> },
+    { id: 'tag', label: 'Tag Pages', route: '/tag/[tag]', icon: <Tag className="h-4 w-4" /> },
+    { id: 'section', label: 'Section Pages', route: '/section/[slug]', icon: <Layers className="h-4 w-4" /> },
+  ];
   if (authLoading || adminChecking) {
     return <div className="flex h-[50vh] items-center justify-center text-surface-400">Loading admin...</div>;
   }
@@ -1912,51 +2012,125 @@ export default function Admin() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Admin Panel</h1>
-          <p className="text-surface-500 dark:text-surface-400 text-sm mt-1">Full control over your site content & settings</p>
-        </div>
-        <div className="flex gap-2">
+    <div className="mx-auto max-w-[1500px] px-4 py-6 fade-in">
+      <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+        {adminNavOpen && (
           <button
-            onClick={async () => {
-              const supabase = createSupabaseClient();
-              await supabase.auth.signOut();
-              setUser(null);
-            }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-surface-500 hover:bg-surface-50 dark:hover:bg-surface-800 border border-surface-200 dark:border-surface-700 transition-colors"
-          >
-            Sign Out
-          </button>
-        </div>
-      </div>
+            type="button"
+            aria-label="Close admin navigation"
+            onClick={() => setAdminNavOpen(false)}
+            className="fixed inset-0 z-30 bg-surface-950/40 backdrop-blur-sm lg:hidden"
+          />
+        )}
 
-      {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-8 scrollbar-hide">
-        {tabs.map(item => (
-          <button
-            key={item.key}
-            onClick={() => setTab(item.key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-              tab === item.key 
-                ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25' 
-                : 'bg-surface-50 dark:bg-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-700'
-            }`}
-          >
-            {item.icon}
-            {item.label}
-            {item.count !== undefined && (
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                tab === item.key ? 'bg-white/20 text-white' : 'bg-surface-200 dark:bg-surface-700 text-surface-500'
-              }`}>
-                {item.count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+        <aside className={`fixed inset-y-0 left-0 z-40 w-72 overflow-y-auto border-r border-surface-200 bg-white p-4 shadow-2xl shadow-surface-950/10 transition-transform dark:border-surface-800 dark:bg-surface-950 lg:sticky lg:top-20 lg:z-auto lg:h-[calc(100vh-6rem)] lg:w-auto lg:translate-x-0 lg:rounded-2xl lg:border lg:shadow-none ${adminNavOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="mb-5 rounded-2xl bg-gradient-to-br from-primary-50 to-fuchsia-50 p-4 dark:from-primary-950/40 dark:to-fuchsia-950/20">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500 text-white shadow-lg shadow-primary-500/25">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-black text-surface-900 dark:text-white">AI PromptMatrix</p>
+                <p className="text-xs text-surface-500 dark:text-surface-400">Admin console</p>
+              </div>
+            </div>
+          </div>
+
+          <nav className="space-y-5">
+            {adminTabGroups.map(group => (
+              <div key={group.label}>
+                <p className="mb-2 px-2 text-[10px] font-black uppercase tracking-wider text-surface-400">{group.label}</p>
+                <div className="space-y-1">
+                  {group.items.map(key => {
+                    const item = tabs.find(tabItem => tabItem.key === key);
+                    if (!item) return null;
+                    const isActive = tab === item.key;
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => setTab(item.key)}
+                        className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold transition-all ${
+                          isActive
+                            ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
+                            : 'text-surface-600 hover:bg-surface-100 hover:text-surface-950 dark:text-surface-300 dark:hover:bg-surface-900 dark:hover:text-white'
+                        }`}
+                      >
+                        <span className={`${isActive ? 'text-white' : 'text-primary-500'}`}>{item.icon}</span>
+                        <span className="min-w-0 flex-1">{item.label}</span>
+                        {item.count !== undefined && (
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-black ${
+                            isActive ? 'bg-white/20 text-white' : 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-300'
+                          }`}>
+                            {item.count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </nav>
+
+          <div className="mt-6 space-y-2 border-t border-surface-200 pt-4 dark:border-surface-800">
+            <button
+              type="button"
+              onClick={() => window.open('/', '_blank')}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-surface-800 dark:bg-surface-900 dark:text-surface-200"
+            >
+              <Eye className="h-4 w-4" /> View Site
+            </button>
+            <button
+              onClick={async () => {
+                const supabase = createSupabaseClient();
+                await supabase.auth.signOut();
+                setUser(null);
+              }}
+              className="flex w-full items-center justify-center rounded-xl px-3 py-2 text-sm font-bold text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-900"
+            >
+              Sign Out
+            </button>
+          </div>
+        </aside>
+
+        <main className="min-w-0">
+          <div className="mb-6 rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900 sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAdminNavOpen(true)}
+                  className="rounded-xl border border-surface-200 bg-surface-50 p-2 text-surface-600 hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:bg-surface-800 lg:hidden"
+                  aria-label="Open admin navigation"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+                <div className="min-w-0">
+                  <h1 className="truncate text-2xl font-black text-surface-950 dark:text-white md:text-3xl">{activeTabMeta.label}</h1>
+                  <p className="mt-1 text-sm text-surface-500 dark:text-surface-400">{adminTabDescriptions[tab]}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={openNewPost}
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-primary-500/25 hover:bg-primary-600"
+                >
+                  <Plus className="h-4 w-4" /> New Post
+                </button>
+                <button
+                  onClick={() => {
+                    setTab('sections');
+                    setSectionLocationFilter('homepage');
+                    startNewSection('homepage');
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl border border-surface-200 bg-surface-50 px-4 py-2 text-sm font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200"
+                >
+                  <Layers className="h-4 w-4" /> New Section
+                </button>
+              </div>
+            </div>
+          </div>
 
       {/* ===== DASHBOARD TAB ===== */}
       {tab === 'dashboard' && (
@@ -2969,6 +3143,33 @@ export default function Admin() {
                 />
                 <p className="mt-1 text-[11px] text-surface-500">Adds a horizontal tag rail above this section grid. Tags must match post tags.</p>
               </div>
+              <div className="sm:col-span-2 rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-800/50">
+                <div className="mb-3">
+                  <p className="text-xs font-black uppercase tracking-wider text-surface-500">Section page hero and SEO</p>
+                  <p className="mt-1 text-xs text-surface-500">Controls the public page at /section/{newSectionSlug || slugify(newSectionName || 'section')}.</p>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <input
+                    value={newSectionSeoTitle}
+                    onChange={e => setNewSectionSeoTitle(e.target.value)}
+                    className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                    placeholder="SEO title override"
+                  />
+                  <input
+                    value={newSectionSeoDescription}
+                    onChange={e => setNewSectionSeoDescription(e.target.value)}
+                    className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                    placeholder="Meta description override"
+                  />
+                  <textarea
+                    value={newSectionIntroContent}
+                    onChange={e => setNewSectionIntroContent(e.target.value)}
+                    rows={3}
+                    className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 sm:col-span-2"
+                    placeholder="Hero / intro description shown on the section page. Markdown supported."
+                  />
+                </div>
+              </div>
             </div>
             <button
               onClick={handleAddSection}
@@ -3350,35 +3551,33 @@ export default function Admin() {
 
       {/* ===== SETTINGS TAB ===== */}
       {tab === 'settings' && (
-        <div className={settingsSubTab === 'homepage' || settingsSubTab === 'discovery' ? 'max-w-7xl' : 'max-w-3xl'}>
-          <div className="flex gap-2 mb-6 overflow-x-auto pb-1 border-b border-surface-200 dark:border-surface-800">
-            {[
-              { id: 'general', label: 'General' },
-              { id: 'homepage', label: 'Homepage' },
-              { id: 'discovery', label: 'Discovery Pages' },
-              { id: 'navigation', label: 'Navigation' },
-              { id: 'footer', label: 'Footer Links' },
-              { id: 'features', label: 'Features' },
-              { id: 'ads', label: 'Ads' },
-              { id: 'ai-tools', label: 'AI Tools' },
-              { id: 'comments', label: 'Comments' },
-              { id: 'share', label: 'Share Buttons' },
-            ].map(t => (
-              <button
-                key={t.id}
-                onClick={() => setSettingsSubTab(t.id as any)}
-                className={`px-4 py-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
-                  settingsSubTab === t.id 
-                    ? 'border-primary-500 text-primary-500' 
-                    : 'border-transparent text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+        <div className={settingsSubTab === 'homepage' || settingsSubTab === 'discovery' ? 'max-w-7xl' : 'max-w-5xl'}>
+          <div className="grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
+            <aside className="h-fit rounded-2xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900 lg:sticky lg:top-24">
+              <div className="hidden px-2 py-2 lg:block">
+                <p className="text-xs font-black uppercase tracking-wider text-surface-400">Settings</p>
+                <p className="mt-1 text-xs text-surface-500">Choose the site area you want to control.</p>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1 lg:mt-2 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
+                {settingsTabs.map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setSettingsSubTab(t.id)}
+                    className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-bold transition-all lg:w-full ${
+                      settingsSubTab === t.id
+                        ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
+                        : 'text-surface-600 hover:bg-surface-50 dark:text-surface-300 dark:hover:bg-surface-800'
+                    }`}
+                  >
+                    <span className={settingsSubTab === t.id ? 'text-white' : 'text-surface-500'}>{t.icon}</span>
+                    <span className="whitespace-nowrap">{t.label}</span>
+                  </button>
+                ))}
+              </div>
+            </aside>
 
-          <div className="space-y-6">
+            <div className="min-w-0 space-y-6">
             {settingsSubTab === 'general' && (
               <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                 <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
@@ -3621,25 +3820,15 @@ export default function Admin() {
                   </p>
                 </div>
               )}
-              <div className="flex flex-wrap gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={heroEnabled}
-                    onChange={e => setHeroEnabled(e.target.checked)}
-                    className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                  />
-                  <span className="text-sm">Show hero slideshow</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={heroAutoPlay}
-                    onChange={e => setHeroAutoPlay(e.target.checked)}
-                    className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                  />
-                  <span className="text-sm">Hero auto-play</span>
-                </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-50 px-4 py-3 dark:border-surface-700 dark:bg-surface-800/50">
+                  <span className="text-sm font-medium">Show hero slideshow</span>
+                  <ToggleSwitch checked={heroEnabled} onChange={setHeroEnabled} />
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-50 px-4 py-3 dark:border-surface-700 dark:bg-surface-800/50">
+                  <span className="text-sm font-medium">Hero auto-play</span>
+                  <ToggleSwitch checked={heroAutoPlay} onChange={setHeroAutoPlay} />
+                </div>
               </div>
               <div className="mt-3">
                 <label className="block text-sm font-medium mb-1.5">Hero Style</label>
@@ -3714,226 +3903,246 @@ export default function Admin() {
           )}
 
           {settingsSubTab === 'discovery' && (
-            <div className="space-y-6">
-              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <Compass className="w-4 h-4 text-primary-500" /> Explore Page
-                </h3>
-                <p className="text-xs text-surface-500 mb-4">
-                  Controls the public /explore listing page hero and SEO. The route is fixed unless a separate redirect/page route is added.
+            <div className="space-y-4">
+              <div className="flex items-start gap-2.5 rounded-lg bg-surface-50 p-3 text-xs text-surface-500 dark:bg-surface-800/60 dark:text-surface-400">
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-surface-400" />
+                <p>
+                  Controls for <span className="font-semibold text-surface-700 dark:text-surface-200">listing and discovery pages</span>. Each panel is labeled with the exact public route it affects. Rails default to off and never show fake auto chips.
                 </p>
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  <label className="block">
-                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">Public path</span>
-                    <input
-                      value={discoveryPages.exploreSlug || '/explore'}
-                      readOnly
-                      className="w-full rounded-xl border border-surface-200 bg-surface-100 px-4 py-2.5 text-sm text-surface-500 outline-none dark:border-surface-700 dark:bg-surface-800"
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">Hero badge</span>
-                    <input
-                      value={discoveryPages.exploreBadge || ''}
-                      onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreBadge: e.target.value }))}
-                      className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                      placeholder="Prompt Library"
-                    />
-                  </label>
-                  <label className="block lg:col-span-2">
-                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">Hero heading</span>
-                    <input
-                      value={discoveryPages.exploreTitle || ''}
-                      onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreTitle: e.target.value }))}
-                      className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                      placeholder="Explore curated AI image prompts"
-                    />
-                  </label>
-                  <label className="block lg:col-span-2">
-                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">Hero description</span>
-                    <textarea
-                      value={discoveryPages.exploreDescription || ''}
-                      onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreDescription: e.target.value }))}
-                      rows={2}
-                      className="min-h-[80px] w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                      placeholder="Browse %count% prompt collections..."
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">SEO title</span>
-                    <input
-                      value={discoveryPages.exploreSeoTitle || ''}
-                      onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreSeoTitle: e.target.value }))}
-                      className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                      placeholder="Explore AI Image Prompts | AI PromptMatrix"
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">OG image</span>
-                    <input
-                      value={discoveryPages.exploreOgImage || ''}
-                      onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreOgImage: e.target.value }))}
-                      className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                      placeholder="https://..."
-                    />
-                  </label>
-                  <label className="block lg:col-span-2">
-                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-surface-500">SEO description</span>
-                    <textarea
-                      value={discoveryPages.exploreSeoDescription || ''}
-                      onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreSeoDescription: e.target.value }))}
-                      rows={2}
-                      className="min-h-[72px] w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                      placeholder="Short search-result description"
-                    />
-                  </label>
-                  <label className="flex items-center gap-2 rounded-xl bg-surface-50 px-3 py-2 text-sm font-medium dark:bg-surface-800 lg:col-span-2">
-                    <input
-                      type="checkbox"
-                      checked={discoveryPages.showHeroStats ?? true}
-                      onChange={e => setDiscoveryPages(prev => ({ ...prev, showHeroStats: e.target.checked }))}
-                      className="h-4 w-4 rounded text-primary-500"
-                    />
-                    Show hero stat boxes
-                  </label>
-                </div>
               </div>
 
-              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <LayoutGrid className="w-4 h-4 text-primary-500" /> Listing Page Templates
-                </h3>
-                <p className="text-xs text-surface-500 mb-4">
-                  These pages use the same hero container, but each page type can generate its own heading and description.
-                </p>
-                <div className="grid grid-cols-1 gap-3">
-                  <p className="text-[11px] font-black uppercase tracking-wide text-surface-500">AI tool pages</p>
-                  <input value={discoveryPages.toolTitleTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, toolTitleTemplate: e.target.value }))} className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Tool title template: %tool% Prompts" />
-                  <textarea value={discoveryPages.toolDescriptionTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, toolDescriptionTemplate: e.target.value }))} rows={2} className="min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Tool description template" />
-                  <p className="text-[11px] font-black uppercase tracking-wide text-surface-500">Tag pages</p>
-                  <input value={discoveryPages.tagTitleTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, tagTitleTemplate: e.target.value }))} className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Tag title template: %tag% Prompts" />
-                  <textarea value={discoveryPages.tagDescriptionTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, tagDescriptionTemplate: e.target.value }))} rows={2} className="min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Tag description template" />
-                  <p className="text-[11px] font-black uppercase tracking-wide text-surface-500">Section pages</p>
-                  <textarea value={discoveryPages.sectionDescriptionTemplate || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, sectionDescriptionTemplate: e.target.value }))} rows={2} className="min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Section description template" />
-                </div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {discoveryTabItems.map(item => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setDiscoverySubTab(item.id)}
+                    className={`inline-flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm font-bold transition ${
+                      discoverySubTab === item.id
+                        ? 'border-primary-500 bg-primary-500 text-white shadow-sm'
+                        : 'border-surface-200 bg-white text-surface-700 hover:bg-surface-50 dark:border-surface-800 dark:bg-surface-900 dark:text-surface-200'
+                    }`}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </button>
+                ))}
               </div>
 
-              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-primary-500" /> Page-Specific Custom Rails
-                </h3>
-                <p className="text-xs text-surface-500 mb-4">
-                  Each page type has its own optional rail. Nothing renders on the public page unless the rail is enabled and at least one chip is saved.
-                </p>
-                <div className="space-y-4">
-                  {[
-                    {
-                      key: 'explore' as RailListKey,
-                      enabledKey: 'useCustomRailOnExplore' as keyof DiscoveryPageSettings,
-                      title: 'Explore page rail',
-                      description: 'Used on /explore.',
-                      items: exploreFilterItems,
-                      liveItems: liveExploreItems,
-                      savedItems: savedExploreItems,
-                      setItems: setExploreFilterItems,
-                    },
-                    {
-                      key: 'tool' as RailListKey,
-                      enabledKey: 'useCustomRailOnTools' as keyof DiscoveryPageSettings,
-                      title: 'AI tool page rail',
-                      description: 'Used on /tool/[tool] pages.',
-                      items: toolRailItems,
-                      liveItems: liveToolRailItems,
-                      savedItems: savedToolRailItems,
-                      setItems: setToolRailItems,
-                    },
-                    {
-                      key: 'tag' as RailListKey,
-                      enabledKey: 'useCustomRailOnTags' as keyof DiscoveryPageSettings,
-                      title: 'Tag page rail',
-                      description: 'Used on /tag/[tag] pages.',
-                      items: tagRailItems,
-                      liveItems: liveTagRailItems,
-                      savedItems: savedTagRailItems,
-                      setItems: setTagRailItems,
-                    },
-                    {
-                      key: 'section' as RailListKey,
-                      enabledKey: 'useCustomRailOnSections' as keyof DiscoveryPageSettings,
-                      title: 'Section page rail',
-                      description: 'Used on custom, popular, latest, and other /section/[slug] pages.',
-                      items: sectionRailItems,
-                      liveItems: liveSectionRailItems,
-                      savedItems: savedSectionRailItems,
-                      setItems: setSectionRailItems,
-                    },
-                  ].map(rail => (
-                    <div key={rail.key} className="rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-800/50">
-                      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-black">{rail.title}</p>
-                          <p className="text-xs text-surface-500">{rail.description}</p>
+              <div className="rounded-xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                <div className="mb-4 flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-200">
+                      {discoveryTabItems.find(item => item.id === discoverySubTab)?.icon}
+                    </div>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-sm font-black text-surface-950 dark:text-white">
+                          {discoveryTabItems.find(item => item.id === discoverySubTab)?.label}
+                        </h3>
+                        <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-black text-primary-600 dark:bg-primary-900/30 dark:text-primary-200">
+                          {discoveryTabItems.find(item => item.id === discoverySubTab)?.route}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-surface-500">
+                        {discoverySubTab === 'explore'
+                          ? 'Controls /explore, your main discovery page.'
+                          : discoverySubTab === 'tool'
+                            ? 'Controls every /tool/[tool] page.'
+                            : discoverySubTab === 'tag'
+                              ? 'Controls every /tag/[tag] page.'
+                              : 'Default controls for /section/[slug]. Per-section overrides live in Sections.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {discoverySubTab === 'explore' && (
+                  <>
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                      <label className="block">
+                        <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">Hero badge</span>
+                        <input value={discoveryPages.exploreBadge || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreBadge: e.target.value }))} className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-surface-700 dark:bg-surface-800" placeholder="Explore the library" />
+                      </label>
+                      <label className="block">
+                        <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">Hero heading</span>
+                        <input value={discoveryPages.exploreTitle || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreTitle: e.target.value }))} className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-surface-700 dark:bg-surface-800" placeholder="Explore AI Prompts" />
+                      </label>
+                    </div>
+                    <label className="mt-4 block">
+                      <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">Hero description</span>
+                      <textarea value={discoveryPages.exploreDescription || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreDescription: e.target.value }))} rows={2} className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-surface-700 dark:bg-surface-800" />
+                    </label>
+                    <div className="mt-4 rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+                      <div className="mb-4 flex items-start gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-200">
+                          <Info className="h-4 w-4" />
                         </div>
-                        <label className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-surface-700 ring-1 ring-surface-200 dark:bg-surface-900 dark:text-surface-100 dark:ring-surface-700">
-                          <input
-                            type="checkbox"
-                            checked={Boolean(discoveryPages[rail.enabledKey])}
-                            onChange={e => setDiscoveryPages(prev => ({ ...prev, [rail.enabledKey]: e.target.checked }))}
-                            className="h-4 w-4 rounded text-primary-500"
-                          />
-                          {discoveryPages[rail.enabledKey] ? 'Enabled' : 'Disabled'}
+                        <div>
+                          <h4 className="text-sm font-black">SEO & social</h4>
+                          <p className="text-sm text-surface-500">Meta for the Explore page</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        <label className="block">
+                          <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">Meta title</span>
+                          <input value={discoveryPages.exploreSeoTitle || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreSeoTitle: e.target.value }))} className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-surface-700 dark:bg-surface-800" />
+                        </label>
+                        <label className="block">
+                          <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">OG image URL</span>
+                          <input value={discoveryPages.exploreOgImage || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreOgImage: e.target.value }))} className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-surface-700 dark:bg-surface-800" placeholder="Default if empty" />
                         </label>
                       </div>
-                      {rail.liveItems.length > 0 ? (
-                        <div className="mb-3 flex flex-wrap gap-2">
-                          <span className="rounded-full bg-primary-600 px-3 py-1.5 text-xs font-black text-white">All</span>
-                          {rail.liveItems.slice(0, 12).map(item => (
-                            <span key={`${rail.key}:${item.type}:${item.value}`} className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-surface-700 ring-1 ring-surface-200 dark:bg-surface-900 dark:text-surface-100 dark:ring-surface-700">
-                              {item.label}
-                            </span>
-                          ))}
-                          {rail.liveItems.length > 12 && (
-                            <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-surface-500 ring-1 ring-surface-200 dark:bg-surface-900 dark:ring-surface-700">
-                              +{rail.liveItems.length - 12} more
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="mb-3 rounded-lg border border-dashed border-surface-300 bg-white p-3 text-xs text-surface-500 dark:border-surface-700 dark:bg-surface-900">
-                          No custom chips added. This rail will not render on the public page.
-                        </div>
-                      )}
-                      <div className="mb-3 flex flex-wrap gap-2">
-                        <button onClick={() => rail.setItems(autoExploreItems)} className="inline-flex items-center gap-2 rounded-lg bg-surface-900 px-3 py-2 text-xs font-bold text-white hover:bg-surface-800 dark:bg-surface-100 dark:text-surface-950">
-                          <Check className="h-3.5 w-3.5" /> Generate chips from current posts
-                        </button>
-                        <button onClick={() => rail.setItems([])} className="inline-flex items-center gap-2 rounded-lg bg-surface-200 px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-300 dark:bg-surface-700 dark:text-surface-100">
-                          <RotateCcw className="h-3.5 w-3.5" /> Clear all chips
-                        </button>
-                      </div>
-                      <div className="space-y-3">
-                        {rail.items.map((item, index) => (
-                          <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_140px_1fr_auto]">
-                            <input value={item.label} onChange={e => updateRailItem(rail.key, index, 'label', e.target.value)} className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm" placeholder="Visible title, e.g. Anime" />
-                            <select value={item.type} onChange={e => updateRailItem(rail.key, index, 'type', e.target.value)} className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm">
-                              <option value="tag">Tag</option>
-                              <option value="tool">AI Tool</option>
-                              <option value="category">Category</option>
-                            </select>
-                            <input value={item.value} onChange={e => updateRailItem(rail.key, index, 'value', e.target.value)} className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm" placeholder="Match value, e.g. anime" />
-                            <button onClick={() => removeRailItem(rail.key, index)} className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm">Remove</button>
-                          </div>
-                        ))}
-                        <button onClick={() => addRailItem(rail.key)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-surface-900 hover:bg-surface-100 dark:hover:bg-surface-700 text-sm font-medium">
-                          <Plus className="w-4 h-4" /> Add Chip
-                        </button>
-                      </div>
+                      <label className="mt-4 block">
+                        <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">Meta description</span>
+                        <textarea value={discoveryPages.exploreSeoDescription || ''} onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreSeoDescription: e.target.value }))} rows={2} className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-surface-700 dark:bg-surface-800" />
+                      </label>
                     </div>
-                  ))}
+                    <div className="mt-4 flex items-center justify-between gap-4 border-y border-surface-100 py-3 dark:border-surface-800">
+                      <div>
+                        <p className="text-sm font-medium text-surface-800 dark:text-surface-100">Show stat boxes</p>
+                        <p className="text-xs text-surface-400">Display total posts / tools / tags in the hero</p>
+                      </div>
+                      <ToggleSwitch checked={discoveryPages.showHeroStats ?? true} onChange={checked => setDiscoveryPages(prev => ({ ...prev, showHeroStats: checked }))} />
+                    </div>
+                  </>
+                )}
+
+                {discoverySubTab !== 'explore' && (
+                  <>
+                    {discoverySubTab === 'section' && (
+                      <div className="mb-4 flex items-start gap-2.5 rounded-lg bg-surface-50 p-3 text-xs text-surface-500 dark:bg-surface-800/60">
+                        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <p>Section names and page titles are edited per-section in the Sections tab. These are shared defaults.</p>
+                      </div>
+                    )}
+                    {discoverySubTab !== 'section' && (
+                      <label className="block">
+                        <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">Hero title</span>
+                        <input
+                          value={discoverySubTab === 'tool' ? discoveryPages.toolTitleTemplate || '' : discoveryPages.tagTitleTemplate || ''}
+                          onChange={e => setDiscoveryPages(prev => discoverySubTab === 'tool' ? ({ ...prev, toolTitleTemplate: e.target.value }) : ({ ...prev, tagTitleTemplate: e.target.value }))}
+                          className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-surface-700 dark:bg-surface-800"
+                        />
+                        <span className="mt-1 block text-xs text-surface-400">Tokens: {discoverySubTab === 'tool' ? '%tool%, %count%' : '%tag%, %count%'}</span>
+                      </label>
+                    )}
+                    <label className="mt-4 block">
+                      <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">Hero description</span>
+                      <textarea
+                        value={discoverySubTab === 'tool' ? discoveryPages.toolDescriptionTemplate || '' : discoverySubTab === 'tag' ? discoveryPages.tagDescriptionTemplate || '' : discoveryPages.sectionDescriptionTemplate || ''}
+                        onChange={e => setDiscoveryPages(prev => discoverySubTab === 'tool' ? ({ ...prev, toolDescriptionTemplate: e.target.value }) : discoverySubTab === 'tag' ? ({ ...prev, tagDescriptionTemplate: e.target.value }) : ({ ...prev, sectionDescriptionTemplate: e.target.value }))}
+                        rows={2}
+                        className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-surface-700 dark:bg-surface-800"
+                      />
+                      <span className="mt-1 block text-xs text-surface-400">Tokens: {discoverySubTab === 'tool' ? '%tool%, %count%' : discoverySubTab === 'tag' ? '%tag%, %count%' : '%section%, %count%'}</span>
+                    </label>
+                    <div className="mt-4 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                      <p className="text-[11px] font-black uppercase tracking-wide text-surface-400">Preview</p>
+                      <p className="mt-2 text-lg font-black text-surface-950 dark:text-white">
+                        {discoverySubTab === 'tool'
+                          ? (discoveryPages.toolTitleTemplate || '').replaceAll('%tool%', 'Midjourney').replaceAll('%count%', '12')
+                          : discoverySubTab === 'tag'
+                            ? (discoveryPages.tagTitleTemplate || '').replaceAll('%tag%', 'portrait').replaceAll('%count%', '8')
+                            : 'Trending Now'}
+                      </p>
+                      <p className="mt-1 text-sm text-surface-500">
+                        {(discoverySubTab === 'tool'
+                          ? discoveryPages.toolDescriptionTemplate || ''
+                          : discoverySubTab === 'tag'
+                            ? discoveryPages.tagDescriptionTemplate || ''
+                            : discoveryPages.sectionDescriptionTemplate || ''
+                        ).replaceAll('%tool%', 'Midjourney').replaceAll('%tag%', 'portrait').replaceAll('%section%', 'Trending Now').replaceAll('%count%', '12')}
+                      </p>
+                    </div>
+                    <div className="mt-4 rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+                      <div className="mb-4 flex items-start gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-200">
+                          <Info className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-black">SEO & social</h4>
+                          <p className="text-sm text-surface-500">Search and social defaults for this page type</p>
+                        </div>
+                      </div>
+                      <label className="block">
+                        <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">Meta title</span>
+                        <input
+                          value={discoverySubTab === 'tool' ? discoveryPages.toolSeoTitleTemplate || '' : discoverySubTab === 'tag' ? discoveryPages.tagSeoTitleTemplate || '' : discoveryPages.sectionSeoTitleTemplate || ''}
+                          onChange={e => setDiscoveryPages(prev => discoverySubTab === 'tool' ? ({ ...prev, toolSeoTitleTemplate: e.target.value }) : discoverySubTab === 'tag' ? ({ ...prev, tagSeoTitleTemplate: e.target.value }) : ({ ...prev, sectionSeoTitleTemplate: e.target.value }))}
+                          className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-surface-700 dark:bg-surface-800"
+                        />
+                      </label>
+                      <label className="mt-4 block">
+                        <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">Meta description</span>
+                        <textarea
+                          value={discoverySubTab === 'tool' ? discoveryPages.toolSeoDescriptionTemplate || '' : discoverySubTab === 'tag' ? discoveryPages.tagSeoDescriptionTemplate || '' : discoveryPages.sectionSeoDescriptionTemplate || ''}
+                          onChange={e => setDiscoveryPages(prev => discoverySubTab === 'tool' ? ({ ...prev, toolSeoDescriptionTemplate: e.target.value }) : discoverySubTab === 'tag' ? ({ ...prev, tagSeoDescriptionTemplate: e.target.value }) : ({ ...prev, sectionSeoDescriptionTemplate: e.target.value }))}
+                          rows={2}
+                          className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-surface-700 dark:bg-surface-800"
+                        />
+                      </label>
+                    </div>
+                  </>
+                )}
+
+                {[
+                  { key: 'explore' as RailListKey, enabledKey: 'useCustomRailOnExplore' as keyof DiscoveryPageSettings, title: 'Filter rail', description: 'The explore page filter rail', items: exploreFilterItems, liveItems: liveExploreItems, setItems: setExploreFilterItems },
+                  { key: 'tool' as RailListKey, enabledKey: 'useCustomRailOnTools' as keyof DiscoveryPageSettings, title: 'Filter rail', description: 'The AI tool page filter rail', items: toolRailItems, liveItems: liveToolRailItems, setItems: setToolRailItems },
+                  { key: 'tag' as RailListKey, enabledKey: 'useCustomRailOnTags' as keyof DiscoveryPageSettings, title: 'Filter rail', description: 'The tag page filter rail', items: tagRailItems, liveItems: liveTagRailItems, setItems: setTagRailItems },
+                  { key: 'section' as RailListKey, enabledKey: 'useCustomRailOnSections' as keyof DiscoveryPageSettings, title: 'Default filter rail', description: 'Sections without an override use this', items: sectionRailItems, liveItems: liveSectionRailItems, setItems: setSectionRailItems },
+                ].filter(rail => rail.key === discoverySubTab).map(rail => (
+                  <div key={rail.key} className="mt-4 rounded-lg border border-surface-200 p-3 dark:border-surface-700">
+                    <div className="mb-4 flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-200">
+                          <Compass className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-black">{rail.title}</h4>
+                          <p className="text-sm text-surface-500">{rail.description}</p>
+                        </div>
+                      </div>
+                      <ToggleSwitch checked={Boolean(discoveryPages[rail.enabledKey])} onChange={checked => setDiscoveryPages(prev => ({ ...prev, [rail.enabledKey]: checked }))} />
+                    </div>
+                    {rail.liveItems.length > 0 ? (
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-primary-600 px-3 py-1.5 text-xs font-black text-white">All</span>
+                        {rail.liveItems.slice(0, 12).map(item => (
+                          <span key={`${rail.key}:${item.type}:${item.value}`} className="rounded-full bg-surface-50 px-3 py-1.5 text-xs font-bold text-surface-700 ring-1 ring-surface-200 dark:bg-surface-800 dark:text-surface-100 dark:ring-surface-700">{item.label}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mb-3 rounded-lg border border-dashed border-surface-300 bg-surface-50 p-3 text-xs text-surface-500 dark:border-surface-700 dark:bg-surface-800/50">No custom chips added. This rail will not render on the public page.</div>
+                    )}
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      <button type="button" onClick={() => rail.setItems(autoExploreItems)} className="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-3 py-2 text-xs font-bold text-white hover:bg-primary-600"><Check className="h-3.5 w-3.5" /> Fill from current posts</button>
+                      <button type="button" onClick={() => rail.setItems([])} className="inline-flex items-center gap-2 rounded-lg bg-surface-100 px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-100"><RotateCcw className="h-3.5 w-3.5" /> Clear custom chips</button>
+                    </div>
+                    <div className="space-y-3">
+                      {rail.items.map((item, index) => (
+                        <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_140px_1fr_auto]">
+                          <input value={item.label} onChange={e => updateRailItem(rail.key, index, 'label', e.target.value)} className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Visible title" />
+                          <select value={item.type} onChange={e => updateRailItem(rail.key, index, 'type', e.target.value)} className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                            <option value="tag">Tag</option>
+                            <option value="tool">AI Tool</option>
+                            <option value="category">Category</option>
+                          </select>
+                          <input value={item.value} onChange={e => updateRailItem(rail.key, index, 'value', e.target.value)} className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Match value" />
+                          <button type="button" onClick={() => removeRailItem(rail.key, index)} className="rounded-lg px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">Remove</button>
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => addRailItem(rail.key)} className="inline-flex items-center gap-2 rounded-lg bg-surface-100 px-4 py-2 text-sm font-medium hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700"><Plus className="h-4 w-4" /> Add Chip</button>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="mt-5 flex items-center justify-end gap-2 rounded-xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900">
+                  <span className="mr-auto text-xs text-surface-400">Changes apply to your live configuration.</span>
+                  <button type="button" onClick={handleSaveSettings} className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-primary-600">
+                    <Save className="h-4 w-4" /> Save {discoveryTabItems.find(item => item.id === discoverySubTab)?.label}
+                  </button>
                 </div>
-                <button onClick={handleSaveSettings} className="mt-5 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors">
-                  <Save className="w-4 h-4" /> Save Discovery Settings
-                </button>
               </div>
             </div>
           )}
@@ -4041,33 +4250,18 @@ export default function Admin() {
                   Control the main homepage hero behavior and the library intro block above the slider.
                 </p>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-700 dark:bg-surface-800/50">
-                    <input
-                      type="checkbox"
-                      checked={features.showHomepageLibraryHero ?? true}
-                      onChange={(e) => setFeatures(prev => ({ ...prev, showHomepageLibraryHero: e.target.checked }))}
-                      className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                    />
-                    Show library hero intro
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-700 dark:bg-surface-800/50">
-                    <input
-                      type="checkbox"
-                      checked={heroEnabled}
-                      onChange={e => setHeroEnabled(e.target.checked)}
-                      className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                    />
-                    Show hero slideshow
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-700 dark:bg-surface-800/50">
-                    <input
-                      type="checkbox"
-                      checked={heroAutoPlay}
-                      onChange={e => setHeroAutoPlay(e.target.checked)}
-                      className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                    />
-                    Hero auto-play
-                  </label>
+                  <div className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-700 dark:bg-surface-800/50">
+                    <span className="font-medium">Show library hero intro</span>
+                    <ToggleSwitch checked={features.showHomepageLibraryHero ?? true} onChange={checked => setFeatures(prev => ({ ...prev, showHomepageLibraryHero: checked }))} />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-700 dark:bg-surface-800/50">
+                    <span className="font-medium">Show hero slideshow</span>
+                    <ToggleSwitch checked={heroEnabled} onChange={setHeroEnabled} />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-700 dark:bg-surface-800/50">
+                    <span className="font-medium">Hero auto-play</span>
+                    <ToggleSwitch checked={heroAutoPlay} onChange={setHeroAutoPlay} />
+                  </div>
                   <label className="block">
                     <span className="block text-xs font-medium text-surface-500 mb-1.5">Hero Style</span>
                     <select
@@ -4277,18 +4471,16 @@ export default function Admin() {
                                 <Edit3 className="h-4 w-4" />
                               </button>
                             )}
-                            <label className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-[11px] font-bold text-surface-600 dark:bg-surface-900 dark:text-surface-200">
-                              <input
-                                type="checkbox"
+                            <div className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-[11px] font-bold text-surface-600 dark:bg-surface-900 dark:text-surface-200">
+                              <ToggleSwitch
                                 checked={enabled}
-                                onChange={(e) => {
-                                  if (section) updateSection({ ...section, visible: e.target.checked });
-                                  else setFeatures(prev => ({ ...prev, [option!.featureKey]: e.target.checked }));
+                                onChange={checked => {
+                                  if (section) updateSection({ ...section, visible: checked });
+                                  else setFeatures(prev => ({ ...prev, [option!.featureKey]: checked }));
                                 }}
-                                className="h-4 w-4 rounded text-primary-500"
                               />
                               Show
-                            </label>
+                            </div>
                           </div>
                         </div>
                         {section && editingSectionId === section.id && (
@@ -4852,126 +5044,105 @@ export default function Admin() {
           )}
 
           {settingsSubTab === 'ads' && (
-          <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-             <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-               <Settings className="w-4 h-4 text-primary-500" /> Ad Spaces
-             </h3>
-             <div className="space-y-6">
-                
-                {/* Header Ad */}
-                <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
-                   <div className="flex items-center justify-between mb-3">
-                     <span className="text-sm font-medium">Header Ad (Top of page)</span>
-                     <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={adsConfig.header.enabled}
-                          onChange={(e) => setAdsConfig(prev => ({ ...prev, header: { ...prev.header, enabled: e.target.checked } }))}
-                          className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+            <div className="space-y-4">
+              <div className="rounded-xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-200">
+                    <Zap className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-surface-950 dark:text-white">Google AdSense</h3>
+                    <p className="text-sm text-surface-500">Publisher ID, auto ads, and global ad script status</p>
+                  </div>
+                  <span className={`ml-auto rounded-full px-2 py-1 text-xs font-bold ${adsConfig.header.enabled || adsConfig.inFeed.enabled || adsConfig.postTop.enabled || adsConfig.postBottom.enabled ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-200' : 'bg-surface-100 text-surface-500 dark:bg-surface-800'}`}>
+                    {adsConfig.header.enabled || adsConfig.inFeed.enabled || adsConfig.postTop.enabled || adsConfig.postBottom.enabled ? 'Connected' : 'Off'}
+                  </span>
+                </div>
+                <label className="block">
+                  <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">Publisher ID</span>
+                  <input
+                    value={adsensePublisherId}
+                    onChange={e => setAdsensePublisherId(e.target.value)}
+                    className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-surface-700 dark:bg-surface-800"
+                    placeholder="ca-pub-xxxxxxxxxxxxxxxx"
+                  />
+                </label>
+                <div className="mt-4 flex items-center justify-between gap-4 border-t border-surface-100 pt-4 dark:border-surface-800">
+                  <div>
+                    <p className="text-sm font-medium text-surface-800 dark:text-surface-100">Auto ads</p>
+                    <p className="text-xs text-surface-400">Let AdSense place ads automatically using the global script.</p>
+                  </div>
+                  <ToggleSwitch
+                    checked={adsenseAutoAds}
+                    onChange={setAdsenseAutoAds}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-200">
+                    <LayoutGrid className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-surface-950 dark:text-white">Manual ad slots</h3>
+                    <p className="text-sm text-surface-500">Place ads at specific locations</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {[
+                    { key: 'header' as const, name: 'Homepage Leaderboard', location: 'homepage-top', slot: adsConfig.header },
+                    { key: 'inFeed' as const, name: 'In-Feed Post Grid', location: `post-grid / every ${adsConfig.inFeed.frequency || 8} posts`, slot: adsConfig.inFeed },
+                    { key: 'postTop' as const, name: 'Post In-Article Top', location: 'post-top', slot: adsConfig.postTop },
+                    { key: 'postBottom' as const, name: 'Post In-Article Bottom', location: 'post-bottom', slot: adsConfig.postBottom },
+                  ].map(ad => (
+                    <div key={ad.key} className="rounded-lg border border-surface-200 bg-white p-3 dark:border-surface-700 dark:bg-surface-900">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-surface-850 dark:text-surface-100">{ad.name}</p>
+                          <p className="font-mono text-xs text-surface-400">{ad.location}</p>
+                        </div>
+                        {ad.key === 'inFeed' && (
+                          <div className="flex items-center gap-2 rounded-lg bg-surface-50 px-2 py-1 dark:bg-surface-800">
+                            <span className="text-xs text-surface-500">Every</span>
+                            <input
+                              type="number"
+                              min="1"
+                              max="20"
+                              value={adsConfig.inFeed.frequency}
+                              onChange={(e) => setAdsConfig(prev => ({ ...prev, inFeed: { ...prev.inFeed, frequency: parseInt(e.target.value) || 8 } }))}
+                              className="w-14 rounded border border-surface-200 bg-white px-2 py-1 text-xs outline-none dark:border-surface-700 dark:bg-surface-900"
+                            />
+                          </div>
+                        )}
+                        <span className={`rounded-full px-2 py-1 text-xs font-bold ${ad.slot.enabled ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-200' : 'bg-surface-100 text-surface-500 dark:bg-surface-800'}`}>
+                          {ad.slot.enabled ? 'Active' : 'Off'}
+                        </span>
+                        <ToggleSwitch
+                          checked={ad.slot.enabled}
+                          onChange={checked => setAdsConfig(prev => ({ ...prev, [ad.key]: { ...prev[ad.key], enabled: checked } }))}
                         />
-                        <span className="text-xs">Enabled</span>
-                     </label>
-                   </div>
-                   <textarea
-                     value={adsConfig.header.code}
-                     onChange={(e) => setAdsConfig(prev => ({ ...prev, header: { ...prev.header, code: e.target.value } }))}
-                     rows={3}
-                     placeholder="Paste Ad HTML/JS code here (e.g., Google AdSense)"
-                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-y"
-                   />
+                      </div>
+                      <textarea
+                        value={ad.slot.code}
+                        onChange={(e) => setAdsConfig(prev => ({ ...prev, [ad.key]: { ...prev[ad.key], code: e.target.value } }))}
+                        rows={3}
+                        placeholder="Paste ad HTML/JS code here"
+                        className="mt-3 w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-xs font-mono outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                      />
+                    </div>
+                  ))}
                 </div>
+              </div>
 
-                {/* In-Feed Ad */}
-                <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
-                   <div className="flex items-center justify-between mb-3">
-                     <span className="text-sm font-medium">In-Feed Ad (Post Grids)</span>
-                     <div className="flex items-center gap-4">
-                       <div className="flex items-center gap-2">
-                         <span className="text-xs text-surface-500">Show every</span>
-                         <input
-                           type="number"
-                           min="1"
-                           max="20"
-                           value={adsConfig.inFeed.frequency}
-                           onChange={(e) => setAdsConfig(prev => ({ ...prev, inFeed: { ...prev.inFeed, frequency: parseInt(e.target.value) || 8 } }))}
-                           className="w-16 px-2 py-1 rounded bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none text-xs"
-                         />
-                         <span className="text-xs text-surface-500">posts</span>
-                       </div>
-                       <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={adsConfig.inFeed.enabled}
-                            onChange={(e) => setAdsConfig(prev => ({ ...prev, inFeed: { ...prev.inFeed, enabled: e.target.checked } }))}
-                            className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                          />
-                          <span className="text-xs">Enabled</span>
-                       </label>
-                     </div>
-                   </div>
-                   <textarea
-                     value={adsConfig.inFeed.code}
-                     onChange={(e) => setAdsConfig(prev => ({ ...prev, inFeed: { ...prev.inFeed, code: e.target.value } }))}
-                     rows={3}
-                     placeholder="Paste Ad HTML/JS code here"
-                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-y"
-                   />
-                </div>
-
-                {/* Post Top Ad */}
-                <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
-                   <div className="flex items-center justify-between mb-3">
-                     <span className="text-sm font-medium">Post Details - Top</span>
-                     <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={adsConfig.postTop.enabled}
-                          onChange={(e) => setAdsConfig(prev => ({ ...prev, postTop: { ...prev.postTop, enabled: e.target.checked } }))}
-                          className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                        />
-                        <span className="text-xs">Enabled</span>
-                     </label>
-                   </div>
-                   <textarea
-                     value={adsConfig.postTop.code}
-                     onChange={(e) => setAdsConfig(prev => ({ ...prev, postTop: { ...prev.postTop, code: e.target.value } }))}
-                     rows={3}
-                     placeholder="Paste Ad HTML/JS code here"
-                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-y"
-                   />
-                </div>
-
-                {/* Post Bottom Ad */}
-                <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
-                   <div className="flex items-center justify-between mb-3">
-                     <span className="text-sm font-medium">Post Details - Bottom</span>
-                     <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={adsConfig.postBottom.enabled}
-                          onChange={(e) => setAdsConfig(prev => ({ ...prev, postBottom: { ...prev.postBottom, enabled: e.target.checked } }))}
-                          className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                        />
-                        <span className="text-xs">Enabled</span>
-                     </label>
-                   </div>
-                   <textarea
-                     value={adsConfig.postBottom.code}
-                     onChange={(e) => setAdsConfig(prev => ({ ...prev, postBottom: { ...prev.postBottom, code: e.target.value } }))}
-                     rows={3}
-                     placeholder="Paste Ad HTML/JS code here"
-                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-y"
-                   />
-                </div>
-
-                <button
-                  onClick={handleSaveSettings}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-8"
-                >
-                  <Save className="w-4 h-4" /> Save Ad Settings
+              <div className="flex items-center justify-end gap-2 rounded-xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900">
+                <span className="mr-auto text-xs text-surface-400">Changes apply to your live configuration.</span>
+                <button onClick={handleSaveSettings} className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-primary-600">
+                  <Save className="h-4 w-4" /> Save ad settings
                 </button>
-             </div>
-          </div>
+              </div>
+            </div>
           )}
 
           {/* AI Tools Management */}
@@ -5124,10 +5295,7 @@ export default function Admin() {
               <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">User Profiles & Bookmarks</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.userProfiles} onChange={(e) => setFeatures(prev => ({ ...prev, userProfiles: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <ToggleSwitch checked={features.userProfiles} onChange={checked => setFeatures(prev => ({ ...prev, userProfiles: checked }))} label={features.userProfiles ? 'On' : 'Off'} />
                 </div>
               </div>
 
@@ -5135,17 +5303,14 @@ export default function Admin() {
               <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">User Submissions & Approval Queue</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.userSubmissions} onChange={(e) => setFeatures(prev => ({ ...prev, userSubmissions: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <ToggleSwitch checked={features.userSubmissions} onChange={checked => setFeatures(prev => ({ ...prev, userSubmissions: checked }))} label={features.userSubmissions ? 'On' : 'Off'} />
                 </div>
                 {features.userSubmissions && (
                   <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
-                    <label className="flex items-center gap-2 cursor-pointer text-sm">
-                      <input type="checkbox" checked={features.userSubmissionsAutoApprove} onChange={(e) => setFeatures(prev => ({ ...prev, userSubmissionsAutoApprove: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                      Auto-Approve User Submissions
-                    </label>
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                      <span>Auto-approve user submissions</span>
+                      <ToggleSwitch checked={Boolean(features.userSubmissionsAutoApprove)} onChange={checked => setFeatures(prev => ({ ...prev, userSubmissionsAutoApprove: checked }))} />
+                    </div>
                   </div>
                 )}
               </div>
@@ -5154,17 +5319,14 @@ export default function Admin() {
               <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Comments & Feedback</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.comments} onChange={(e) => setFeatures(prev => ({ ...prev, comments: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <ToggleSwitch checked={features.comments} onChange={checked => setFeatures(prev => ({ ...prev, comments: checked }))} label={features.comments ? 'On' : 'Off'} />
                 </div>
                 {features.comments && (
                   <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
-                    <label className="flex items-center gap-2 cursor-pointer text-sm">
-                      <input type="checkbox" checked={features.commentsRequireApproval} onChange={(e) => setFeatures(prev => ({ ...prev, commentsRequireApproval: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                      Require manual approval for user comments
-                    </label>
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                      <span>Require manual approval for user comments</span>
+                      <ToggleSwitch checked={Boolean(features.commentsRequireApproval)} onChange={checked => setFeatures(prev => ({ ...prev, commentsRequireApproval: checked }))} />
+                    </div>
                   </div>
                 )}
               </div>
@@ -5178,26 +5340,21 @@ export default function Admin() {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="checkbox" checked={features.showCopyCollection ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showCopyCollection: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    Copy entire collection block
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="checkbox" checked={features.showHowTo ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showHowTo: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    How to use section
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="checkbox" checked={features.showRecommendedPosts ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showRecommendedPosts: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    Recommended prompts
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="checkbox" checked={features.showTags ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showTags: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    Discovery tags
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="checkbox" checked={features.showDetailedInsights ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showDetailedInsights: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    Detailed insights
-                  </label>
+                  {[
+                    ['showCopyCollection', 'Copy entire collection block', true],
+                    ['showHowTo', 'How to use section', true],
+                    ['showRecommendedPosts', 'Recommended prompts', true],
+                    ['showTags', 'Discovery tags', true],
+                    ['showDetailedInsights', 'Detailed insights', true],
+                  ].map(([key, label, defaultValue]) => (
+                    <div key={key as string} className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-sm dark:bg-surface-900">
+                      <span>{label as string}</span>
+                      <ToggleSwitch
+                        checked={Boolean((features as any)[key as string] ?? defaultValue)}
+                        onChange={checked => setFeatures(prev => ({ ...prev, [key as string]: checked }))}
+                      />
+                    </div>
+                  ))}
                   {[
                     ['showPostSidebar', 'Post sidebar'],
                     ['showShareButtons', 'Share buttons'],
@@ -5209,15 +5366,13 @@ export default function Admin() {
                     ['publicProfileLikes', 'Show likes on public profiles'],
                     ['publicProfileBookmarks', 'Show saves on public profiles'],
                   ].map(([key, label]) => (
-                    <label key={key} className="flex items-center gap-2 cursor-pointer text-sm">
-                      <input
-                        type="checkbox"
+                    <div key={key} className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-sm dark:bg-surface-900">
+                      <span>{label}</span>
+                      <ToggleSwitch
                         checked={Boolean((features as any)[key] ?? ['showPostSidebar', 'showShareButtons', 'showTryButtons', 'showYouMightAlsoLike', 'showScrollProgress', 'showFaqSchema', 'showPublicProfiles'].includes(key))}
-                        onChange={(e) => setFeatures(prev => ({ ...prev, [key]: e.target.checked }))}
-                        className="w-4 h-4 rounded text-primary-500"
+                        onChange={checked => setFeatures(prev => ({ ...prev, [key]: checked }))}
                       />
-                      {label}
-                    </label>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -5308,10 +5463,7 @@ export default function Admin() {
               <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Advanced Search & Filtering</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.advancedFiltering} onChange={(e) => setFeatures(prev => ({ ...prev, advancedFiltering: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <ToggleSwitch checked={features.advancedFiltering} onChange={checked => setFeatures(prev => ({ ...prev, advancedFiltering: checked }))} label={features.advancedFiltering ? 'On' : 'Off'} />
                 </div>
               </div>
 
@@ -5319,10 +5471,7 @@ export default function Admin() {
               <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Smart &quot;Fill-in-the-blank&quot; Templates</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.smartTemplates} onChange={(e) => setFeatures(prev => ({ ...prev, smartTemplates: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <ToggleSwitch checked={features.smartTemplates} onChange={checked => setFeatures(prev => ({ ...prev, smartTemplates: checked }))} label={features.smartTemplates ? 'On' : 'Off'} />
                 </div>
               </div>
 
@@ -5330,10 +5479,7 @@ export default function Admin() {
               <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Infinite Scrolling (Explore)</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.infiniteScroll} onChange={(e) => setFeatures(prev => ({ ...prev, infiniteScroll: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <ToggleSwitch checked={features.infiniteScroll} onChange={checked => setFeatures(prev => ({ ...prev, infiniteScroll: checked }))} label={features.infiniteScroll ? 'On' : 'Off'} />
                 </div>
                 {features.infiniteScroll && (
                   <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex items-center gap-4">
@@ -5354,10 +5500,7 @@ export default function Admin() {
               <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Premium / Pro Prompts</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.premiumPrompts} onChange={(e) => setFeatures(prev => ({ ...prev, premiumPrompts: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <ToggleSwitch checked={features.premiumPrompts} onChange={checked => setFeatures(prev => ({ ...prev, premiumPrompts: checked }))} label={features.premiumPrompts ? 'On' : 'Off'} />
                 </div>
                 {features.premiumPrompts && (
                   <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 space-y-3">
@@ -5389,10 +5532,7 @@ export default function Admin() {
               <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Skeleton Loaders</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.skeletonLoaders} onChange={(e) => setFeatures(prev => ({ ...prev, skeletonLoaders: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <ToggleSwitch checked={features.skeletonLoaders} onChange={checked => setFeatures(prev => ({ ...prev, skeletonLoaders: checked }))} label={features.skeletonLoaders ? 'On' : 'Off'} />
                 </div>
               </div>
 
@@ -5400,10 +5540,7 @@ export default function Admin() {
               <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Trending Algorithms</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.trendingAlgorithm} onChange={(e) => setFeatures(prev => ({ ...prev, trendingAlgorithm: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <ToggleSwitch checked={features.trendingAlgorithm} onChange={checked => setFeatures(prev => ({ ...prev, trendingAlgorithm: checked }))} label={features.trendingAlgorithm ? 'On' : 'Off'} />
                 </div>
                 {features.trendingAlgorithm && (
                   <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 space-y-3">
@@ -5493,130 +5630,140 @@ export default function Admin() {
           )}
 
           {settingsSubTab === 'comments' && (
-            <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-              <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                <MessageCircle className="w-4 h-4 text-primary-500" /> Comments
-              </h3>
-              <div className="space-y-4">
-                <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
-                  <span>
-                    <b>Enable comments globally</b>
-                    <span className="mt-1 block text-xs text-surface-500">Controls the live comment form and comment lists on post pages.</span>
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={features.comments}
-                    onChange={e => setFeatures(prev => ({ ...prev, comments: e.target.checked }))}
-                    className="h-4 w-4 rounded text-primary-500"
-                  />
-                </label>
-                <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
-                  <span>
-                    <b>Require approval</b>
-                    <span className="mt-1 block text-xs text-surface-500">New comments stay pending until an admin approves them.</span>
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={features.commentsRequireApproval}
-                    onChange={e => setFeatures(prev => ({ ...prev, commentsRequireApproval: e.target.checked }))}
-                    className="h-4 w-4 rounded text-primary-500"
-                  />
-                </label>
-                <div>
-                  <label className="block text-xs font-medium text-surface-400 mb-1">Comment provider</label>
-                  <select className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none dark:border-surface-700 dark:bg-surface-800" value="custom" disabled>
-                    <option value="custom">Custom built-in comments</option>
-                  </select>
-                  <p className="mt-1 text-xs text-surface-500">This site currently renders the built-in comment system. Disqus can be added later without changing this route.</p>
+            <div className="space-y-4">
+              <div className="rounded-xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-200">
+                    <MessageCircle className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-surface-950 dark:text-white">Comments</h3>
+                    <p className="text-sm text-surface-500">Global comment settings</p>
+                  </div>
+                </div>
+                <div className="divide-y divide-surface-100 dark:divide-surface-800">
+                  <div className="flex items-center justify-between gap-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium text-surface-800 dark:text-surface-100">Enable comments</p>
+                      <p className="text-xs text-surface-400">Master switch for comment forms and comment lists.</p>
+                    </div>
+                    <ToggleSwitch checked={features.comments ?? false} onChange={checked => setFeatures(prev => ({ ...prev, comments: checked }))} />
+                  </div>
+                  <div className="flex items-center justify-between gap-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium text-surface-800 dark:text-surface-100">Require approval</p>
+                      <p className="text-xs text-surface-400">New comments stay pending until an admin approves them.</p>
+                    </div>
+                    <ToggleSwitch checked={features.commentsRequireApproval ?? false} onChange={checked => setFeatures(prev => ({ ...prev, commentsRequireApproval: checked }))} />
+                  </div>
+                </div>
+                <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <label>
+                    <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">Provider</span>
+                    <select className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none dark:border-surface-700 dark:bg-surface-800" value="custom" disabled>
+                      <option value="custom">Custom built-in comments</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">Moderation</span>
+                    <select className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none dark:border-surface-700 dark:bg-surface-800" value={features.commentsRequireApproval ? 'pre-moderate' : 'post-moderate'} onChange={e => setFeatures(prev => ({ ...prev, commentsRequireApproval: e.target.value === 'pre-moderate' }))}>
+                      <option value="pre-moderate">Pre-moderate (approve first)</option>
+                      <option value="post-moderate">Post-moderate (auto-approve)</option>
+                    </select>
+                  </label>
                 </div>
               </div>
-              <button
-                onClick={handleSaveSettings}
-                className="mt-6 flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-600"
-              >
-                <Save className="w-4 h-4" /> Save Comments
-              </button>
+              <div className="flex items-center justify-end gap-2 rounded-xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900">
+                <span className="mr-auto text-xs text-surface-400">Changes apply to your live configuration.</span>
+                <button onClick={handleSaveSettings} className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-primary-600">
+                  <Save className="h-4 w-4" /> Save comment settings
+                </button>
+              </div>
             </div>
           )}
 
           {settingsSubTab === 'share' && (
-            <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-              <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                <ArrowRight className="w-4 h-4 text-primary-500" /> Share Buttons
-              </h3>
-              <div className="space-y-4">
-                <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
-                  <span>
-                    <b>Show share buttons on post pages</b>
-                    <span className="mt-1 block text-xs text-surface-500">Controls the live share strip rendered on prompt pages.</span>
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={features.showShareButtons ?? true}
-                    onChange={e => setFeatures(prev => ({ ...prev, showShareButtons: e.target.checked }))}
-                    className="h-4 w-4 rounded text-primary-500"
-                  />
-                </label>
-                <div className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-800 dark:bg-surface-800/50">
-                  <p className="text-sm font-bold">Show these share targets</p>
-                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="space-y-4">
+              <div className="rounded-xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-200">
+                    <ArrowRight className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-surface-950 dark:text-white">Share buttons</h3>
+                    <p className="text-sm text-surface-500">Where and how share actions appear</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <label>
+                    <span className="mb-1.5 block text-sm font-medium text-surface-700 dark:text-surface-200">Position</span>
+                    <select
+                      value={settings.shareSettings?.position || 'floating-sidebar'}
+                      onChange={e => updateSettings({
+                        ...settings,
+                        shareSettings: {
+                          targets: settings.shareSettings?.targets?.length ? settings.shareSettings.targets : ['whatsapp', 'x', 'instagram', 'copy'],
+                          position: e.target.value as 'below-prompt' | 'bottom' | 'floating-sidebar',
+                        },
+                      })}
+                      className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:border-surface-700 dark:bg-surface-800"
+                    >
+                      <option value="below-prompt">Below prompt</option>
+                      <option value="bottom">Bottom of page</option>
+                      <option value="floating-sidebar">Floating sidebar</option>
+                    </select>
+                  </label>
+                  <div className="flex items-center justify-between gap-4 rounded-lg bg-surface-50 px-3 py-2.5 dark:bg-surface-800/50">
+                    <div>
+                      <p className="text-sm font-medium text-surface-800 dark:text-surface-100">Show share buttons</p>
+                      <p className="text-xs text-surface-400">Controls the live share strip on prompt pages.</p>
+                    </div>
+                    <ToggleSwitch checked={features.showShareButtons ?? true} onChange={checked => setFeatures(prev => ({ ...prev, showShareButtons: checked }))} />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <p className="mb-2 text-sm font-medium text-surface-700 dark:text-surface-200">Enabled share targets</p>
+                  <div className="flex flex-wrap gap-2">
                     {shareTargetOptions.map(target => {
                       const activeTargets: ShareTarget[] = settings.shareSettings?.targets?.length ? settings.shareSettings.targets : ['whatsapp', 'x', 'instagram', 'copy'];
+                      const active = activeTargets.includes(target.id);
                       return (
-                        <label key={target.id} className="flex items-center gap-2 text-sm">
-                          <input
-                            type="checkbox"
-                            checked={activeTargets.includes(target.id)}
-                            onChange={e => {
-                              const nextTargets = e.target.checked
-                                ? Array.from(new Set([...activeTargets, target.id]))
-                                : activeTargets.filter(item => item !== target.id);
-                              updateSettings({
-                                ...settings,
-                                shareSettings: {
-                                  targets: nextTargets.length > 0 ? nextTargets : (['copy'] as ShareTarget[]),
-                                  position: settings.shareSettings?.position || 'floating-sidebar',
-                                },
-                              });
-                            }}
-                            className="h-4 w-4 rounded text-primary-500"
-                          />
+                        <button
+                          key={target.id}
+                          type="button"
+                          onClick={() => {
+                            const nextTargets = active
+                              ? activeTargets.filter(item => item !== target.id)
+                              : Array.from(new Set([...activeTargets, target.id]));
+                            updateSettings({
+                              ...settings,
+                              shareSettings: {
+                                targets: nextTargets.length > 0 ? nextTargets : (['copy'] as ShareTarget[]),
+                                position: settings.shareSettings?.position || 'floating-sidebar',
+                              },
+                            });
+                          }}
+                          className={`rounded-lg px-3 py-1.5 text-sm font-bold transition ${active ? 'bg-primary-500 text-white' : 'bg-surface-100 text-surface-500 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700'}`}
+                        >
                           {target.label}
-                        </label>
+                        </button>
                       );
                     })}
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-surface-400 mb-1">Position</label>
-                  <select
-                    value={settings.shareSettings?.position || 'floating-sidebar'}
-                    onChange={e => updateSettings({
-                      ...settings,
-                      shareSettings: {
-                        targets: settings.shareSettings?.targets?.length ? settings.shareSettings.targets : ['whatsapp', 'x', 'instagram', 'copy'],
-                        position: e.target.value as 'below-prompt' | 'bottom' | 'floating-sidebar',
-                      },
-                    })}
-                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                  >
-                    <option value="below-prompt">Below prompt</option>
-                    <option value="bottom">Bottom of page</option>
-                    <option value="floating-sidebar">Floating sidebar</option>
-                  </select>
-                </div>
               </div>
-              <button
-                onClick={handleSaveSettings}
-                className="mt-6 flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-600"
-              >
-                <Save className="w-4 h-4" /> Save Share Buttons
-              </button>
+              <div className="flex items-center justify-end gap-2 rounded-xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900">
+                <span className="mr-auto text-xs text-surface-400">Changes apply to your live configuration.</span>
+                <button onClick={handleSaveSettings} className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-primary-600">
+                  <Save className="h-4 w-4" /> Save share settings
+                </button>
+              </div>
             </div>
           )}
 
           {/* Danger Zone Removed */}
         </div>
+      </div>
       </div>
       )}
 
@@ -5811,27 +5958,55 @@ export default function Admin() {
       {/* ===== SEO TAB ===== */}
       {tab === 'seo' && (
         <div className="max-w-4xl">
-          <SeoPagesTab settings={settings} updateSettings={updateSettings} />
+          <SeoPagesTab settings={settings} updateSettings={updateSettings} mode="global" />
         </div>
       )}
 
       {/* ===== PAGES TAB ===== */}
       {tab === 'pages' && (
-        <div className="max-w-4xl">
-          <StaticPagesTab
-            key={[
-              settings.pageAbout,
-              settings.pagePrivacy,
-              settings.pageTerms,
-              settings.pageDmca,
-              settings.pageDisclaimer,
-              settings.pageContact,
-            ].join('|')}
-            settings={settings}
-            updateSettings={updateSettings}
-          />
+        <div className="max-w-5xl space-y-5">
+          <div className="rounded-2xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900">
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: 'static' as PagesSubTab, label: 'Static Pages', description: 'About, contact, privacy, terms, DMCA, disclaimer.' },
+                { id: 'seo-pages' as PagesSubTab, label: 'SEO Pages', description: 'Custom landing pages for search combinations.' },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setPagesSubTab(item.id)}
+                  className={`rounded-xl px-4 py-3 text-left transition-all ${
+                    pagesSubTab === item.id
+                      ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
+                      : 'bg-surface-50 text-surface-700 hover:bg-surface-100 dark:bg-surface-800 dark:text-surface-200 dark:hover:bg-surface-700'
+                  }`}
+                >
+                  <span className="block text-sm font-black">{item.label}</span>
+                  <span className={`mt-1 block text-xs ${pagesSubTab === item.id ? 'text-white/80' : 'text-surface-500'}`}>{item.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          {pagesSubTab === 'static' ? (
+            <StaticPagesTab
+              key={[
+                settings.pageAbout,
+                settings.pagePrivacy,
+                settings.pageTerms,
+                settings.pageDmca,
+                settings.pageDisclaimer,
+                settings.pageContact,
+              ].join('|')}
+              settings={settings}
+              updateSettings={updateSettings}
+            />
+          ) : (
+            <SeoPagesTab mode="pages" />
+          )}
         </div>
       )}
+        </main>
+      </div>
     </div>
   );
 }

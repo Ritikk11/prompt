@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { Metadata } from 'next';
 import ToolContent from './ToolContent';
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
+import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
 
 interface Props {
   params: Promise<{ tool: string }>;
@@ -13,10 +14,26 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { tool } = await params;
   const decodedTool = decodeURIComponent(tool);
+  const [posts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
+  const discovery = settings.discoveryPages || {};
+  const count = posts.filter(post =>
+    (post.status === 'published' || !post.status) &&
+    post.visibility !== 'private' &&
+    ((post.aiTools || []).some(item => item.toLowerCase() === decodedTool.toLowerCase()) ||
+      post.images.some(image => (image.aiTools || [image.aiTool]).filter(Boolean).some(item => item.toLowerCase() === decodedTool.toLowerCase())))
+  ).length;
+  const title = fillDiscoveryTemplate(
+    discovery.toolSeoTitleTemplate || discovery.toolTitleTemplate || 'Best %tool% AI Prompts | AI PromptMatrix',
+    { tool: decodedTool, count }
+  );
+  const description = fillDiscoveryTemplate(
+    discovery.toolSeoDescriptionTemplate || discovery.toolDescriptionTemplate || 'Explore the best AI prompts and images for %tool%.',
+    { tool: decodedTool, count }
+  );
   
   return {
-    title: `Best ${decodedTool} AI Prompts | AI PromptMatrix`,
-    description: `Explore the best AI prompts and images for ${decodedTool}. Discover collections curated for advanced text generation, image creation, and more.`,
+    title,
+    description,
     keywords: [decodedTool, 'AI prompts', 'templates'],
   };
 }

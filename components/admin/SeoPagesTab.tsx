@@ -4,6 +4,19 @@ import { Plus, Trash2, Edit3, X, Save } from 'lucide-react';
 import { createClient } from '@/lib/supabase-client';
 import type { SeoSettings, SiteSettings } from '@/lib/types';
 
+type SeoPagesTabMode = 'global' | 'pages' | 'all';
+
+function ToggleSwitch({ checked, onChange, label }: { checked: boolean; onChange: (checked: boolean) => void; label?: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className="inline-flex items-center gap-2 text-xs font-bold">
+      <span className={`relative inline-flex h-6 w-11 rounded-full transition-colors ${checked ? 'bg-primary-500' : 'bg-surface-300 dark:bg-surface-700'}`}>
+        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`} />
+      </span>
+      {label && <span className={checked ? 'text-primary-600 dark:text-primary-300' : 'text-surface-500'}>{label}</span>}
+    </button>
+  );
+}
+
 async function adminRequest(payload?: any) {
   const supabase = createClient();
   const { data: { session } } = await supabase.auth.getSession();
@@ -38,7 +51,7 @@ const defaultSeoSettings: SeoSettings = {
   redirects: [],
 };
 
-export default function SeoPagesTab({ settings, updateSettings }: { settings?: SiteSettings; updateSettings?: (s: SiteSettings) => void }) {
+export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: { settings?: SiteSettings; updateSettings?: (s: SiteSettings) => void; mode?: SeoPagesTabMode }) {
   const [seoPages, setSeoPages] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -206,7 +219,7 @@ export default function SeoPagesTab({ settings, updateSettings }: { settings?: S
 
   return (
     <div>
-      {settings && updateSettings && (
+      {settings && updateSettings && mode !== 'pages' && (
         <div className="mb-8 space-y-5 rounded-xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
           <div>
             <h2 className="text-xl font-bold">Global SEO</h2>
@@ -278,7 +291,7 @@ export default function SeoPagesTab({ settings, updateSettings }: { settings?: S
               </div>
               <button type="button" onClick={() => window.open('/sitemap.xml', '_blank')} className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-primary-600 dark:bg-surface-900">Open Sitemap</button>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {[
                 ['posts', 'Posts'],
                 ['sections', 'Sections'],
@@ -286,15 +299,13 @@ export default function SeoPagesTab({ settings, updateSettings }: { settings?: S
                 ['tools', 'Tool pages'],
                 ['staticPages', 'Static pages'],
               ].map(([key, label]) => (
-                <label key={key} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
+                <div key={key} className="flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 text-sm dark:bg-surface-900">
+                  <span>{label}</span>
+                  <ToggleSwitch
                     checked={Boolean((seoSettings.sitemapInclude as any)?.[key] ?? true)}
-                    onChange={e => updateSeoSettings({ sitemapInclude: { [key]: e.target.checked } as any })}
-                    className="h-4 w-4 rounded text-primary-500"
+                    onChange={checked => updateSeoSettings({ sitemapInclude: { [key]: checked } as any })}
                   />
-                  {label}
-                </label>
+                </div>
               ))}
             </div>
           </div>
@@ -310,18 +321,18 @@ export default function SeoPagesTab({ settings, updateSettings }: { settings?: S
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={seoSettings.enableJsonLd ?? true} onChange={e => updateSeoSettings({ enableJsonLd: e.target.checked })} className="h-4 w-4 rounded text-primary-500" />
-              Enable JSON-LD on post pages
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={seoSettings.enableBreadcrumbList ?? true} onChange={e => updateSeoSettings({ enableBreadcrumbList: e.target.checked })} className="h-4 w-4 rounded text-primary-500" />
-              Enable BreadcrumbList
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={seoSettings.enableSitelinksSearchbox ?? true} onChange={e => updateSeoSettings({ enableSitelinksSearchbox: e.target.checked })} className="h-4 w-4 rounded text-primary-500" />
-              Enable WebSite sitelinks searchbox
-            </label>
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
+              <span>JSON-LD on post pages</span>
+              <ToggleSwitch checked={seoSettings.enableJsonLd ?? true} onChange={checked => updateSeoSettings({ enableJsonLd: checked })} />
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
+              <span>BreadcrumbList</span>
+              <ToggleSwitch checked={seoSettings.enableBreadcrumbList ?? true} onChange={checked => updateSeoSettings({ enableBreadcrumbList: checked })} />
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
+              <span>WebSite sitelinks searchbox</span>
+              <ToggleSwitch checked={seoSettings.enableSitelinksSearchbox ?? true} onChange={checked => updateSeoSettings({ enableSitelinksSearchbox: checked })} />
+            </div>
             <div>
               <label className="block text-xs font-medium text-surface-500 mb-1">Schema type</label>
               <select
@@ -368,6 +379,8 @@ export default function SeoPagesTab({ settings, updateSettings }: { settings?: S
         </div>
       )}
 
+      {mode !== 'global' && (
+      <>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">SEO Pages</h2>
         <button onClick={() => setShowForm(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors">
@@ -400,6 +413,8 @@ export default function SeoPagesTab({ settings, updateSettings }: { settings?: S
           </div>
         ))}
       </div>
+      </>
+      )}
     </div>
   );
 }
