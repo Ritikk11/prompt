@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import type { Post, PostComment, SiteSettings } from '@/lib/types';
 
+function isMissingTableError(error: unknown) {
+  const message = typeof error === 'object' && error && 'message' in error ? String((error as any).message) : '';
+  const code = typeof error === 'object' && error && 'code' in error ? String((error as any).code) : '';
+  return code === '42P01' || message.includes('Could not find the table') || message.includes('does not exist');
+}
+
 async function getUserFromRequest(request: Request) {
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
   if (!token) return null;
@@ -53,6 +59,20 @@ export async function POST(request: Request) {
       createdAt: post.createdAt || new Date().toISOString(),
     };
 
+    const submissionInsert = await admin.from('submissions').upsert({
+      id: cleanPost.id,
+      user_id: user.id,
+      data: cleanPost,
+      status: cleanPost.status === 'published' ? 'published' : 'pending',
+      reviewed_at: cleanPost.status === 'published' ? new Date().toISOString() : null,
+    });
+    if (submissionInsert.error && !isMissingTableError(submissionInsert.error)) {
+      return NextResponse.json({ error: submissionInsert.error.message }, { status: 500 });
+    }
+
+    // Compatibility mirror: the current admin submissions tab still reads pending
+    // submissions from posts.data. Remove this after the admin queue is fully
+    // switched to the submissions table.
     const { error } = await admin.from('posts').upsert({ id: cleanPost.id, data: cleanPost });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true, post: cleanPost });
@@ -104,6 +124,24 @@ export async function POST(request: Request) {
           createdAt: new Date().toISOString(),
         };
 
+        const commentInsert = await admin.from('comments').insert({
+          id: comment.id,
+          post_id: id,
+          user_id: user.id,
+          user_name: comment.userName,
+          user_avatar: comment.userAvatar,
+          text: comment.text,
+          status: comment.status,
+          created_at: comment.createdAt,
+          updated_at: comment.createdAt,
+        });
+        if (!commentInsert.error) {
+          return NextResponse.json({ ok: true, comment });
+        }
+        if (!isMissingTableError(commentInsert.error)) {
+          return NextResponse.json({ error: commentInsert.error.message }, { status: 500 });
+        }
+
         const updated = {
           ...post,
           comments: [...(post.comments || []), comment],
@@ -111,6 +149,33 @@ export async function POST(request: Request) {
         const { error } = await admin.from('posts').update({ data: updated }).eq('id', id);
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
         return NextResponse.json({ ok: true, comment });
+      }
+
+      const existingBookmark = await admin
+        .from('user_bookmarks')
+        .select('post_id')
+        .eq('post_id', id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!existingBookmark.error || existingBookmark.data) {
+        if (existingBookmark.data) {
+          const { error } = await admin
+            .from('user_bookmarks')
+            .delete()
+            .eq('post_id', id)
+            .eq('user_id', user.id);
+          if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+          return NextResponse.json({ ok: true, bookmarked: false });
+        }
+
+        const { error } = await admin
+          .from('user_bookmarks')
+          .insert({ post_id: id, user_id: user.id });
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ ok: true, bookmarked: true });
+      }
+      if (!isMissingTableError(existingBookmark.error)) {
+        return NextResponse.json({ error: existingBookmark.error.message }, { status: 500 });
       }
 
       const bookmarkedBy = new Set(post.bookmarkedBy || []);
@@ -129,6 +194,21 @@ export async function POST(request: Request) {
 
     const likedBy = new Set(post.likedBy || []);
     if (action === 'like' && user) {
+      if (liked) {
+        const { error } = await admin.from('user_likes').insert({ post_id: id, user_id: user.id });
+        if (error && !isMissingTableError(error) && error.code !== '23505') {
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+      } else {
+        const { error } = await admin
+          .from('user_likes')
+          .delete()
+          .eq('post_id', id)
+          .eq('user_id', user.id);
+        if (error && !isMissingTableError(error)) {
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+      }
       if (liked) likedBy.add(user.id);
       else likedBy.delete(user.id);
     }

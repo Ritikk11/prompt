@@ -14,17 +14,17 @@ export default function HomePromptOfDay({ post, settings }: { post?: Post; setti
   const imageUrl = post.thumbnailUrl || post.images?.[0]?.url;
 
   return (
-    <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-800 to-rose-800 px-5 py-16 text-white sm:px-8">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(255,255,255,0.12),transparent_34%)]" />
+    <section className="relative w-full overflow-hidden rounded-[32px] border border-white/5 bg-gradient-to-br from-indigo-950 via-purple-950 to-rose-950 px-4 py-12 text-white shadow-xl sm:px-8 sm:py-16">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(255,255,255,0.08),transparent_35%)]" />
       <div className="relative mx-auto max-w-6xl text-center">
-        <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-amber-200 backdrop-blur-md">
-          <Crown className="h-4 w-4" />
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/10 px-4 py-2 text-xs font-bold text-amber-200 backdrop-blur-md">
+          <Crown className="h-4 w-4 text-amber-400" />
           {content.badge || 'Prompt of the Day'}
         </div>
-        <h2 className="text-3xl font-black tracking-normal sm:text-4xl">{content.title || "Today's Featured Prompt"}</h2>
-        <p className="mt-3 text-sm text-white/80">{content.description || 'Handpicked from your published featured prompts'}</p>
+        <h2 className="text-2xl font-black tracking-tight text-white sm:text-4xl">{content.title || "Today's Featured Prompt"}</h2>
+        <p className="mx-auto mt-2 max-w-2xl text-xs text-white/70 sm:text-sm">{content.description || 'Handpicked from your published featured prompts'}</p>
 
-        <div className={`mx-auto mt-8 grid overflow-hidden rounded-[32px] border border-white/15 bg-white/10 text-left shadow-2xl backdrop-blur-md ${imageUrl ? 'lg:grid-cols-[0.9fr_1.1fr]' : 'max-w-4xl'}`}>
+        <div className={`mx-auto mt-8 grid overflow-hidden rounded-2xl border border-white/10 bg-white/5 text-left shadow-2xl backdrop-blur-md ${imageUrl ? 'lg:grid-cols-[0.95fr_1.05fr]' : 'max-w-4xl'}`}>
           {imageUrl && (
             <Link href={`/${post.slug || post.id}`} className="group relative flex min-h-[320px] items-center justify-center overflow-hidden bg-black/20 p-4 sm:min-h-[420px] sm:p-6 lg:min-h-full">
               <div className="relative flex h-full max-h-[520px] w-full items-center justify-center overflow-hidden rounded-3xl bg-black/20">
@@ -55,7 +55,12 @@ export default function HomePromptOfDay({ post, settings }: { post?: Post; setti
             </div>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-xs text-white/80">
               <span className="inline-flex items-center gap-2"><Tag className="h-4 w-4" /> {category}</span>
-              {tools.length > 0 && <span className="inline-flex items-center gap-2"><Wand2 className="h-4 w-4" /> Best for {tools.join(', ')}</span>}
+              {tools.length > 0 && (
+                <span className="inline-flex items-start gap-2">
+                  <Wand2 className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span className="leading-snug">Best for {tools.join(', ')}</span>
+                </span>
+              )}
               <span className="inline-flex items-center gap-2"><Heart className="h-4 w-4" /> {post.likes || 0} likes</span>
             </div>
             <Link href={`/${post.slug || post.id}`} className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-5 py-4 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5">

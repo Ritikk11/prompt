@@ -1,5 +1,5 @@
 import { createClient } from './supabase-server';
-import type { Post, Section, SiteSettings } from './types';
+import type { Post, PostComment, Section, SiteSettings } from './types';
 import { seedPosts, seedSections } from './data/seedData';
 import { filterPostsForSection } from './sections';
 import { getThumbnailImageUrl } from './image-url';
@@ -238,6 +238,12 @@ function isNextDynamicServerError(error: unknown) {
   return err?.digest === 'DYNAMIC_SERVER_USAGE' || err?.message?.includes('Dynamic server usage');
 }
 
+function isMissingTableError(error: unknown) {
+  const message = typeof error === 'object' && error && 'message' in error ? String((error as any).message) : '';
+  const code = typeof error === 'object' && error && 'code' in error ? String((error as any).code) : '';
+  return code === '42P01' || message.includes('Could not find the table') || message.includes('does not exist');
+}
+
 export async function fetchPosts() {
   try {
     const supabase = await createClient();
@@ -246,7 +252,42 @@ export async function fetchPosts() {
       console.error('Supabase posts fetch error:', error);
       return [];
     }
-    return (data || []).map(d => d.data as Post).filter(Boolean);
+    const posts = (data || []).map(d => d.data as Post).filter(Boolean);
+    const { data: commentRows, error: commentsError } = await supabase
+      .from('comments')
+      .select('id, post_id, user_id, user_name, user_avatar, text, status, created_at')
+      .eq('status', 'approved');
+
+    if (commentsError) {
+      if (!isMissingTableError(commentsError)) console.error('Supabase comments fetch error:', commentsError);
+      return posts;
+    }
+
+    const commentsByPost = new Map<string, PostComment[]>();
+    for (const row of commentRows || []) {
+      const comment: PostComment = {
+        id: row.id,
+        postId: row.post_id,
+        userId: row.user_id,
+        userName: row.user_name,
+        userAvatar: row.user_avatar,
+        text: row.text,
+        status: row.status,
+        createdAt: row.created_at,
+      };
+      commentsByPost.set(row.post_id, [...(commentsByPost.get(row.post_id) || []), comment]);
+    }
+
+    return posts.map((post) => {
+      const tableComments = commentsByPost.get(post.id) || [];
+      if (tableComments.length === 0) return post;
+      const legacyComments = post.comments || [];
+      const mergedComments = [
+        ...legacyComments.filter((comment) => !tableComments.some((item) => item.id === comment.id)),
+        ...tableComments,
+      ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      return { ...post, comments: mergedComments };
+    });
   } catch (error) {
     if (isNextDynamicServerError(error)) throw error;
     console.error('Supabase posts fetch error:', error);

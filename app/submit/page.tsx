@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { Upload, Plus, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { ImagePrompt } from '@/lib/types';
-import { supabase } from '@/lib/supabase';
 import { getImageModelForTools } from '@/lib/constants';
 import { getAuthRedirectTo } from '@/lib/auth-redirect';
 import { optimizeImageFile } from '@/lib/client-image-optimizer';

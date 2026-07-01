@@ -8,7 +8,7 @@ import { DataProvider } from '@/components/context/DataContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AdSlot from '@/components/AdSlot';
-import { fetchPostSummaries, fetchSections, fetchSettings } from '@/lib/data';
+import { fetchSections, fetchSettings } from '@/lib/data';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -33,10 +33,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     url: 'https://aipromptmatrix.in',
   };
 
-  const [initialSettings, initialSections, initialPosts] = await Promise.all([
+  const [initialSettings, initialSections] = await Promise.all([
     fetchSettings(),
     fetchSections(),
-    fetchPostSummaries(),
   ]);
 
   return (
@@ -56,12 +55,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen flex flex-col font-sans transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100 bg-white text-gray-900" suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col overflow-x-hidden font-sans transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100 bg-white text-gray-900" suppressHydrationWarning>
         <ThemeProvider>
           <DataProvider 
             initialSettings={initialSettings}
             initialSections={initialSections}
-            initialPosts={initialPosts}
+            initialPosts={[]}
           >
             <Suspense fallback={null}>
               <Header />

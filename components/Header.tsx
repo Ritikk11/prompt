@@ -16,6 +16,7 @@ import { getAuthRedirectTo } from '@/lib/auth-redirect';
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const { settings, sections, posts } = useData();
+  const accountFeaturesEnabled = Boolean(settings.features?.userProfiles || settings.features?.userSubmissions);
   const headerSections = sections.filter(s => s.location === 'header' && s.visible).sort((a,b) => a.order - b.order);
   const headerLinks = settings.headerLinks || [];
   const navigate = useRouter();
@@ -258,7 +259,7 @@ export default function Header() {
     <header className={`sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-surface-950/80 border-b border-surface-200 dark:border-surface-800 transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between gap-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0" onClick={() => setMenuOpen(false)}>
+        <Link href="/" prefetch={false} className="flex items-center gap-2 shrink-0" onClick={() => setMenuOpen(false)}>
           {settings.siteLogo ? (
             <>
               <div className="w-9 h-9 text-transparent rounded-xl overflow-hidden shrink-0 relative">
@@ -297,19 +298,19 @@ export default function Header() {
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-2">
           {settings.features?.userSubmissions && (
-             <Link href="/submit" className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+             <Link href="/submit" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
                <Plus className="w-4 h-4 text-primary-500" />
                Submit Prompt
              </Link>
           )}
-          <Link href="/" className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+          <Link href="/" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
             Home
           </Link>
-          <Link href="/explore" className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+          <Link href="/explore" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
             Explore
           </Link>
           {headerSections.map(s => (
-            <Link key={s.id} href={getSectionPath(s)} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+            <Link key={s.id} href={getSectionPath(s)} prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
               {s.name}
             </Link>
           ))}
@@ -319,11 +320,11 @@ export default function Header() {
             </SmartLink>
           ))}
           
-          {(settings.features?.userProfiles || settings.features?.userSubmissions) && (
+          {accountFeaturesEnabled && (
             <div className="flex items-center ml-2 border-l border-surface-200 dark:border-surface-700 pl-4 gap-2">
               {user ? (
                 <>
-                  <Link href="/profile" className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+                  <Link href="/profile" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
                     <UserIcon className="w-4 h-4" /> Profile
                   </Link>
                   <button onClick={handleLogout} className="p-2 rounded-lg text-surface-400 hover:text-red-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors" title="Logout">
@@ -400,19 +401,19 @@ export default function Header() {
         <nav className="md:hidden border-t border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-950 slide-in">
           <div className="px-4 py-3 space-y-1">
             {settings.features?.userSubmissions && (
-              <Link href="/submit" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800">
+              <Link href="/submit" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800">
                 <Plus className="w-4 h-4 text-primary-500" />
                 Submit Prompt
               </Link>
             )}
-            <Link href="/" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
+            <Link href="/" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
               Home
             </Link>
-            <Link href="/explore" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
+            <Link href="/explore" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
               Explore
             </Link>
             {headerSections.map(s => (
-              <Link key={s.id} href={getSectionPath(s)} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
+              <Link key={s.id} href={getSectionPath(s)} prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
                 {s.name}
               </Link>
             ))}
@@ -421,11 +422,11 @@ export default function Header() {
                 {link.label}
               </SmartLink>
             ))}
-            {(settings.features?.userProfiles || settings.features?.userSubmissions) && (
+            {accountFeaturesEnabled && (
               <div className="pt-2 mt-2 border-t border-surface-100 dark:border-surface-800">
                 {user ? (
                    <>
-                    <Link href="/profile" onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800">
+                    <Link href="/profile" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800">
                       <UserIcon className="w-4 h-4" /> Profile
                     </Link>
                     <button onClick={() => { handleLogout(); setMenuOpen(false); }} className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">

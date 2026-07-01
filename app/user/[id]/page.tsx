@@ -8,6 +8,17 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+function postsFromRows(rows: any[] | null | undefined) {
+  return (rows || [])
+    .map((row: any) => row.data as Post)
+    .filter(Boolean)
+    .filter(isPublicPost);
+}
+
+function uniquePosts(posts: Post[]) {
+  return Array.from(new Map(posts.map((post) => [post.id, post])).values());
+}
+
 export default async function PublicProfilePage({ params }: Props) {
   const { id } = await params;
   const settings = await fetchSettings();
@@ -22,20 +33,59 @@ export default async function PublicProfilePage({ params }: Props) {
   }
 
   const admin = createAdminClient();
-  const [{ data: userData }, { data: rows }] = await Promise.all([
+  const [{ data: userData }, submittedResult, likeRowsResult, bookmarkRowsResult, legacyLikedResult, legacySavedResult] = await Promise.all([
     admin.auth.admin.getUserById(id),
-    admin.from('posts').select('data'),
+    admin
+      .from('posts')
+      .select('data')
+      .eq('data->>authorId', id)
+      .eq('data->>status', 'published'),
+    settings.features?.publicProfileLikes
+      ? admin.from('user_likes').select('post_id').eq('user_id', id)
+      : Promise.resolve({ data: [] }),
+    settings.features?.publicProfileBookmarks
+      ? admin.from('user_bookmarks').select('post_id').eq('user_id', id)
+      : Promise.resolve({ data: [] }),
+    settings.features?.publicProfileLikes
+      ? admin
+          .from('posts')
+          .select('data')
+          .eq('data->>status', 'published')
+          .filter('data->likedBy', 'cs', JSON.stringify([id]))
+      : Promise.resolve({ data: [] }),
+    settings.features?.publicProfileBookmarks
+      ? admin
+          .from('posts')
+          .select('data')
+          .eq('data->>status', 'published')
+          .filter('data->bookmarkedBy', 'cs', JSON.stringify([id]))
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const likedPostIds = (likeRowsResult.data || []).map((row: any) => row.post_id);
+  const savedPostIds = (bookmarkRowsResult.data || []).map((row: any) => row.post_id);
+  const [likedPostsResult, savedPostsResult] = await Promise.all([
+    settings.features?.publicProfileLikes && likedPostIds.length > 0
+      ? admin.from('posts').select('data').in('id', likedPostIds)
+      : Promise.resolve({ data: [] }),
+    settings.features?.publicProfileBookmarks && savedPostIds.length > 0
+      ? admin.from('posts').select('data').in('id', savedPostIds)
+      : Promise.resolve({ data: [] }),
   ]);
 
   const profile = userData?.user;
-  const allPosts = (rows || []).map((row: any) => row.data as Post).filter(Boolean);
-  const publicPosts = allPosts.filter(isPublicPost);
-  const submitted = publicPosts.filter(post => post.authorId === id).map(toPostSummary);
+  const submitted = postsFromRows(submittedResult.data).map(toPostSummary);
   const liked = settings.features?.publicProfileLikes
-    ? publicPosts.filter(post => post.likedBy?.includes(id)).map(toPostSummary)
+    ? uniquePosts([
+        ...postsFromRows(likedPostsResult.data),
+        ...postsFromRows(legacyLikedResult.data),
+      ]).map(toPostSummary)
     : [];
   const saved = settings.features?.publicProfileBookmarks
-    ? publicPosts.filter(post => post.bookmarkedBy?.includes(id)).map(toPostSummary)
+    ? uniquePosts([
+        ...postsFromRows(savedPostsResult.data),
+        ...postsFromRows(legacySavedResult.data),
+      ]).map(toPostSummary)
     : [];
   const displayName = profile?.user_metadata?.full_name || profile?.email?.split('@')[0] || 'Creator';
 

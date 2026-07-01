@@ -21,7 +21,7 @@ interface DataContextType {
   searchPosts: (query: string) => Post[];
   resetData: () => void;
   deleteMockData: () => void;
-  loadAdminData: () => Promise<void>;
+  loadAdminData: () => Promise<any>;
   setPosts: (posts: Post[]) => void;
   setSections: (sections: Section[]) => void;
   loading: boolean;
@@ -31,10 +31,17 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 async function adminRequest(payload?: any) {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  let { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    const { data } = await supabase.auth.refreshSession().catch(() => ({ data: { session: null } as any }));
+    session = data.session;
+  }
+  if (!session?.access_token) {
+    throw new Error('Unauthorized: please sign in again before loading admin data');
+  }
   const headers: Record<string, string> = {};
   if (payload) headers['Content-Type'] = 'application/json';
-  if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+  headers.Authorization = `Bearer ${session.access_token}`;
 
   const res = await fetch('/api/admin', {
     method: payload ? 'POST' : 'GET',
@@ -48,7 +55,11 @@ async function adminRequest(payload?: any) {
 
 async function postRequest(payload: any) {
   const supabase = createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  let { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    const { data } = await supabase.auth.refreshSession().catch(() => ({ data: { session: null } as any }));
+    session = data.session;
+  }
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
 
@@ -111,10 +122,12 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
         if (!res.ok) return;
         const viewerState = Array.isArray(json.viewerState) ? json.viewerState : [];
         setLocalBookmarks(viewerState.filter((item: any) => item.bookmarkedByUser).map((item: any) => item.id));
-        setLocalLikes(prev => Array.from(new Set([
-          ...prev,
-          ...viewerState.filter((item: any) => item.likedByUser).map((item: any) => item.id),
-        ])));
+        const serverLiked = viewerState
+          .filter((item: any) => item.likedByUser)
+          .map((item: any) => item.id);
+        if (serverLiked.length > 0) {
+          setLocalLikes(serverLiked);
+        }
       } catch (error) {
         console.error('Viewer state load failed', error);
       }
@@ -146,6 +159,7 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
       if (data.posts) setPosts(data.posts);
       if (data.sections) setSections(data.sections);
       if (data.settings) setSettings(data.settings);
+      return data;
     } catch (e) {
       console.error('Error loading admin data', e);
       throw e;

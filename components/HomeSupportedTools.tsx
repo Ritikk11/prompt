@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Check, Zap } from 'lucide-react';
+import { ArrowRight, BookmarkCheck, Check, Cpu, Gauge, Sparkles, Zap } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 import { getAllTools, getDefaultImageModel, getToolInfo } from '@/lib/constants';
 
@@ -35,28 +35,41 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
   if (tools.length === 0) return null;
 
   return (
-    <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-surface-50 px-5 py-16 dark:bg-surface-950 sm:px-8">
-      <div className="mx-auto max-w-6xl">
+    <section className="relative overflow-hidden bg-surface-50 px-4 py-20 dark:bg-surface-950 sm:px-6 sm:py-28 lg:px-8">
+      <div className="mx-auto max-w-7xl">
       <div className="text-center">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-300">
           <Zap className="h-4 w-4" />
-          {content.badge || 'Supported AI tools'}
+          {content.badge || 'PRO-GRADE COMPATIBILITY'}
         </div>
         <h2 className="text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white">{content.title || 'Prompts for Every Major AI Tool'}</h2>
         <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-surface-600 dark:text-surface-300">
-          {content.description || 'Browse prompt collections prepared for the tools your visitors already use.'}
+          {content.description || 'Browse highly optimized prompt structures verified across top generators.'}
         </p>
       </div>
 
-      <div className="mx-auto mt-9 grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {tools.map((tool, index) => {
           const info = getToolInfo(tool, settings.toolDetails);
           const model = getDefaultImageModel(tool) || 'Image prompts';
-          const notes = getNotesForTool(tool);
+          const details = settings.toolDetails?.[tool];
+          const notes = details?.checks?.length ? details.checks : getNotesForTool(tool);
+          const stats = details?.stats?.length ? details.stats : [
+            { label: 'Prompt Power', value: 'Optimized' },
+            { label: 'Flexibility', value: 'Stellar' },
+            { label: 'Compatibility', value: 'Verified' },
+          ];
+          const statIcons = [Cpu, Gauge, Sparkles];
           return (
-            <Link key={tool} href={`/tool/${encodeURIComponent(tool)}`} className="group rounded-2xl border border-surface-200 bg-surface-50 p-5 transition hover:-translate-y-1 hover:shadow-xl dark:border-surface-800 dark:bg-surface-900/70">
+            <Link key={tool} href={`/tool/${encodeURIComponent(tool)}`} className="group flex h-full flex-col rounded-3xl border border-surface-200 bg-white/70 p-6 shadow-sm backdrop-blur-md transition hover:-translate-y-1.5 hover:shadow-2xl dark:border-surface-800 dark:bg-surface-900/50">
               <div className={`h-1 rounded-full ${['bg-emerald-500', 'bg-blue-500', 'bg-orange-500', 'bg-fuchsia-500'][index % 4]}`} />
-              <div className="mt-5 flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-surface-800">
+              <div className="mt-5 flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-[11px] font-bold text-surface-600 dark:bg-surface-800 dark:text-surface-300">
+                  <BookmarkCheck className="h-3.5 w-3.5 text-primary-500" /> {toolCounts.get(tool) || 0} prompts
+                </span>
+                <span className="truncate text-right text-[9px] font-black uppercase tracking-wider text-surface-400">{details?.badge || 'AI prompts library'}</span>
+              </div>
+              <div className="mt-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-50 shadow-sm dark:bg-surface-800">
                 {info.logo ? (
                   <span className="relative h-7 w-7 overflow-hidden rounded-full">
                     <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
@@ -67,17 +80,28 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
               </div>
               <h3 className="mt-5 text-lg font-extrabold text-surface-950 dark:text-white">{tool}</h3>
               <p className="mt-1 text-sm font-bold text-primary-600 dark:text-primary-300">{model}</p>
-              <p className="mt-1 text-xs text-surface-500 dark:text-surface-400">{toolCounts.get(tool) || 0} prompts available</p>
-              <div className="mt-5 space-y-2">
+              <div className="mt-5 grid grid-cols-3 gap-1 rounded-2xl bg-surface-100/80 p-3 dark:bg-surface-800/70">
+                {stats.slice(0, 3).map((stat, statIndex) => {
+                  const Icon = statIcons[statIndex] || Sparkles;
+                  return (
+                    <div key={`${stat.label}-${statIndex}`} className="min-w-0 text-center">
+                      <Icon className="mx-auto h-3.5 w-3.5 text-surface-400" />
+                      <p className="mt-1 truncate text-[10px] font-black text-surface-800 dark:text-white">{stat.value}</p>
+                      <p className="truncate text-[8px] text-surface-500">{stat.label}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-6 flex-1 space-y-3">
                 {notes.map(note => (
-                  <div key={note} className="flex items-center gap-2 text-xs text-surface-600 dark:text-surface-300">
-                    <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  <div key={note} className="flex items-start gap-2 text-xs font-medium text-surface-600 dark:text-surface-300">
+                    <span className="mt-0.5 rounded-full bg-emerald-500/15 p-0.5"><Check className="h-3 w-3 text-emerald-500" /></span>
                     {note}
                   </div>
                 ))}
               </div>
-              <div className="mt-5 inline-flex items-center gap-1 text-xs font-bold text-primary-600 opacity-0 transition group-hover:opacity-100 dark:text-primary-300">
-                Explore {tool}
+              <div className="mt-7 inline-flex items-center justify-center gap-2 rounded-xl border border-surface-200 px-4 py-3 text-xs font-bold text-surface-800 transition group-hover:border-primary-500 group-hover:text-primary-600 dark:border-surface-700 dark:text-white">
+                Explore Collection
                 <ArrowRight className="h-3.5 w-3.5" />
               </div>
             </Link>

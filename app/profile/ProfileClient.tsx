@@ -3,21 +3,35 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import { LogOut, Heart, FileText } from 'lucide-react';
+import { LogOut, Heart, FileText, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import SkeletonPostCard from '@/components/SkeletonPostCard';
 import { getGridClasses } from '@/lib/utils';
 import type { Post, SiteSettings } from '@/lib/types';
+import { getPostPath } from '@/lib/sections';
 
 import PostCard from '@/components/PostCard';
 
+type ProfileComment = {
+  id: string;
+  postId: string;
+  postTitle: string;
+  postSlug: string;
+  text: string;
+  status: 'approved' | 'pending';
+  createdAt: string;
+};
+
 export default function ProfileClient({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
+  const accountHubEnabled = Boolean(settings.features?.userProfiles || settings.features?.userSubmissions);
+  const savedAndLikedEnabled = Boolean(settings.features?.userProfiles);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [bookmarks, setBookmarks] = useState<Post[]>([]);
   const [liked, setLiked] = useState<Post[]>([]);
   const [submissions, setSubmissions] = useState<Post[]>([]);
+  const [comments, setComments] = useState<ProfileComment[]>([]);
   const [profileLoading, setProfileLoading] = useState(false);
   const navigate = useRouter();
 
@@ -26,8 +40,9 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setAuthLoading(false);
-      // Private profile needs the account/bookmark feature. Public author profiles are controlled separately.
-      if (settings.features?.userProfiles === false) {
+      // This page is also the user's submissions dashboard, so keep it available
+      // when submissions are enabled even if saved/liked profiles are disabled.
+      if (!accountHubEnabled) {
          navigate.push('/');
       }
     });
@@ -38,7 +53,7 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, settings]);
+  }, [accountHubEnabled, navigate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,6 +62,7 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
         setBookmarks([]);
         setLiked([]);
         setSubmissions([]);
+        setComments([]);
         setProfileLoading(false);
         return;
       }
@@ -54,7 +70,11 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
       setProfileLoading(true);
       try {
         const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
+        let { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          const { data } = await supabase.auth.refreshSession().catch(() => ({ data: { session: null } as any }));
+          session = data.session;
+        }
         const res = await fetch('/api/profile', {
           headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
         });
@@ -64,6 +84,7 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
           setBookmarks(json.bookmarks || []);
           setLiked(json.liked || []);
           setSubmissions(json.submissions || []);
+          setComments(json.comments || []);
         }
       } catch (error) {
         console.error('Profile load failed', error);
@@ -78,7 +99,7 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
     };
   }, [user]);
 
-  if (settings.features?.userProfiles === false) {
+  if (!accountHubEnabled) {
     return null;
   }
 
@@ -90,7 +111,7 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
     return (
       <div className="max-w-md mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold mb-4">Please Sign In</h1>
-        <p className="text-surface-500 mb-8">Sign in with Google to view and save your favorite prompts.</p>
+        <p className="text-surface-500 mb-8">Sign in to manage your account activity.</p>
         <button onClick={() => navigate.push('/')} className="text-primary-500 hover:text-primary-600 font-medium">
           Return Home
         </button>
@@ -134,55 +155,76 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="mb-10">
-            <h2 className="text-xl md:text-2xl font-bold mb-6 flex items-center gap-2">
-              <Heart className="w-6 h-6 text-red-500 fill-red-500" /> My Saved Prompts
-            </h2>
-            {profileLoading ? (
-              <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-                {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} />)}
-              </div>
-            ) : savedPosts.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
-                <Heart className="w-8 h-8 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
-                <p className="text-surface-500 font-medium">No bookmarks yet</p>
-                <Link href="/explore" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
-                  Explore trending prompts
+          {settings.features?.userSubmissions && (
+            <div className="mb-10 rounded-2xl border border-primary-100 bg-primary-50/70 p-5 dark:border-primary-900/50 dark:bg-primary-950/20">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-primary-500">Creator dashboard</p>
+                  <h1 className="mt-1 text-2xl font-black text-surface-950 dark:text-white">Your prompt submissions</h1>
+                  <p className="mt-1 text-sm text-surface-600 dark:text-surface-300">
+                    Track pending, approved, and draft prompt collections from one place.
+                  </p>
+                </div>
+                <Link href="/submit" className="inline-flex items-center justify-center rounded-xl bg-primary-500 px-5 py-3 text-sm font-bold text-white hover:bg-primary-600">
+                  Submit new prompt
                 </Link>
               </div>
-            ) : (
-              <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-                {savedPosts.map((post, i) => (
-                  <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
-                    <PostCard post={post} index={i} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          <div className="mb-10">
-            <h2 className="text-xl md:text-2xl font-bold mb-6 flex items-center gap-2">
-              <Heart className="w-6 h-6 text-red-500" /> My Liked Prompts
-            </h2>
-            {profileLoading ? (
-              <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-                {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} />)}
-              </div>
-            ) : likedPosts.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
-                <p className="text-surface-500 font-medium">No liked prompts yet</p>
-              </div>
-            ) : (
-              <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-                {likedPosts.map((post, i) => (
-                  <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
-                    <PostCard post={post} index={i} />
+          {savedAndLikedEnabled && (
+            <>
+              <div className="mb-10">
+                <h2 className="text-xl md:text-2xl font-bold mb-6 flex items-center gap-2">
+                  <Heart className="w-6 h-6 text-red-500 fill-red-500" /> My Saved Prompts
+                </h2>
+                {profileLoading ? (
+                  <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+                    {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} />)}
                   </div>
-                ))}
+                ) : savedPosts.length === 0 ? (
+                  <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
+                    <Heart className="w-8 h-8 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
+                    <p className="text-surface-500 font-medium">No bookmarks yet</p>
+                    <Link href="/explore" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
+                      Explore trending prompts
+                    </Link>
+                  </div>
+                ) : (
+                  <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+                    {savedPosts.map((post, i) => (
+                      <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
+                        <PostCard post={post} index={i} />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+
+              <div className="mb-10">
+                <h2 className="text-xl md:text-2xl font-bold mb-6 flex items-center gap-2">
+                  <Heart className="w-6 h-6 text-red-500" /> My Liked Prompts
+                </h2>
+                {profileLoading ? (
+                  <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+                    {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} />)}
+                  </div>
+                ) : likedPosts.length === 0 ? (
+                  <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
+                    <p className="text-surface-500 font-medium">No liked prompts yet</p>
+                  </div>
+                ) : (
+                  <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+                    {likedPosts.map((post, i) => (
+                      <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
+                        <PostCard post={post} index={i} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           {settings.features?.userSubmissions && (
             <div>
@@ -211,6 +253,49 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
                           </div>
                        )}
                        <PostCard post={post} index={i} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {settings.features?.comments && (
+            <div className="mt-10">
+              <h2 className="text-xl md:text-2xl font-bold mb-6 flex items-center gap-2">
+                <MessageCircle className="w-6 h-6 text-primary-500" /> My Comments
+              </h2>
+              {profileLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="h-24 animate-pulse rounded-2xl bg-surface-100 dark:bg-surface-800" />
+                  ))}
+                </div>
+              ) : comments.length === 0 ? (
+                <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
+                  <MessageCircle className="w-8 h-8 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
+                  <p className="text-surface-500 font-medium">No comments yet</p>
+                  <Link href="/explore" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
+                    Find prompts to discuss
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {comments.map(comment => (
+                    <div key={comment.id} className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-950">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-surface-500">
+                        <Link href={getPostPath({ id: comment.postId, slug: comment.postSlug })} className="font-bold text-primary-500 hover:text-primary-600">
+                          {comment.postTitle}
+                        </Link>
+                        <span>•</span>
+                        <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
+                        {comment.status === 'pending' && (
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 font-bold uppercase tracking-wider text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                            Pending
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-surface-700 dark:text-surface-200">{comment.text}</p>
                     </div>
                   ))}
                 </div>
