@@ -82,6 +82,8 @@ export interface Section {
   aiTool?: string;
   tag?: string;
   filterTags?: string[];
+  useCustomRail?: boolean;
+  railItems?: FilterRailItem[];
   category?: string;
   postIds?: string[];
   order: number;
@@ -278,7 +280,22 @@ export interface SiteSettings {
   cardStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
   badgeStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10';
   aiTools: string[];
-  toolDetails?: Record<string, { logo?: string; color?: string; logoScale?: number }>;
+  toolDetails?: Record<string, {
+    logo?: string;
+    color?: string;
+    logoScale?: number;
+    badge?: string;
+    stats?: { label: string; value: string }[];
+    checks?: string[];
+    description?: string;
+    slug?: string;
+    models?: string[];
+    defaultModel?: string;
+    active?: boolean;
+    featured?: boolean;
+    showInHero?: boolean;
+    showInFooter?: boolean;
+  }>;
   headerSections?: Section[];
   headerLinks?: NavLink[];
   homeLinkBlocks?: HomeLinkBlock[];
@@ -327,6 +344,8 @@ export interface AdminUserSummary {
   avatar?: string;
   createdAt?: string;
   lastSignInAt?: string;
+  bannedUntil?: string;
+  role?: string;
 }
 
 export type Theme = 'light' | 'dark';

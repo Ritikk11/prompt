@@ -15,6 +15,12 @@ function isPlainObject(value: unknown): value is Record<string, any> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
+function isMissingTableError(error: unknown) {
+  const message = typeof error === 'object' && error && 'message' in error ? String((error as any).message) : '';
+  const code = typeof error === 'object' && error && 'code' in error ? String((error as any).code) : '';
+  return code === '42P01' || message.includes('Could not find the table') || message.includes('does not exist');
+}
+
 function isValidId(value: unknown) {
   return typeof value === 'string' && value.length > 0 && value.length <= 160 && /^[a-zA-Z0-9_:/.-]+$/.test(value);
 }
@@ -70,16 +76,56 @@ export async function GET(request: Request) {
   if (auth.error) return auth.error;
   const admin = auth.admin!;
 
-  const [posts, sections, settings, seopages] = await Promise.all([
+  const [posts, sections, settings, seopages, comments] = await Promise.all([
     admin.from('posts').select('data'),
     admin.from('sections').select('data'),
     admin.from('settings').select('data').eq('id', 'global').maybeSingle(),
     admin.from('seoPages').select('data'),
+    admin.from('comments').select('id, post_id, user_id, user_name, user_avatar, text, status, created_at'),
   ]);
+  if (comments.error && !isMissingTableError(comments.error)) {
+    return NextResponse.json({ error: comments.error.message }, { status: 500 });
+  }
   const { data: userData } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+  const environmentAdminEmails = process.env.ADMIN_EMAILS
+    ? process.env.ADMIN_EMAILS.split(',').map(email => email.trim().toLowerCase())
+    : [];
+  const savedAdminEmails = settings.data?.data?.adminEmails || [];
+  const allAdminEmails = new Set([
+    ...environmentAdminEmails,
+    ...savedAdminEmails.map((email: string) => email.toLowerCase()),
+  ]);
+
+  const tableCommentsByPost = new Map<string, any[]>();
+  for (const row of comments.data || []) {
+    const comment = {
+      id: row.id,
+      postId: row.post_id,
+      userId: row.user_id,
+      userName: row.user_name,
+      userAvatar: row.user_avatar,
+      text: row.text,
+      status: row.status,
+      createdAt: row.created_at,
+    };
+    tableCommentsByPost.set(row.post_id, [...(tableCommentsByPost.get(row.post_id) || []), comment]);
+  }
+
+  const mergedPosts = (posts.data || []).map((row: any) => {
+    const post = row.data;
+    const tableComments = tableCommentsByPost.get(post.id) || [];
+    if (tableComments.length === 0) return post;
+    return {
+      ...post,
+      comments: [
+        ...(post.comments || []).filter((comment: any) => !tableComments.some((item) => item.id === comment.id)),
+        ...tableComments,
+      ],
+    };
+  });
 
   return NextResponse.json({
-    posts: (posts.data || []).map((row: any) => row.data),
+    posts: mergedPosts,
     sections: (sections.data || []).map((row: any) => row.data),
     settings: settings.data?.data || null,
     seopages: (seopages.data || []).map((row: any) => row.data),
@@ -90,6 +136,8 @@ export async function GET(request: Request) {
       avatar: user.user_metadata?.avatar_url,
       createdAt: user.created_at,
       lastSignInAt: user.last_sign_in_at,
+      bannedUntil: user.banned_until,
+      role: user.email && allAdminEmails.has(user.email.toLowerCase()) ? 'Admin' : 'Subscriber',
     })),
   });
 }
@@ -119,6 +167,27 @@ export async function POST(request: Request) {
     for (const section of seedSections) {
       await admin.from('sections').delete().eq('id', section.id);
     }
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === 'updateUserStatus') {
+    const { userId, status, durationValue, durationUnit } = data || {};
+    if (!userId || !status) {
+      return NextResponse.json({ error: 'Missing userId or status' }, { status: 400 });
+    }
+    let banDuration = 'none';
+    if (status === 'suspended' || status === 'banned') {
+      const val = typeof durationValue === 'number' && durationValue > 0 ? durationValue : 24;
+      if (durationUnit === 'Hours') banDuration = `${val}h`;
+      else if (durationUnit === 'Days') banDuration = `${val * 24}h`;
+      else if (durationUnit === 'Weeks') banDuration = `${val * 24 * 7}h`;
+      else if (durationUnit === 'Months') banDuration = `${val * 24 * 30}h`;
+      else if (durationUnit === 'Permanent') banDuration = '876000h';
+      else if (durationUnit === 'None') banDuration = 'none';
+      else banDuration = '876000h';
+    }
+    const { error } = await admin.auth.admin.updateUserById(userId, { ban_duration: banDuration });
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json({ ok: true });
   }
 
