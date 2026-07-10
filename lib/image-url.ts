@@ -16,6 +16,10 @@ function getUploadOrigin() {
 }
 
 function getResizeOrigin() {
+  if (process.env.NEXT_PUBLIC_ENABLE_CLOUDFLARE_IMAGE_RESIZE !== 'true') {
+    return '';
+  }
+
   const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_ORIGIN;
   try {
     const siteUrl = new URL(rawSiteUrl);
