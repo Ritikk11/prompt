@@ -18,6 +18,7 @@ import type { Post, ShareTarget } from '@/lib/types';
 import CopyButton from '@/components/CopyButton';
 import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
 
 import PostCard from '@/components/PostCard';
 import AdSlot from '@/components/AdSlot';
@@ -197,6 +198,12 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const primaryHeroToolInfo = heroTools.length > 0 ? getToolInfo(heroTools[0], settings?.toolDetails) : { color: '', logo: '', logoScale: undefined };
   const heroToolInfo = primaryHeroToolInfo;
   const heroToolName = heroTools.join(' + ');
+  const fallbackPromptImageUrl = 'https://picsum.photos/seed/placeholder/800/600';
+  const originalMainImageUrl = post.thumbnailUrl || post.images[0]?.url || fallbackPromptImageUrl;
+  const mainPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 1280, quality: 78 });
+  const backgroundPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 720, quality: 60 });
+  const displayPromptImageUrl = (url?: string, width = 1200) => getPromptImageUrl(url || fallbackPromptImageUrl, { width, quality: 78 });
+  const displayReferenceImageUrl = (url?: string) => getThumbnailImageUrl(url, { width: 760, quality: 74 });
 
   useEffect(() => {
     if (post && !viewIncrementedRef.current) {
@@ -553,12 +560,12 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       case 'v2': // Immersive Blur Background
         return (
           <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-surface-900 shadow-2xl group min-h-[500px] flex items-end">
-            <Image src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="bg" fill className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
+            <Image src={backgroundPromptImageUrl} alt="bg" fill className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
             <div className="relative z-20 p-8 md:p-12 w-full max-w-4xl mx-auto flex flex-col items-center text-center pb-12">
               <div className="relative w-full max-w-lg aspect-[4/3] mb-8 rounded-2xl overflow-hidden shadow-2xl border border-white/10">
                 <LoadingImage 
-                  src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+                  src={mainPromptImageUrl}
                   alt={post.title} 
                   fill 
                   showSkeleton={showSkeleton}
@@ -620,9 +627,9 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                    <div className="flex justify-start">{renderMetaInfo()}</div>
                 </div>
                 <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-surface-100 dark:bg-surface-800/30 flex items-center justify-center p-6 lg:p-10">
-                   <Image src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt="" fill className="object-cover blur-3xl opacity-20 scale-125 z-0"  referrerPolicy="no-referrer" />
+                   <Image src={backgroundPromptImageUrl} alt="" fill className="object-cover blur-3xl opacity-20 scale-125 z-0"  referrerPolicy="no-referrer" />
                    <div className="max-h-[400px] w-full max-w-[800px] h-full sm:w-[600px] rounded-[24px] shadow-2xl relative z-10 overflow-hidden">
-                     <LoadingImage src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} alt={post.title} fill showSkeleton={showSkeleton} className="object-contain" referrerPolicy="no-referrer" />
+                     <LoadingImage src={mainPromptImageUrl} alt={post.title} fill showSkeleton={showSkeleton} className="object-contain" referrerPolicy="no-referrer" priority />
                    </div>
                 </div>
              </div>
@@ -646,7 +653,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <div className="relative w-full max-w-2xl aspect-video mb-10 rounded-3xl overflow-hidden shadow-xl bg-surface-100 dark:bg-surface-800/50 p-4">
               <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-inner">
                 <LoadingImage 
-                  src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+                  src={mainPromptImageUrl}
                   alt={post.title} 
                   fill 
                   showSkeleton={showSkeleton}
@@ -689,7 +696,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             </div>
             <div className="lg:col-span-5 order-1 lg:order-2 relative aspect-[3/4] lg:aspect-auto lg:h-[600px] rounded-[40px] overflow-hidden shadow-2xl skew-y-2 lg:skew-y-0 lg:-rotate-2 hover:rotate-0 transition-transform duration-700">
                <LoadingImage 
-                src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+                src={mainPromptImageUrl}
                 alt={post.title} 
                 fill 
                 showSkeleton={showSkeleton}
@@ -731,7 +738,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   </div>
                   <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-surface-900 shadow-2xl rotate-1">
                     <LoadingImage 
-                      src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+                      src={mainPromptImageUrl}
                       alt={post.title} 
                       fill 
                       showSkeleton={showSkeleton}
@@ -747,7 +754,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         return (
           <div className="relative w-full h-[80vh] min-h-[600px] mb-12 rounded-[48px] overflow-hidden group">
              <LoadingImage 
-              src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+              src={mainPromptImageUrl}
               alt={post.title} 
               fill 
               showSkeleton={showSkeleton}
@@ -786,7 +793,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           <div className="relative mb-20 md:mb-32">
              <div className="relative w-full h-64 md:h-96 rounded-[32px] overflow-hidden">
                 <Image 
-                  src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+                  src={mainPromptImageUrl}
                   alt={post.title} 
                   fill 
                   className="object-cover blur-2xl opacity-50 scale-110" 
@@ -797,7 +804,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-0 md:-translate-y-1/2 w-[95%] max-w-5xl bg-white dark:bg-surface-900 rounded-[32px] shadow-2xl border border-surface-100 dark:border-surface-800 p-8 md:p-12 flex flex-col md:flex-row gap-10 items-center">
                 <div className="w-full md:w-1/2 aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shrink-0">
                   <LoadingImage 
-                    src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'} 
+                    src={mainPromptImageUrl}
                     alt={post.title} 
                     fill 
                     showSkeleton={showSkeleton}
@@ -849,7 +856,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-surface-100 dark:bg-surface-800/30 p-2 sm:p-4">
                 <div className="w-full h-full max-h-[75vh] min-h-[40vh] sm:min-h-[50vh] rounded-[24px] shadow-md relative overflow-hidden">
                   <LoadingImage
-                    src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+                    src={mainPromptImageUrl}
                     alt={post.title}
                     fill
                     showSkeleton={showSkeleton}
@@ -930,7 +937,14 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                  <div className="relative w-full h-auto flex items-center justify-center p-3 sm:p-4 bg-surface-50 dark:bg-surface-800">
                     <div className="w-full relative rounded-xl overflow-hidden cursor-zoom-in" onClick={() => setLightboxImage({ url, index: idx, tools: [] })}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={url} alt={`Reference ${idx + 1}`} className="w-full h-auto block rounded-xl group-hover:scale-[1.01] transition-transform duration-500" referrerPolicy="no-referrer" />
+                      <img
+                        src={displayReferenceImageUrl(url)}
+                        alt={`Reference ${idx + 1}`}
+                        className="w-full h-auto block rounded-xl group-hover:scale-[1.01] transition-transform duration-500"
+                        referrerPolicy="no-referrer"
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </div>
                  </div>
                  <div className="p-3 sm:p-4 border-t border-surface-100 dark:border-surface-800 flex justify-between items-center bg-white dark:bg-surface-900 mt-auto">
@@ -974,7 +988,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   <div className="relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-2 shadow-sm transition-transform duration-500 group-hover:scale-[1.005] dark:border-surface-700/70 dark:bg-surface-800/60 group/img">
                     <div className="relative flex w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-900" onClick={() => setLightboxImage({ url: img.url || '', index, tools: img.aiTools || [img.aiTool].filter(Boolean) })}>
                       <LoadingImg
-                        src={img.url || 'https://picsum.photos/seed/placeholder/800/600'}
+                        src={displayPromptImageUrl(img.url, 1100)}
                         alt={`Prompt ${index + 1}`}
                         showSkeleton={showSkeleton}
                         className="block h-auto w-full rounded-xl"

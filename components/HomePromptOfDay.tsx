@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ArrowRight, Crown, Heart, Tag, Wand2 } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 import { getAllTools } from '@/lib/constants';
+import { getPromptImageUrl } from '@/lib/image-url';
 
 export default function HomePromptOfDay({ post, settings }: { post?: Post; settings?: SiteSettings }) {
   if (!post) return null;
@@ -11,7 +12,7 @@ export default function HomePromptOfDay({ post, settings }: { post?: Post; setti
   const prompt = post.images?.[0]?.prompt || post.description;
   const tools = getAllTools(post).slice(0, 3);
   const category = post.category || post.categories?.[0] || post.tags?.[0] || 'Creative prompt';
-  const imageUrl = post.thumbnailUrl || post.images?.[0]?.url;
+  const imageUrl = getPromptImageUrl(post.thumbnailUrl || post.images?.[0]?.url, { width: 960, quality: 78 });
 
   return (
     <section className="relative left-1/2 isolate w-screen -translate-x-1/2 overflow-hidden bg-surface-50 px-5 py-16 text-surface-950 dark:bg-surface-950 dark:text-white sm:px-8">
@@ -38,6 +39,7 @@ export default function HomePromptOfDay({ post, settings }: { post?: Post; setti
                   sizes="(max-width: 1024px) 100vw, 42vw"
                   className="max-h-[520px] w-auto max-w-full rounded-3xl object-contain transition duration-700 group-hover:scale-[1.02]"
                   referrerPolicy="no-referrer"
+                  loading="lazy"
                 />
               </div>
               <span className="absolute left-5 top-5 rounded-full bg-black/45 px-4 py-1.5 text-xs font-black text-white backdrop-blur-md">

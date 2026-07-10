@@ -1,5 +1,6 @@
 import { BookOpen, Camera, Image as ImageIcon, Layers, Palette, Settings, Shield, Sparkles, TrendingUp, Users, Wand2, Lightbulb } from 'lucide-react';
 import type { Article, ArticleIcon } from '@/lib/content/types';
+import { getArticleImageUrl } from '@/lib/image-url';
 
 export const articleIconMap: Record<ArticleIcon, typeof BookOpen> = {
   wand: Wand2,
@@ -44,7 +45,7 @@ export default function ArticleThumbnail({
   thumbnailUrl?: string;
 }) {
   const theme = thumbnailThemes[hashString(article.slug) % thumbnailThemes.length];
-  const imageUrl = thumbnailUrl || article.thumbnailUrl;
+  const imageUrl = getArticleImageUrl(thumbnailUrl || article.thumbnailUrl);
   const canRenderImage = Boolean(imageUrl && imageUrl !== 'Uploading...');
 
   const thumbnailBackground = canRenderImage
@@ -64,6 +65,9 @@ export default function ArticleThumbnail({
             alt=""
             className="absolute inset-0 h-full w-full object-cover"
             referrerPolicy="no-referrer"
+            loading={compact ? 'lazy' : 'eager'}
+            decoding="async"
+            fetchPriority={compact ? 'auto' : 'high'}
           />
         </div>
       )}

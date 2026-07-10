@@ -191,6 +191,7 @@ export default function FeaturedSlider({
             <button
               key={i}
               onClick={() => goTo(i)}
+              aria-label={`Show featured prompt ${i + 1}`}
               className={`h-1.5 rounded-full transition-all duration-300 ${
                 i === current ? 'bg-primary-500 w-8' : 'bg-surface-300 dark:bg-surface-700 hover:bg-surface-400 w-3'
               }`}
@@ -204,6 +205,7 @@ export default function FeaturedSlider({
           <button
             onClick={() => setPlaying(!playing)}
             className="p-1.5 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 text-surface-500 hover:text-surface-900 dark:hover:text-surface-100 transition-colors"
+            aria-label={playing ? 'Pause featured slider' : 'Play featured slider'}
           >
             {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
           </button>
@@ -269,8 +271,8 @@ export default function FeaturedSlider({
               </Link>
             </div>
           </div>
-          <button onClick={() => goTo(current - 1)} className="absolute left-3 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm opacity-100 md:opacity-0 group-hover:opacity-100 transition-all shadow-lg"><ChevronLeft className="w-5 h-5" /></button>
-          <button onClick={() => goTo(current + 1)} className="absolute right-3 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm opacity-100 md:opacity-0 group-hover:opacity-100 transition-all shadow-lg"><ChevronRight className="w-5 h-5" /></button>
+          <button onClick={() => goTo(current - 1)} aria-label="Previous featured prompt" className="absolute left-3 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm opacity-100 md:opacity-0 group-hover:opacity-100 transition-all shadow-lg"><ChevronLeft className="w-5 h-5" /></button>
+          <button onClick={() => goTo(current + 1)} aria-label="Next featured prompt" className="absolute right-3 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm opacity-100 md:opacity-0 group-hover:opacity-100 transition-all shadow-lg"><ChevronRight className="w-5 h-5" /></button>
         </div>
         {renderProgress}
       </div>
@@ -394,8 +396,8 @@ export default function FeaturedSlider({
                 Get Prompt <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
               </Link>
               <div className="flex shrink-0 gap-1.5 md:gap-2">
-                <button onClick={() => goTo(current - 1)} className="rounded-xl bg-white/50 p-2.5 text-surface-900 shadow-sm backdrop-blur transition-all hover:bg-white dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronLeft className="h-4 w-4 md:h-5 md:w-5"/></button>
-                <button onClick={() => goTo(current + 1)} className="rounded-xl bg-white/50 p-2.5 text-surface-900 shadow-sm backdrop-blur transition-all hover:bg-white dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronRight className="h-4 w-4 md:h-5 md:w-5"/></button>
+                <button onClick={() => goTo(current - 1)} aria-label="Previous featured prompt" className="rounded-xl bg-white/50 p-2.5 text-surface-900 shadow-sm backdrop-blur transition-all hover:bg-white dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronLeft className="h-4 w-4 md:h-5 md:w-5"/></button>
+                <button onClick={() => goTo(current + 1)} aria-label="Next featured prompt" className="rounded-xl bg-white/50 p-2.5 text-surface-900 shadow-sm backdrop-blur transition-all hover:bg-white dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronRight className="h-4 w-4 md:h-5 md:w-5"/></button>
               </div>
             </div>
           </div>
@@ -528,13 +530,13 @@ export default function FeaturedSlider({
           
           {/* Navigation */}
           <div className="absolute bottom-8 left-0 w-full z-40 flex justify-center items-center gap-6 px-6">
-             <button onClick={() => goTo(current - 1)} className="p-3 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors backdrop-blur"><ChevronLeft className="w-6 h-6" /></button>
+             <button onClick={() => goTo(current - 1)} aria-label="Previous featured prompt" className="p-3 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors backdrop-blur"><ChevronLeft className="w-6 h-6" /></button>
              <div className="flex gap-2">
                {featured.map((_, i) => (
-                 <button key={i} onClick={() => goTo(i)} className={`h-2 rounded-full transition-all duration-300 ${i === current ? 'bg-white w-8' : 'border border-white/30 bg-transparent w-2'}`} />
+                 <button key={i} onClick={() => goTo(i)} aria-label={`Show featured prompt ${i + 1}`} className={`h-2 rounded-full transition-all duration-300 ${i === current ? 'bg-white w-8' : 'border border-white/30 bg-transparent w-2'}`} />
                ))}
              </div>
-             <button onClick={() => goTo(current + 1)} className="p-3 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors backdrop-blur"><ChevronRight className="w-6 h-6" /></button>
+             <button onClick={() => goTo(current + 1)} aria-label="Next featured prompt" className="p-3 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors backdrop-blur"><ChevronRight className="w-6 h-6" /></button>
           </div>
         </div>
       </div>
@@ -577,8 +579,8 @@ export default function FeaturedSlider({
                     View Prompt
                   </Link>
                   <div className="flex gap-2">
-                    <button onClick={() => goTo(current - 1)} className="p-4 rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 shadow-sm hover:translate-y-[-2px] transition-all"><ChevronLeft className="w-5 h-5"/></button>
-                    <button onClick={() => goTo(current + 1)} className="p-4 rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 shadow-sm hover:translate-y-[-2px] transition-all"><ChevronRight className="w-5 h-5"/></button>
+                    <button onClick={() => goTo(current - 1)} aria-label="Previous featured prompt" className="p-4 rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 shadow-sm hover:translate-y-[-2px] transition-all"><ChevronLeft className="w-5 h-5"/></button>
+                    <button onClick={() => goTo(current + 1)} aria-label="Next featured prompt" className="p-4 rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 shadow-sm hover:translate-y-[-2px] transition-all"><ChevronRight className="w-5 h-5"/></button>
                   </div>
                </div>
             </div>
@@ -621,8 +623,8 @@ export default function FeaturedSlider({
                 <h2 className="text-3xl md:text-5xl font-black text-surface-900 dark:text-white tracking-tighter">FEATURED PROMPTS</h2>
              </div>
              <div className="flex gap-2">
-                <button onClick={() => goTo(current - 1)} className="p-3 rounded-full border border-surface-200 dark:border-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><ChevronLeft className="w-6 h-6"/></button>
-                <button onClick={() => goTo(current + 1)} className="p-3 rounded-full border border-surface-200 dark:border-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><ChevronRight className="w-6 h-6"/></button>
+                <button onClick={() => goTo(current - 1)} aria-label="Previous featured prompt" className="p-3 rounded-full border border-surface-200 dark:border-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><ChevronLeft className="w-6 h-6"/></button>
+                <button onClick={() => goTo(current + 1)} aria-label="Next featured prompt" className="p-3 rounded-full border border-surface-200 dark:border-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><ChevronRight className="w-6 h-6"/></button>
              </div>
            </div>
            
@@ -699,8 +701,8 @@ export default function FeaturedSlider({
                           PROMPT DETAILS
                         </Link>
                         <div className="flex gap-4">
-                           <button onClick={() => goTo(current - 1)} className="w-12 h-12 rounded-full border border-white/20 text-white flex items-center justify-center hover:bg-white hover:text-black transition-all"><ChevronLeft className="w-6 h-6"/></button>
-                           <button onClick={() => goTo(current + 1)} className="w-12 h-12 rounded-full border border-white/20 text-white flex items-center justify-center hover:bg-white hover:text-black transition-all"><ChevronRight className="w-6 h-6"/></button>
+                           <button onClick={() => goTo(current - 1)} aria-label="Previous featured prompt" className="w-12 h-12 rounded-full border border-white/20 text-white flex items-center justify-center hover:bg-white hover:text-black transition-all"><ChevronLeft className="w-6 h-6"/></button>
+                           <button onClick={() => goTo(current + 1)} aria-label="Next featured prompt" className="w-12 h-12 rounded-full border border-white/20 text-white flex items-center justify-center hover:bg-white hover:text-black transition-all"><ChevronRight className="w-6 h-6"/></button>
                         </div>
                     </div>
                   </div>
@@ -711,7 +713,7 @@ export default function FeaturedSlider({
         {/* Play Progress Dot Bar */}
         <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl">
            {featured.map((_, i) => (
-             <button key={i} onClick={() => goTo(i)} className={`h-2.5 rounded-full transition-all duration-500 ${i === current ? 'w-10 bg-primary-500' : 'w-2.5 bg-white/30 hover:bg-white/50'}`} />
+             <button key={i} onClick={() => goTo(i)} aria-label={`Show featured prompt ${i + 1}`} className={`h-2.5 rounded-full transition-all duration-500 ${i === current ? 'w-10 bg-primary-500' : 'w-2.5 bg-white/30 hover:bg-white/50'}`} />
            ))}
         </div>
       </div>

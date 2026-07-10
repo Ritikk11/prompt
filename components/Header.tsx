@@ -349,18 +349,23 @@ export default function Header() {
           <button
             onClick={() => setSearchOpen(!searchOpen)}
             className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800"
+            aria-label={searchOpen ? 'Close search' : 'Open search'}
+            aria-expanded={searchOpen}
           >
             <Search className="w-5 h-5" />
           </button>
           <button
             onClick={toggleTheme}
             className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800"
+            aria-label="Toggle theme"
           >
             {theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-surface-600" />}
           </button>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
           >
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>

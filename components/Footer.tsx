@@ -127,7 +127,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 pt-6 border-t border-surface-200 dark:border-surface-800 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-surface-400">&copy; {new Date().getFullYear()} {settings.siteTitle}. All rights reserved.</p>
+          <p className="text-sm text-surface-600 dark:text-surface-300">&copy; {new Date().getFullYear()} {settings.siteTitle}. All rights reserved.</p>
         </div>
       </div>
 
