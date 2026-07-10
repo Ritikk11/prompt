@@ -5,10 +5,15 @@ type ThumbnailOptions = {
 };
 
 const DEFAULT_SITE_ORIGIN = 'https://aipromptmatrix.in';
+const DEFAULT_UPLOAD_ORIGIN = 'https://uploads.aipromptmatrix.in';
 const RESIZE_ELIGIBLE_HOSTS = new Set([
   'aipromptmatrix.in',
   'www.aipromptmatrix.in',
 ]);
+
+function getUploadOrigin() {
+  return (process.env.CLOUDFLARE_UPLOAD_PUBLIC_URL || DEFAULT_UPLOAD_ORIGIN).replace(/\/$/, '');
+}
 
 function getResizeOrigin() {
   const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_ORIGIN;
@@ -19,6 +24,23 @@ function getResizeOrigin() {
     return siteUrl.origin;
   } catch {
     return '';
+  }
+}
+
+function normalizeImageUrl(url: string) {
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) return trimmed;
+  if (trimmed.startsWith('/')) return trimmed;
+
+  try {
+    // Already an absolute URL.
+    return new URL(trimmed).toString();
+  } catch {
+    // Older CMS/upload values can be stored as bare R2 keys/filenames
+    // (`thumbnails/x.webp`, `thumbnail-x.webp`, etc.). Resolve those to the
+    // public upload domain before handing them to Cloudflare image resizing.
+    return `${getUploadOrigin()}/${trimmed.replace(/^\/+/, '')}`;
   }
 }
 
@@ -40,7 +62,7 @@ function canResizeImage(url: string) {
 
 export function getCloudflareImageUrl(url?: string, options: ThumbnailOptions = {}) {
   if (!url) return '';
-  const trimmed = url.trim();
+  const trimmed = normalizeImageUrl(url);
   if (!canResizeImage(trimmed)) return trimmed;
 
   const resizeOrigin = getResizeOrigin();
