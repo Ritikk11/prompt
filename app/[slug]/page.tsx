@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -220,4 +220,11 @@ export default async function PostPage({ params }: Props) {
       <PostContent post={post} relatedPosts={relatedPosts} />
     </>
   );
+}
+
+// Empty array + dynamicParams default (true) is required for ISR to actually cache
+// this route per-slug — without it, `revalidate` above is silently ignored and every
+// request falls back to full SSR. See https://github.com/vercel/next.js/issues/62195
+export function generateStaticParams() {
+  return [];
 }

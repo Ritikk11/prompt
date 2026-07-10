@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 import { Metadata } from 'next';
 import { getSectionBySlug, fetchPostSummaries, fetchSettings } from '@/lib/data';
@@ -134,4 +134,10 @@ export default async function SectionPage({ params }: Props) {
       )}
     </div>
   );
+}
+
+// Empty array is required for ISR to actually cache this route per-slug — without it,
+// `revalidate` above is silently ignored and every request falls back to full SSR.
+export function generateStaticParams() {
+  return [];
 }

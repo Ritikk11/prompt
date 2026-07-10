@@ -17,6 +17,10 @@
     {
       "binding": "UPLOADS",
       "bucket_name": "uploads"
+    },
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "aipromptmatrix-isr-cache"
     }
   ],
   "services": [

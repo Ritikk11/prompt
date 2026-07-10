@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -95,4 +95,10 @@ export default async function SeoPublicPage({ params }: Props) {
       )}
     </div>
   );
+}
+
+// Empty array is required for ISR to actually cache this route per-slug — without it,
+// `revalidate` above is silently ignored and every request falls back to full SSR.
+export function generateStaticParams() {
+  return [];
 }

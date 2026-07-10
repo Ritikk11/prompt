@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 import type { ReactNode } from 'react';
 import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } from '@/lib/data';
 import FeaturedSlider from '@/components/FeaturedSlider';

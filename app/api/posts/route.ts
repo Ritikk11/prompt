@@ -1,6 +1,28 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase-admin';
 import type { Post, PostComment, SiteSettings } from '@/lib/types';
+
+function getAllToolsFromPost(post: Partial<Post>) {
+  const tools = new Set<string>();
+  (post.aiTools || []).forEach((tool) => tool && tools.add(tool));
+  (post.images || []).forEach((image: any) => {
+    (image?.aiTools || [image?.aiTool]).forEach((tool: string) => tool && tools.add(tool));
+  });
+  return Array.from(tools);
+}
+
+// Only new/published submissions need on-demand revalidation. view/like/bookmark/comment
+// fire on nearly every page load — revalidating there would defeat ISR caching entirely.
+function revalidateNewPost(post: Post) {
+  const slug = post.slug || post.id;
+  if (slug) revalidatePath(`/${slug}`);
+  (post.tags || []).forEach((tag) => tag && revalidatePath(`/tag/${encodeURIComponent(tag.toLowerCase())}`));
+  getAllToolsFromPost(post).forEach((tool) => revalidatePath(`/tool/${encodeURIComponent(tool.toLowerCase())}`));
+  revalidatePath('/');
+  revalidatePath('/explore');
+  revalidatePath('/sitemap.xml');
+}
 
 function isMissingTableError(error: unknown) {
   const message = typeof error === 'object' && error && 'message' in error ? String((error as any).message) : '';
@@ -78,6 +100,7 @@ export async function POST(request: Request) {
     // switched to the submissions table.
     const { error } = await admin.from('posts').upsert({ id: cleanPost.id, data: cleanPost });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (cleanPost.status === 'published') revalidateNewPost(cleanPost);
     return NextResponse.json({ ok: true, post: cleanPost });
   }
 

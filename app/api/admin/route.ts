@@ -1,7 +1,58 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/admin-auth';
 import { seedPosts, seedSections } from '@/lib/data/seedData';
 import type { Post, Section, SiteSettings } from '@/lib/types';
+
+function getAllToolsFromPost(post: Partial<Post>) {
+  const tools = new Set<string>();
+  (post.aiTools || []).forEach((tool) => tool && tools.add(tool));
+  (post.images || []).forEach((image: any) => {
+    (image?.aiTools || [image?.aiTool]).forEach((tool: string) => tool && tools.add(tool));
+  });
+  return Array.from(tools);
+}
+
+// Content pages are ISR-cached; on-demand revalidation keeps them fresh right after an
+// admin edit instead of waiting for the time-based revalidate window to expire.
+function revalidateContent(resource: string, data: any, id?: string) {
+  revalidatePath('/sitemap.xml');
+
+  if (resource === 'posts') {
+    const slug = data?.slug || data?.id || id;
+    if (slug) revalidatePath(`/${slug}`);
+    (data?.tags || []).forEach((tag: string) => tag && revalidatePath(`/tag/${encodeURIComponent(tag.toLowerCase())}`));
+    getAllToolsFromPost(data || {}).forEach((tool) => revalidatePath(`/tool/${encodeURIComponent(tool.toLowerCase())}`));
+    revalidatePath('/');
+    revalidatePath('/explore');
+    return;
+  }
+
+  if (resource === 'sections') {
+    const slug = data?.slug || data?.id || id;
+    if (slug) revalidatePath(`/section/${slug}`);
+    revalidatePath('/');
+    return;
+  }
+
+  if (resource === 'settings') {
+    // Settings drive homepage copy, SEO templates, and discovery-page text everywhere.
+    revalidatePath('/');
+    revalidatePath('/explore');
+    revalidatePath('/blog');
+    revalidatePath('/guides');
+    return;
+  }
+
+  if (resource === 'seopages') {
+    const slug = data?.slug || data?.id || id;
+    if (slug) {
+      revalidatePath(`/page/${slug}`);
+      revalidatePath(`/${slug}`);
+    }
+    return;
+  }
+}
 
 const resources = new Set(['posts', 'sections', 'settings', 'seopages']);
 const tableForResource: Record<string, string> = {
@@ -157,6 +208,9 @@ export async function POST(request: Request) {
       await admin.from('posts').upsert({ id: post.id, data: post });
     }
     await admin.from('settings').upsert({ id: 'seeded', data: { completedAt: new Date().toISOString() } });
+    revalidatePath('/');
+    revalidatePath('/explore');
+    revalidatePath('/sitemap.xml');
     return NextResponse.json({ ok: true });
   }
 
@@ -167,6 +221,9 @@ export async function POST(request: Request) {
     for (const section of seedSections) {
       await admin.from('sections').delete().eq('id', section.id);
     }
+    revalidatePath('/');
+    revalidatePath('/explore');
+    revalidatePath('/sitemap.xml');
     return NextResponse.json({ ok: true });
   }
 
@@ -204,6 +261,7 @@ export async function POST(request: Request) {
     if (!validateResourceData(resource, data)) return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     const { error } = await admin.from(table).upsert({ id: rowId, data });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidateContent(resource, data, rowId);
     return NextResponse.json({ ok: true });
   }
 
@@ -213,6 +271,7 @@ export async function POST(request: Request) {
     if (resource === 'settings') return NextResponse.json({ error: 'Settings cannot be deleted' }, { status: 400 });
     const { error } = await admin.from(table).delete().eq('id', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidateContent(resource, null, id);
     return NextResponse.json({ ok: true });
   }
 

@@ -1,5 +1,5 @@
 import { cache } from 'react';
-import { createClient } from './supabase-server';
+import { createPublicClient } from './supabase-public';
 import type { Post, PostComment, Section, SiteSettings } from './types';
 import { seedPosts, seedSections } from './data/seedData';
 import { filterPostsForSection } from './sections';
@@ -271,7 +271,7 @@ function isMissingTableError(error: unknown) {
 
 export async function fetchPosts() {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data, error } = await supabase.from('posts').select('data');
     if (error) {
       console.error('Supabase posts fetch error:', error);
@@ -478,7 +478,7 @@ export async function fetchPostSummaries() {
 
 export async function fetchSections() {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data, error } = await supabase.from('sections').select('data');
     if (error) {
       console.error('Supabase sections fetch error:', error);
@@ -494,7 +494,7 @@ export async function fetchSections() {
 
 export const fetchSettings = cache(async () => {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data, error } = await supabase.from('settings').select('data').eq('id', 'global').maybeSingle();
     if (error) {
       console.error('Supabase settings fetch error:', error);
@@ -528,7 +528,7 @@ export async function getPostsForSection(section: Section, settings: SiteSetting
 
 export async function fetchSeoPages() {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data, error } = await supabase.from('seoPages').select('data');
     if (error) {
       console.error('Supabase seo pages fetch error:', error);

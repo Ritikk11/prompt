@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 import { Metadata } from 'next';
 import ToolContent from './ToolContent';
@@ -41,4 +41,10 @@ export default async function ToolPage({ params }: Props) {
   const settings = await fetchSettings();
   
   return <ToolContent posts={posts} settings={settings} />;
+}
+
+// Empty array is required for ISR to actually cache this route per-tool — without it,
+// `revalidate` above is silently ignored and every request falls back to full SSR.
+export function generateStaticParams() {
+  return [];
 }

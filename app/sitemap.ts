@@ -4,7 +4,7 @@ import { Post, Section } from '@/lib/types';
 import { getArticlesForSettings } from '@/lib/content';
 import { getAllTools } from '@/lib/constants';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
 
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

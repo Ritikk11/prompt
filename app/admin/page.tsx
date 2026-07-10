@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
 import type { Post, Section, ImagePrompt, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, CreativeDirectionItem, ShareTarget, DiscoveryPageSettings, ArticleSettingsOverride } from '@/lib/types';
@@ -518,6 +518,14 @@ function HomepageBlockPreview({
 }
 
 export default function Admin() {
+  return (
+    <Suspense fallback={null}>
+      <AdminInner />
+    </Suspense>
+  );
+}
+
+function AdminInner() {
   const {
     posts, sections, settings, addPost, updatePost, deletePost,
     addSection, updateSection, deleteSection, updateSettings, resetData, deleteMockData, loading, loadAdminData

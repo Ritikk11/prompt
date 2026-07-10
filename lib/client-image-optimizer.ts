@@ -9,8 +9,8 @@ type OptimizeOptions = {
 };
 
 const presets: Record<ImageOptimizePreset, OptimizeOptions> = {
-  thumbnail: { maxSizeKB: 140, maxDimension: 900, startQuality: 0.76, minQuality: 0.34, mimeType: 'image/webp' },
-  prompt: { maxSizeKB: 520, maxDimension: 1600, startQuality: 0.82, minQuality: 0.48, mimeType: 'image/webp' },
+  thumbnail: { maxSizeKB: 90, maxDimension: 820, startQuality: 0.72, minQuality: 0.32, mimeType: 'image/webp' },
+  prompt: { maxSizeKB: 360, maxDimension: 1400, startQuality: 0.78, minQuality: 0.44, mimeType: 'image/webp' },
   reference: { maxSizeKB: 650, maxDimension: 1400, startQuality: 0.8, minQuality: 0.44, mimeType: 'image/webp' },
   logo: { maxSizeKB: 45, maxDimension: 240, startQuality: 0.82, minQuality: 0.45, mimeType: 'image/webp' },
 };
