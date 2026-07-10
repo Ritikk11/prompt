@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { SiteSettings, StaticPageSettings } from './types';
 
-export type StaticPageKey = 'about' | 'contact' | 'privacy' | 'terms' | 'dmca' | 'disclaimer';
+export type StaticPageKey = 'about' | 'contact' | 'privacy' | 'terms' | 'dmca' | 'disclaimer' | 'cookies';
 
 const defaults: Record<StaticPageKey, Pick<StaticPageSettings, 'title' | 'subtitle' | 'metaTitle' | 'metaDescription'>> = {
   about: {
@@ -39,6 +39,12 @@ const defaults: Record<StaticPageKey, Pick<StaticPageSettings, 'title' | 'subtit
     subtitle: 'Important limitations and usage notes for this website.',
     metaTitle: 'Disclaimer | AI PromptMatrix',
     metaDescription: 'Read the AI PromptMatrix disclaimer.',
+  },
+  cookies: {
+    title: 'Cookies Policy',
+    subtitle: 'How and why we use cookies and similar technologies.',
+    metaTitle: 'Cookies Policy | AI PromptMatrix',
+    metaDescription: 'Read the AI PromptMatrix cookies policy.',
   },
 };
 

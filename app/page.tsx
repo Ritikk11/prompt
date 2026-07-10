@@ -10,8 +10,9 @@ import HomeReviewProcess from '@/components/HomeReviewProcess';
 import HomePromptOfDay from '@/components/HomePromptOfDay';
 import HomeCreativeDirections from '@/components/HomeCreativeDirections';
 import HomeSupportedTools from '@/components/HomeSupportedTools';
-import HomeNewsletter from '@/components/HomeNewsletter';
+import HomeGuides from '@/components/HomeGuides';
 import HomeCreatorFeedback from '@/components/HomeCreatorFeedback';
+import ScrollReveal from '@/components/ScrollReveal';
 
 const defaultHomepageBlockOrder = [
   'howTo',
@@ -19,8 +20,8 @@ const defaultHomepageBlockOrder = [
   'promptOfDay',
   'supportedTools',
   'creativeDirections',
+  'guides',
   'creatorFeedback',
-  'newsletter',
 ];
 
 function normalizeBlockToken(key: string) {
@@ -32,7 +33,7 @@ export default async function Home() {
   const settings = await fetchSettings();
   const allPosts = await fetchPostSummaries();
   const featuredPosts = allPosts.filter(p => p.featured && (p.status === 'published' || !p.status) && p.visibility !== 'private');
-  
+
   const homepageSections = sections
     .filter(s => s.visible && (s.location || 'homepage') === 'homepage')
     .sort((a, b) => a.order - b.order);
@@ -64,39 +65,52 @@ export default async function Home() {
     supportedTools: (settings.features?.showHomepageSupportedTools ?? true) ? <HomeSupportedTools posts={allPosts} settings={settings} /> : null,
     creativeDirections: (settings.features?.showHomepageCreativeDirections ?? true) ? <HomeCreativeDirections posts={allPosts} settings={settings} /> : null,
     creatorFeedback: (settings.features?.showHomepageCreatorFeedback ?? true) ? <HomeCreatorFeedback settings={settings} /> : null,
-    newsletter: (settings.features?.showHomepageNewsletter ?? true) ? <HomeNewsletter settings={settings} /> : null,
+    guides: (settings.features?.showHomepageGuides ?? true) ? <HomeGuides settings={settings} /> : null,
   };
   const homepageSectionPosts = new Map(homepageSections.map((section, index) => [section.id, sectionPostsData[index]]));
   const homepageSectionsById = new Map(homepageSections.map(section => [section.id, section]));
 
   return (
-    <div className="max-w-7xl mx-auto px-1 py-0">
+    <div className="w-full overflow-x-hidden">
       {(settings.features?.showHomepageLibraryHero ?? true) && settings.heroStyle !== 'v9' && (
-        <HomeLibraryHero featuredPosts={featuredPosts} settings={settings} postCount={allPosts.length} />
+        <ScrollReveal>
+          <HomeLibraryHero featuredPosts={featuredPosts} settings={settings} postCount={allPosts.length} />
+        </ScrollReveal>
       )}
 
       {/* Featured Slider */}
-      <section>
-        <FeaturedSlider
-          featuredPosts={featuredPosts}
-          settings={settings}
-          stats={{ postCount: allPosts.length, sectionCount: homepageSections.length }}
-        />
-      </section>
+      <ScrollReveal delay={100}>
+        <section className="mx-auto max-w-7xl px-1 py-0">
+          <FeaturedSlider
+            featuredPosts={featuredPosts}
+            settings={settings}
+            stats={{ postCount: allPosts.length, sectionCount: homepageSections.length }}
+          />
+        </section>
+      </ScrollReveal>
 
-      <HomeLinkBlocks blocks={settings.homeLinkBlocks} />
+      <ScrollReveal delay={200}>
+        <div className="mx-auto max-w-7xl px-1 py-0">
+          <HomeLinkBlocks blocks={settings.homeLinkBlocks} />
+        </div>
+      </ScrollReveal>
 
       {homepageOrder.map(token => {
         if (token.startsWith('block:')) {
           const key = token.replace('block:', '');
-          return homepageBlocks[key] ? <div key={token}>{homepageBlocks[key]}</div> : null;
+          if (!homepageBlocks[key]) return null;
+          return <ScrollReveal key={token}>{homepageBlocks[key]}</ScrollReveal>;
         }
         const sectionId = token.replace('section:', '');
         const section = homepageSectionsById.get(sectionId);
         if (!section) return null;
-        return <HomeSection key={token} section={section} initialPosts={homepageSectionPosts.get(sectionId) || []} settings={settings} />;
+        return (
+          <ScrollReveal key={token} className="mx-auto max-w-7xl px-1 py-0">
+            <HomeSection section={section} initialPosts={homepageSectionPosts.get(sectionId) || []} settings={settings} />
+          </ScrollReveal>
+        );
       })}
-      
+
       {homepageSections.length === 0 && (
         <div className="text-center py-12 text-surface-400">
           No sections found. Create one in the admin panel.

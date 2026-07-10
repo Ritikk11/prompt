@@ -7,6 +7,7 @@ import PostCard from '@/components/PostCard';
 import FilterChipRail from '@/components/FilterChipRail';
 import type { Post } from '@/lib/types';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import ScrollReveal from '@/components/ScrollReveal';
 import { matchesCategory, matchesTag, matchesTool } from '@/lib/sections';
 
 interface Props {
@@ -80,13 +81,17 @@ export default async function SeoPublicPage({ params }: Props) {
           <p className="text-surface-500">No posts found matching the criteria.</p>
         </div>
       ) : seoPage.filterTags?.length ? (
-        <FilterChipRail posts={filteredPosts} tags={seoPage.filterTags} tools={[]} showTools={false} settings={settings} cardStyleOverride={seoPage.cardStyle} renderGrid />
+        <ScrollReveal>
+          <FilterChipRail posts={filteredPosts} tags={seoPage.filterTags} tools={[]} showTools={false} settings={settings} cardStyleOverride={seoPage.cardStyle} renderGrid />
+        </ScrollReveal>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start pt-8">
-          {filteredPosts.map((post, index) => (
-            <PostCard key={post.id} post={post} index={index} cardStyleOverride={seoPage.cardStyle} />
-          ))}
-        </div>
+        <ScrollReveal>
+          <div data-reveal-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start pt-8">
+            {filteredPosts.map((post, index) => (
+              <PostCard key={post.id} post={post} index={index} cardStyleOverride={seoPage.cardStyle} />
+            ))}
+          </div>
+        </ScrollReveal>
       )}
     </div>
   );

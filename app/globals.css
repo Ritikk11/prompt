@@ -36,8 +36,105 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Scroll-reveal (ScrollReveal component). Keyframe-based with `backwards`
+   fill so once the entrance finishes NO styles remain on the wrapper — no
+   lingering transform (which would hijack position:fixed descendants such as
+   ad overlay iframes) and no transition. While hidden the wrapper is inert:
+   invisible AND not hit-testable. */
+@keyframes reveal-section-in {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal-root:not(.reveal-visible) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.reveal-root.reveal-visible {
+  animation: reveal-section-in 0.7s ease-out backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-root:not(.reveal-visible) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .reveal-root.reveal-visible {
+    animation: none;
+  }
+}
+
+/* Scroll-reveal inner stagger: inside a ScrollReveal, direct children of any
+   [data-reveal-stagger] container cascade in after the section reveals.
+   Uses a keyframe animation with `backwards` fill so no styles linger after
+   the entrance finishes (hover transforms/transitions keep working). */
+@keyframes reveal-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal-root:not(.reveal-visible) [data-reveal-stagger] > * {
+  opacity: 0;
+}
+
+.reveal-root.reveal-visible [data-reveal-stagger] > * {
+  animation: reveal-stagger-in 0.55s ease-out backwards;
+}
+
+.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(1) { animation-delay: 0.1s; }
+.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(2) { animation-delay: 0.19s; }
+.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(3) { animation-delay: 0.28s; }
+.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(4) { animation-delay: 0.37s; }
+.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(5) { animation-delay: 0.46s; }
+.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(6) { animation-delay: 0.55s; }
+.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(n+7) { animation-delay: 0.64s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-root [data-reveal-stagger] > * {
+    opacity: 1 !important;
+    animation: none !important;
+  }
+}
+
 body {
   @apply bg-white text-surface-900 dark:bg-surface-950 dark:text-surface-100 transition-colors duration-300;
+}
+
+button,
+a,
+select,
+summary,
+label,
+[role="button"],
+[role="link"],
+[tabindex]:not([tabindex="-1"]) {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"],
+select:disabled,
+input:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
+input,
+textarea {
+  cursor: text;
 }
 
 /* Custom scrollbar */
@@ -113,8 +210,64 @@ body {
   animation: fadeIn 0.4s ease-out;
 }
 
+@keyframes headerDropdownIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); filter: blur(2px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes headerMenuIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes headerDropdownOut {
+  from { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  to { opacity: 0; transform: translateY(-8px) scale(0.98); filter: blur(2px); }
+}
+
+@keyframes headerMenuOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-10px); }
+}
+
+.header-dropdown-in {
+  animation: headerDropdownIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: top center;
+}
+
+.header-menu-in {
+  animation: headerMenuIn 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.header-dropdown-out {
+  animation: headerDropdownOut 0.18s ease-in forwards;
+  transform-origin: top center;
+}
+
+.header-menu-out {
+  animation: headerMenuOut 0.18s ease-in forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @keyframes shimmer {
   100% { transform: translateX(100%); }
+}
+
+@keyframes movePgrs {
+  0% { background-position: 0 0; }
+  100% { background-position: 50px 50px; }
 }
 
 @keyframes imageShimmer {

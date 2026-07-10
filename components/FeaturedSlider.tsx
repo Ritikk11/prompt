@@ -80,7 +80,7 @@ export default function FeaturedSlider({
 
   if (heroStyle === 'v9') {
     const previewPosts = featured.slice(0, 4);
-    const displayTitle = settings.heroTitle || 'Your Ultimate AI Prompt Library';
+    const displayTitle = settings.heroTitle || 'Better Image Prompts Start Here';
     const displaySubtitle = settings.heroSubtitle || settings.siteDescription;
     const tools = (settings.aiTools || allTools).filter(Boolean).slice(0, 4);
     const totalLikes = featured.reduce((sum, item) => sum + (item.likes || 0), 0);
@@ -252,7 +252,7 @@ export default function FeaturedSlider({
                         {info.logo && (
                           <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
                             <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                              <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
+                              <Image src={info.logo} alt="" width={18} height={18} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
                             </div>
                           </div>
                         )}
@@ -292,7 +292,7 @@ export default function FeaturedSlider({
                     {info.logo && (
                       <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
                         <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                          <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
+                          <Image src={info.logo} alt="" width={18} height={18} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
                         </div>
                       </div>
                     )}
@@ -351,40 +351,56 @@ export default function FeaturedSlider({
           <div className="absolute inset-0 bg-surface-50/80 dark:bg-surface-950/80 backdrop-blur-md" />
         </div>
         
-        <div className="relative z-10 w-full max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-6 md:gap-16">
+        <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center gap-6 md:flex-row md:gap-16">
           {/* Text Content */}
-          <div className="w-full md:w-1/2 flex flex-col text-center md:text-left animate-in slide-in-from-left-8 duration-700 order-2 md:order-1">
-            <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-2 md:mb-4">
-              {allTools.map(tool => {
-                const info = getToolInfo(tool, settings?.toolDetails);
+          <div className="order-2 flex w-full flex-col text-center md:order-1 md:w-1/2 md:text-left">
+            <div className="relative min-h-[230px] md:min-h-[290px]">
+              {featured.map((p, i) => {
+                const slideTools = getAllTools(p);
                 return (
-                  <span key={tool} className={`inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-sm font-bold text-white shadow-lg ${info.color}`}>
-                    {info.logo && (
-                      <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                          <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                        </div>
-                      </div>
-                    )}
-                    {tool}
-                  </span>
+                  <div
+                    key={p.id}
+                    className={`absolute inset-0 flex flex-col justify-center transition-all duration-500 ease-out ${
+                      i === current
+                        ? 'translate-y-0 opacity-100 blur-0'
+                        : 'pointer-events-none translate-y-3 opacity-0 blur-[1px]'
+                    }`}
+                  >
+                    <div className="mb-2 flex flex-wrap justify-center gap-2 md:mb-4 md:justify-start">
+                      {slideTools.map(tool => {
+                        const info = getToolInfo(tool, settings?.toolDetails);
+                        return (
+                          <span key={tool} className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-bold text-white shadow-lg md:px-4 md:py-1.5 md:text-sm ${info.color}`}>
+                            {info.logo && (
+                              <div className="relative flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/20 p-[1px]">
+                                <div className="relative h-full w-full overflow-hidden rounded-full bg-white shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
+                                  <Image src={info.logo} alt="" width={18} height={18} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+                                </div>
+                              </div>
+                            )}
+                            {tool}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <h2 className="mb-2 text-xl font-black leading-[1.1] text-surface-900 dark:text-white md:mb-6 md:text-5xl">{p.title}</h2>
+                    <p className="line-clamp-2 text-xs font-medium text-surface-700 dark:text-surface-300 md:line-clamp-3 md:text-lg">{p.description}</p>
+                  </div>
                 );
               })}
             </div>
-            <h2 className="text-xl md:text-5xl font-black text-surface-900 dark:text-white mb-2 md:mb-6 leading-[1.1]">{post.title}</h2>
-            <p className="text-surface-700 dark:text-surface-300 text-xs md:text-lg mb-4 md:mb-8 line-clamp-2 md:line-clamp-3 font-medium">{post.description}</p>
-            <div className="flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 w-full">
-              <Link href={`/${post.slug || post.id}`} className="inline-flex flex-1 md:flex-none justify-center items-center gap-1.5 px-4 py-2.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 text-xs md:text-base font-bold hover:scale-105 transition-transform shadow-xl">
-                Get Prompt <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+            <div className="flex w-full flex-row items-center justify-center gap-2 md:justify-start md:gap-4">
+              <Link href={`/${post.slug || post.id}`} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-surface-900 px-4 py-2.5 text-xs font-bold text-white shadow-xl transition-all duration-300 hover:scale-105 dark:bg-white dark:text-surface-900 md:flex-none md:rounded-2xl md:px-8 md:py-4 md:text-base">
+                Get Prompt <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
               </Link>
-              <div className="flex gap-1.5 md:gap-2 shrink-0">
-                <button onClick={() => goTo(current - 1)} className="p-2.5 md:p-4 rounded-xl bg-white/50 dark:bg-black/50 hover:bg-white dark:hover:bg-surface-800 backdrop-blur shadow-sm transition-all text-surface-900 dark:text-white"><ChevronLeft className="w-4 h-4 md:w-5 md:h-5"/></button>
-                <button onClick={() => goTo(current + 1)} className="p-2.5 md:p-4 rounded-xl bg-white/50 dark:bg-black/50 hover:bg-white dark:hover:bg-surface-800 backdrop-blur shadow-sm transition-all text-surface-900 dark:text-white"><ChevronRight className="w-4 h-4 md:w-5 md:h-5"/></button>
+              <div className="flex shrink-0 gap-1.5 md:gap-2">
+                <button onClick={() => goTo(current - 1)} className="rounded-xl bg-white/50 p-2.5 text-surface-900 shadow-sm backdrop-blur transition-all hover:bg-white dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronLeft className="h-4 w-4 md:h-5 md:w-5"/></button>
+                <button onClick={() => goTo(current + 1)} className="rounded-xl bg-white/50 p-2.5 text-surface-900 shadow-sm backdrop-blur transition-all hover:bg-white dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronRight className="h-4 w-4 md:h-5 md:w-5"/></button>
               </div>
             </div>
           </div>
           {/* Image Content */}
-          <div className="w-full md:w-1/2 relative h-[300px] md:h-[400px] perspective-1000 order-1 md:order-2">
+          <div className="perspective-1000 order-1 relative h-[300px] w-full md:order-2 md:h-[400px] md:w-1/2">
              {featured.map((p, i) => {
                const offset = i - current;
                const isVisible = Math.abs(offset) <= 1 || (i === 0 && current === featured.length - 1) || (i === featured.length - 1 && current === 0);
@@ -395,15 +411,23 @@ export default function FeaturedSlider({
                return (
                  <div
                    key={p.id}
-                   className={`absolute inset-0 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] rounded-2xl shadow-2xl overflow-hidden border border-white/20`}
+                   className="absolute inset-0 overflow-hidden rounded-2xl border border-white/20 shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]"
                    style={{
                      transform: `translateX(${relativeIdx * 25}px) translateZ(${relativeIdx === 0 ? 0 : -100}px) rotateY(${relativeIdx * -15}deg) scale(${relativeIdx === 0 ? 1 : 0.85})`,
                      opacity: relativeIdx === 0 ? 1 : 0.4,
                      zIndex: relativeIdx === 0 ? 30 : 20,
                    }}
                  >
-                   <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt={`bg-${p.title}`} fill sizes="20vw" className="object-cover blur-xl scale-125 opacity-50"  referrerPolicy="no-referrer" />
-                   <LoadingImage src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill sizes="(max-width: 768px) 100vw, 50vw" showSkeleton={showSkeleton} className="object-contain"  referrerPolicy="no-referrer" />
+                   <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt={`bg-${p.title}`} fill sizes="20vw" className="scale-125 object-cover opacity-50 blur-xl" referrerPolicy="no-referrer" />
+                   <LoadingImage
+                     src={p.thumbnailUrl || p.images[0]?.url || ''}
+                     alt={p.title}
+                     fill
+                     sizes="(max-width: 768px) 100vw, 50vw"
+                     showSkeleton={showSkeleton}
+                     className="object-contain transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]"
+                     referrerPolicy="no-referrer"
+                   />
                  </div>
                );
              })}
@@ -533,7 +557,7 @@ export default function FeaturedSlider({
                         {info.logo && (
                           <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-0.5">
                             <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                              <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
+                              <Image src={info.logo} alt="" width={18} height={18} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
                             </div>
                           </div>
                         )}
@@ -621,7 +645,7 @@ export default function FeaturedSlider({
                                 {slideToolInfo.logo && (
                                   <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
                                     <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={slideToolInfo.logoScale ? { transform: `scale(${slideToolInfo.logoScale})` } : undefined}>
-                                      <Image src={slideToolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
+                                      <Image src={slideToolInfo.logo} alt="" width={18} height={18} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
                                     </div>
                                   </div>
                                 )}

@@ -7,9 +7,9 @@ import PostContent from '@/components/PostContent';
 import PostCard from '@/components/PostCard';
 import FilterChipRail from '@/components/FilterChipRail';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import ScrollReveal from '@/components/ScrollReveal';
 import type { Post } from '@/lib/types';
 import { matchesCategory, matchesTag, matchesTool } from '@/lib/sections';
-import { getAuthorForPost } from '@/lib/authors';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -122,13 +122,17 @@ export default async function PostPage({ params }: Props) {
             <p className="text-surface-500">No posts found matching the criteria.</p>
           </div>
         ) : seoPage.filterTags?.length ? (
-          <FilterChipRail posts={filteredPosts} tags={seoPage.filterTags} tools={[]} showTools={false} settings={settings} cardStyleOverride={seoPage.cardStyle} renderGrid />
+          <ScrollReveal>
+            <FilterChipRail posts={filteredPosts} tags={seoPage.filterTags} tools={[]} showTools={false} settings={settings} cardStyleOverride={seoPage.cardStyle} renderGrid />
+          </ScrollReveal>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start pt-8">
-            {filteredPosts.map((candidate, index) => (
-              <PostCard key={candidate.id} post={candidate} index={index} cardStyleOverride={seoPage.cardStyle} />
-            ))}
-          </div>
+          <ScrollReveal>
+            <div data-reveal-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start pt-8">
+              {filteredPosts.map((candidate, index) => (
+                <PostCard key={candidate.id} post={candidate} index={index} cardStyleOverride={seoPage.cardStyle} />
+              ))}
+            </div>
+          </ScrollReveal>
         )}
       </div>
     );
@@ -138,7 +142,6 @@ export default async function PostPage({ params }: Props) {
 
   let relatedPosts: Post[] = [];
   const [allPosts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
-  const author = getAuthorForPost(post, settings);
   relatedPosts = allPosts
     .filter(p =>
       p.id !== post.id &&
@@ -156,10 +159,9 @@ export default async function PostPage({ params }: Props) {
     name: `How to use ${post.title}`,
     description: post.description,
     author: {
-      '@type': 'Person',
-      name: author.name,
-      url: `${siteUrl}/author/${author.slug}`,
-      description: author.bio || undefined,
+      '@type': 'Organization',
+      name: settings.siteTitle || 'AI PromptMatrix',
+      url: siteUrl,
     },
     publisher: {
       '@type': 'Organization',

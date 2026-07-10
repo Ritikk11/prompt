@@ -9,6 +9,7 @@ import { getGridClasses } from '@/lib/utils';
 import type { Post, SiteSettings } from '@/lib/types';
 
 import PostCard from '@/components/PostCard';
+import ScrollReveal from '@/components/ScrollReveal';
 
 function SearchContent({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
   const searchParams = useSearchParams();
@@ -43,13 +44,15 @@ function SearchContent({ posts, settings }: { posts: Post[], settings: SiteSetti
       </div>
 
       {results.length > 0 ? (
-        <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-          {results.map((post, i) => (
-             <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
-              <PostCard post={post} index={i} />
-            </div>
-          ))}
-        </div>
+        <ScrollReveal>
+          <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+            {results.map((post, i) => (
+               <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
+                <PostCard post={post} index={i} />
+              </div>
+            ))}
+          </div>
+        </ScrollReveal>
       ) : (
         <div className="text-center py-20">
           <SearchIcon className="w-16 h-16 text-surface-200 dark:text-surface-700 mx-auto mb-4" />

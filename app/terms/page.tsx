@@ -12,11 +12,12 @@ export async function generateMetadata() {
 export default async function TermsOfService() {
   const settings = await fetchSettings();
   const siteTitle = settings.siteTitle || 'Our Platform';
-  
+  const contactEmail = settings.contactEmail || 'contact@aipromptmatrix.in';
+
   const defaultContent = `
 # Terms of Service
 
-Last updated: May 23, 2026
+Last updated: July 6, 2026
 
 Welcome to ${siteTitle}. By accessing or using our website, services, and software provided through or in connection with the service ("Service"), you signify that you have read, understood, and agree to be bound by this Terms of Service Agreement ("Agreement"), whether or not you are a registered user of our Service. 
 
@@ -26,7 +27,7 @@ ${siteTitle} provides a platform for discovering, sharing, and utilizing AI-gene
 
 ## 2. Eligibility
 
-You must be at least 13 years old to use the Service. By agreeing to these Terms, you represent and warrant to us that: (a) you are at least 13 years old; (b) you have not previously been suspended or removed from the Service; and (c) your registration and your use of the Service is in compliance with any and all applicable laws and regulations.
+You must be at least 18 years old to use the Service. If you are a minor in your jurisdiction, you may use the Service only with the involvement and consent of a parent or legal guardian, who agrees to be bound by these Terms on your behalf. By agreeing to these Terms, you represent and warrant to us that: (a) you meet the age requirement above; (b) you have not previously been suspended or removed from the Service; and (c) your registration and your use of the Service is in compliance with any and all applicable laws and regulations.
 
 ## 3. User Accounts and Registration
 
@@ -55,7 +56,7 @@ In using the Service, you agree not to:
 
 ## 6. Intellectual Property
 
-The Service is owned and operated by ${siteTitle}. The visual interfaces, graphics, design, compilation, information, data, computer code (including source code or object code), products, software, services, and all other elements of the Service ("Materials") provided by ${siteTitle} are protected by intellectual property and other laws. All Materials included in the Service are the property of ${siteTitle} or its third-party licensors. You may not make use of the Materials except as expressly authorized by ${siteTitle}. 
+The Service is owned and operated by ${siteTitle}. The visual interfaces, graphics, design, compilation, information, data, computer code (including source code or object code), products, software, services, and all other elements of the Service ("Materials") provided by ${siteTitle} are protected by intellectual property and other laws. All Materials included in the Service are the property of ${siteTitle} or its third-party licensors. You may not make use of the Materials except as expressly authorized by ${siteTitle}. If you believe that content on the Service infringes your copyright, please review our [DMCA Notice](/dmca) for instructions on submitting a takedown request.
 
 ## 7. Modification of Terms
 
@@ -67,9 +68,25 @@ THE SERVICE AND ALL MATERIALS AND CONTENT AVAILABLE THROUGH THE SERVICE ARE PROV
 
 IN NO EVENT WILL ${siteTitle} BE LIABLE TO YOU FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES (INCLUDING DAMAGES FOR LOSS OF PROFITS, GOODWILL, OR ANY OTHER INTANGIBLE LOSS) ARISING OUT OF OR RELATING TO YOUR ACCESS TO OR USE OF, OR YOUR INABILITY TO ACCESS OR USE, THE SERVICE OR ANY MATERIALS OR CONTENT ON THE SERVICE.
 
-## 9. General
+## 9. Termination
 
-These Terms, together with the Privacy Policy and any other agreements expressly incorporated by reference into these Terms, are the entire and exclusive understanding and agreement between you and ${siteTitle} regarding your use of the Service. You may not assign or transfer these Terms or your rights under these Terms, in whole or in part, by operation of law or otherwise, without our prior written consent.
+We may suspend or terminate your access to the Service at any time, with or without cause and with or without notice, including if we reasonably believe you have violated these Terms or applicable law. You may stop using the Service at any time. Upon termination, all provisions of these Terms that by their nature should survive will survive, including ownership provisions, warranty disclaimers, indemnity, and limitations of liability.
+
+## 10. Indemnification
+
+You agree to defend, indemnify, and hold harmless ${siteTitle} and its officers, directors, employees, and agents from and against any claims, liabilities, damages, losses, and expenses, including reasonable legal fees, arising out of or in any way connected with: (a) your access to or use of the Service; (b) your User Content; or (c) your violation of these Terms or of any applicable law or third-party right.
+
+## 11. Governing Law and Dispute Resolution
+
+These Terms are governed by and construed in accordance with the laws of India, without regard to its conflict-of-laws principles. Subject to any applicable mandatory law, the courts located in [City, State], India shall have exclusive jurisdiction over any dispute arising out of or relating to these Terms or the Service. Before starting any formal proceeding, you agree to first contact us at ${contactEmail} and attempt to resolve the dispute informally.
+
+## 12. General
+
+These Terms, together with the Privacy Policy and any other agreements expressly incorporated by reference into these Terms, are the entire and exclusive understanding and agreement between you and ${siteTitle} regarding your use of the Service, and supersede any prior agreements. Our failure to enforce any right or provision of these Terms will not be deemed a waiver of that right or provision. If any provision is held to be invalid or unenforceable, the remaining provisions will remain in full force and effect. You may not assign or transfer these Terms or your rights under these Terms, in whole or in part, by operation of law or otherwise, without our prior written consent; we may assign these Terms without restriction. We will not be liable for any failure or delay in performance resulting from causes beyond our reasonable control.
+
+## 13. Contact
+
+If you have any questions about these Terms, please contact us at ${contactEmail}.
 `;
   const page = getStaticPageContent(settings, 'terms', settings.pageTerms, defaultContent);
   if (!page.visible) notFound();

@@ -37,7 +37,7 @@ export default function HomeReviewProcess({ settings }: { settings?: SiteSetting
     text: content.items?.[index]?.text || step.text,
   })) : reviewSteps;
   return (
-    <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-surface-50 px-5 py-16 dark:bg-surface-950 sm:px-8">
+    <section className="relative w-full overflow-hidden bg-surface-50 px-5 py-16 dark:bg-surface-950 sm:px-8">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <div>
@@ -51,16 +51,18 @@ export default function HomeReviewProcess({ settings }: { settings?: SiteSetting
           <p className="mt-4 max-w-xl text-base leading-7 text-surface-600 dark:text-surface-300">
             {content.description || 'Every public prompt is checked for clarity, useful examples, model context, and clean organization before it appears in the library.'}
           </p>
-          <Link
-            href={content.ctaHref || '/submit'}
-            className="mt-7 inline-flex items-center gap-2 rounded-full bg-surface-950 px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-primary-600 dark:bg-white dark:text-surface-950 dark:hover:bg-primary-100"
-          >
-            {content.ctaLabel || 'Submit a prompt'}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          {content.showCta !== false && (
+            <Link
+              href={content.ctaHref || '/submit'}
+              className="mt-7 inline-flex items-center gap-2 rounded-full bg-surface-950 px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-primary-600 dark:bg-white dark:text-surface-950 dark:hover:bg-primary-100"
+            >
+              {content.ctaLabel || 'Submit a prompt'}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          )}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div data-reveal-stagger className="grid gap-4 sm:grid-cols-2">
           {editableSteps.map(step => {
             const Icon = step.icon;
             return (

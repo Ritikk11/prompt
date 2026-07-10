@@ -12,10 +12,12 @@ export async function generateMetadata() {
 export default async function Dmca() {
   const settings = await fetchSettings();
   const siteTitle = settings.siteTitle || 'Our Platform';
-  const contactEmail = settings.contactEmail || 'support@aipromptmatrix.in';
-  
+  const contactEmail = settings.contactEmail || 'contact@aipromptmatrix.in';
+
   const defaultContent = `
 # DMCA Notice
+
+Last updated: July 6, 2026
 
 ${siteTitle} respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998, the text of which may be found on the U.S. Copyright Office website at http://www.copyright.gov/legislation/dmca.pdf, we will respond expeditiously to claims of copyright infringement committed using our service.
 
@@ -39,6 +41,7 @@ Deliver this Notice, with all items completed, to our designated Copyright Agent
 
 **Copyright Agent**
 ${siteTitle} Legal Department
+Address: [Registered business address]
 Email: ${contactEmail}
 
 ## Counter-Notice

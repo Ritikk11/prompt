@@ -12,8 +12,8 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
   const totalLikes = featuredPosts.reduce((sum, post) => sum + (post.likes || 0), 0);
   const totalSaves = featuredPosts.reduce((sum, post) => sum + (post.bookmarkedBy?.length || 0), 0);
   const toolNames = (settings.aiTools || []).filter(Boolean).slice(0, 4);
-  const title = settings.heroTitle || 'Your Ultimate AI Prompt Library';
-  const subtitle = settings.heroSubtitle || 'Discover curated prompts for ChatGPT, Gemini, Grok, Qwen, and other image tools. Copy, customize, and generate stronger AI art from one organized library.';
+  const title = settings.heroTitle || 'Better Image Prompts Start Here';
+  const subtitle = settings.heroSubtitle || 'Discover tested prompts for ChatGPT, Gemini, Grok, Qwen, and other image tools. Copy, customize, and build stronger artwork from one organized library.';
 
   const statItems = [
     { label: 'Prompts', value: `${postCount}+`, icon: Sparkles },
@@ -23,10 +23,10 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
   ];
 
   return (
-    <section className="relative left-1/2 isolate w-screen -translate-x-1/2 overflow-hidden bg-surface-50 px-5 py-16 text-surface-950 dark:bg-surface-950 dark:text-white sm:px-8 md:min-h-[calc(100vh-64px)] md:py-20 lg:px-12">
+    <section className="relative isolate w-full overflow-hidden bg-surface-50 px-5 py-16 text-surface-950 dark:bg-surface-950 dark:text-white sm:px-8 md:min-h-[calc(100vh-64px)] md:py-20 lg:px-12">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_18%_15%,rgba(139,92,246,0.16),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(250,204,21,0.22),transparent_30%),radial-gradient(circle_at_50%_78%,rgba(236,72,153,0.13),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(248,250,252,0.96)_100%)] dark:bg-[radial-gradient(circle_at_18%_15%,rgba(139,92,246,0.25),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(250,204,21,0.1),transparent_30%),radial-gradient(circle_at_50%_78%,rgba(236,72,153,0.2),transparent_36%),linear-gradient(180deg,#020617_0%,#0f172a_100%)]" />
       <div className="absolute inset-0 -z-10 opacity-[0.22] [background-image:radial-gradient(#7c3aed_0.7px,transparent_0.7px)] [background-size:18px_18px] dark:opacity-[0.12]" />
-      <div className="absolute inset-x-0 top-0 -z-10 h-1 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-amber-300" />
+
 
       <div className="mx-auto flex min-h-full max-w-6xl flex-col items-center justify-center text-center">
         <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-100/80 px-4 py-2 text-xs font-bold text-primary-700 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-violet-100">

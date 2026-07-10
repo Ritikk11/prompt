@@ -32,7 +32,7 @@ export default function DiscoveryPageHero({
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-primary-500/10 px-4 py-2 text-xs font-black text-primary-600 dark:text-primary-300">
             {logoIcon?.logo ? (
               <span className="relative h-5 w-5 overflow-hidden rounded-full bg-white shadow-sm" style={logoIcon.logoScale ? { transform: `scale(${logoIcon.logoScale})` } : undefined}>
-                <Image src={logoIcon.logo} alt="" fill sizes="20px" className="object-contain" referrerPolicy="no-referrer" />
+                <Image src={logoIcon.logo} alt="" width={20} height={20} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
               </span>
             ) : nodeIcon ? (
               nodeIcon

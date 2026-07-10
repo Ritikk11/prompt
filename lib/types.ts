@@ -1,3 +1,5 @@
+import type { ArticleIcon } from './content/types';
+
 export interface ImagePrompt {
   id: string;
   url: string;
@@ -41,22 +43,12 @@ export interface Post {
   isTemplate?: boolean;
   templateVariables?: string[];
   authorId?: string;
+  authorName?: string;
+  authorUsername?: string;
+  authorAvatar?: string;
   status?: 'published' | 'pending' | 'draft';
   visibility?: 'public' | 'private';
   createdAt: string;
-}
-
-export interface Author {
-  id: string;
-  slug: string;
-  name: string;
-  role?: string;
-  bio?: string;
-  avatarUrl?: string;
-  website?: string;
-  active?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface PostComment {
@@ -113,7 +105,7 @@ export interface SiteFeatures {
   showHomepagePromptOfDay?: boolean;
   showHomepageCreativeDirections?: boolean;
   showHomepageSupportedTools?: boolean;
-  showHomepageNewsletter?: boolean;
+  showHomepageGuides?: boolean;
   showHomepageCreatorFeedback?: boolean;
   showScrollProgress?: boolean;
   showFaqSchema?: boolean;
@@ -136,6 +128,8 @@ export interface SiteFeatures {
 }
 
 export interface AdSettings {
+  publisherId?: string;
+  autoAdsEnabled?: boolean;
   header: { enabled: boolean; code: string };
   inFeed: { enabled: boolean; code: string; frequency: number };
   postTop: { enabled: boolean; code: string };
@@ -150,6 +144,8 @@ export interface FooterLinkGroup {
 export interface NavLink {
   label: string;
   href: string;
+  /** Stable id used to persist header nav ordering across edits. */
+  id?: string;
 }
 
 export type ShareTarget = 'whatsapp' | 'x' | 'instagram' | 'copy' | 'facebook' | 'pinterest';
@@ -207,12 +203,24 @@ export interface FilterRailItem {
   value: string;
 }
 
+/** Homepage "Browse by style" card — fully standalone from the chip-rail filters. */
+export interface CreativeDirectionItem {
+  label: string;
+  type: 'tool' | 'tag' | 'category';
+  value: string;
+  /** Icon from the shared article icon set. */
+  icon?: ArticleIcon;
+  /** Custom logo/image URL — takes priority over `icon` when set */
+  imageUrl?: string;
+}
+
 export interface HomepageBlockContent {
   badge?: string;
   title?: string;
   description?: string;
   itemDescription?: string;
   pinnedPostId?: string;
+  selectedGuideSlugs?: string[];
   items?: {
     title: string;
     text: string;
@@ -220,9 +228,7 @@ export interface HomepageBlockContent {
   }[];
   ctaLabel?: string;
   ctaHref?: string;
-  inputPlaceholder?: string;
-  successText?: string;
-  helperText?: string;
+  showCta?: boolean;
 }
 
 export interface KeepExploringSettings {
@@ -298,13 +304,18 @@ export interface SiteSettings {
   }>;
   headerSections?: Section[];
   headerLinks?: NavLink[];
+  /** Ordered nav-item keys (home, explore, submit, section:<id>, link:<id>) for the header. */
+  headerNavOrder?: string[];
   homeLinkBlocks?: HomeLinkBlock[];
   homepageBlockOrder?: string[];
   homepageContent?: Record<string, HomepageBlockContent>;
+  articleThumbnails?: Record<string, string>;
+  articleOverrides?: Record<string, ArticleSettingsOverride>;
+  customArticles?: ArticleSettingsOverride[];
   exploreFilterTags?: string[];
   exploreFilterItems?: FilterRailItem[];
   discoveryPages?: DiscoveryPageSettings;
-  creativeDirectionItems?: FilterRailItem[];
+  creativeDirectionItems?: CreativeDirectionItem[];
   footerLinkGroups?: FooterLinkGroup[];
   footerDescription?: string;
   copyrightText?: string;
@@ -314,19 +325,12 @@ export interface SiteSettings {
     instagram?: string;
     youtube?: string;
   };
-  authors?: Author[];
-  defaultAuthorId?: string;
   shareSettings?: ShareSettings;
   keepExploring?: KeepExploringSettings;
   seoSettings?: SeoSettings;
   staticPages?: Record<string, StaticPageSettings>;
   ads?: AdSettings;
-  adsensePublisherId?: string;
-  adsenseAutoAds?: boolean;
-  imgbbApiKey?: string;
-  imageProvider?: 'imgbb' | 'cloudinary' | 'supabase';
-  cloudinaryCloudName?: string;
-  cloudinaryUploadPreset?: string;
+  imageProvider?: 'supabase' | 'cloudflare';
   features?: SiteFeatures;
   adminEmails?: string[];
   pageAbout?: string;
@@ -335,6 +339,22 @@ export interface SiteSettings {
   pageDmca?: string;
   pageDisclaimer?: string;
   pageContact?: string;
+  pageCookies?: string;
+}
+
+export interface ArticleSettingsOverride {
+  slug: string;
+  title?: string;
+  description?: string;
+  category?: 'blog' | 'guide';
+  tags?: string[];
+  readMinutes?: number;
+  datePublished?: string;
+  dateModified?: string;
+  icon?: string;
+  thumbnailUrl?: string;
+  featured?: boolean;
+  body?: string;
 }
 
 export interface AdminUserSummary {

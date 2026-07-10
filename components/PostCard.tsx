@@ -6,7 +6,7 @@ import { Eye, Heart } from 'lucide-react';
 import type { Post } from '@/lib/types';
 import { getToolInfo, getAllTools } from '@/lib/constants';
 import { useData } from '@/components/context/DataContext';
-import LoadingImage from '@/components/LoadingImage';
+import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
 
 const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; toolName: string; toolInfo: any; className?: string }) => {
   const isIconOnly = style === 'v8';
@@ -71,10 +71,10 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
     return (
       <Link
         href={`/${post.slug || post.id}`}
-        className={`group block bg-white dark:bg-surface-900 rounded-[24px] border border-surface-200 dark:border-surface-800 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary-500/50 break-inside-avoid mb-4 ${aspect ? aspect : ''}`}
+        className={`group block bg-white p-3 dark:bg-surface-900 rounded-[28px] border border-surface-200 dark:border-surface-800 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary-500/50 break-inside-avoid mb-4 ${aspect ? aspect : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
-        <div className="p-4 flex items-center gap-3">
+        <div className="px-1 pb-3 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-surface-100 dark:bg-surface-800 animate-pulse flex items-center justify-center shrink-0">
              <div className="w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-700" />
           </div>
@@ -83,7 +83,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
             <div className="h-3 w-16 bg-surface-100 dark:bg-surface-800 rounded" />
           </div>
         </div>
-        <div className="relative aspect-square">
+        <div className="relative aspect-square overflow-hidden rounded-[22px]">
            <LoadingImage
             src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
             alt={post.title}
@@ -93,7 +93,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
             referrerPolicy="no-referrer" skeleton={showSkeleton} />
            <div className="absolute top-3 right-3">{renderBadges()}</div>
         </div>
-        <div className="p-4">
+        <div className="px-1 pt-4 pb-1">
           <h3 className="font-bold text-surface-900 dark:text-white text-base leading-snug line-clamp-2 mb-3">
             {post.title}
           </h3>
@@ -239,19 +239,30 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
     return (
       <Link
         href={`/${post.slug || post.id}`}
-        className={`group block relative rounded-lg overflow-hidden bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 transition-all duration-300 hover:border-primary-500 break-inside-avoid shadow-sm hover:shadow-lg ${aspect ? `${aspect} h-full` : ''}`}
+        className={`group block relative rounded-[15px] overflow-hidden bg-surface-50 p-2 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 transition-all duration-300 hover:border-primary-500 break-inside-avoid shadow-sm hover:shadow-lg ${aspect ? `${aspect} h-full` : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
-        <div className={`relative overflow-hidden ${aspect ? 'h-full' : ''}`}>
-          <LoadingImage
-            src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
-            alt={post.title}
-            width={500}
-            height={700}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            showSkeleton={showSkeleton}
-            className={`w-full transition-transform duration-700 ease-in-out group-hover:scale-105 block ${aspect ? 'h-full object-cover' : 'h-auto'}`}
-           referrerPolicy="no-referrer" skeleton={showSkeleton} />
+        <div className={`relative overflow-hidden rounded-[15px] bg-white dark:bg-surface-950 ${aspect ? 'h-full' : ''}`}>
+          {aspect ? (
+            <LoadingImage
+              src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+              alt={post.title}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              showSkeleton={showSkeleton}
+              className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
+              referrerPolicy="no-referrer"
+              skeleton={showSkeleton}
+            />
+          ) : (
+            <LoadingImg
+              src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+              alt={post.title}
+              showSkeleton={showSkeleton}
+              className="block h-auto w-full transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
+              referrerPolicy="no-referrer"
+            />
+          )}
           <div className="absolute top-2.5 left-2.5 z-10">
              {renderBadges()}
           </div>
@@ -263,7 +274,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
             </div>
           )}
         </div>
-        <div className={`p-3 sm:p-4 ${aspect ? 'hidden' : ''}`}>
+        <div className={`px-1 pb-1 pt-3 ${aspect ? 'hidden' : ''}`}>
           <h3 className="font-bold text-surface-900 dark:text-white text-[13px] sm:text-[15px] leading-snug line-clamp-2 mb-2 group-hover:text-primary-500 transition-colors">
             {post.title}
           </h3>

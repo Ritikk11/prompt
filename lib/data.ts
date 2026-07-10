@@ -1,40 +1,68 @@
+import { cache } from 'react';
 import { createClient } from './supabase-server';
 import type { Post, PostComment, Section, SiteSettings } from './types';
 import { seedPosts, seedSections } from './data/seedData';
 import { filterPostsForSection } from './sections';
 import { getThumbnailImageUrl } from './image-url';
-import { getAuthors } from './authors';
+
+const defaultArticleThumbnails: Record<string, string> = {
+  '3d-figurine-photo-trend-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/3d-figurine-photo-trend-guide.webp',
+  'ai-headshots-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/ai-headshots-guide.webp',
+  'ai-image-aspect-ratios-explained': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/ai-image-aspect-ratios-explained.webp',
+  'ai-photo-trends-2026': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/ai-photo-trends-2026.webp',
+  'ai-product-photography-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/ai-product-photography-guide.webp',
+  'anatomy-of-a-perfect-ai-image-prompt': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/anatomy-of-a-perfect-ai-image-prompt.webp',
+  'anime-portrait-prompts-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/anime-portrait-prompts-guide.webp',
+  'chatgpt-image-generation-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/chatgpt-image-generation-guide.webp',
+  'chatgpt-vs-gemini-image-generation': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/chatgpt-vs-gemini-image-generation.webp',
+  'common-ai-prompt-mistakes': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/common-ai-prompt-mistakes.webp',
+  'consistent-characters-ai-images': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/consistent-characters-ai-images.webp',
+  'couple-portrait-prompts-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/couple-portrait-prompts-guide.webp',
+  'gemini-photo-editing-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/gemini-photo-editing-guide.webp',
+  'how-ai-image-generators-work': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/how-ai-image-generators-work.webp',
+  'how-to-use-prompts-from-promptmatrix': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/how-to-use-prompts-from-promptmatrix.webp',
+  'how-to-write-better-ai-image-prompts': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/how-to-write-better-ai-image-prompts.webp',
+  'negative-prompts-explained': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/negative-prompts-explained.webp',
+  'reference-images-vs-text-prompts': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/reference-images-vs-text-prompts.webp',
+  'restore-old-photos-with-ai': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/restore-old-photos-with-ai.webp',
+  'retro-saree-portrait-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/retro-saree-portrait-guide.webp',
+  'what-are-ai-image-prompts': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/what-are-ai-image-prompts.webp',
+  'who-owns-ai-generated-images': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/who-owns-ai-generated-images.webp',
+};
 
 const defaultSettings: SiteSettings = {
   siteTitle: 'AI PromptMatrix',
-  siteDescription: 'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.',
+  siteDescription: 'A curated prompt library for image creators. Discover tested examples, copy the workflow, and make stronger artwork.',
   siteLogo: '',
-  heroTitle: 'Discover AI Prompt Masterpieces',
-  heroSubtitle: 'Explore a curated collection of breathtaking AI-generated imagery and their full prompts. Learn, inspire, and create.',
+  heroTitle: 'Better Image Prompts Start Here',
+  heroSubtitle: 'Browse a curated library of tested prompts for ChatGPT, Gemini, Grok, and more — each with example images and the exact text that created them.',
   heroEnabled: true,
   heroAutoPlay: true,
   aiTools: ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
   headerLinks: [],
   homeLinkBlocks: [],
+  articleThumbnails: defaultArticleThumbnails,
+  articleOverrides: {},
+  customArticles: [],
   homepageBlockOrder: [
     'howTo',
     'reviewProcess',
     'promptOfDay',
     'supportedTools',
     'creativeDirections',
+    'guides',
     'creatorFeedback',
-    'newsletter',
   ],
   homepageContent: {
     howTo: {
       badge: 'How It Works',
-      title: 'Create better AI images in 4 simple steps',
+      title: 'Create better images in 4 simple steps',
       description: 'From browsing prompts to generating finished artwork, this workflow keeps the process simple and repeatable.',
       items: [
         {
           title: 'Browse & Discover',
-          text: 'Explore curated AI prompts organized by tool, style, mood, and use case. Find the right direction before you generate.',
-          checks: ['Filter by AI tool', 'Check trending prompts', 'Open curated collections'],
+          text: 'Explore curated prompts organized by tool, style, mood, and use case. Find the right direction before you generate.',
+          checks: ['Filter by tool', 'Check trending prompts', 'Open curated collections'],
         },
         {
           title: 'Copy the Prompt',
@@ -43,7 +71,7 @@ const defaultSettings: SiteSettings = {
         },
         {
           title: 'Paste & Generate',
-          text: 'Open your preferred AI tool, paste the prompt, attach reference images when needed, and adjust settings as needed.',
+          text: 'Open your preferred image tool, paste the prompt, attach reference images when needed, and adjust settings as needed.',
           checks: ['Works with major image tools', 'Adjust aspect ratios', 'Fine-tune prompt details'],
         },
         {
@@ -59,6 +87,7 @@ const defaultSettings: SiteSettings = {
       description: 'Every public prompt is checked for clarity, useful examples, model context, and clean organization before it appears in the library.',
       ctaLabel: 'Submit a prompt',
       ctaHref: '/submit',
+      showCta: true,
       items: [
         { title: 'Submission check', text: 'Prompts are checked for a clear title, useful example image, model label, and complete prompt text before publishing.' },
         { title: 'Prompt quality pass', text: 'We look for prompts that are reusable, specific enough to help creators, and organized with the right tools, categories, and tags.' },
@@ -69,13 +98,13 @@ const defaultSettings: SiteSettings = {
     promptOfDay: {
       badge: 'Prompt of the Day',
       title: "Today's Featured Prompt",
-      description: 'Handpicked from your published featured prompts',
+      description: 'One standout prompt, hand-picked every day. Copy it, tweak it, and make it your own.',
       ctaLabel: 'View This Prompt',
     },
     supportedTools: {
-      badge: 'Supported AI tools',
-      title: 'Prompts for Every Major AI Tool',
-      description: 'Browse prompt collections prepared for the tools your visitors already use.',
+      badge: 'Supported tools',
+      title: 'Prompts for Every Major Image Tool',
+      description: 'Find prompt sets organized by the image tools people actually create with, so you can choose the right workflow before you start experimenting.',
       items: [
         { title: 'ChatGPT', text: 'Strong text rendering, Reference image workflows, Detailed prompt structure' },
         { title: 'Gemini', text: 'Fast image ideation, Reference-aware prompts, Creative variations' },
@@ -86,28 +115,26 @@ const defaultSettings: SiteSettings = {
     creativeDirections: {
       badge: 'Browse by style',
       title: 'Explore Creative Directions',
-      description: 'Jump into prompt collections by subject, genre, and visual direction using your real post tags.',
+      description: 'Portraits, posters, anime, product shots — jump straight to the visual style you have in mind.',
       itemDescription: 'Curated prompt direction',
     },
     creatorFeedback: {
-      badge: 'Creator-focused',
-      title: 'Built for Creators Who Need Usable Prompts',
-      description: 'These blocks explain why the library is useful without relying on fake testimonials.',
+      badge: 'Why creators use it',
+      title: 'A Prompt Library You Can Actually Rely On',
+      description: 'No vague inspiration dumps — every prompt is tested, labeled, and written so you can copy it and get the same result.',
       items: [
-        { title: 'Faster prompt browsing', text: 'Visitors can move through image prompt ideas by tool, style, and intent instead of guessing which post is useful.' },
-        { title: 'Clear model context', text: 'Prompt pages show the AI tool and model labels, so creators know where each prompt is meant to be used.' },
-        { title: 'Reusable collections', text: 'Multi-prompt posts, copy actions, and workflow notes make prompts easier to test and revisit later.' },
-        { title: 'Better organized library', text: 'Sections, tags, search, and custom pages help the site feel like a curated resource instead of a raw feed.' },
+        { title: 'Find it fast', text: 'Browse by tool, style, and intent instead of scrolling a random feed hoping something fits.' },
+        { title: 'Know before you generate', text: 'Every prompt shows the AI tool and model it was written for, so you always know where to paste it.' },
+        { title: 'Copy the whole workflow', text: 'Multi-prompt collections, one-click copy, and model notes let you reproduce the full result — not just one image.' },
+        { title: 'Curated, not scraped', text: 'Each collection is reviewed for clear prompt text and real example images before it goes live.' },
       ],
     },
-    newsletter: {
-      badge: 'Stay updated',
-      title: 'Get Weekly Prompt Collections',
-      description: 'Subscribe to receive curated prompt packs for ChatGPT, Gemini, Grok, and Qwen.',
-      inputPlaceholder: 'Enter your email',
-      ctaLabel: 'Subscribe',
-      successText: "Subscribed. You're on the list.",
-      helperText: 'No spam. Unsubscribe anytime.',
+    guides: {
+      badge: 'Learn the craft',
+      title: 'Step-by-Step Prompt Guides',
+      description: 'Hands-on tutorials that take you from a blank prompt box to a finished image — trends, edits, and pro techniques included.',
+      ctaLabel: 'Browse all guides',
+      ctaHref: '/guides',
     },
   },
   footerLinkGroups: [
@@ -129,8 +156,6 @@ const defaultSettings: SiteSettings = {
       ],
     },
   ],
-  authors: [],
-  defaultAuthorId: 'editorial-team',
   shareSettings: {
     targets: ['whatsapp', 'x', 'instagram', 'copy'],
     position: 'floating-sidebar',
@@ -172,7 +197,7 @@ const defaultSettings: SiteSettings = {
   seoSettings: {
     metaTitleTemplate: '%post_title% | AI PromptMatrix',
     defaultMetaDescription: 'Discover curated AI image prompts, prompt collections, and creative workflows.',
-    defaultOgImage: '',
+    defaultOgImage: '/og-default.png',
     twitterHandle: '',
     googleVerification: '',
     bingVerification: '',
@@ -212,7 +237,7 @@ const defaultSettings: SiteSettings = {
     showHomepagePromptOfDay: true,
     showHomepageCreativeDirections: true,
     showHomepageSupportedTools: true,
-    showHomepageNewsletter: true,
+    showHomepageGuides: true,
     showHomepageCreatorFeedback: true,
     showScrollProgress: true,
     showFaqSchema: true,
@@ -303,6 +328,27 @@ function isInlineImage(url?: string) {
   return !!url && url.startsWith('data:image');
 }
 
+function cleanPublicCopy(value?: string) {
+  if (!value) return value;
+  const exactReplacements: Record<string, string> = {
+    'Create better AI images in 4 simple steps': 'Create better images in 4 simple steps',
+    'Prompts for Every Major AI Tool': 'Prompts for Every Major Image Tool',
+    'Supported AI tools': 'Supported tools',
+    'Browse prompt collections prepared for the tools your visitors already use.': 'Find prompt sets organized by the image tools people actually create with, so you can choose the right workflow before you start experimenting.',
+    'Browse prompt collections prepared for the generators creators use most.': 'Find prompt sets organized by the image tools people actually create with, so you can choose the right workflow before you start experimenting.',
+    'These blocks explain why the library is useful without relying on fake testimonials.': 'Built for creators who want practical prompt examples, clear model notes, and repeatable workflows instead of vague inspiration screenshots.',
+    'Step-by-Step AI Prompt Guides': 'Step-by-Step Prompt Guides',
+    'Jump into prompt collections by subject, genre, and visual direction using your real post tags.': 'Browse by subject, genre, and visual direction — from portraits and posters to product shots and anime styles.',
+    'Explore a curated collection of breathtaking AI-generated imagery and their full prompts. Learn, inspire, and create.': 'Explore polished prompt examples, finished visuals, and copy-ready workflows for your next creation.',
+    'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.': 'A curated prompt library for image creators. Discover tested examples, copy the workflow, and make stronger artwork.',
+  };
+  if (exactReplacements[value]) return exactReplacements[value];
+  if (value.startsWith('Browse a curated library of tested prompts for ChatGPT')) {
+    return 'Browse tested prompts for ChatGPT, Gemini, Grok, and more — each paired with example images and the exact text behind them.';
+  }
+  return value;
+}
+
 function sanitizeSettings(settings: SiteSettings): SiteSettings {
   const toolDetails = settings.toolDetails
     ? Object.fromEntries(
@@ -324,6 +370,9 @@ function sanitizeSettings(settings: SiteSettings): SiteSettings {
         {
           ...content,
           ...(savedHomepageContent[key] || {}),
+          title: cleanPublicCopy((savedHomepageContent[key] || {}).title || content.title),
+          badge: cleanPublicCopy((savedHomepageContent[key] || {}).badge || content.badge),
+          description: cleanPublicCopy((savedHomepageContent[key] || {}).description || content.description),
         },
       ])
     ),
@@ -331,9 +380,13 @@ function sanitizeSettings(settings: SiteSettings): SiteSettings {
 
   return {
     ...settings,
+    siteDescription: cleanPublicCopy(settings.siteDescription) || settings.siteDescription,
+    heroSubtitle: cleanPublicCopy(settings.heroSubtitle) || settings.heroSubtitle,
     siteLogo: isInlineImage(settings.siteLogo) ? '' : settings.siteLogo,
-    authors: getAuthors(settings),
-    defaultAuthorId: settings.defaultAuthorId || 'editorial-team',
+    articleThumbnails: {
+      ...defaultArticleThumbnails,
+      ...(settings.articleThumbnails || {}),
+    },
     homepageContent,
     discoveryPages: {
       ...(defaultSettings.discoveryPages || {}),
@@ -353,7 +406,6 @@ function sanitizePublicSettings(settings: SiteSettings): SiteSettings {
   return {
     ...sanitized,
     adminEmails: [],
-    imgbbApiKey: '',
   };
 }
 
@@ -440,7 +492,7 @@ export async function fetchSections() {
   }
 }
 
-export async function fetchSettings() {
+export const fetchSettings = cache(async () => {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.from('settings').select('data').eq('id', 'global').maybeSingle();
@@ -456,7 +508,7 @@ export async function fetchSettings() {
     console.error('Supabase settings fetch error:', error);
   }
   return sanitizePublicSettings(defaultSettings);
-}
+});
 
 export async function getPostBySlugOrId(idOrSlug: string) {
   const posts = await fetchPosts();

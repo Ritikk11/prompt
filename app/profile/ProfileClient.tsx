@@ -1,15 +1,16 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, Suspense } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
-import { useRouter } from 'next/navigation';
-import { LogOut, Heart, FileText, MessageCircle } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { LogOut, Heart, FileText, MessageCircle, Edit2, Camera, User as UserIcon, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import SkeletonPostCard from '@/components/SkeletonPostCard';
 import { getGridClasses } from '@/lib/utils';
 import type { Post, SiteSettings } from '@/lib/types';
 import { getPostPath } from '@/lib/sections';
+import { uploadImageFileToProvider } from '@/lib/client-upload';
 
 import PostCard from '@/components/PostCard';
 
@@ -23,7 +24,7 @@ type ProfileComment = {
   createdAt: string;
 };
 
-export default function ProfileClient({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
+function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
   const accountHubEnabled = Boolean(settings.features?.userProfiles || settings.features?.userSubmissions);
   const savedAndLikedEnabled = Boolean(settings.features?.userProfiles);
   const [user, setUser] = useState<User | null>(null);
@@ -34,12 +35,84 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
   const [comments, setComments] = useState<ProfileComment[]>([]);
   const [profileLoading, setProfileLoading] = useState(false);
   const navigate = useRouter();
+  const searchParams = useSearchParams();
+
+  // Profile edit states
+  const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const hasIncompleteProfile = Boolean(user) && (!user?.user_metadata?.username || !user?.user_metadata?.full_name);
+
+  const applyUserProfileState = useCallback((nextUser: User | null) => {
+    setUser(nextUser);
+    if (nextUser) {
+      setFullName(nextUser.user_metadata?.full_name || '');
+      setUsername(nextUser.user_metadata?.username || '');
+      setAvatarUrl(nextUser.user_metadata?.avatar_url || '');
+      const incompleteProfile = !nextUser.user_metadata?.username || !nextUser.user_metadata?.full_name;
+      if (searchParams.get('setup') === 'true' || incompleteProfile) {
+        setIsEditing(true);
+      }
+    }
+  }, [searchParams]);
+
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          full_name: fullName.trim(),
+          username: username.toLowerCase().trim(),
+          avatar_url: avatarUrl.trim(),
+        }
+      });
+      if (error) throw error;
+      setUser(data.user);
+      setIsEditing(false);
+      alert('Profile updated successfully!');
+    } catch (err: any) {
+      alert(err.message || 'Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = async (file: File) => {
+    try {
+      setSaving(true);
+      const { optimizeImageFile } = await import('@/lib/client-image-optimizer');
+      const optimizedFile = await optimizeImageFile(file, 'logo');
+      
+      const url = await uploadImageFileToProvider(
+        optimizedFile,
+        settings.imageProvider === 'cloudflare' ? 'cloudflare' : 'supabase',
+        'avatar'
+      );
+      setAvatarUrl(url);
+      alert('Avatar uploaded successfully! Click Save to apply changes.');
+    } catch (err: any) {
+      alert(err.message || 'Image upload failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      applyUserProfileState(session?.user ?? null);
       setAuthLoading(false);
+      if (!session?.user) {
+        navigate.replace('/login?redirectTo=/profile');
+      }
       // This page is also the user's submissions dashboard, so keep it available
       // when submissions are enabled even if saved/liked profiles are disabled.
       if (!accountHubEnabled) {
@@ -48,12 +121,15 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      applyUserProfileState(session?.user ?? null);
       setAuthLoading(false);
+      if (!session?.user) {
+        navigate.replace('/login?redirectTo=/profile');
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, [accountHubEnabled, navigate]);
+  }, [accountHubEnabled, applyUserProfileState, navigate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -109,12 +185,9 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
 
   if (!user) {
     return (
-      <div className="max-w-md mx-auto px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold mb-4">Please Sign In</h1>
-        <p className="text-surface-500 mb-8">Sign in to manage your account activity.</p>
-        <button onClick={() => navigate.push('/')} className="text-primary-500 hover:text-primary-600 font-medium">
-          Return Home
-        </button>
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-sm text-surface-500">Redirecting to login...</p>
       </div>
     );
   }
@@ -135,11 +208,25 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
         {/* Sidebar */}
         <div className="w-full md:w-64 shrink-0 bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl p-6 relative">
           <div className="flex flex-col items-center text-center">
-            <div className="w-20 h-20 bg-surface-200 dark:bg-surface-700 rounded-full mb-4 overflow-hidden shadow-sm relative">
-              {user.user_metadata?.avatar_url && <Image src={user.user_metadata.avatar_url} alt="" fill className="object-cover" referrerPolicy="no-referrer" />}
+            <div className="w-20 h-20 bg-surface-200 dark:bg-surface-700 rounded-full mb-4 overflow-hidden shadow-sm relative group">
+              {avatarUrl ? (
+                <Image src={avatarUrl} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-2xl font-black text-primary-500">
+                  {(fullName || user.email || 'U').slice(0, 1).toUpperCase()}
+                </div>
+              )}
             </div>
-            <h2 className="font-bold text-lg">{user.user_metadata?.full_name || 'Anonymous User'}</h2>
-            <p className="text-xs text-surface-500 truncate w-full" title={user.email || ''}>{user.email}</p>
+            <h2 className="font-bold text-lg leading-tight">{fullName || 'Anonymous Creator'}</h2>
+            <p className="text-xs font-semibold text-primary-500 mt-1">@{username || 'set_username'}</p>
+            <p className="text-[10px] text-surface-400 mt-2 truncate w-full" title={user.email || ''}>{user.email}</p>
+
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className="mt-6 w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border border-surface-200 dark:border-surface-800 hover:border-primary-400 dark:hover:border-primary-500/50 hover:bg-white dark:hover:bg-surface-900 transition-colors"
+            >
+              <Edit2 className="w-3.5 h-3.5" /> {isEditing ? "View Dashboard" : "Edit Profile"}
+            </button>
           </div>
           
           <hr className="my-6 border-surface-200 dark:border-surface-800" />
@@ -155,8 +242,101 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {settings.features?.userSubmissions && (
-            <div className="mb-10 rounded-2xl border border-primary-100 bg-primary-50/70 p-5 dark:border-primary-900/50 dark:bg-primary-950/20">
+          {isEditing ? (
+            <div className="mb-10 rounded-2xl border border-surface-200 bg-white p-6 shadow-sm dark:border-surface-800 dark:bg-surface-900 fade-in">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-surface-900 dark:text-white flex items-center gap-2">
+                    <UserIcon className="w-5 h-5 text-primary-500" /> Edit Profile Settings
+                  </h2>
+                  <p className="text-xs text-surface-500 mt-1">Configure your public credentials and picture</p>
+                </div>
+                {!hasIncompleteProfile && (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="text-xs font-bold text-surface-400 hover:text-surface-600 uppercase tracking-wider font-semibold"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+
+              {hasIncompleteProfile && (
+                <div className="mb-6 rounded-xl p-3.5 bg-primary-50/70 border border-primary-200 dark:bg-primary-950/20 dark:border-primary-900 text-xs text-primary-700 dark:text-primary-300 leading-relaxed flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-primary-500 shrink-0 mt-0.5" />
+                  <span>Welcome! Please set your display name and public @username before you save, like, or submit prompts.</span>
+                </div>
+              )}
+
+              <form onSubmit={handleUpdateProfile} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-surface-500 uppercase tracking-wider mb-1.5">Display Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={fullName}
+                      onChange={e => setFullName(e.target.value)}
+                      placeholder="e.g. John Doe"
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-surface-500 uppercase tracking-wider mb-1.5">Username (public @handle)</label>
+                    <input
+                      type="text"
+                      required
+                      value={username}
+                      onChange={e => setUsername(e.target.value)}
+                      placeholder="e.g. johndoe"
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-surface-500 uppercase tracking-wider mb-1.5">Profile Picture URL</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={avatarUrl}
+                      onChange={e => setAvatarUrl(e.target.value)}
+                      placeholder="https://example.com/avatar.jpg"
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none text-sm"
+                    />
+                    <label className="shrink-0 px-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 text-xs font-bold cursor-pointer hover:bg-surface-50 flex items-center gap-1.5">
+                      <Camera className="w-4 h-4" /> Upload
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={e => e.target.files?.[0] && handleAvatarUpload(e.target.files[0])}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="rounded-xl p-4 bg-amber-50/50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-900 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                  <p className="font-bold mb-1">Email Verification Warning:</p>
+                  <p>Please make sure you are using a proper, verified real email address. Submissions or interactions created by accounts registered with random, temporary, or fake email addresses will be permanently deleted without notice.</p>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-primary-500 hover:bg-primary-600 disabled:opacity-50 transition-colors"
+                  >
+                    {saving ? "Saving Changes..." : "Save Profile Info"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <>
+              {settings.features?.userSubmissions && (
+                <div className="mb-10 rounded-2xl border border-primary-100 bg-primary-50/70 p-5 dark:border-primary-900/50 dark:bg-primary-950/20">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.2em] text-primary-500">Creator dashboard</p>
@@ -302,8 +482,18 @@ export default function ProfileClient({ posts, settings }: { posts: Post[], sett
               )}
             </div>
           )}
+          </>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfileClient({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div></div>}>
+      <ProfileContent posts={posts} settings={settings} />
+    </Suspense>
   );
 }

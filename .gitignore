@@ -9,3 +9,15 @@ coverage/
 .env*
 !.env.example
 backups/
+
+# Local AI/editor tooling metadata
+.agents/
+.claude/
+.vscode/
+.ai-scratch/
+.codex-scratch/
+.agent-scratch/
+skills-lock.json
+tsconfig.tsbuildinfo
+pw-*.mjs
+pw-*.png

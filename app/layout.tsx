@@ -15,14 +15,24 @@ const inter = Inter({
   variable: '--font-sans',
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in'),
-  title: 'AI PromptMatrix - AI Prompts',
-  description: 'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.',
-  other: {
-    'google-adsense-account': 'ca-pub-7670949318287729' // User needs to replace this
-  }
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await fetchSettings();
+  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+  const description =
+    settings.seoSettings?.defaultMetaDescription ||
+    settings.siteDescription ||
+    'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.';
+  const publisherId = settings.ads?.publisherId || process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
+  const ogImage = settings.seoSettings?.defaultOgImage;
+
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in'),
+    title: `${siteTitle} - AI Prompts`,
+    description,
+    ...(ogImage ? { openGraph: { images: [{ url: ogImage }] } } : {}),
+    ...(publisherId ? { other: { 'google-adsense-account': publisherId } } : {}),
+  };
+}
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const jsonLd = {
@@ -37,10 +47,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     fetchSettings(),
     fetchSections(),
   ]);
+  const adsensePublisherId = initialSettings.ads?.publisherId || process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
       <head>
+        {adsensePublisherId && initialSettings.ads?.autoAdsEnabled && (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsensePublisherId}`}
+            crossOrigin="anonymous"
+          />
+        )}
         {initialSettings.seoSettings?.googleVerification && (
           <meta name="google-site-verification" content={initialSettings.seoSettings.googleVerification} />
         )}

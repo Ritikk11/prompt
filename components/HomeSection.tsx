@@ -77,7 +77,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
         /* Latest — Masonry grid with Load More */
         <div>
             <>
-              <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+              <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
                 {visibleLatest.map((post, i) => (
                   <React.Fragment key={post.id}>
                     <div className="mb-1 inline-block w-full break-inside-avoid">
@@ -116,6 +116,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
           {/* Scrollable row */}
           <div
             ref={scrollRef}
+            data-reveal-stagger
             className="flex gap-2 sm:gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-thin"
             style={{ scrollbarWidth: 'thin' }}
           >

@@ -12,9 +12,12 @@ export async function generateMetadata() {
 export default async function Disclaimer() {
   const settings = await fetchSettings();
   const siteTitle = settings.siteTitle || 'Our Platform';
-  
+  const contactEmail = settings.contactEmail || 'contact@aipromptmatrix.in';
+
   const defaultContent = `
 # Disclaimer
+
+Last updated: July 6, 2026
 
 The information provided by ${siteTitle} ("we," "us," or "our") on our website (the "Site") is for general informational purposes only. All information on the Site is provided in good faith, however, we make no representation or warranty of any kind, express or implied, regarding the accuracy, adequacy, validity, reliability, availability, or completeness of any information on the Site.
 
@@ -40,7 +43,11 @@ The Site contains content submitted by users, including prompts, comments, and i
 
 ## Affiliates Disclaimer
 
-The Site may contain links to affiliate websites, and we receive an affiliate commission for any purchases made by you on the affiliate website using such links. 
+The Site may contain links to affiliate websites, and we receive an affiliate commission for any purchases made by you on the affiliate website using such links.
+
+## Contact Us
+
+If you have any questions about this Disclaimer, please contact us at ${contactEmail}.
 `;
   const page = getStaticPageContent(settings, 'disclaimer', settings.pageDisclaimer, defaultContent);
   if (!page.visible) notFound();

@@ -72,7 +72,7 @@ export default function HomeLinkBlocks({ blocks }: { blocks?: HomeLinkBlock[] })
           <h2 className="text-lg md:text-xl font-extrabold tracking-tight text-surface-950 dark:text-white">Quick Explore</h2>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 px-2 sm:px-0">
+      <div data-reveal-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 px-2 sm:px-0">
         {visibleBlocks.map((block, index) => {
           const accent = accentMap[block.accent || fallbackAccents[index % fallbackAccents.length]];
           const Icon = iconMap[block.icon || fallbackIcons[index % fallbackIcons.length]];

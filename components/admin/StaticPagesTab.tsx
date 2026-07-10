@@ -18,7 +18,7 @@ Put important notes here.
 
 Inline styles: {mark:highlight}, {primary:primary}, {green:good}, {red:avoid}.`;
 
-const pageKeys = ['about', 'contact', 'privacy', 'terms', 'dmca', 'disclaimer'] as const;
+const pageKeys = ['about', 'contact', 'privacy', 'terms', 'dmca', 'disclaimer', 'cookies'] as const;
 type PageKey = typeof pageKeys[number];
 const pageLabels: Record<PageKey, string> = {
   about: 'About Us',
@@ -27,6 +27,7 @@ const pageLabels: Record<PageKey, string> = {
   terms: 'Terms of Service',
   dmca: 'DMCA',
   disclaimer: 'Disclaimer',
+  cookies: 'Cookies Policy',
 };
 function pageDefaults(key: PageKey): StaticPageSettings {
   const defaultBodies: Record<PageKey, string> = {
@@ -52,7 +53,7 @@ For corrections, copyright concerns, partnerships, or general questions, use the
 
 We read messages about corrections, copyright concerns, prompt submissions, partnerships, and site feedback.
 
-**Email:** support@aipromptmatrix.in
+**Email:** contact@aipromptmatrix.in
 
 ## What To Include
 
@@ -109,6 +110,19 @@ AI PromptMatrix provides prompts, images, examples, and notes for general creati
 AI-generated results can vary. We do not guarantee that using a prompt will reproduce the same image, style, quality, or result in every model.
 
 The website may link to third-party tools or services. We are not responsible for third-party content, policies, or outputs.`,
+    cookies: `# Cookies Policy
+
+AI PromptMatrix uses cookies and similar technologies to operate the website, remember preferences, analyze usage, and serve advertising.
+
+## Types of Cookies
+
+- Essential cookies needed for the site to function.
+- Analytics cookies that help us understand how the site is used.
+- Advertising cookies, including those set by Google AdSense.
+
+## Managing Cookies
+
+You can control or disable cookies through your browser settings. Some features may not work correctly if cookies are disabled.`,
   };
   return {
     title: pageLabels[key],
@@ -130,6 +144,7 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
   const [pageDmca, setPageDmca] = useState(settings.staticPages?.dmca?.body || settings.pageDmca || pageDefaults('dmca').body || '');
   const [pageDisclaimer, setPageDisclaimer] = useState(settings.staticPages?.disclaimer?.body || settings.pageDisclaimer || pageDefaults('disclaimer').body || '');
   const [pageContact, setPageContact] = useState(settings.staticPages?.contact?.body || settings.pageContact || pageDefaults('contact').body || '');
+  const [pageCookies, setPageCookies] = useState(settings.staticPages?.cookies?.body || settings.pageCookies || pageDefaults('cookies').body || '');
   const [staticPages, setStaticPages] = useState<Record<string, StaticPageSettings>>(() => settings.staticPages || {});
 
   const initialPage = pageKeys.includes(searchParams.get('page') as PageKey) ? searchParams.get('page') as PageKey : 'about';
@@ -161,6 +176,7 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
       terms: pageTerms,
       dmca: pageDmca,
       disclaimer: pageDisclaimer,
+      cookies: pageCookies,
     };
     const nextStaticPages = Object.fromEntries(
       pageKeys.map(key => [
@@ -180,6 +196,7 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
       pageDmca,
       pageDisclaimer,
       pageContact,
+      pageCookies,
       staticPages: nextStaticPages,
     });
     setStaticPages(nextStaticPages);
@@ -192,7 +209,8 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
     privacy: { label: pageLabels.privacy, value: pagePrivacy, set: setPagePrivacy },
     terms: { label: pageLabels.terms, value: pageTerms, set: setPageTerms },
     dmca: { label: pageLabels.dmca, value: pageDmca, set: setPageDmca },
-    disclaimer: { label: pageLabels.disclaimer, value: pageDisclaimer, set: setPageDisclaimer }
+    disclaimer: { label: pageLabels.disclaimer, value: pageDisclaimer, set: setPageDisclaimer },
+    cookies: { label: pageLabels.cookies, value: pageCookies, set: setPageCookies }
   };
   const currentPage = {
     ...pageDefaults(activeTab),

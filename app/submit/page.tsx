@@ -9,8 +9,8 @@ import { Upload, Plus, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { ImagePrompt } from '@/lib/types';
 import { getImageModelForTools } from '@/lib/constants';
-import { getAuthRedirectTo } from '@/lib/auth-redirect';
 import { optimizeImageFile } from '@/lib/client-image-optimizer';
+import { uploadImageFileToProvider } from '@/lib/client-upload';
 
 export default function SubmitPage() {
   const { settings, loading, addPost } = useData();
@@ -63,15 +63,7 @@ export default function SubmitPage() {
       <div className="max-w-md mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold mb-4">Please Sign In</h1>
         <p className="text-surface-500 mb-8">Sign in to submit your prompt collection.</p>
-        <button onClick={async () => {
-           const supabase = createClient();
-           await supabase.auth.signInWithOAuth({
-             provider: 'google',
-             options: {
-               redirectTo: getAuthRedirectTo('/submit'),
-             },
-           });
-        }} className="px-6 py-3 rounded-xl font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors">
+        <button onClick={() => navigate.push('/login?redirectTo=/submit')} className="px-6 py-3 rounded-xl font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors">
           Sign In
         </button>
       </div>
@@ -79,51 +71,13 @@ export default function SubmitPage() {
   }
 
   const handleImageUpload = async (file: File) => {
-    const isConfigured = 
-      (settings.imageProvider === 'cloudinary' && settings.cloudinaryCloudName && settings.cloudinaryUploadPreset) ||
-      (settings.imageProvider === 'supabase') ||
-      ((settings.imageProvider === 'imgbb' || !settings.imageProvider) && settings.imgbbApiKey);
-
-    if (!isConfigured) {
-      alert("Image uploads are not configured by the admin yet.");
-      return;
-    }
     try {
-      let url = '';
       const optimizedFile = await optimizeImageFile(file, 'prompt');
-      if (settings.imageProvider === 'cloudinary' && settings.cloudinaryCloudName && settings.cloudinaryUploadPreset) {
-        const formData = new FormData();
-        formData.append('file', optimizedFile);
-        formData.append('upload_preset', settings.cloudinaryUploadPreset);
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${settings.cloudinaryCloudName}/image/upload`, { method: 'POST', body: formData });
-        const data = await res.json();
-        if (data.secure_url) url = data.secure_url;
-        else throw new Error(data.error?.message || 'Cloudinary upload failed');
-      } else if (settings.imageProvider === 'supabase') {
-        const { createClient: createSupabaseClient } = await import('@/lib/supabase-client');
-        const supabase = createSupabaseClient();
-        const ext = optimizedFile.name.split('.').pop() || 'webp';
-        const fileName = `${generateId()}.${ext}`;
-        const { data, error } = await supabase.storage.from('images').upload(fileName, optimizedFile, {
-          contentType: optimizedFile.type || 'image/webp',
-          cacheControl: '31536000',
-        });
-        if (error) throw new Error(error.message);
-        const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName);
-        url = publicUrl;
-      } else if ((settings.imageProvider === 'imgbb' || !settings.imageProvider) && settings.imgbbApiKey) {
-        const formData = new FormData();
-        formData.append('image', optimizedFile);
-        const res = await fetch(`https://api.imgbb.com/1/upload?key=${settings.imgbbApiKey}`, {
-          method: 'POST',
-          body: formData,
-        });
-        const data = await res.json();
-        if (data.success) url = data.data.url;
-        else throw new Error("Upload failed: " + data.error?.message);
-      } else {
-        throw new Error("No image provider configured");
-      }
+      const url = await uploadImageFileToProvider(
+        optimizedFile,
+        settings.imageProvider === 'cloudflare' ? 'cloudflare' : 'supabase',
+        'prompt'
+      );
       
       const defaultTool = settings.aiTools[0] || 'ChatGPT';
       setImages(prev => [...prev, { id: generateId(), url, prompt: '', aiTool: defaultTool, model: getImageModelForTools([defaultTool]) }]);
@@ -176,6 +130,9 @@ export default function SubmitPage() {
         likes: 0,
         featured: false,
         authorId: user.id,
+        authorName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Creator',
+        authorUsername: user.user_metadata?.username || user.email?.split('@')[0] || 'creator',
+        authorAvatar: user.user_metadata?.avatar_url || '',
         status: isAutoApprove ? 'published' : 'pending'
       });
       alert(isAutoApprove ? 'Prompt collection published successfully!' : 'Prompt collection submitted successfully! It is pending admin approval.');
@@ -188,6 +145,8 @@ export default function SubmitPage() {
     }
   };
 
+  const hasIncompleteProfile = !user?.user_metadata?.username || !user?.user_metadata?.full_name;
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 fade-in">
       <h1 className="text-2xl md:text-3xl font-bold mb-2">Submit a Prompt</h1>
@@ -195,6 +154,16 @@ export default function SubmitPage() {
         Share your AI generation with the community.
         {!settings.features?.userSubmissionsAutoApprove && ' Submissions will be reviewed by an admin.'}
       </p>
+
+      {hasIncompleteProfile && (
+        <div className="mb-8 p-5 rounded-2xl border border-amber-200 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-sm shadow-sm">
+          <p className="font-extrabold mb-1">Please Complete Your Profile</p>
+          <p className="mb-3 text-surface-600 dark:text-surface-300">Set your name, public @username, and profile picture before submitting to ensure your prompts are properly credited.</p>
+          <Link href="/profile?setup=true" className="inline-flex font-bold underline text-primary-500 hover:text-primary-600">
+            Go to Profile Setup &rarr;
+          </Link>
+        </div>
+      )}
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">

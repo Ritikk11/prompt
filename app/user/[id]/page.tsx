@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import PostCard from '@/components/PostCard';
+import ScrollReveal from '@/components/ScrollReveal';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { fetchSettings, isPublicPost, toPostSummary } from '@/lib/data';
 import type { Post } from '@/lib/types';
@@ -88,6 +90,8 @@ export default async function PublicProfilePage({ params }: Props) {
       ]).map(toPostSummary)
     : [];
   const displayName = profile?.user_metadata?.full_name || profile?.email?.split('@')[0] || 'Creator';
+  const username = profile?.user_metadata?.username || profile?.email?.split('@')[0] || 'creator';
+  const avatarUrl = profile?.user_metadata?.avatar_url;
 
   const sections = [
     { title: 'Submitted prompts', posts: submitted },
@@ -97,10 +101,24 @@ export default async function PublicProfilePage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
-      <div className="mb-10 rounded-3xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900">
-        <p className="mb-2 text-xs font-black uppercase tracking-[0.2em] text-primary-500">Public Profile</p>
-        <h1 className="text-3xl font-black text-surface-900 dark:text-white">{displayName}</h1>
-        <p className="mt-2 text-sm text-surface-500">{submitted.length} submitted prompts</p>
+      <div className="mb-10 rounded-3xl border border-surface-200 bg-white p-6 shadow-sm dark:border-surface-800 dark:bg-surface-900 sm:p-8">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-primary-500/10 border border-surface-200 dark:border-surface-800 shadow-inner">
+            {avatarUrl ? (
+              <Image src={avatarUrl} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-2xl font-black text-primary-500">
+                {displayName.slice(0, 1).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-500">Public Profile</p>
+            <h1 className="text-3xl font-black tracking-tight text-surface-900 dark:text-white sm:text-4xl">{displayName}</h1>
+            <p className="mt-1 text-sm font-semibold text-surface-500 dark:text-surface-400">@{username}</p>
+            <p className="mt-3 text-xs font-bold text-surface-400 dark:text-surface-500 uppercase tracking-widest">{submitted.length} submitted prompts</p>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-12">
@@ -112,9 +130,11 @@ export default async function PublicProfilePage({ params }: Props) {
                 Nothing public here yet.
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {section.posts.map((post, index) => <PostCard key={post.id} post={post} index={index} />)}
-              </div>
+              <ScrollReveal>
+                <div data-reveal-stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {section.posts.map((post, index) => <PostCard key={post.id} post={post} index={index} />)}
+                </div>
+              </ScrollReveal>
             )}
           </section>
         ))}

@@ -2,16 +2,17 @@
 
 import { useState } from 'react';
 import { Check, Copy, Heart, Search, Wand2 } from 'lucide-react';
+import ScrollReveal from '@/components/ScrollReveal';
 import type { SiteSettings } from '@/lib/types';
 
 const steps = [
   {
     number: '01',
     title: 'Browse & Discover',
-    text: 'Explore curated AI prompts organized by tool, style, mood, and use case. Find the right direction before you generate.',
+    text: 'Explore curated prompts organized by tool, style, mood, and use case. Find the right direction before you generate.',
     icon: Search,
     color: 'from-violet-500 to-violet-600',
-    checks: ['Filter by AI tool', 'Check trending prompts', 'Open curated collections'],
+    checks: ['Filter by tool', 'Check trending prompts', 'Open curated collections'],
   },
   {
     number: '02',
@@ -24,7 +25,7 @@ const steps = [
   {
     number: '03',
     title: 'Paste & Generate',
-    text: 'Open your preferred AI tool, paste the prompt, attach reference images when needed, and adjust settings as needed.',
+    text: 'Open your preferred image tool, paste the prompt, attach reference images when needed, and adjust settings as needed.',
     icon: Wand2,
     color: 'from-emerald-500 to-emerald-600',
     checks: ['Works with major image tools', 'Adjust aspect ratios', 'Fine-tune prompt details'],
@@ -52,7 +53,7 @@ export default function HomeHowItWorks({ settings }: { settings?: SiteSettings }
   const ActiveIcon = active.icon;
 
   return (
-    <section id="how-it-works" className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-white px-5 py-16 dark:bg-surface-950 sm:px-8">
+    <section id="how-it-works" className="relative w-full overflow-hidden bg-white px-5 py-16 dark:bg-surface-950 sm:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="mb-10 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-50 px-4 py-2 text-xs font-bold text-primary-700">
@@ -60,15 +61,48 @@ export default function HomeHowItWorks({ settings }: { settings?: SiteSettings }
             {content.badge || 'How It Works'}
           </div>
           <h2 className="text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white sm:text-4xl">
-            {content.title || 'Create better AI images in 4 simple steps'}
+            {content.title || 'Create better images in 4 simple steps'}
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-surface-600 dark:text-surface-300">
             {content.description || 'From browsing prompts to generating finished artwork, this workflow keeps the process simple and repeatable.'}
           </p>
         </div>
 
-        <div className="grid gap-10 lg:grid-cols-[1fr_0.92fr] lg:items-center">
-          <div className="space-y-4">
+        {/* Mobile: full cards revealed on scroll, no click needed */}
+        <div className="space-y-4 lg:hidden">
+          {editableSteps.map((step, index) => {
+            const Icon = step.icon;
+
+            return (
+              <ScrollReveal key={step.number} delay={(index % 2) * 100}>
+                <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900/70">
+                  <div className="flex items-start gap-4">
+                    <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${step.color} text-sm font-black text-white shadow-lg`}>
+                      {step.number}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-lg font-extrabold text-surface-950 dark:text-white">{step.title}</div>
+                      <p className="mt-1.5 text-sm leading-6 text-surface-600 dark:text-surface-300">{step.text}</p>
+                    </div>
+                    <Icon className="mt-1 h-6 w-6 shrink-0 text-surface-400" />
+                  </div>
+                  <div className="mt-4 space-y-2.5">
+                    {step.checks.map(check => (
+                      <div key={check} className="flex items-center gap-3 rounded-xl bg-surface-50 px-4 py-3 text-sm font-medium text-surface-700 dark:bg-surface-950/70 dark:text-surface-200">
+                        <Check className="h-4 w-4 shrink-0 text-emerald-500" />
+                        {check}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </ScrollReveal>
+            );
+          })}
+        </div>
+
+        {/* Desktop: interactive step list + detail panel */}
+        <div className="hidden gap-10 lg:grid lg:grid-cols-[1fr_0.92fr] lg:items-center">
+          <div data-reveal-stagger className="space-y-4">
             {editableSteps.map((step, index) => {
               const Icon = step.icon;
               const isActive = activeIndex === index;
@@ -81,11 +115,10 @@ export default function HomeHowItWorks({ settings }: { settings?: SiteSettings }
                   onMouseEnter={() => setActiveIndex(index)}
                   onFocus={() => setActiveIndex(index)}
                   onClick={() => setActiveIndex(index)}
-                  className={`group grid w-full grid-cols-[auto_1fr_auto] items-start gap-4 rounded-2xl border p-5 text-left transition ${
-                    isActive
+                  className={`group grid w-full grid-cols-[auto_1fr_auto] items-start gap-4 rounded-2xl border p-5 text-left transition ${isActive
                       ? 'border-primary-500 bg-primary-50 shadow-[0_16px_44px_rgba(124,58,237,0.13)] dark:bg-primary-500/10 dark:shadow-[0_18px_52px_rgba(124,58,237,0.16)]'
                       : 'border-surface-200 bg-white hover:border-primary-300 hover:bg-primary-50/40 dark:border-surface-800 dark:bg-surface-900/70 dark:hover:border-primary-500/60 dark:hover:bg-primary-500/10'
-                  }`}
+                    }`}
                 >
                   <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${step.color} text-sm font-black text-white shadow-lg`}>
                     {step.number}

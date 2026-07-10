@@ -30,19 +30,36 @@ const fallbackFooterGroups: FooterLinkGroup[] = [
 export default function Footer() {
   const { settings } = useData();
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const footerGroups = settings.footerLinkGroups?.length ? settings.footerLinkGroups : fallbackFooterGroups;
   const footerLinkClass = 'block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors';
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 400) {
-        setShowScrollTop(true);
-      } else {
-        setShowScrollTop(false);
-      }
+    let frame: number | null = null;
+
+    const updateScrollTop = () => {
+      frame = null;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = max > 0 ? Math.min(100, Math.max(0, (window.scrollY / max) * 100)) : 0;
+
+      setScrollProgress(progress);
+      setShowScrollTop(window.scrollY > 400);
     };
+
+    const handleScroll = () => {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(updateScrollTop);
+    };
+
+    updateScrollTop();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('resize', updateScrollTop);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', updateScrollTop);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   const scrollToTop = () => {
@@ -117,10 +134,15 @@ export default function Footer() {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 p-3 rounded-full bg-primary-500 text-white shadow-lg hover:bg-primary-600 transition-all z-50 fade-in"
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full p-1 shadow-xl transition-all hover:-translate-y-0.5 fade-in"
+          style={{
+            background: `conic-gradient(#6366f1 ${scrollProgress * 3.6}deg, rgba(148,163,184,0.25) 0deg)`,
+          }}
           aria-label="Scroll to top"
         >
-          <ChevronUp className="w-5 h-5" />
+          <span className="flex h-full w-full items-center justify-center rounded-full bg-white text-surface-700 shadow-sm transition-colors hover:text-primary-600 dark:bg-surface-900 dark:text-white dark:hover:text-primary-300">
+            <ChevronUp className="w-5 h-5" />
+          </span>
         </button>
       )}
     </footer>

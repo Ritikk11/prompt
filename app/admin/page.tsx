@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useData } from '@/components/context/DataContext';
 import { aiTools } from '@/lib/data/seedData';
-import type { Post, Section, ImagePrompt, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, ShareTarget, Author, DiscoveryPageSettings } from '@/lib/types';
+import type { Post, Section, ImagePrompt, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, CreativeDirectionItem, ShareTarget, DiscoveryPageSettings, ArticleSettingsOverride } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
@@ -10,7 +10,7 @@ import {
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload,
   Settings, Check, Filter, Search, RotateCcw, GripVertical, Image as ImageIcon,
   Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass, Menu, Mail,
-  Ban, Shield, Flag, CheckCircle, Cpu
+  Ban, Shield, Flag, CheckCircle, Cpu, BookOpen
 } from 'lucide-react';
 
 import Image from 'next/image';
@@ -20,8 +20,10 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
 import { filterPostsForSection, getSectionPath } from '@/lib/sections';
+import { buildHeaderNavItems, headerLinkKey } from '@/lib/header-nav';
 import { getFilterTagsFromPosts } from '@/lib/filter-tags';
-import { optimizeImageFile, optimizeImageToDataUrl, type ImageOptimizePreset } from '@/lib/client-image-optimizer';
+import { optimizeImageFile, type ImageOptimizePreset } from '@/lib/client-image-optimizer';
+import { uploadImageFileToProvider, type UploadProvider } from '@/lib/client-upload';
 import PostCard from '@/components/PostCard';
 import HomeHowItWorks from '@/components/HomeHowItWorks';
 import HomeReviewProcess from '@/components/HomeReviewProcess';
@@ -29,22 +31,15 @@ import HomePromptOfDay from '@/components/HomePromptOfDay';
 import HomeSupportedTools from '@/components/HomeSupportedTools';
 import HomeCreativeDirections from '@/components/HomeCreativeDirections';
 import HomeCreatorFeedback from '@/components/HomeCreatorFeedback';
-import HomeNewsletter from '@/components/HomeNewsletter';
-import { getAuthors, normalizeAuthor, slugifyAuthor } from '@/lib/authors';
+import HomeGuides from '@/components/HomeGuides';
+import ArticleThumbnail, { articleIconList } from '@/components/ArticleThumbnail';
+import { getArticlesForSettings } from '@/lib/content';
 
-
-
-type AdminTab = 'dashboard' | 'posts' | 'sections' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages';
+type AdminTab = 'dashboard' | 'posts' | 'sections' | 'articles' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages';
 type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share';
 type SectionLocationFilter = 'homepage' | 'header' | 'footer' | 'all';
 
-const defaultOwnerEmails = ['ritikkewat11@gmail.com'];
-
-function isDefaultOwner(email?: string | null) {
-  return Boolean(email && defaultOwnerEmails.includes(email.toLowerCase()));
-}
-
-const adminTabKeys: AdminTab[] = ['dashboard', 'posts', 'sections', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages'];
+const adminTabKeys: AdminTab[] = ['dashboard', 'posts', 'sections', 'articles', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages'];
 const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'discovery', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share'];
 const sectionLocationKeys: SectionLocationFilter[] = ['homepage', 'header', 'footer', 'all'];
 
@@ -70,6 +65,41 @@ function parseSectionLocation(value: string | null): SectionLocationFilter {
 
 function settingsSubTabParam(value: SettingsSubTab) {
   return value === 'ai-tools' ? 'aitools' : value;
+}
+
+function cleanAdminPublicCopy(value?: string) {
+  if (!value) return value;
+  const exactReplacements: Record<string, string> = {
+    'Create better AI images in 4 simple steps': 'Create better images in 4 simple steps',
+    'Prompts for Every Major AI Tool': 'Prompts for Every Major Image Tool',
+    'Supported AI tools': 'Supported tools',
+    'Browse prompt collections prepared for the tools your visitors already use.': 'Find prompt sets organized by the image tools people actually create with, so you can choose the right workflow before you start experimenting.',
+    'Browse prompt collections prepared for the generators creators use most.': 'Find prompt sets organized by the image tools people actually create with, so you can choose the right workflow before you start experimenting.',
+    'These blocks explain why the library is useful without relying on fake testimonials.': 'Built for creators who want practical prompt examples, clear model notes, and repeatable workflows instead of vague inspiration screenshots.',
+    'Step-by-Step AI Prompt Guides': 'Step-by-Step Prompt Guides',
+    'Jump into prompt collections by subject, genre, and visual direction using your real post tags.': 'Browse by subject, genre, and visual direction — from portraits and posters to product shots and anime styles.',
+    'Explore a curated collection of breathtaking AI-generated imagery and their full prompts. Learn, inspire, and create.': 'Explore polished prompt examples, finished visuals, and copy-ready workflows for your next creation.',
+    'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.': 'A curated prompt library for image creators. Discover tested examples, copy the workflow, and make stronger artwork.',
+  };
+  if (exactReplacements[value]) return exactReplacements[value];
+  if (value.startsWith('Browse a curated library of tested prompts for ChatGPT')) {
+    return 'Browse tested prompts for ChatGPT, Gemini, Grok, and more — each paired with example images and the exact text behind them.';
+  }
+  return value;
+}
+
+function cleanAdminHomepageContent(content: Record<string, HomepageBlockContent> = {}) {
+  return Object.fromEntries(
+    Object.entries(content).map(([key, block]) => [
+      key,
+      {
+        ...block,
+        title: cleanAdminPublicCopy(block.title),
+        badge: cleanAdminPublicCopy(block.badge),
+        description: cleanAdminPublicCopy(block.description),
+      },
+    ])
+  );
 }
 
 const TAILWIND_COLORS = [
@@ -118,8 +148,8 @@ const homepageBlockOptions = [
   { key: 'promptOfDay', featureKey: 'showHomepagePromptOfDay', title: 'Prompt of the day' },
   { key: 'supportedTools', featureKey: 'showHomepageSupportedTools', title: 'Supported AI tools' },
   { key: 'creativeDirections', featureKey: 'showHomepageCreativeDirections', title: 'Creative directions' },
+  { key: 'guides', featureKey: 'showHomepageGuides', title: 'Guides' },
   { key: 'creatorFeedback', featureKey: 'showHomepageCreatorFeedback', title: 'Creator feedback' },
-  { key: 'newsletter', featureKey: 'showHomepageNewsletter', title: 'Newsletter' },
 ] as const;
 const defaultHomepageBlockOrder = homepageBlockOptions.map(item => item.key);
 const homepageBlockStaticHints: Record<string, string> = {
@@ -228,8 +258,19 @@ const defaultDiscoveryPages: Required<DiscoveryPageSettings> = {
   showHeroStats: true,
 };
 
+function newNavId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  return `nav-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/** Ensures every header link has a stable id so nav ordering survives edits. */
+function withHeaderLinkIds(links: NavLink[] = []): NavLink[] {
+  return links.map(link => (link.id ? link : { ...link, id: newNavId() }));
+}
+
 function cleanNavLinks(links: NavLink[] = []) {
   return links.map(link => ({
+    id: link.id || newNavId(),
     label: link.label.trim(),
     href: link.href.trim(),
   })).filter(link => link.label && link.href);
@@ -281,13 +322,28 @@ function titleCase(value: string) {
   return value.replace(/[-_]+/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
 }
 
-function cleanRailItems(items: FilterRailItem[] = []) {
+function cleanRailItems(items: { label: string; type: string; value: string }[] = []): FilterRailItem[] {
   return items
     .map(item => ({
       label: item.label.trim(),
-      type: item.type || 'tag',
+      type: (item.type || 'tag') as 'tool' | 'tag' | 'category',
       value: item.value.trim(),
     }))
+    .filter(item => item.label && item.value);
+}
+
+function cleanCreativeDirectionItems(items: CreativeDirectionItem[] = []): CreativeDirectionItem[] {
+  return items
+    .map(item => {
+      const icon = item.icon && articleIconList.includes(item.icon) ? item.icon : undefined;
+      return {
+        label: item.label.trim(),
+        type: (item.type || 'tag') as 'tool' | 'tag' | 'category',
+        value: item.value.trim(),
+        ...(icon ? { icon } : {}),
+        ...(item.imageUrl?.trim() ? { imageUrl: item.imageUrl.trim() } : {}),
+      };
+    })
     .filter(item => item.label && item.value);
 }
 
@@ -305,7 +361,7 @@ function getAutoExploreItems(posts: Post[]): FilterRailItem[] {
   ];
 }
 
-function getAutoCreativeItems(posts: Post[]): FilterRailItem[] {
+function getAutoCreativeItems(posts: Post[]): CreativeDirectionItem[] {
   const counts = new Map<string, number>();
   getPublicPosts(posts).forEach(post => {
     const values = [...(post.categories || []), post.category, ...(post.tags || [])].filter(Boolean) as string[];
@@ -439,7 +495,7 @@ function HomepageBlockPreview({
     if (blockKey === 'supportedTools') return <HomeSupportedTools posts={previewPosts} settings={previewSettings} />;
     if (blockKey === 'creativeDirections') return <HomeCreativeDirections posts={previewPosts} settings={previewSettings} />;
     if (blockKey === 'creatorFeedback') return <HomeCreatorFeedback settings={previewSettings} />;
-    if (blockKey === 'newsletter') return <HomeNewsletter settings={previewSettings} />;
+    if (blockKey === 'guides') return <HomeGuides settings={previewSettings} />;
     return null;
   })();
 
@@ -483,7 +539,7 @@ export default function Admin() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isAdmin = Boolean(user && (isDefaultOwner(user.email) || !adminAccessDenied));
+  const isAdmin = Boolean(user && !adminAccessDenied);
 
   const initialDataLoaded = useRef(false);
   const lastAuthUserId = useRef<string | null>(null);
@@ -509,7 +565,7 @@ export default function Admin() {
           if (message.includes('SUPABASE_SERVICE_ROLE_KEY')) {
             setAdminConfigError(message);
           } else {
-            setAdminAccessDenied(!isDefaultOwner(user.email));
+            setAdminAccessDenied(true);
             setAdminAccessError(message);
           }
         } finally {
@@ -980,7 +1036,6 @@ export default function Admin() {
   const [category, setCategory] = useState('');
   const [categoriesStr, setCategoriesStr] = useState('');
   const [selectedAiTools, setSelectedAiTools] = useState<string[]>([]);
-  const [authorId, setAuthorId] = useState(settings.defaultAuthorId || getAuthors(settings)[0]?.id || 'editorial-team');
   const [featured, setFeatured] = useState(false);
   const [status, setStatus] = useState<'published' | 'pending' | 'draft'>('published');
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
@@ -1033,7 +1088,7 @@ export default function Admin() {
 
   const [siteTitle, setSiteTitle] = useState(settings.siteTitle);
   const [siteLogo, setSiteLogo] = useState(settings.siteLogo || '');
-  const [siteDescription, setSiteDescription] = useState(settings.siteDescription);
+  const [siteDescription, setSiteDescription] = useState(cleanAdminPublicCopy(settings.siteDescription) || settings.siteDescription);
   const [heroEnabled, setHeroEnabled] = useState(settings.heroEnabled);
   const [heroAutoPlay, setHeroAutoPlay] = useState(settings.heroAutoPlay);
   const [heroStyle, setHeroStyle] = useState(settings.heroStyle || 'v1');
@@ -1041,11 +1096,14 @@ export default function Admin() {
   const [cardStyle, setCardStyle] = useState(settings.cardStyle || 'v1');
   const [badgeStyle, setBadgeStyle] = useState(settings.badgeStyle || 'v1');
   const [adminEmailsStr, setAdminEmailsStr] = useState((settings.adminEmails || []).join(', '));
-  const [authors, setAuthors] = useState<Author[]>(getAuthors(settings));
-  const [defaultAuthorId, setDefaultAuthorId] = useState(settings.defaultAuthorId || getAuthors(settings)[0]?.id || 'editorial-team');
-  const [headerLinks, setHeaderLinks] = useState<NavLink[]>(settings.headerLinks || []);
+  const [headerLinks, setHeaderLinks] = useState<NavLink[]>(() => withHeaderLinkIds(settings.headerLinks || []));
+  const [headerNavOrder, setHeaderNavOrder] = useState<string[]>(settings.headerNavOrder || []);
   const [homeLinkBlocks, setHomeLinkBlocks] = useState<HomeLinkBlock[]>(settings.homeLinkBlocks || []);
-  const [homepageContent, setHomepageContent] = useState<Record<string, HomepageBlockContent>>(settings.homepageContent || {});
+  const [homepageContent, setHomepageContent] = useState<Record<string, HomepageBlockContent>>(cleanAdminHomepageContent(settings.homepageContent || {}));
+  const [articleOverrides, setArticleOverrides] = useState<Record<string, ArticleSettingsOverride>>(settings.articleOverrides || {});
+  const [customArticles, setCustomArticles] = useState<ArticleSettingsOverride[]>(settings.customArticles || []);
+  const [selectedArticleSlug, setSelectedArticleSlug] = useState('');
+  const [articleManagerFilter, setArticleManagerFilter] = useState<'all' | 'blog' | 'guide'>('all');
   const [discoveryPages, setDiscoveryPages] = useState<DiscoveryPageSettings>({
     ...defaultDiscoveryPages,
     ...(settings.discoveryPages || {}),
@@ -1065,14 +1123,13 @@ export default function Admin() {
   const [toolRailItems, setToolRailItems] = useState<FilterRailItem[]>(settings.discoveryPages?.toolRailItems || []);
   const [tagRailItems, setTagRailItems] = useState<FilterRailItem[]>(settings.discoveryPages?.tagRailItems || []);
   const [sectionRailItems, setSectionRailItems] = useState<FilterRailItem[]>(settings.discoveryPages?.sectionRailItems || []);
-  const [creativeDirectionItems, setCreativeDirectionItems] = useState<FilterRailItem[]>(
+  const [creativeDirectionItems, setCreativeDirectionItems] = useState<CreativeDirectionItem[]>(
     settings.creativeDirectionItems || []
   );
   const [footerLinkGroups, setFooterLinkGroups] = useState<FooterLinkGroup[]>(settings.footerLinkGroups || defaultFooterLinkGroups);
-  const [imgbbApiKey, setImgbbApiKey] = useState(settings.imgbbApiKey || '');
-  const [imageProvider, setImageProvider] = useState<'imgbb' | 'cloudinary' | 'supabase'>(settings.imageProvider || 'imgbb');
-  const [cloudinaryCloudName, setCloudinaryCloudName] = useState(settings.cloudinaryCloudName || '');
-  const [cloudinaryUploadPreset, setCloudinaryUploadPreset] = useState(settings.cloudinaryUploadPreset || '');
+  const [imageProvider, setImageProvider] = useState<UploadProvider>(
+    settings.imageProvider === 'cloudflare' ? 'cloudflare' : 'supabase'
+  );
   const [adsConfig, setAdsConfig] = useState<AdSettings>(
     settings.ads || {
       header: { enabled: false, code: '' },
@@ -1104,7 +1161,7 @@ export default function Admin() {
       showHomepagePromptOfDay: true,
       showHomepageCreativeDirections: true,
       showHomepageSupportedTools: true,
-      showHomepageNewsletter: true,
+      showHomepageGuides: true,
       showHomepageCreatorFeedback: true,
       showScrollProgress: true,
       showFaqSchema: true,
@@ -1191,7 +1248,7 @@ export default function Admin() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (settings.siteTitle !== undefined) setSiteTitle(settings.siteTitle);
     if (settings.siteLogo !== undefined) setSiteLogo(settings.siteLogo);
-    if (settings.siteDescription !== undefined) setSiteDescription(settings.siteDescription);
+    if (settings.siteDescription !== undefined) setSiteDescription(cleanAdminPublicCopy(settings.siteDescription) || settings.siteDescription);
     if (settings.heroEnabled !== undefined) setHeroEnabled(settings.heroEnabled);
     if (settings.heroAutoPlay !== undefined) setHeroAutoPlay(settings.heroAutoPlay);
     if (settings.heroStyle !== undefined) setHeroStyle(settings.heroStyle);
@@ -1199,15 +1256,12 @@ export default function Admin() {
     if (settings.cardStyle !== undefined) setCardStyle(settings.cardStyle);
     if (settings.badgeStyle !== undefined) setBadgeStyle(settings.badgeStyle);
     if (settings.adminEmails !== undefined) setAdminEmailsStr((settings.adminEmails || []).join(', '));
-    if (settings.authors !== undefined || settings.defaultAuthorId !== undefined) {
-      const nextAuthors = getAuthors(settings);
-      setAuthors(nextAuthors);
-      setDefaultAuthorId(settings.defaultAuthorId || nextAuthors[0]?.id || 'editorial-team');
-      setAuthorId(current => current || settings.defaultAuthorId || nextAuthors[0]?.id || 'editorial-team');
-    }
-    if (settings.headerLinks !== undefined) setHeaderLinks(settings.headerLinks || []);
+    if (settings.headerLinks !== undefined) setHeaderLinks(withHeaderLinkIds(settings.headerLinks || []));
+    if (settings.headerNavOrder !== undefined) setHeaderNavOrder(settings.headerNavOrder || []);
     if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocks(settings.homeLinkBlocks || []);
-    if (settings.homepageContent !== undefined) setHomepageContent(settings.homepageContent || {});
+    if (settings.homepageContent !== undefined) setHomepageContent(cleanAdminHomepageContent(settings.homepageContent || {}));
+    if (settings.articleOverrides !== undefined) setArticleOverrides(settings.articleOverrides || {});
+    if (settings.customArticles !== undefined) setCustomArticles(settings.customArticles || []);
     if (settings.discoveryPages !== undefined) setDiscoveryPages({ ...defaultDiscoveryPages, ...(settings.discoveryPages || {}) });
     if (settings.keepExploring !== undefined) {
       setKeepExploring({
@@ -1228,10 +1282,9 @@ export default function Admin() {
     if (settings.discoveryPages?.sectionRailItems !== undefined) setSectionRailItems(settings.discoveryPages.sectionRailItems || []);
     if (settings.creativeDirectionItems !== undefined) setCreativeDirectionItems(settings.creativeDirectionItems || []);
     if (settings.footerLinkGroups !== undefined) setFooterLinkGroups(settings.footerLinkGroups || defaultFooterLinkGroups);
-    if (settings.imgbbApiKey !== undefined) setImgbbApiKey(settings.imgbbApiKey);
-    if (settings.imageProvider !== undefined) setImageProvider(settings.imageProvider);
-    if (settings.cloudinaryCloudName !== undefined) setCloudinaryCloudName(settings.cloudinaryCloudName);
-    if (settings.cloudinaryUploadPreset !== undefined) setCloudinaryUploadPreset(settings.cloudinaryUploadPreset);
+    if (settings.imageProvider !== undefined) {
+      setImageProvider(settings.imageProvider === 'cloudflare' ? 'cloudflare' : 'supabase');
+    }
     if (settings.ads) setAdsConfig(settings.ads);
     if (settings.features) setFeatures(settings.features);
   }, [settings]);
@@ -1241,6 +1294,14 @@ export default function Admin() {
   // Get custom sections for assignment
   const customSections = sections.filter(s => s.type === 'custom');
   const publicPosts = getPublicPosts(posts);
+  const articleManagerSettings: SiteSettings = { ...settings, articleOverrides, customArticles };
+  const managedArticles = getArticlesForSettings(articleManagerSettings);
+  const filteredManagedArticles = articleManagerFilter === 'all'
+    ? managedArticles
+    : managedArticles.filter(article => article.category === articleManagerFilter);
+  const selectedArticle = selectedArticleSlug ? managedArticles.find(article => article.slug === selectedArticleSlug) : undefined;
+  const selectedArticleIsCustom = Boolean(selectedArticle && customArticles.some(article => article.slug === selectedArticle.slug));
+  const guideArticles = managedArticles.filter(article => article.category === 'guide');
   const featuredPosts = publicPosts.filter(post => post.featured);
   const promptOfDayContent = homepageContent.promptOfDay || {};
   const pinnedPromptOfDayId = promptOfDayContent.pinnedPostId;
@@ -1293,7 +1354,7 @@ export default function Admin() {
   const savedSectionRailItems = cleanRailItems(sectionRailItems);
   const liveSectionRailItems = savedSectionRailItems.length > 0 ? savedSectionRailItems : autoExploreItems;
   const autoCreativeItems = getAutoCreativeItems(posts);
-  const savedCreativeItems = cleanRailItems(creativeDirectionItems);
+  const savedCreativeItems = cleanCreativeDirectionItems(creativeDirectionItems);
   const liveCreativeItems = savedCreativeItems.length > 0 ? savedCreativeItems : autoCreativeItems;
   const supportedTools = Array.from(new Set(publicPosts.flatMap(post => getAllTools(post)).filter(Boolean)));
   const getHomepageBlockDetail = (key: string) => {
@@ -1307,13 +1368,15 @@ export default function Admin() {
     }
     if (key === 'creativeDirections') return `${liveCreativeItems.length} ${savedCreativeItems.length > 0 ? 'saved' : 'auto'} cards`;
     if (key === 'creatorFeedback') return 'Static creator-focused trust section';
-    if (key === 'newsletter') return 'Static newsletter capture section';
+    if (key === 'guides') {
+      const selectedCount = homepageContent.guides?.selectedGuideSlugs?.length || 0;
+      return selectedCount > 0 ? `${selectedCount} manually selected guide${selectedCount === 1 ? '' : 's'}` : 'Auto: featured/latest guides';
+    }
     return 'Homepage block';
   };
 
   const resetForm = () => {
     setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setFaqs([]); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
-    setAuthorId(defaultAuthorId || authors[0]?.id || 'editorial-team');
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
     setStatus('published'); setVisibility('public');
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
@@ -1334,7 +1397,6 @@ export default function Admin() {
     setCategory(post.category || '');
     setCategoriesStr(post.categories?.join(', ') || '');
     setSelectedAiTools(post.aiTools || []);
-    setAuthorId(post.authorId || defaultAuthorId || authors[0]?.id || 'editorial-team');
     setFeatured(post.featured);
     setStatus(post.status || 'published');
     setVisibility(post.visibility || 'public');
@@ -1459,36 +1521,7 @@ export default function Admin() {
 
   const uploadImageFile = async (file: File, preset: ImageOptimizePreset = 'prompt'): Promise<string> => {
     const optimizedFile = await optimizeImageFile(file, preset);
-
-    if (imageProvider === 'cloudinary' && cloudinaryCloudName && cloudinaryUploadPreset) {
-      const formData = new FormData();
-      formData.append('file', optimizedFile);
-      formData.append('upload_preset', cloudinaryUploadPreset);
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`, { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.secure_url) return data.secure_url;
-      throw new Error(data.error?.message || 'Cloudinary upload failed');
-    } else if (imageProvider === 'supabase') {
-      const supabase = createSupabaseClient();
-      const ext = optimizedFile.name.split('.').pop() || 'webp';
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-      const { data, error } = await supabase.storage.from('images').upload(fileName, optimizedFile, {
-        contentType: optimizedFile.type || 'image/webp',
-        cacheControl: '31536000',
-      });
-      if (error) throw new Error(error.message);
-      const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName);
-      return publicUrl;
-    } else if ((imageProvider === 'imgbb' || !imageProvider) && imgbbApiKey) {
-      const formData = new FormData();
-      formData.append('image', optimizedFile);
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.success) return data.data.url;
-      throw new Error(data.error?.message || 'ImgBB upload failed');
-    }
-
-    return await optimizeImageToDataUrl(file, preset);
+    return uploadImageFileToProvider(optimizedFile, imageProvider, preset);
   };
 
   const handleImageUpload = async (idx: number, file: File) => {
@@ -1500,6 +1533,30 @@ export default function Admin() {
       console.error(err);
       alert('Failed to process image');
       updateImage(idx, 'url', '');
+    }
+  };
+
+  const handleArticleThumbnailUpload = async (slug: string, file: File) => {
+    try {
+      updateManagedArticle(slug, { thumbnailUrl: 'Uploading...' });
+      const url = await uploadImageFile(file, 'thumbnail');
+      updateManagedArticle(slug, { thumbnailUrl: url });
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload article thumbnail');
+      updateManagedArticle(slug, { thumbnailUrl: '' });
+    }
+  };
+
+  const handleCreativeDirectionLogoUpload = async (index: number, file: File) => {
+    try {
+      updateRailItem('creative', index, 'imageUrl', 'Uploading...');
+      const url = await uploadImageFile(file, 'thumbnail');
+      updateRailItem('creative', index, 'imageUrl', url);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload browse card logo');
+      updateRailItem('creative', index, 'imageUrl', '');
     }
   };
 
@@ -1601,7 +1658,10 @@ export default function Admin() {
       category: category || undefined,
       categories: categoriesStr.split(',').map(c => c.trim()).filter(Boolean),
       aiTools: selectedAiTools,
-      authorId: authorId || defaultAuthorId || authors[0]?.id || 'editorial-team',
+      authorId: editingPost?.authorId,
+      authorName: editingPost?.authorName,
+      authorUsername: editingPost?.authorUsername,
+      authorAvatar: editingPost?.authorAvatar,
       featured,
       views: editingPost?.views || 0,
       likes: editingPost?.likes || 0,
@@ -1809,6 +1869,32 @@ export default function Admin() {
     setHeaderLinks(prev => prev.map((link, i) => i === index ? { ...link, [field]: value } : link));
   };
 
+  const headerNavSections = sections.filter(s => s.location === 'header' && s.visible).sort((a, b) => a.order - b.order);
+  const headerNavItems = buildHeaderNavItems({ features: settings.features, headerLinks, headerNavOrder }, headerNavSections);
+
+  const moveHeaderNavItem = (navKey: string, dir: -1 | 1) => {
+    const keys = headerNavItems.map(item => item.navKey);
+    const from = keys.indexOf(navKey);
+    const to = from + dir;
+    if (from === -1 || to < 0 || to >= keys.length) return;
+    const next = [...keys];
+    [next[from], next[to]] = [next[to], next[from]];
+    setHeaderNavOrder(next);
+  };
+
+  const addHeaderLink = () => {
+    const link: NavLink = { id: newNavId(), label: '', href: '' };
+    setHeaderLinks(prev => [...prev, link]);
+    setHeaderNavOrder(prev => [...headerNavItems.map(i => i.navKey), headerLinkKey(link, headerLinks.length)]
+      .filter((k, i, arr) => arr.indexOf(k) === i));
+  };
+
+  const removeHeaderLink = (index: number) => {
+    const removedKey = headerLinkKey(headerLinks[index], index);
+    setHeaderLinks(prev => prev.filter((_, i) => i !== index));
+    setHeaderNavOrder(prev => prev.filter(k => k !== removedKey));
+  };
+
   const updateHomeLinkBlock = (index: number, field: keyof HomeLinkBlock, value: string) => {
     setHomeLinkBlocks(prev => prev.map((block, i) => i === index ? { ...block, [field]: value } : block));
   };
@@ -1825,7 +1911,7 @@ export default function Admin() {
     });
   };
 
-  const updateHomepageContent = (key: string, field: keyof HomepageBlockContent, value: string) => {
+  const updateHomepageContent = (key: string, field: keyof HomepageBlockContent, value: HomepageBlockContent[keyof HomepageBlockContent]) => {
     setHomepageContent(prev => ({
       ...prev,
       [key]: {
@@ -1833,6 +1919,41 @@ export default function Admin() {
         [field]: value,
       },
     }));
+  };
+
+  const toggleHomepageGuide = (slug: string) => {
+    setHomepageContent(prev => {
+      const current = prev.guides || {};
+      const selected = current.selectedGuideSlugs || [];
+      const nextSelected = selected.includes(slug)
+        ? selected.filter(item => item !== slug)
+        : [...selected, slug].slice(0, 4);
+      return {
+        ...prev,
+        guides: {
+          ...current,
+          selectedGuideSlugs: nextSelected,
+        },
+      };
+    });
+  };
+
+  const moveHomepageGuide = (slug: string, direction: -1 | 1) => {
+    setHomepageContent(prev => {
+      const current = prev.guides || {};
+      const selected = [...(current.selectedGuideSlugs || [])];
+      const index = selected.indexOf(slug);
+      const nextIndex = index + direction;
+      if (index < 0 || nextIndex < 0 || nextIndex >= selected.length) return prev;
+      [selected[index], selected[nextIndex]] = [selected[nextIndex], selected[index]];
+      return {
+        ...prev,
+        guides: {
+          ...current,
+          selectedGuideSlugs: selected,
+        },
+      };
+    });
   };
 
   const updateHomepageItem = (key: string, index: number, field: 'title' | 'text' | 'checks', value: string) => {
@@ -1871,27 +1992,43 @@ export default function Admin() {
 
   type RailListKey = 'explore' | 'tool' | 'tag' | 'section' | 'creative';
 
-  const getRailSetter = (list: RailListKey) => {
-    if (list === 'explore') return setExploreFilterItems;
-    if (list === 'tool') return setToolRailItems;
-    if (list === 'tag') return setTagRailItems;
-    if (list === 'section') return setSectionRailItems;
-    return setCreativeDirectionItems;
-  };
+  const updateRailItem = (list: RailListKey, index: number, field: string, value: string) => {
+    if (list === 'creative') {
+      setCreativeDirectionItems(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+      return;
+    }
 
-  const updateRailItem = (list: RailListKey, index: number, field: keyof FilterRailItem, value: string) => {
-    const setter = getRailSetter(list);
-    setter(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+    const update = (prev: FilterRailItem[]) => prev.map((item, i) => i === index ? { ...item, [field]: value } : item);
+    if (list === 'explore') setExploreFilterItems(update);
+    if (list === 'tool') setToolRailItems(update);
+    if (list === 'tag') setTagRailItems(update);
+    if (list === 'section') setSectionRailItems(update);
   };
 
   const addRailItem = (list: RailListKey) => {
-    const setter = getRailSetter(list);
-    setter(prev => [...prev, { label: '', type: 'tag', value: '' }]);
+    if (list === 'creative') {
+      setCreativeDirectionItems(prev => [...prev, { label: '', type: 'tag', value: '', icon: undefined, imageUrl: undefined }]);
+      return;
+    }
+
+    const add = (prev: FilterRailItem[]) => [...prev, { label: '', type: 'tag' as const, value: '' }];
+    if (list === 'explore') setExploreFilterItems(add);
+    if (list === 'tool') setToolRailItems(add);
+    if (list === 'tag') setTagRailItems(add);
+    if (list === 'section') setSectionRailItems(add);
   };
 
   const removeRailItem = (list: RailListKey, index: number) => {
-    const setter = getRailSetter(list);
-    setter(prev => prev.filter((_, i) => i !== index));
+    if (list === 'creative') {
+      setCreativeDirectionItems(prev => prev.filter((_, i) => i !== index));
+      return;
+    }
+
+    const remove = (prev: FilterRailItem[]) => prev.filter((_, i) => i !== index);
+    if (list === 'explore') setExploreFilterItems(remove);
+    if (list === 'tool') setToolRailItems(remove);
+    if (list === 'tag') setTagRailItems(remove);
+    if (list === 'section') setSectionRailItems(remove);
   };
 
   const moveHomepageItem = (index: number, direction: 'up' | 'down') => {
@@ -1900,6 +2037,66 @@ export default function Admin() {
     const next = [...orderedHomepageItems];
     [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
     setHomepageBlockOrder(next);
+  };
+
+  const moveArrayItem = <T,>(list: T[], from: number, to: number): T[] => {
+    if (to < 0 || to >= list.length || from === to) return list;
+    const next = [...list];
+    [next[from], next[to]] = [next[to], next[from]];
+    return next;
+  };
+
+  const moveFooterLink = (groupIndex: number, from: number, to: number) => {
+    setFooterLinkGroups(prev => prev.map((group, i) => (
+      i === groupIndex ? { ...group, links: moveArrayItem(group.links, from, to) } : group
+    )));
+  };
+
+  const updateManagedArticle = (slug: string, patch: Partial<ArticleSettingsOverride>) => {
+    if (customArticles.some(article => article.slug === slug)) {
+      setCustomArticles(prev => prev.map(article => article.slug === slug ? { ...article, ...patch } : article));
+      return;
+    }
+    setArticleOverrides(prev => ({
+      ...prev,
+      [slug]: {
+        ...(prev[slug] || {}),
+        ...patch,
+        slug,
+      },
+    }));
+  };
+
+  const resetManagedArticle = (slug: string) => {
+    if (customArticles.some(article => article.slug === slug)) {
+      setCustomArticles(prev => prev.filter(article => article.slug !== slug));
+      setSelectedArticleSlug('');
+      return;
+    }
+    setArticleOverrides(prev => {
+      const next = { ...prev };
+      delete next[slug];
+      return next;
+    });
+  };
+
+  const addManagedArticle = () => {
+    const baseSlug = `new-article-${Date.now().toString(36)}`;
+    const article: ArticleSettingsOverride = {
+      slug: baseSlug,
+      title: 'New Article',
+      description: 'Write a clear 140-160 character description for search previews and article cards.',
+      category: 'blog',
+      tags: ['ai prompts'],
+      readMinutes: 6,
+      datePublished: new Date().toISOString().slice(0, 10),
+      icon: 'book',
+      thumbnailUrl: '',
+      featured: false,
+      body: 'Start writing your article here.\n\n## Main section\n\nAdd practical, original advice for readers.',
+    };
+    setCustomArticles(prev => [article, ...prev]);
+    setSelectedArticleSlug(baseSlug);
   };
 
   const updateFooterGroupTitle = (groupIndex: number, title: string) => {
@@ -1915,18 +2112,6 @@ export default function Admin() {
   };
 
   const handleSaveSettings = () => {
-    const cleanAuthors = authors
-      .map(author => normalizeAuthor({
-        ...author,
-        slug: author.slug || slugifyAuthor(author.name),
-        updatedAt: new Date().toISOString(),
-      }))
-      .filter(author => author.name.trim());
-    const resolvedAuthors = cleanAuthors.length ? cleanAuthors : getAuthors({ ...settings, siteTitle, siteLogo });
-    const resolvedDefaultAuthorId = resolvedAuthors.some(author => author.id === defaultAuthorId)
-      ? defaultAuthorId
-      : resolvedAuthors[0]?.id;
-
     updateSettings({
       ...settings,
       siteTitle,
@@ -1939,11 +2124,12 @@ export default function Admin() {
       cardStyle,
       badgeStyle,
       adminEmails: adminEmailsStr.split(',').map(e => e.trim()).filter(Boolean),
-      authors: resolvedAuthors,
-      defaultAuthorId: resolvedDefaultAuthorId,
       headerLinks: cleanNavLinks(headerLinks),
+      headerNavOrder,
       homeLinkBlocks: cleanHomeBlocks(homeLinkBlocks),
-      homepageContent,
+      homepageContent: cleanAdminHomepageContent(homepageContent),
+      articleOverrides,
+      customArticles: customArticles.filter(article => article.slug && article.title && article.description && article.body),
       discoveryPages: {
         ...discoveryPages,
         exploreRailItems: cleanRailItems(exploreFilterItems),
@@ -1955,14 +2141,11 @@ export default function Admin() {
       homepageBlockOrder: orderedHomepageItems,
       exploreFilterTags: cleanCommaList(exploreFilterTags),
       exploreFilterItems: cleanRailItems(exploreFilterItems),
-      creativeDirectionItems: cleanRailItems(creativeDirectionItems),
+      creativeDirectionItems: cleanCreativeDirectionItems(creativeDirectionItems),
       footerLinkGroups: cleanFooterGroups(footerLinkGroups),
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
       ads: adsConfig,
-      imgbbApiKey,
       imageProvider,
-      cloudinaryCloudName,
-      cloudinaryUploadPreset,
       features,
     });
     alert('Settings saved!');
@@ -2150,14 +2333,14 @@ export default function Admin() {
   const recentPosts = [...posts]
     .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
     .slice(0, 5);
-  const adsSettings = settings.ads as (AdSettings & { publisherId?: string; autoAdsEnabled?: boolean }) | undefined;
+  const adsSettings = settings.ads;
   const settingsExtras = settings as SiteSettings & { ogImage?: string; defaultOgImage?: string; footerDescription?: string };
   const siteHealthChecks = [
     { label: 'AdSense meta tag present', ok: Boolean(adsSettings?.publisherId || process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID) },
     { label: 'Auto Ads script active', ok: Boolean(adsSettings?.autoAdsEnabled) },
     { label: 'Sitemap accessible', ok: true },
     { label: 'Robots.txt present', ok: true },
-    { label: 'OG image set', ok: Boolean(settingsExtras.ogImage || settingsExtras.defaultOgImage || settings.siteLogo) },
+    { label: 'OG image set', ok: Boolean(settings.seoSettings?.defaultOgImage || settingsExtras.ogImage || settingsExtras.defaultOgImage || settings.siteLogo) },
     { label: 'Footer description set', ok: Boolean((settingsExtras.footerDescription || settings.siteDescription || '').trim()) },
   ];
   const sectionLocationsToRender: Array<'homepage' | 'header' | 'footer'> =
@@ -2167,6 +2350,7 @@ export default function Admin() {
     { key: 'dashboard', label: 'Dashboard', icon: <BarChart2 className="w-4 h-4" /> },
     { key: 'posts', label: 'Posts', icon: <FileText className="w-4 h-4" />, count: posts.length },
     { key: 'sections', label: 'Sections', icon: <Layers className="w-4 h-4" /> },
+    { key: 'articles', label: 'Articles', icon: <BookOpen className="w-4 h-4" />, count: managedArticles.length },
     { key: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
     { key: 'submissions', label: 'Submissions', icon: <Upload className="w-4 h-4" />, count: pendingSubmissionCount },
     { key: 'comments', label: 'Comments', icon: <MessageCircle className="w-4 h-4" />, count: pendingCommentCount },
@@ -2328,7 +2512,7 @@ export default function Admin() {
     },
     {
       title: 'Content Engine',
-      items: tabs.filter(t => ['posts', 'sections', 'pages'].includes(t.key))
+      items: tabs.filter(t => ['posts', 'sections', 'articles', 'pages'].includes(t.key))
     },
     {
       title: 'Community & Feedback',
@@ -2865,19 +3049,6 @@ export default function Admin() {
                       <option value="private">Private</option>
                     </select>
                   </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium mb-1.5">Author / Reviewer</label>
-                    <select
-                      value={authorId}
-                      onChange={e => setAuthorId(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                    >
-                      {authors.filter(author => author.active !== false).map(author => (
-                        <option key={author.id} value={author.id}>{author.name}{author.role ? ` - ${author.role}` : ''}</option>
-                      ))}
-                    </select>
-                    <p className="mt-1 text-xs text-surface-500">Shown as the public reviewer/byline and used in structured data.</p>
-                  </div>
                 </div>
 
                 <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
@@ -3400,6 +3571,187 @@ export default function Admin() {
       )}
 
       {/* ===== SECTIONS TAB ===== */}
+      {tab === 'articles' && (
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-surface-200 bg-white p-6 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-black tracking-tight text-surface-950 dark:text-white">Article Manager</h2>
+                <p className="mt-1 text-sm text-surface-500">Manage blog posts and guides, including thumbnails, SEO copy, tags, and full markdown body.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={addManagedArticle} className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-primary-600">
+                  <Plus className="h-4 w-4" /> Add Article
+                </button>
+                <button onClick={handleSaveSettings} className="inline-flex items-center gap-2 rounded-xl bg-surface-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-surface-800 dark:bg-white dark:text-surface-950">
+                  <Save className="h-4 w-4" /> Save Articles
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+            <div className="flex flex-wrap gap-2.5">
+              {([
+                ['all', 'All Articles'],
+                ['blog', 'Blogs'],
+                ['guide', 'Guides'],
+              ] as const).map(([filter, label]) => (
+                <button
+                  key={filter}
+                  type="button"
+                  onClick={() => setArticleManagerFilter(filter)}
+                  className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
+                    articleManagerFilter === filter
+                      ? 'bg-primary-500 text-white shadow-sm'
+                      : 'border border-surface-200 bg-transparent text-surface-600 hover:bg-surface-50 hover:text-surface-900 dark:border-surface-800 dark:text-surface-400 dark:hover:bg-surface-800 dark:hover:text-surface-100'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+            <div className="rounded-2xl border border-surface-200 bg-white p-3 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+              <div className="max-h-[72vh] space-y-2 overflow-y-auto pr-1">
+                {filteredManagedArticles.map(article => {
+                  const active = selectedArticle?.slug === article.slug;
+                  const isCustom = customArticles.some(item => item.slug === article.slug);
+                  const isEdited = Boolean(articleOverrides[article.slug]);
+                  return (
+                    <button
+                      key={article.slug}
+                      onClick={() => setSelectedArticleSlug(article.slug)}
+                      className={`w-full rounded-xl border p-3 text-left transition ${active ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10' : 'border-surface-200 hover:border-primary-300 hover:bg-surface-50 dark:border-surface-800 dark:hover:bg-surface-800/60'}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="line-clamp-2 text-sm font-black text-surface-950 dark:text-white">{article.title}</p>
+                          <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-surface-400">{article.category} · {article.readMinutes} min</p>
+                        </div>
+                        <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black ${isCustom ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : isEdited ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300' : 'bg-surface-100 text-surface-500 dark:bg-surface-800'}`}>
+                          {isCustom ? 'Custom' : isEdited ? 'Edited' : 'Default'}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+                {filteredManagedArticles.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-surface-300 p-4 text-center text-xs font-semibold text-surface-500 dark:border-surface-700">
+                    No {articleManagerFilter === 'all' ? 'articles' : articleManagerFilter === 'blog' ? 'blogs' : 'guides'} yet.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {selectedArticle && (
+              <div className="space-y-5">
+                <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                  <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="space-y-1 sm:col-span-2">
+                        <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Title</span>
+                        <input value={selectedArticle.title} onChange={e => updateManagedArticle(selectedArticle.slug, { title: e.target.value })} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
+                      </label>
+                      <label className="space-y-1">
+                        <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Slug</span>
+                        <input
+                          value={selectedArticle.slug}
+                          disabled={!selectedArticleIsCustom}
+                          onChange={e => {
+                            const nextSlug = slugify(e.target.value);
+                            updateManagedArticle(selectedArticle.slug, { slug: nextSlug });
+                            setSelectedArticleSlug(nextSlug);
+                          }}
+                          className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 disabled:opacity-60 dark:border-surface-700 dark:bg-surface-800"
+                        />
+                      </label>
+                      <label className="space-y-1">
+                        <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Category</span>
+                        <select value={selectedArticle.category} onChange={e => updateManagedArticle(selectedArticle.slug, { category: e.target.value as 'blog' | 'guide' })} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                          <option value="blog">Blog</option>
+                          <option value="guide">Guide</option>
+                        </select>
+                      </label>
+                      <label className="space-y-1 sm:col-span-2">
+                        <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Description</span>
+                        <textarea value={selectedArticle.description} onChange={e => updateManagedArticle(selectedArticle.slug, { description: e.target.value })} rows={3} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
+                      </label>
+                      <label className="space-y-1">
+                        <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Tags</span>
+                        <input value={selectedArticle.tags.join(', ')} onChange={e => updateManagedArticle(selectedArticle.slug, { tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean) })} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="prompt writing, beginners" />
+                      </label>
+                      <label className="space-y-1">
+                        <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Thumbnail URL</span>
+                        <input value={selectedArticle.thumbnailUrl || ''} onChange={e => updateManagedArticle(selectedArticle.slug, { thumbnailUrl: e.target.value })} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="https://..." />
+                        <label className="mt-2 inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-primary-300 bg-primary-50 px-3 text-xs font-bold text-primary-600 hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-300">
+                          <Upload className="h-3.5 w-3.5" /> Upload thumbnail
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={e => {
+                              const file = e.target.files?.[0];
+                              if (file) handleArticleThumbnailUpload(selectedArticle.slug, file);
+                              e.currentTarget.value = '';
+                            }}
+                          />
+                        </label>
+                      </label>
+                      <label className="space-y-1">
+                        <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Read minutes</span>
+                        <input type="number" min={1} value={selectedArticle.readMinutes} onChange={e => updateManagedArticle(selectedArticle.slug, { readMinutes: parseInt(e.target.value) || 1 })} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
+                      </label>
+                      <label className="space-y-1">
+                        <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Publish date</span>
+                        <input type="date" value={selectedArticle.datePublished} onChange={e => updateManagedArticle(selectedArticle.slug, { datePublished: e.target.value })} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
+                      </label>
+                      <label className="flex items-center gap-2 rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm font-bold dark:border-surface-700 dark:bg-surface-800">
+                        <input type="checkbox" checked={Boolean(selectedArticle.featured)} onChange={e => updateManagedArticle(selectedArticle.slug, { featured: e.target.checked })} className="h-4 w-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500" />
+                        Featured article
+                      </label>
+                      <p className="-mt-2 text-[11px] leading-5 text-surface-500 sm:col-span-2">
+                        Featured guides are used first by the homepage Guides block when no manual guide picker is set.
+                      </p>
+                    </div>
+                    <div>
+                      <p className="mb-2 text-xs font-bold uppercase tracking-wide text-surface-500">Thumbnail preview</p>
+                      <ArticleThumbnail article={selectedArticle} />
+                      <button type="button" onClick={() => resetManagedArticle(selectedArticle.slug)} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-300">
+                        <RotateCcw className="h-4 w-4" /> {selectedArticleIsCustom ? 'Delete custom article' : 'Reset overrides'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                  <label className="space-y-2 block">
+                    <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Article body markdown</span>
+                    <textarea value={selectedArticle.body} onChange={e => updateManagedArticle(selectedArticle.slug, { body: e.target.value })} rows={22} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 font-mono text-xs leading-6 outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
+                  </label>
+                </div>
+              </div>
+            )}
+            {!selectedArticle && (
+              <div className="flex min-h-[420px] items-center justify-center rounded-2xl border border-dashed border-surface-300 bg-white p-6 text-center shadow-sm dark:border-surface-700 dark:bg-surface-900">
+                <div className="max-w-sm">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-500 dark:bg-primary-500/10">
+                    <BookOpen className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-4 text-lg font-black text-surface-950 dark:text-white">Choose an article to edit</h3>
+                  <p className="mt-2 text-sm leading-6 text-surface-500">Select a blog or guide from the list, or add a new one. The editor stays closed until you choose something.</p>
+                  <button onClick={addManagedArticle} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-primary-600">
+                    <Plus className="h-4 w-4" /> Add Article
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {tab === 'sections' && (
         <div className="w-full max-w-6xl space-y-6 animate-in fade-in duration-200">
           {/* Section Header matching requested design */}
@@ -4252,113 +4604,6 @@ export default function Admin() {
                       placeholder="admin@example.com, owner@example.com"
                     />
                   </div>
-                  <div className="rounded-2xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-800/40">
-                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <h4 className="text-sm font-bold text-surface-900 dark:text-white">Authors / Reviewers</h4>
-                        <p className="mt-1 text-xs text-surface-500">Public bylines, author pages, and post structured data for trust signals.</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const id = `author-${generateId()}`;
-                          setAuthors(prev => [...prev, {
-                            id,
-                            slug: id,
-                            name: 'New Author',
-                            role: 'Reviewer',
-                            bio: '',
-                            avatarUrl: '',
-                            website: '',
-                            active: true,
-                            createdAt: new Date().toISOString(),
-                            updatedAt: new Date().toISOString(),
-                          }]);
-                        }}
-                        className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-3 py-2 text-xs font-bold text-white hover:bg-primary-600"
-                      >
-                        <Plus className="h-3.5 w-3.5" /> Add Author
-                      </button>
-                    </div>
-                    <div className="space-y-3">
-                      {authors.map((author, index) => (
-                        <div key={author.id} className="rounded-xl border border-surface-200 bg-white p-3 dark:border-surface-700 dark:bg-surface-900">
-                          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                            <label className="flex items-center gap-2 text-xs font-bold text-surface-600 dark:text-surface-300">
-                              <input
-                                type="radio"
-                                checked={defaultAuthorId === author.id}
-                                onChange={() => setDefaultAuthorId(author.id)}
-                                className="h-4 w-4 text-primary-500"
-                              />
-                              Default author
-                            </label>
-                            <div className="flex items-center gap-2">
-                              <label className="flex items-center gap-2 text-xs font-bold text-surface-500">
-                                <input
-                                  type="checkbox"
-                                  checked={author.active !== false}
-                                  onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, active: e.target.checked } : item))}
-                                  className="h-4 w-4 rounded text-primary-500"
-                                />
-                                Active
-                              </label>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (authors.length <= 1) return alert('Keep at least one author.');
-                                  setAuthors(prev => prev.filter((_, itemIndex) => itemIndex !== index));
-                                  if (defaultAuthorId === author.id) setDefaultAuthorId(authors.find((_, itemIndex) => itemIndex !== index)?.id || '');
-                                }}
-                                className="text-xs font-bold text-red-500 hover:text-red-600"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <input
-                              value={author.name}
-                              onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, name: e.target.value, slug: slugifyAuthor(e.target.value) } : item))}
-                              className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                              placeholder="Author name"
-                            />
-                            <input
-                              value={author.role || ''}
-                              onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, role: e.target.value } : item))}
-                              className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                              placeholder="Role, e.g. Editorial Reviewer"
-                            />
-                            <input
-                              value={author.slug}
-                              onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, slug: slugifyAuthor(e.target.value) } : item))}
-                              className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                              placeholder="author-url-slug"
-                            />
-                            <input
-                              value={author.avatarUrl || ''}
-                              onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, avatarUrl: e.target.value } : item))}
-                              className="rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                              placeholder="Avatar URL"
-                            />
-                            <input
-                              value={author.website || ''}
-                              onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, website: e.target.value } : item))}
-                              className="sm:col-span-2 rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                              placeholder="Website URL"
-                            />
-                            <textarea
-                              value={author.bio || ''}
-                              onChange={e => setAuthors(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, bio: e.target.value } : item))}
-                              rows={3}
-                              className="sm:col-span-2 min-h-[96px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-                              placeholder="Short author bio shown on post pages and /author profile."
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                   <div>
                 <label className="block text-xs font-medium text-surface-400 mb-1">Site Title</label>
                 <div className="flex gap-2">
@@ -4409,16 +4654,16 @@ export default function Admin() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-surface-400 mb-2">Image Hosting Provider</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                <label className="block text-xs font-medium text-surface-400 mb-2">Image Upload Platform</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                   {[
-                    { id: 'imgbb', label: 'ImgBB', desc: 'Free, simple' },
-                    { id: 'cloudinary', label: 'Cloudinary', desc: 'Fast, secure' },
-                    { id: 'supabase', label: 'Supabase Storage', desc: 'Native' },
+                    { id: 'supabase', label: 'Supabase Storage', desc: 'Uses your public images bucket' },
+                    { id: 'cloudflare', label: 'Cloudflare R2', desc: 'Uses uploads.aipromptmatrix.in' },
                   ].map(provider => (
                     <button
                       key={provider.id}
-                      onClick={() => setImageProvider(provider.id as any)}
+                      type="button"
+                      onClick={() => setImageProvider(provider.id as UploadProvider)}
                       className={`flex flex-col items-start p-3 rounded-xl border text-left transition-colors ${
                         imageProvider === provider.id
                           ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500'
@@ -4430,55 +4675,28 @@ export default function Admin() {
                     </button>
                   ))}
                 </div>
+                <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-800/50 border border-surface-200 dark:border-surface-700">
+                  {imageProvider === 'cloudflare' ? (
+                    <>
+                      <p className="text-xs text-surface-600 dark:text-surface-400 mb-2">
+                        Images upload through your app API into the Cloudflare R2 <span className="font-mono">uploads</span> bucket.
+                      </p>
+                      <p className="text-[10px] text-surface-500 font-mono bg-surface-100 dark:bg-surface-900 p-2 rounded">
+                        Requires the Worker R2 binding named UPLOADS and public domain https://uploads.aipromptmatrix.in.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xs text-surface-600 dark:text-surface-400 mb-2">
+                        Images upload to your Supabase Storage <span className="font-mono">images</span> bucket.
+                      </p>
+                      <p className="text-[10px] text-surface-500 font-mono bg-surface-100 dark:bg-surface-900 p-2 rounded">
+                        Make sure the bucket is public.
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
-
-              {imageProvider === 'imgbb' && (
-                <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-800/50 border border-surface-200 dark:border-surface-700">
-                  <label className="block text-xs font-medium text-surface-400 mb-1">ImgBB API Key</label>
-                  <input
-                    value={imgbbApiKey}
-                    onChange={e => setImgbbApiKey(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                    placeholder="Paste ImgBB API key..."
-                  />
-                  <p className="mt-2 text-[10px] text-surface-500">Firebase has a 1MB limit per document. Set this to offload images larger than 800KB.</p>
-                </div>
-              )}
-
-              {imageProvider === 'cloudinary' && (
-                <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-800/50 border border-surface-200 dark:border-surface-700 space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-surface-400 mb-1">Cloudinary Cloud Name</label>
-                    <input
-                      value={cloudinaryCloudName}
-                      onChange={e => setCloudinaryCloudName(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                      placeholder="e.g. dxyz123ab"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-surface-400 mb-1">Upload Preset (Unsigned)</label>
-                    <input
-                      value={cloudinaryUploadPreset}
-                      onChange={e => setCloudinaryUploadPreset(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                      placeholder="e.g. my_unsigned_preset"
-                    />
-                    <p className="mt-2 text-[10px] text-surface-500">You must create an <strong>unsigned</strong> upload preset in your Cloudinary settings to allow direct uploads from the browser.</p>
-                  </div>
-                </div>
-              )}
-
-              {imageProvider === 'supabase' && (
-                <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-800/50 border border-surface-200 dark:border-surface-700">
-                  <p className="text-xs text-surface-600 dark:text-surface-400 mb-2">
-                    Images will be uploaded to your Supabase Storage images bucket.
-                  </p>
-                  <p className="text-[10px] text-surface-500 font-mono bg-surface-100 dark:bg-surface-900 p-2 rounded">
-                    Make sure your Supabase Storage bucket is public.
-                  </p>
-                </div>
-              )}
               <div className="flex flex-wrap gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -5029,78 +5247,70 @@ export default function Admin() {
             <div className="space-y-6">
               <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                 <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <LayoutGrid className="w-4 h-4 text-primary-500" /> Current Header Navigation
+                  <LayoutGrid className="w-4 h-4 text-primary-500" /> Header Navigation Order
                 </h3>
                 <p className="text-xs text-surface-500 mb-4">
-                  This is what the header can show. Built-in links are controlled by the app; header sections are managed in Sections.
+                  Drag order with the arrows to arrange every header item — built-in links, header sections, and your custom links — in one list. Built-in links and sections can be reordered here; edit section names in the Sections tab. Custom links are fully editable below.
                 </p>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wider text-surface-500 font-semibold mb-2">Built-in links</p>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { label: 'Home', href: '/' },
-                        { label: 'Explore', href: '/explore' },
-                        ...(settings.features?.userSubmissions ? [{ label: 'Submit Prompt', href: '/submit' }] : []),
-                        ...(settings.features?.userProfiles ? [{ label: 'Profile', href: '/profile' }] : []),
-                      ].map(link => (
-                        <span key={link.href} className="px-3 py-1.5 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-xs">
-                          {link.label} <span className="text-surface-500">{link.href}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wider text-surface-500 font-semibold mb-2">Header sections</p>
-                    <div className="flex flex-wrap gap-2">
-                      {sections.filter(s => s.location === 'header' && s.visible).sort((a,b) => a.order - b.order).length > 0 ? (
-                        sections.filter(s => s.location === 'header' && s.visible).sort((a,b) => a.order - b.order).map(section => (
-                          <span key={section.id} className="px-3 py-1.5 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-xs">
-                            {section.name} <span className="text-surface-500">{getSectionPath(section)}</span>
-                          </span>
-                        ))
+                <div className="space-y-2">
+                  {headerNavItems.map((item, index) => (
+                    <div key={item.navKey} className="grid grid-cols-1 sm:grid-cols-[auto_1fr_1fr_auto] gap-2 items-center rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/60 p-2">
+                      <div className="flex sm:flex-col gap-1">
+                        <button
+                          onClick={() => moveHeaderNavItem(item.navKey, -1)}
+                          disabled={index === 0}
+                          className="p-1 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Move up"
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => moveHeaderNavItem(item.navKey, 1)}
+                          disabled={index === headerNavItems.length - 1}
+                          className="p-1 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Move down"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      {item.kind === 'link' ? (
+                        <>
+                          <input
+                            value={item.label}
+                            onChange={e => updateHeaderLink(item.linkIndex, 'label', e.target.value)}
+                            className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                            placeholder="Label"
+                          />
+                          <input
+                            value={item.href}
+                            onChange={e => updateHeaderLink(item.linkIndex, 'href', e.target.value)}
+                            className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                            placeholder="/page/custom or https://..."
+                          />
+                          <button
+                            onClick={() => removeHeaderLink(item.linkIndex)}
+                            className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+                          >
+                            Remove
+                          </button>
+                        </>
                       ) : (
-                        <span className="text-xs text-surface-500">No header sections enabled.</span>
+                        <>
+                          <div className="flex items-center gap-2 px-1 text-sm font-medium">
+                            {item.label}
+                          </div>
+                          <div className="px-1 text-xs text-surface-500 truncate">{item.href}</div>
+                          <span className="justify-self-start sm:justify-self-end px-2 py-1 rounded-md bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-[10px] uppercase tracking-wider font-semibold text-surface-500">
+                            {item.kind === 'section' ? 'Section' : 'Built-in'}
+                          </span>
+                        </>
                       )}
                     </div>
-                  </div>
-                </div>
-              </div>
-              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <LayoutGrid className="w-4 h-4 text-primary-500" /> Extra Header Links
-                </h3>
-                <p className="text-xs text-surface-500 mb-4">
-                  Home, Explore, Submit, Profile, and header sections are handled automatically. Add only extra custom links here, one per line as Label | URL.
-                </p>
-                <div className="space-y-3">
-                  {headerLinks.length === 0 && (
-                    <p className="text-xs text-surface-500">No extra header links.</p>
-                  )}
-                  {headerLinks.map((link, index) => (
-                    <div key={index} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
-                      <input
-                        value={link.label}
-                        onChange={e => updateHeaderLink(index, 'label', e.target.value)}
-                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                        placeholder="Label"
-                      />
-                      <input
-                        value={link.href}
-                        onChange={e => updateHeaderLink(index, 'href', e.target.value)}
-                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                        placeholder="/page/custom or https://..."
-                      />
-                      <button
-                        onClick={() => setHeaderLinks(prev => prev.filter((_, i) => i !== index))}
-                        className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
-                      >
-                        Remove
-                      </button>
-                    </div>
                   ))}
+                </div>
+                <div className="flex flex-wrap gap-2 mt-4">
                   <button
-                    onClick={() => setHeaderLinks(prev => [...prev, { label: '', href: '' }])}
+                    onClick={addHeaderLink}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-medium"
                   >
                     <Plus className="w-4 h-4" /> Add Header Link
@@ -5112,6 +5322,9 @@ export default function Admin() {
                     <Save className="w-4 h-4" /> Save Navigation
                   </button>
                 </div>
+                <p className="text-[11px] text-surface-500 mt-3">
+                  Note: Profile / Sign In and the theme toggle stay pinned to the right of the header and are not part of this order.
+                </p>
               </div>
             </div>
           )}
@@ -5356,7 +5569,7 @@ export default function Admin() {
                       blockKey === 'supportedTools' ? <Zap className="w-4 h-4 text-violet-500" /> :
                       blockKey === 'creativeDirections' ? <Compass className="w-4 h-4 text-rose-500" /> :
                       blockKey === 'creatorFeedback' ? <Users className="w-4 h-4 text-pink-500" /> :
-                      blockKey === 'newsletter' ? <Mail className="w-4 h-4 text-indigo-500" /> :
+                      blockKey === 'guides' ? <BookOpen className="w-4 h-4 text-indigo-500" /> :
                       <Layers className="w-4 h-4 text-primary-500" />
                     );
                     return (
@@ -5517,7 +5730,18 @@ export default function Admin() {
                             )}
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <input value={blockContent.badge || ''} onChange={e => updateHomepageContent(blockKey, 'badge', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Badge / eyebrow" />
-                                {(blockKey === 'reviewProcess' || blockKey === 'promptOfDay' || blockKey === 'newsletter') && <input value={blockContent.ctaLabel || ''} onChange={e => updateHomepageContent(blockKey, 'ctaLabel', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Button label" />}
+                                {(blockKey === 'reviewProcess' || blockKey === 'promptOfDay' || blockKey === 'guides') && <input value={blockContent.ctaLabel || ''} onChange={e => updateHomepageContent(blockKey, 'ctaLabel', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Button label" />}
+                                {blockKey === 'reviewProcess' && (
+                                  <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm font-bold text-surface-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200">
+                                    <span>Show submit button</span>
+                                    <input
+                                      type="checkbox"
+                                      checked={blockContent.showCta !== false}
+                                      onChange={e => updateHomepageContent(blockKey, 'showCta', e.target.checked)}
+                                      className="h-4 w-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+                                    />
+                                  </label>
+                                )}
                                 {blockKey === 'promptOfDay' && (
                                   <div className="grid gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50 sm:col-span-2 sm:grid-cols-[120px_1fr]">
                                   <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-white dark:bg-surface-900">
@@ -5575,6 +5799,67 @@ export default function Admin() {
                                   </div>
                                 </div>
                                 )}
+                                {blockKey === 'guides' && (
+                                  <div className="space-y-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50 sm:col-span-2">
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                      <div>
+                                        <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">Homepage guide picker</p>
+                                        <p className="mt-1 text-[11px] text-surface-500">Optional override. Leave empty to use Featured guides first, then latest guides.</p>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => updateHomepageContent('guides', 'selectedGuideSlugs', [])}
+                                        className="self-start rounded-md bg-white px-2 py-1 text-[10px] font-bold text-surface-600 hover:bg-surface-100 dark:bg-surface-900 dark:text-surface-200 dark:hover:bg-surface-800 sm:self-auto"
+                                      >
+                                        Auto mode
+                                      </button>
+                                    </div>
+                                    <div className="grid max-h-72 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+                                      {guideArticles.map(guide => {
+                                        const selectedSlugs = blockContent.selectedGuideSlugs || [];
+                                        const selectedIndex = selectedSlugs.indexOf(guide.slug);
+                                        const selected = selectedIndex >= 0;
+                                        return (
+                                          <div
+                                            key={guide.slug}
+                                            className={`rounded-lg border p-2 transition ${
+                                              selected
+                                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10'
+                                                : 'border-surface-200 bg-white hover:border-primary-300 dark:border-surface-700 dark:bg-surface-900'
+                                            }`}
+                                          >
+                                            <button
+                                              type="button"
+                                              onClick={() => toggleHomepageGuide(guide.slug)}
+                                              className="flex w-full items-start justify-between gap-3 text-left"
+                                            >
+                                              <span className="min-w-0">
+                                                <span className="line-clamp-2 text-xs font-black text-surface-950 dark:text-white">{guide.title}</span>
+                                                <span className="mt-1 block text-[10px] font-bold uppercase tracking-wide text-surface-400">{guide.readMinutes} min read</span>
+                                              </span>
+                                              <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black ${selected ? 'bg-primary-500 text-white' : 'bg-surface-100 text-surface-500 dark:bg-surface-800'}`}>
+                                                {selected ? `#${selectedIndex + 1}` : 'Pick'}
+                                              </span>
+                                            </button>
+                                            {selected && (
+                                              <div className="mt-2 flex gap-1">
+                                                <button type="button" onClick={() => moveHomepageGuide(guide.slug, -1)} className="rounded-md bg-white px-2 py-1 text-[10px] font-bold text-surface-600 hover:bg-surface-100 disabled:opacity-40 dark:bg-surface-900 dark:text-surface-200 dark:hover:bg-surface-800" disabled={selectedIndex === 0}>
+                                                  Up
+                                                </button>
+                                                <button type="button" onClick={() => moveHomepageGuide(guide.slug, 1)} className="rounded-md bg-white px-2 py-1 text-[10px] font-bold text-surface-600 hover:bg-surface-100 disabled:opacity-40 dark:bg-surface-900 dark:text-surface-200 dark:hover:bg-surface-800" disabled={selectedIndex === selectedSlugs.length - 1}>
+                                                  Down
+                                                </button>
+                                              </div>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                    {guideArticles.length === 0 && (
+                                      <p className="rounded-lg bg-white px-3 py-2 text-[11px] text-surface-500 dark:bg-surface-900">Create guides in the Articles tab first.</p>
+                                    )}
+                                  </div>
+                                )}
                                 <input value={blockContent.title || ''} onChange={e => updateHomepageContent(blockKey, 'title', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Heading" />
                                 <textarea value={blockContent.description || ''} onChange={e => updateHomepageContent(blockKey, 'description', e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Description" />
                                 {['howTo', 'reviewProcess', 'supportedTools', 'creatorFeedback'].includes(blockKey) && (
@@ -5616,14 +5901,7 @@ export default function Admin() {
                                 </div>
                                 )}
                                 {blockKey === 'creativeDirections' && <input value={blockContent.itemDescription || ''} onChange={e => updateHomepageContent(blockKey, 'itemDescription', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Card description line" />}
-                                {blockKey === 'reviewProcess' && <input value={blockContent.ctaHref || ''} onChange={e => updateHomepageContent(blockKey, 'ctaHref', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Button URL" />}
-                                {blockKey === 'newsletter' && (
-                                  <>
-                                    <input value={blockContent.inputPlaceholder || ''} onChange={e => updateHomepageContent(blockKey, 'inputPlaceholder', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Input placeholder" />
-                                    <input value={blockContent.helperText || ''} onChange={e => updateHomepageContent(blockKey, 'helperText', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Helper text" />
-                                    <input value={blockContent.successText || ''} onChange={e => updateHomepageContent(blockKey, 'successText', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Success text" />
-                                  </>
-                                )}
+                                {(blockKey === 'reviewProcess' || blockKey === 'guides') && <input value={blockContent.ctaHref || ''} onChange={e => updateHomepageContent(blockKey, 'ctaHref', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Button URL" />}
                             </div>
                           </div>
                         )}
@@ -5732,6 +6010,52 @@ export default function Admin() {
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
+                      <div className="grid grid-cols-1 gap-3 sm:col-span-4 sm:grid-cols-[140px_1fr]">
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Icon</span>
+                          <select
+                            value={item.icon || ''}
+                            onChange={e => updateRailItem('creative', index, 'icon', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs"
+                          >
+                            <option value="">Auto</option>
+                            <option value="wand">Wand</option>
+                            <option value="image">Image</option>
+                            <option value="book">Book</option>
+                            <option value="camera">Camera</option>
+                            <option value="palette">Palette</option>
+                            <option value="shield">Shield</option>
+                            <option value="lightbulb">Lightbulb</option>
+                            <option value="layers">Layers</option>
+                            <option value="trending">Trending</option>
+                            <option value="users">Users</option>
+                            <option value="sparkles">Sparkles</option>
+                            <option value="settings">Settings</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Custom Logo URL (optional, overrides icon)</span>
+                          <input
+                            value={item.imageUrl || ''}
+                            onChange={e => updateRailItem('creative', index, 'imageUrl', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs"
+                            placeholder="https://... (png/svg with transparency works best)"
+                          />
+                          <label className="mt-2 inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-primary-300 bg-primary-50 px-3 text-xs font-bold text-primary-600 hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-300">
+                            <Upload className="h-3.5 w-3.5" /> Upload logo
+                            <input
+                              type="file"
+                              accept="image/png,image/jpeg,image/webp,image/gif"
+                              className="hidden"
+                              onChange={e => {
+                                const file = e.target.files?.[0];
+                                if (file) handleCreativeDirectionLogoUpload(index, file);
+                                e.currentTarget.value = '';
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   ))}
                   <button
@@ -5936,7 +6260,25 @@ export default function Admin() {
               <div className="space-y-4">
                 {footerLinkGroups.map((group, groupIndex) => (
                   <div key={groupIndex} className="p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/60 space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-2 items-center">
+                      <div className="flex sm:flex-col gap-1">
+                        <button
+                          onClick={() => setFooterLinkGroups(prev => moveArrayItem(prev, groupIndex, groupIndex - 1))}
+                          disabled={groupIndex === 0}
+                          className="p-1 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Move group up"
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setFooterLinkGroups(prev => moveArrayItem(prev, groupIndex, groupIndex + 1))}
+                          disabled={groupIndex === footerLinkGroups.length - 1}
+                          className="p-1 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Move group down"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                       <input
                         value={group.title}
                         onChange={e => updateFooterGroupTitle(groupIndex, e.target.value)}
@@ -5955,7 +6297,25 @@ export default function Admin() {
                         <p className="text-xs text-surface-500">No links in this group.</p>
                       )}
                       {group.links.map((link, linkIndex) => (
-                        <div key={linkIndex} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2">
+                        <div key={linkIndex} className="grid grid-cols-1 sm:grid-cols-[auto_1fr_1fr_auto] gap-2 items-center">
+                          <div className="flex sm:flex-col gap-1">
+                            <button
+                              onClick={() => moveFooterLink(groupIndex, linkIndex, linkIndex - 1)}
+                              disabled={linkIndex === 0}
+                              className="p-1 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move up"
+                            >
+                              <ChevronUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => moveFooterLink(groupIndex, linkIndex, linkIndex + 1)}
+                              disabled={linkIndex === group.links.length - 1}
+                              className="p-1 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move down"
+                            >
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                           <input
                             value={link.label}
                             onChange={e => updateFooterLink(groupIndex, linkIndex, 'label', e.target.value)}
@@ -6011,6 +6371,32 @@ export default function Admin() {
                <Settings className="w-4 h-4 text-primary-500" /> Ad Spaces
              </h3>
              <div className="space-y-6">
+
+                {/* AdSense Account */}
+                <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                   <div className="flex items-center justify-between mb-3">
+                     <span className="text-sm font-medium">Google AdSense Account</span>
+                     <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(adsConfig.autoAdsEnabled)}
+                          onChange={(e) => setAdsConfig(prev => ({ ...prev, autoAdsEnabled: e.target.checked }))}
+                          className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+                        />
+                        <span className="text-xs">Auto Ads</span>
+                     </label>
+                   </div>
+                   <input
+                     type="text"
+                     value={adsConfig.publisherId || ''}
+                     onChange={(e) => setAdsConfig(prev => ({ ...prev, publisherId: e.target.value.trim() }))}
+                     placeholder="ca-pub-XXXXXXXXXXXXXXXX"
+                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono"
+                   />
+                   <p className="mt-2 text-xs text-surface-500">
+                     Adds the site verification meta tag for AdSense. Enable Auto Ads to load the AdSense script on every page (requires a publisher ID).
+                   </p>
+                </div>
 
                 {/* Header Ad */}
                 <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">

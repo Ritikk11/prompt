@@ -51,6 +51,9 @@ export async function POST(request: Request) {
     const cleanPost: Post = {
       ...post,
       authorId: user.id,
+      authorName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Creator',
+      authorUsername: user.user_metadata?.username || user.email?.split('@')[0] || 'creator',
+      authorAvatar: user.user_metadata?.avatar_url || '',
       status: settings.features.userSubmissionsAutoApprove ? 'published' : 'pending',
       visibility: 'public',
       featured: false,

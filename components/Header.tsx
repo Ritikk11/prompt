@@ -11,7 +11,6 @@ import { createClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import { getPostPath, getSectionPath } from '@/lib/sections';
 import SmartLink from '@/components/SmartLink';
-import { getAuthRedirectTo } from '@/lib/auth-redirect';
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
@@ -29,14 +28,14 @@ export default function Header() {
   const [user, setUser] = useState<User | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [routeProgress, setRouteProgress] = useState(0);
+  const progressFillRef = useRef<HTMLDivElement>(null);
+  const lastScrollYRef = useRef(0);
+  const scrollFrameRef = useRef<number | null>(null);
   const routeTimerRef = useRef<number | null>(null);
   const routeIntervalRef = useRef<number | null>(null);
-  const scrollFrameRef = useRef<number | null>(null);
   const didMountRef = useRef(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [routeProgress, setRouteProgress] = useState(0);
 
   const stopRouteTimers = useCallback(() => {
     if (routeTimerRef.current) window.clearTimeout(routeTimerRef.current);
@@ -47,85 +46,87 @@ export default function Header() {
 
   const startRouteProgress = useCallback(() => {
     stopRouteTimers();
-    setRouteProgress(8);
-    routeTimerRef.current = window.setTimeout(() => setRouteProgress(28), 120);
+    setRouteProgress(10);
+    routeTimerRef.current = window.setTimeout(() => setRouteProgress(34), 120);
     routeIntervalRef.current = window.setInterval(() => {
-      setRouteProgress(prev => (prev > 0 && prev < 88 ? Math.min(prev + 7, 88) : prev));
-    }, 450);
+      setRouteProgress(prev => (prev > 0 && prev < 88 ? Math.min(prev + 8, 88) : prev));
+    }, 420);
   }, [stopRouteTimers]);
 
   useEffect(() => {
-    const handleScroll = () => {
+    const updateHeaderAndProgress = () => {
+      scrollFrameRef.current = null;
       const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 48 && !menuOpen && !searchOpen && !showLiveResults) {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = max > 0 ? Math.min(100, Math.max(0, (currentScrollY / max) * 100)) : 0;
+
+      if (progressFillRef.current) {
+        progressFillRef.current.style.width = `${progress}%`;
+      }
+
+      const delta = currentScrollY - lastScrollYRef.current;
+      const shouldHide = delta > 4 && currentScrollY > 64 && !menuOpen && !searchOpen && !showLiveResults;
+      const shouldShow = delta < -4 || currentScrollY <= 16 || menuOpen || searchOpen || showLiveResults;
+      if (shouldHide) {
         setIsVisible(false);
-      } else {
+      } else if (shouldShow) {
         setIsVisible(true);
       }
-      setLastScrollY(currentScrollY);
+      lastScrollYRef.current = currentScrollY;
     };
 
+    const handleScroll = () => {
+      if (scrollFrameRef.current !== null) return;
+      scrollFrameRef.current = window.requestAnimationFrame(updateHeaderAndProgress);
+    };
+
+    updateHeaderAndProgress();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY, menuOpen, searchOpen, showLiveResults]);
+    window.addEventListener('resize', updateHeaderAndProgress);
 
-  useEffect(() => {
-    const showScrollProgress = settings.features?.showScrollProgress !== false;
-    if (!showScrollProgress) {
-      window.setTimeout(() => setScrollProgress(0), 0);
-      return;
-    }
-    const updateProgress = () => {
-      if (scrollFrameRef.current) return;
-      scrollFrameRef.current = window.requestAnimationFrame(() => {
-        scrollFrameRef.current = null;
-      const doc = document.documentElement;
-      const max = doc.scrollHeight - window.innerHeight;
-      setScrollProgress(max > 0 ? Math.min(100, Math.max(0, (window.scrollY / max) * 100)) : 0);
-      });
-    };
-    updateProgress();
-    window.addEventListener('scroll', updateProgress, { passive: true });
-    window.addEventListener('resize', updateProgress);
     return () => {
-      window.removeEventListener('scroll', updateProgress);
-      window.removeEventListener('resize', updateProgress);
-      if (scrollFrameRef.current) window.cancelAnimationFrame(scrollFrameRef.current);
-      scrollFrameRef.current = null;
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', updateHeaderAndProgress);
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+        scrollFrameRef.current = null;
+      }
     };
-  }, [settings.features?.showScrollProgress, pathname, searchParams]);
+  }, [menuOpen, searchOpen, showLiveResults]);
 
   useEffect(() => {
     if (!didMountRef.current) {
       didMountRef.current = true;
       return;
     }
+
     stopRouteTimers();
-    window.setTimeout(() => setRouteProgress(100), 0);
-    routeTimerRef.current = window.setTimeout(() => setRouteProgress(0), 350);
-    return () => {
-      stopRouteTimers();
-    };
+    setRouteProgress(100);
+    routeTimerRef.current = window.setTimeout(() => setRouteProgress(0), 320);
+
+    return stopRouteTimers;
   }, [pathname, searchParams, stopRouteTimers]);
 
   useEffect(() => {
     const handleDocumentClick = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
       const anchor = (event.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
       if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+
       const nextUrl = new URL(anchor.href, window.location.href);
       const currentUrl = new URL(window.location.href);
       if (nextUrl.origin !== currentUrl.origin) return;
       if (nextUrl.pathname === currentUrl.pathname && nextUrl.search === currentUrl.search) return;
+
       startRouteProgress();
     };
+
     document.addEventListener('click', handleDocumentClick, true);
     return () => document.removeEventListener('click', handleDocumentClick, true);
   }, [startRouteProgress]);
 
-  const showScrollProgress = settings.features?.showScrollProgress !== false;
-  const loadingProgressWidth = routeProgress;
-  const scrollProgressWidth = showScrollProgress ? scrollProgress : 0;
+  useEffect(() => stopRouteTimers, [stopRouteTimers]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -165,6 +166,7 @@ export default function Header() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
+      startRouteProgress();
       navigate.push(`/search?q=${encodeURIComponent(query.trim())}`);
       setQuery('');
       setSearchOpen(false);
@@ -173,18 +175,8 @@ export default function Header() {
     }
   };
 
-  const handleLogin = async () => {
-    try {
-      const supabase = createClient();
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: getAuthRedirectTo(),
-        },
-      });
-    } catch (e) {
-      console.error(e);
-    }
+  const handleLogin = () => {
+    navigate.push(`/login?redirectTo=${encodeURIComponent(pathname)}`);
   };
 
   const handleLogout = async () => {
@@ -241,22 +233,25 @@ export default function Header() {
 
   return (
     <>
-    <div className="fixed inset-x-0 top-0 z-[60] h-0.5 bg-transparent pointer-events-none">
+    <div className="fixed inset-x-0 top-0 z-[9999] h-[3px] bg-transparent pointer-events-none">
       <div
-        className="h-full origin-left bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.5)] transition-[transform,opacity] duration-200 ease-out"
-        style={{ transform: `scaleX(${loadingProgressWidth / 100})`, opacity: loadingProgressWidth > 0 ? 1 : 0 }}
+        className="h-full origin-left bg-gradient-to-r from-primary-500 via-fuchsia-500 to-purple-500 shadow-[0_0_14px_rgba(168,85,247,0.55)] transition-[transform,opacity] duration-200 ease-out"
+        style={{ transform: `scaleX(${routeProgress / 100})`, opacity: routeProgress > 0 ? 1 : 0 }}
       />
     </div>
     <div
-      className="fixed inset-x-0 z-[60] h-0.5 bg-transparent pointer-events-none transition-[top] duration-300 ease-in-out"
+      className="fixed inset-x-0 z-[60] h-[6px] overflow-hidden rounded-b border-y border-surface-200 bg-surface-50 pointer-events-none transition-[top] duration-300 ease-in-out dark:border-surface-800 dark:bg-surface-900"
       style={{ top: isVisible ? '48px' : '0px' }}
     >
       <div
-        className="h-full origin-left bg-gradient-to-r from-primary-500 via-fuchsia-500 to-purple-500 shadow-[0_0_10px_rgba(139,92,246,0.35)] transition-[transform,opacity] duration-75 ease-out"
-        style={{ transform: `scaleX(${scrollProgressWidth / 100})`, opacity: scrollProgressWidth > 0 ? 1 : 0 }}
+        ref={progressFillRef}
+        className="relative h-1 rounded-full bg-gradient-to-r from-primary-500 via-fuchsia-500 to-purple-500 transition-[width] duration-150 ease-linear after:absolute after:inset-0 after:bg-[linear-gradient(-45deg,rgba(255,255,255,.22)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.22)_50%,rgba(255,255,255,.22)_75%,transparent_75%,transparent)] after:bg-[length:50px_50px] after:content-[''] after:animate-[movePgrs_2s_linear_infinite]"
+        style={{ width: '0%' }}
       />
     </div>
-    <header className={`sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-surface-950/80 border-b border-surface-200 dark:border-surface-800 transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+    <header
+      className={`sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-surface-950/80 border-b border-surface-200 dark:border-surface-800 transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}
+    >
       <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" prefetch={false} className="flex items-center gap-2 shrink-0" onClick={() => setMenuOpen(false)}>

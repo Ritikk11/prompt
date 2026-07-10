@@ -12,7 +12,7 @@ export async function generateMetadata() {
 export default async function Contact() {
   const settings = await fetchSettings();
   
-  const contactEmail = settings.contactEmail || 'support@aipromptmatrix.in';
+  const contactEmail = settings.contactEmail || 'contact@aipromptmatrix.in';
   const defaultContent = `
 # Contact Us
 

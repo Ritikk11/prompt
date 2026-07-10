@@ -13,6 +13,12 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "r2_buckets": [
+    {
+      "binding": "UPLOADS",
+      "bucket_name": "uploads"
+    }
+  ],
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
@@ -20,10 +26,7 @@
     }
   ],
   "vars": {
-    "ADMIN_EMAILS": "ritikkewat11@gmail.com",
-    "NEXT_PUBLIC_SITE_URL": "https://aipromptmatrix.in",
-    "NEXT_PUBLIC_SUPABASE_URL": "https://fcmmcgyqovqbxbqfeaho.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_Yhl5uQjZqnfZWVadDvuspg_G8mMdZ35"
+    "NEXT_PUBLIC_SITE_URL": "https://aipromptmatrix.in"
   },
   "observability": {
     "enabled": true

@@ -12,6 +12,7 @@ import PostCard from '@/components/PostCard';
 import FilterChipRail from '@/components/FilterChipRail';
 import DiscoveryPageHero from '@/components/DiscoveryPageHero';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
+import ScrollReveal from '@/components/ScrollReveal';
 
 const toolHeroCopy: Record<string, string> = {
   chatgpt: 'Image prompts built for strong composition, clear subject control, and reliable GPT Image results.',
@@ -102,15 +103,18 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
 
       {/* Grid */}
       {showCustomRail ? (
-        <FilterChipRail
-          posts={filtered}
-          items={railItems}
-          tools={[]}
-          tags={[]}
-          settings={settings}
-          renderGrid
-        />
-      ) : <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+        <ScrollReveal>
+          <FilterChipRail
+            posts={filtered}
+            items={railItems}
+            tools={[]}
+            tags={[]}
+            settings={settings}
+            renderGrid
+          />
+        </ScrollReveal>
+      ) : <ScrollReveal>
+      <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
         {filtered.map((post, i) => (
           <React.Fragment key={post.id}>
             <div className="mb-4 sm:mb-6 inline-block w-full break-inside-avoid">
@@ -119,7 +123,8 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
             <AdSlot placement="inFeed" inFeedIndex={i} className="mb-4 sm:mb-6 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
           </React.Fragment>
         ))}
-      </div>}
+      </div>
+      </ScrollReveal>}
 
       {filtered.length === 0 && (
         <div className="text-center py-20">

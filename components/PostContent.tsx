@@ -2,16 +2,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 
 import Image from 'next/image';
 import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Wand2, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle, Layers, ClipboardCheck } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
 import { getDefaultImageModel, getToolInfo, getAllTools, getToolForImageModel } from '@/lib/constants';
-import { getAuthorForPost } from '@/lib/authors';
+import { isUserOwnedPost, EDITORIAL_TEAM_NAME } from '@/lib/authors';
 import TemplatePrompt from '@/components/TemplatePrompt';
 import { createClient } from '@/lib/supabase-client';
-import { getAuthRedirectTo } from '@/lib/auth-redirect';
 import type { User } from '@supabase/supabase-js';
 import type { Post, ShareTarget } from '@/lib/types';
 
@@ -21,6 +21,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 import PostCard from '@/components/PostCard';
 import AdSlot from '@/components/AdSlot';
+import ScrollReveal from '@/components/ScrollReveal';
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -72,6 +73,8 @@ const defaultKeepExploring = {
 
 export default function PostContent({ post: initialPost, relatedPosts }: { post: Post; relatedPosts: Post[] }) {
   const { incrementViews, toggleLike, toggleBookmark, settings, posts } = useData();
+  const router = useRouter();
+  const pathname = usePathname();
   const contextPost = posts.find(p => p.id === initialPost?.id);
   const contextHasPrompts = contextPost?.images?.some((image) => image.prompt?.trim());
   const post = useMemo(() => (
@@ -186,22 +189,11 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     }
   };
 
-  const handleLogin = async () => {
-    try {
-      const supabase = createClient();
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: getAuthRedirectTo(),
-        },
-      });
-    } catch (e) {
-      console.error(e);
-    }
+  const handleLogin = () => {
+    router.push(`/login?redirectTo=${encodeURIComponent(pathname)}`);
   };
 
   const heroTools = post ? getAllTools(post) : [];
-  const author = getAuthorForPost(post, settings);
   const primaryHeroToolInfo = heroTools.length > 0 ? getToolInfo(heroTools[0], settings?.toolDetails) : { color: '', logo: '', logoScale: undefined };
   const heroToolInfo = primaryHeroToolInfo;
   const heroToolName = heroTools.join(' + ');
@@ -512,26 +504,49 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     );
   };
 
-  const renderAuthorByline = () => (
-    <Link
-      href={`/author/${author.slug}`}
-      className="mb-6 inline-flex items-center gap-3 rounded-2xl border border-surface-200 bg-white/80 px-4 py-3 text-left shadow-sm transition-colors hover:border-primary-300 hover:bg-white dark:border-surface-800 dark:bg-surface-900/80 dark:hover:border-primary-500/50"
-    >
-      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary-500/10">
-        {author.avatarUrl ? (
-          <Image src={author.avatarUrl} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm font-black text-primary-500">
-            {author.name.slice(0, 1).toUpperCase()}
+  const renderAuthorByline = () => {
+    const isUserOwned = isUserOwnedPost(post.authorId);
+
+    if (!isUserOwned) {
+      return (
+        <div className="mb-6 inline-flex items-center gap-3 rounded-2xl border border-surface-200 bg-white/80 px-4 py-3 text-left shadow-sm dark:border-surface-800 dark:bg-surface-900/80">
+          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center">
+            <span className="text-white text-xs font-black">AI</span>
           </div>
-        )}
-      </div>
-      <div>
-        <p className="text-xs font-bold text-surface-500 dark:text-surface-400">Reviewed by</p>
-        <p className="text-sm font-black text-surface-900 dark:text-white">{author.name}</p>
-      </div>
-    </Link>
-  );
+          <div>
+            <p className="text-[10px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-widest leading-none mb-1">Published by</p>
+            <p className="text-xs font-black text-surface-900 dark:text-white leading-tight">{EDITORIAL_TEAM_NAME}</p>
+          </div>
+        </div>
+      );
+    }
+
+    const displayName = post.authorName || 'Creator';
+    const username = post.authorUsername || 'creator';
+    const avatarUrl = post.authorAvatar;
+    const authorUrl = `/user/${post.authorId}`;
+
+    return (
+      <Link
+        href={authorUrl}
+        className="mb-6 inline-flex items-center gap-3 rounded-2xl border border-surface-200 bg-white/80 px-4 py-3 text-left shadow-sm transition-colors hover:border-primary-300 hover:bg-white dark:border-surface-800 dark:bg-surface-900/80 dark:hover:border-primary-500/50"
+      >
+        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary-500/10">
+          {avatarUrl ? (
+            <Image src={avatarUrl} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-sm font-black text-primary-500">
+              {displayName.slice(0, 1).toUpperCase()}
+            </div>
+          )}
+        </div>
+        <div>
+          <p className="text-[10px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-widest leading-none mb-1">Submitted by</p>
+          <p className="text-xs font-black text-surface-900 dark:text-white leading-tight">@{username}</p>
+        </div>
+      </Link>
+    );
+  };
 
   const renderHero = () => {
     switch (postHeroStyle) {
@@ -1161,25 +1176,54 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                 </div>
               </div>
 
-              <Link href={`/author/${author.slug}`} className="block rounded-2xl border border-surface-200 bg-white p-4 shadow-sm transition-colors hover:border-primary-300 dark:border-surface-800 dark:bg-surface-900 dark:hover:border-primary-500/50">
-                <p className="mb-3 text-sm font-black text-surface-900 dark:text-white">Author</p>
-                <div className="mb-3 flex items-center gap-3">
-                  <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-primary-500/10">
-                    {author.avatarUrl ? (
-                      <Image src={author.avatarUrl} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-sm font-black text-primary-500">
-                        {author.name.slice(0, 1).toUpperCase()}
+              {(() => {
+                const isUserOwned = isUserOwnedPost(post.authorId);
+                if (!isUserOwned) {
+                  return (
+                    <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                      <p className="mb-3 text-xs font-bold text-surface-400 uppercase tracking-widest">Author</p>
+                      <div className="flex items-center gap-3">
+                        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center">
+                          <span className="text-white text-xs font-black">AI</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-black text-surface-900 dark:text-white">{EDITORIAL_TEAM_NAME}</p>
+                          <p className="text-xs text-surface-500 dark:text-surface-400">Official Publisher</p>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-black text-surface-900 dark:text-white">{author.name}</p>
-                    {author.role && <p className="text-xs text-surface-500 dark:text-surface-400">{author.role}</p>}
-                  </div>
-                </div>
-                {author.bio && <p className="line-clamp-4 text-xs leading-relaxed text-surface-500 dark:text-surface-400">{author.bio}</p>}
-              </Link>
+                      <p className="mt-3 text-xs leading-relaxed text-surface-500 dark:text-surface-400">
+                        Official AI PromptMatrix Editorial Team curating high-quality prompts for the community.
+                      </p>
+                    </div>
+                  );
+                }
+
+                const displayName = post.authorName || 'Creator';
+                const username = post.authorUsername || 'creator';
+                const avatarUrl = post.authorAvatar;
+                const authorUrl = `/user/${post.authorId}`;
+
+                return (
+                  <Link href={authorUrl} className="block rounded-2xl border border-surface-200 bg-white p-4 shadow-sm transition-colors hover:border-primary-300 dark:border-surface-800 dark:bg-surface-900 dark:hover:border-primary-500/50">
+                    <p className="mb-3 text-xs font-bold text-surface-400 uppercase tracking-widest">Author</p>
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-primary-500/10">
+                        {avatarUrl ? (
+                          <Image src={avatarUrl} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-sm font-black text-primary-500">
+                            {displayName.slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black text-surface-900 dark:text-white">{displayName}</p>
+                        <p className="text-xs text-primary-500 font-semibold">@{username}</p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })()}
 
               {renderExploreAllPromptsBlock()}
 
@@ -1304,13 +1348,15 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
-          <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns) + " mb-16"}>
-            {relatedPosts.map((p, i) => (
-              <div key={p.id} className="mb-1 inline-block w-full break-inside-avoid">
-                <PostCard post={p} index={i} />
-              </div>
-            ))}
-          </div>
+          <ScrollReveal>
+            <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns) + " mb-16"}>
+              {relatedPosts.map((p, i) => (
+                <div key={p.id} className="mb-1 inline-block w-full break-inside-avoid">
+                  <PostCard post={p} index={i} />
+                </div>
+              ))}
+            </div>
+          </ScrollReveal>
         </div>
       )}
 
@@ -1381,13 +1427,15 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
-          <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns) + " mb-16"}>
-            {recommendedPosts.map((p, i) => (
-              <div key={p.id} className="mb-1 inline-block w-full break-inside-avoid">
-                <PostCard post={p} index={i} />
-              </div>
-            ))}
-          </div>
+          <ScrollReveal>
+            <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns) + " mb-16"}>
+              {recommendedPosts.map((p, i) => (
+                <div key={p.id} className="mb-1 inline-block w-full break-inside-avoid">
+                  <PostCard post={p} index={i} />
+                </div>
+              ))}
+            </div>
+          </ScrollReveal>
         </div>
       )}
 

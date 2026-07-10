@@ -10,6 +10,7 @@ import PostCard from '@/components/PostCard';
 import FilterChipRail from '@/components/FilterChipRail';
 import DiscoveryPageHero from '@/components/DiscoveryPageHero';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
+import ScrollReveal from '@/components/ScrollReveal';
 
 export default function TagContent({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
   const params = useParams();
@@ -111,15 +112,18 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
 
       {/* Grid */}
       {showCustomRail ? (
-        <FilterChipRail
-          posts={filtered}
-          items={railItems}
-          tools={[]}
-          tags={[]}
-          settings={settings}
-          renderGrid
-        />
-      ) : <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+        <ScrollReveal>
+          <FilterChipRail
+            posts={filtered}
+            items={railItems}
+            tools={[]}
+            tags={[]}
+            settings={settings}
+            renderGrid
+          />
+        </ScrollReveal>
+      ) : <ScrollReveal>
+      <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
         {filtered.map((post, i) => (
           <React.Fragment key={post.id}>
             <div className="mb-1 inline-block w-full break-inside-avoid">
@@ -128,7 +132,8 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
             <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
           </React.Fragment>
         ))}
-      </div>}
+      </div>
+      </ScrollReveal>}
 
       {filtered.length === 0 && (
         <div className="text-center py-20">

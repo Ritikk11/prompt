@@ -10,6 +10,7 @@ import { getAllTools } from '@/lib/constants';
 import { Flame, Sparkles } from 'lucide-react';
 import DiscoveryPageHero from '@/components/DiscoveryPageHero';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
+import ScrollReveal from '@/components/ScrollReveal';
 
 export default function ExploreClient({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'trending'>('latest');
@@ -102,14 +103,17 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
         </div>
 
         {showCustomRail && (
-          <FilterChipRail posts={filtered} tools={tools} tags={filterTags} items={filterItems} settings={settings} renderGrid />
+          <ScrollReveal>
+            <FilterChipRail posts={filtered} tools={tools} tags={filterTags} items={filterItems} settings={settings} renderGrid />
+          </ScrollReveal>
         )}
       </div>
 
       {/* Masonry layout like Pinterest */}
       {!showCustomRail && (
         <>
-          <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+          <ScrollReveal>
+          <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
             {visiblePosts.map((post, i) => (
               <React.Fragment key={post.id}>
                 <div className="mb-1 inline-block w-full break-inside-avoid">
@@ -119,6 +123,7 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
               </React.Fragment>
             ))}
           </div>
+          </ScrollReveal>
           
           {visiblePosts.length < filtered.length && (
             <div ref={loadMoreRef} className="py-8 text-center flex flex-col items-center justify-center">

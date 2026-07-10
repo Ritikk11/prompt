@@ -12,6 +12,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import FilterChipRail from '@/components/FilterChipRail';
 import DiscoveryPageHero from '@/components/DiscoveryPageHero';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
+import ScrollReveal from '@/components/ScrollReveal';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -97,33 +98,39 @@ export default async function SectionPage({ params }: Props) {
           </Link>
         </div>
       ) : showCustomRail ? (
-        <FilterChipRail
-          posts={filteredPosts}
-          items={railItems}
-          tools={[]}
-          tags={[]}
-          settings={settings}
-          cardStyleOverride={section.cardStyle}
-          renderGrid
-        />
+        <ScrollReveal>
+          <FilterChipRail
+            posts={filteredPosts}
+            items={railItems}
+            tools={[]}
+            tags={[]}
+            settings={settings}
+            cardStyleOverride={section.cardStyle}
+            renderGrid
+          />
+        </ScrollReveal>
       ) : section.filterTags?.length ? (
-        <FilterChipRail
-          posts={filteredPosts}
-          tools={[]}
-          tags={section.filterTags}
-          showTools={false}
-          settings={settings}
-          cardStyleOverride={section.cardStyle}
-          renderGrid
-        />
+        <ScrollReveal>
+          <FilterChipRail
+            posts={filteredPosts}
+            tools={[]}
+            tags={section.filterTags}
+            showTools={false}
+            settings={settings}
+            cardStyleOverride={section.cardStyle}
+            renderGrid
+          />
+        </ScrollReveal>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
+        <ScrollReveal>
+        <div data-reveal-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
           {filteredPosts.map((post, i) => (
             <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
               <PostCard post={post} index={i} cardStyleOverride={section.cardStyle} />
             </div>
           ))}
         </div>
+        </ScrollReveal>
       )}
     </div>
   );

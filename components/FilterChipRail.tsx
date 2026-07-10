@@ -111,7 +111,7 @@ export default function FilterChipRail({
               >
                 {showToolLogo ? (
                   <span className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-white p-[2px] shadow-sm">
-                    <Image src={toolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" sizes="20px" />
+                    <Image src={toolInfo.logo} alt="" width={20} height={20} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
                   </span>
                 ) : null}
                 {chip.label}
@@ -123,7 +123,7 @@ export default function FilterChipRail({
 
       {renderGrid && (
         <>
-          <div className={getGridClasses(settings?.features?.mobileColumns, settings?.features?.desktopColumns)}>
+          <div data-reveal-stagger className={getGridClasses(settings?.features?.mobileColumns, settings?.features?.desktopColumns)}>
             {filteredPosts.map((post, i) => (
               <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
                 <PostCard post={post} index={i} cardStyleOverride={cardStyleOverride} />
