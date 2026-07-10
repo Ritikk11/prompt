@@ -263,8 +263,8 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
               </div>
 
               {hasIncompleteProfile && (
-                <div className="mb-6 rounded-xl p-3.5 bg-primary-50/70 border border-primary-200 dark:bg-primary-950/20 dark:border-primary-900 text-xs text-primary-700 dark:text-primary-300 leading-relaxed flex items-start gap-2.5">
-                  <AlertCircle className="w-4 h-4 text-primary-500 shrink-0 mt-0.5" />
+                <div className="mb-6 rounded-xl border border-primary-200 bg-primary-50 p-3.5 text-xs leading-relaxed text-primary-800 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-100 flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-primary-500 dark:text-primary-300 shrink-0 mt-0.5" />
                   <span>Welcome! Please set your display name and public @username before you save, like, or submit prompts.</span>
                 </div>
               )}
@@ -317,7 +317,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                   </div>
                 </div>
 
-                <div className="rounded-xl p-4 bg-amber-50/50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-900 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-100">
                   <p className="font-bold mb-1">Email Verification Warning:</p>
                   <p>Please make sure you are using a proper, verified real email address. Submissions or interactions created by accounts registered with random, temporary, or fake email addresses will be permanently deleted without notice.</p>
                 </div>
@@ -336,7 +336,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
           ) : (
             <>
               {settings.features?.userSubmissions && (
-                <div className="mb-10 rounded-2xl border border-primary-100 bg-primary-50/70 p-5 dark:border-primary-900/50 dark:bg-primary-950/20">
+                <div className="mb-10 rounded-2xl border border-primary-100 bg-primary-50 p-5 dark:border-primary-500/20 dark:bg-surface-900">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.2em] text-primary-500">Creator dashboard</p>
