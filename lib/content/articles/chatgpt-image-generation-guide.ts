@@ -23,7 +23,7 @@ Type your request directly into the chat: "Create an image of..." followed by yo
 - **Lighting:** the time of day or light source.
 - **Style:** photograph, watercolor, 3D render, flat illustration, and so on.
 
-:::example
+:::example Thin vs full prompt
 Thin prompt: "A cat in a cafe."
 Full prompt: "Create an image of a fluffy orange cat sleeping on a stack of books beside a steaming cappuccino, in a cozy cafe with warm morning light through a rain-streaked window. Soft photographic style, shallow depth of field."
 Both are valid requests, but the second one makes decisions — pose, props, weather, light, style — that the first leaves to chance.
@@ -52,7 +52,7 @@ This is ChatGPT's superpower. When an image is 80% right, do not rewrite the who
 
 ChatGPT keeps the conversation's context, so targeted follow-ups preserve what worked. Change one thing per message; a reply that alters lighting, outfit, and background at once often reshuffles details you wanted kept.
 
-:::warning
+:::warning Restart when it breaks
 If a result is badly wrong — wrong subject, wrong style entirely — stop patching. Three or four corrective replies on a broken image usually produce a Frankenstein result. Start a fresh request with an improved full description instead. Revise the good; regenerate the bad.
 :::
 
@@ -64,7 +64,7 @@ Modern ChatGPT image generation handles text far better than early AI tools, but
 - **Keep it short.** One to five words render reliably. Full sentences invite typos.
 - **Say where and how:** "bold white sans-serif text at the top" beats hoping for good placement.
 
-:::example
+:::example Text-in-image prompt
 "Create a minimalist coffee shop poster. Large bold cream-colored text at the top reads 'SLOW MORNINGS'. Below it, a simple line illustration of a coffee cup on a dark green background. Vintage print style."
 If a word comes out misspelled, reply: "Regenerate the same image but fix the text — it must read exactly 'SLOW MORNINGS'." One correction round fixes most typos.
 :::
@@ -81,7 +81,7 @@ If a word comes out misspelled, reply: "Regenerate the same image but fix the te
 
 You can convert an existing result: "Regenerate this as a vertical image for a phone wallpaper." Expect the scene to be recomposed, not just cropped — the model refits the composition to the new frame. For a full breakdown of which shape suits which platform, see [AI image aspect ratios explained](/blog/ai-image-aspect-ratios-explained).
 
-:::tip
+:::tip Set the frame early
 State the aspect ratio in your first message rather than converting later. Composition decisions — where the subject stands, how much sky exists — are made for the frame shape, so a scene designed vertical from the start beats a landscape scene squeezed vertical afterwards.
 :::
 

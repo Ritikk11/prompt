@@ -13,7 +13,7 @@ const article: Article = {
   body: `
 You generated a great image with ChatGPT or Gemini. Can you put it on a t-shirt, use it in a client project, or stop someone else from copying it? The honest answer is "it depends" — but the rules are easier to understand than most people think. This article walks through who owns AI images, what the major tools actually allow, and where the real risks hide.
 
-:::info
+:::info Not legal advice
 This article is general information, not legal advice. Copyright law differs by country and is changing quickly as courts and regulators catch up with AI. If real money or a real business depends on an image, talk to a lawyer in your jurisdiction and read the current terms of the tool you used.
 :::
 
@@ -73,7 +73,7 @@ Because raw AI output may not be copyrightable, someone else can generate someth
 
 ## A practical safe-use checklist
 
-:::warning
+:::warning Commercial-use checklist
 Before using an AI image commercially, run through this list:
 
 1. Read the current terms of service for the tool and plan you used. Confirm commercial use is allowed on your tier.
@@ -92,7 +92,7 @@ For personal projects, social media posts, and experimentation, the rules are fo
 
 If you are just getting started with prompting itself, our [explore page](/explore) has hundreds of copy-ready examples, and the primer on [what AI image prompts are](/blog/what-are-ai-image-prompts) covers the fundamentals. The [ChatGPT prompts](/tool/chatgpt) collection is a good place to see what current tools produce from well-written text.
 
-:::tip
+:::tip Save your prompt
 Habit worth building: save the exact prompt alongside every image you keep. It documents your creative input, makes results reproducible, and — if registration rules evolve to credit human contribution more generously — you will have the paper trail ready.
 :::
 

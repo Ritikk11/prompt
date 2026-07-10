@@ -35,7 +35,7 @@ Structure your instruction in three parts:
 2. **What to keep** — the face, the pose, the identity.
 3. **The mood** — lighting, color tone, camera feel.
 
-:::example
+:::example Weak vs strong edit
 Weak prompt: "Make this photo look vintage."
 Strong prompt: "Edit this photo of me. Change my outfit to a 1970s brown leather jacket and put me on a rainy city street at night with neon signs reflecting in puddles. Keep my face, hairstyle, and expression exactly the same as the uploaded photo. Cinematic moody lighting, slight film grain."
 The second version tells Gemini the change, the anchor, and the atmosphere — three separate jobs the model handles much better when they are spelled out.
@@ -51,7 +51,7 @@ The single most common beginner complaint is "it looks great, but that isn't me.
 
 Use at least one of these lines in every edit prompt. Stacking two is not overkill for portraits. This idea — anchoring what stays fixed while you vary everything else — is the same skill behind [consistent characters in AI images](/blog/consistent-characters-ai-images), and it transfers directly.
 
-:::warning
+:::warning Avoid face-changing words
 Avoid vague words like "enhance my face" or "make me look better." These actively invite Gemini to redraw your features. If you want cleaner skin or brighter eyes, ask for a lighting change instead: "soft flattering studio light" improves a portrait without touching identity.
 :::
 
@@ -77,7 +77,7 @@ Gemini is conversational, and that is its biggest advantage over one-shot genera
 
 Each step gives you a checkpoint. If round three goes wrong, you still have round two, and you know exactly which instruction caused the problem. When a follow-up works, phrase the next one the same way: "keep everything else identical" is the glue that holds multi-step editing together.
 
-:::tip
+:::tip Save good frames
 When a follow-up result is good, download it immediately. Gemini regenerates images on each turn, and there is no guarantee a later step preserves an earlier one you loved. Treat every good frame as a save point.
 :::
 

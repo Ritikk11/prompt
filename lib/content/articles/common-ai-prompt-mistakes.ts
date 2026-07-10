@@ -73,7 +73,7 @@ Before: "a knight, a dragon, a wizard, and a princess in a castle courtyard"
 
 After: "a knight facing a dragon in a castle courtyard, seen from behind the knight"
 
-:::warning
+:::warning Two-character scenes
 Wanting two named characters interacting is the single hardest thing to prompt in one shot. If both matter, generate them separately or use an editing workflow — see the [Gemini photo editing guide](/guides/gemini-photo-editing-guide) for a practical approach.
 :::
 
@@ -117,7 +117,7 @@ A prompt written for Midjourney's parameter syntax pasted raw into ChatGPT (or v
 A street musician playing saxophone in a rainy neon-lit alley at midnight, warm light from a noodle shop sign reflecting in puddles, steam rising from a vent behind him, shallow depth of field, moody cinematic photograph, 35mm lens
 :::
 
-:::tip
+:::tip 20-second prompt audit
 Before you send any prompt, run a 20-second audit: specific subject first, one lighting phrase, one style anchor, no contradictions, no filler adjectives. Those five checks catch nine of the twelve mistakes on this list.
 :::
 

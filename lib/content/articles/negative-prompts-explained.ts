@@ -33,7 +33,7 @@ ChatGPT and Gemini have no negative prompt field. They generate images through a
 
 There's a subtlety, though. Even in conversational tools, mentioning a concept gives it attention. "Absolutely no clowns" plants the idea of clowns, and occasionally one shows up anyway — the model heard the noun louder than the negation. The safer pattern is to describe the positive alternative: instead of "no people in the background", write "an empty, deserted street". Positive phrasing states what you want without ever naming what you don't.
 
-:::tip
+:::tip Say what you want first
 Order of preference in conversational tools: first describe the desired state positively ("a clean, unbranded product shot on seamless white"), and only add an explicit "no..." sentence for stubborn recurring artifacts. Reserve the negation for things you can't phrase positively.
 :::
 
@@ -73,7 +73,7 @@ Asking for "an oil painting" while negating "brushstrokes" or requesting "cozy c
 
 In ChatGPT or Gemini, a paragraph of "don't do this, don't do that" reads like a list of nouns to a distracted listener. Two or three clear exclusions phrased as sentences work; ten bullet-pointed prohibitions often backfire by flooding the prompt with exactly the concepts you fear.
 
-:::warning
+:::warning Rewrite the scene
 If a specific unwanted element keeps appearing despite your negatives, stop fighting it with longer exclusion lists. Rewrite the positive prompt so the element has no room to exist — change the setting, the framing, or the style — or fix the one bad output with an editing pass instead of regenerating. The [PromptMatrix usage guide](/guides/how-to-use-prompts-from-promptmatrix) covers adapting prompts this way.
 :::
 

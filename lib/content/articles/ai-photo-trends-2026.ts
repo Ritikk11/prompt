@@ -73,7 +73,7 @@ Rendering yourself as an anime character: soft Ghibli-inspired scenery styles, c
 
 Anime is a style transform, not a realism task, so the model has freedom to interpret. Small likeness errors that would ruin a photorealistic portrait read as charming stylization instead. It is also one of the best beginner trends because almost any wording produces something fun.
 
-:::example
+:::example Anime selfie starter
 A simple starting point: upload a clear selfie and ask for "a portrait of this person as an anime character, 90s retro anime style, cel shading, soft warm colors, detailed eyes, plain gradient background, keeping the same hairstyle and glasses." Naming the era and the shading style matters more than adding adjectives.
 :::
 
@@ -89,7 +89,7 @@ Your dog as a Renaissance nobleman in oil paint. Your cat as an astronaut, a bar
 
 Pets combine the two things that perform best online: animals and absurdity. Owners also have no vanity concerns, so they experiment more boldly than with self-portraits. Technically, pets are forgiving subjects — a slightly-off golden retriever still looks like a golden retriever — but breed-specific markings matter to owners, so upload a clear reference photo of the actual pet rather than describing it.
 
-:::tip
+:::tip Anchor pet details
 For any pet portrait, mention the breed, coat color, and one distinctive marking in the prompt even when uploading a photo ("a golden retriever with a white chest patch"). It anchors the model to the details owners notice first.
 :::
 

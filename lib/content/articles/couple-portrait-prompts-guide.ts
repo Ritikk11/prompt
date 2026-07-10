@@ -25,7 +25,7 @@ Look for a photo where:
 
 A casual, well-lit phone photo of the two of you facing the camera beats a dramatic candid where one person is in profile. You are choosing an identity reference, not the final composition — the prompt handles the rest. For more on why the reference photo matters so much, see [reference images vs text prompts](/blog/reference-images-vs-text-prompts).
 
-:::tip
+:::tip Take one clear photo
 If you don't have one good photo of both of you, take one now. Stand by a window, hold the phone at eye level, and both look at the camera. Thirty seconds of effort here saves ten frustrating regenerations later.
 :::
 
@@ -40,7 +40,7 @@ Two phrasings work reliably:
 
 The words "do not blend or swap features between the two people" matter more than they look. Feature swapping — his nose on her face, her eye shape on his — is the single most common failure in couple edits, and naming it directly in the prompt reduces it noticeably.
 
-:::warning
+:::warning Don’t describe the faces
 Never describe either partner's face in the prompt text ("sharp jawline", "big brown eyes"). Written descriptions compete with the photo, and the model starts generating the description instead of preserving the person. Describe the scene, the clothing, and the light — let the photo carry the faces.
 :::
 
@@ -70,13 +70,13 @@ Generate, then compare each face against the original photo one at a time — co
 
 Almost every couple edit needs one correction pass, and it is almost always one partner, not both. Follow up conversationally:
 
-:::example
+:::example Face drift follow-up
 "This is close, but the woman's face has drifted — her face is rounder and her nose is different in the original photo. Regenerate keeping her face exactly as it is in the uploaded image. The man's face and everything else in the scene are correct; keep those unchanged."
 :::
 
 Naming which person drifted, what changed, and what to keep is far more effective than "try again." If the same face keeps failing after two or three attempts, the problem is usually the source photo — that face is smaller, softer, or more shadowed than the other. Switch to a reference photo where both faces are equally clear, or upload an additional solo photo of the person who keeps drifting.
 
-:::info
+:::info Consent before sharing
 Both people in the photo should be comfortable with the edit before you share it. That is basic courtesy with any portrait, and doubly so when clothing and setting are being changed. If you plan to post results publicly, it is worth understanding [who owns AI-generated images](/blog/who-owns-ai-generated-images).
 :::
 

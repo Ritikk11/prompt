@@ -37,7 +37,7 @@ The environment answers "where and when." Be concrete: a place, a time of day, w
 
 Running example adds: "in a snow-covered temple courtyard at dawn, bare maple branches overhead, snow falling lightly".
 
-:::tip
+:::tip Use drawable details
 One vivid environmental detail beats five generic ones. "Bare maple branches overhead" does more than "beautiful detailed background scenery" ever will, because it's something the model can actually draw.
 :::
 
@@ -83,7 +83,7 @@ An aging samurai with a gray-streaked topknot, wearing weathered dark-blue lacqu
 
 Compare that to "a samurai." Same subject, but now the model receives roughly a dozen deliberate decisions instead of making them all itself.
 
-:::warning
+:::warning Use only what matters
 You don't need all eight parts in every prompt. A quick concept sketch might only need subject, style, and mood. But when an image matters, run down the list and check that every part you skipped was skipped on purpose — not forgotten.
 :::
 

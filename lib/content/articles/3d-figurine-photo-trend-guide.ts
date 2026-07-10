@@ -36,7 +36,7 @@ The selfie requirements are strict for this trend because your face is being shr
 - Head and shoulders or waist-up framing works best.
 - One person only.
 
-:::tip
+:::tip Use a full-body photo
 A full-body photo helps if you want the figurine's outfit and body type to match yours. With only a headshot, the model invents the body — fine if you are describing a costume anyway, worse if you want "me, as I am, but as a toy."
 :::
 
@@ -62,7 +62,7 @@ The packaging is where the trend gets personal, and it is fully promptable. Swap
 
 Change one or two elements per run. Box text is the most fragile part: keep names short, put them in quotation marks, and if the text comes out garbled, reply asking for the same image with the text corrected.
 
-:::example
+:::example Packaging tweak
 A follow-up that works well: "Same image, but the box is deep blue with silver foil accents, the title text reads 'RAVI' in bold white letters, and add a tiny molded coffee mug and headphones as accessories inside the packaging window."
 :::
 
@@ -84,7 +84,7 @@ The second classic failure: the "figurine" comes out life-sized, or looks like a
 - **Say it is a toy, twice.** "Collectible figurine" in the first sentence and "glossy PVC toy texture" later — material words do heavy lifting. Skin that looks like plastic is what makes the brain read "toy."
 - **Keep the base.** The round acrylic base is not decoration; it is the strongest single visual cue that this is a display figure.
 
-:::warning
+:::warning Keep the scene anchor
 Do not delete the monitor-with-3D-software line to simplify the prompt. It seems optional, but it anchors both the scale and the story of the scene. If you want a cleaner image, replace it with another anchor — "displayed on a collector's shelf beside other boxed figures" — rather than removing context entirely.
 :::
 

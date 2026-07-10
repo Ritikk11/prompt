@@ -33,7 +33,7 @@ During training, the model was shown real images that had been progressively cor
 
 At generation time, the process runs in reverse. The model starts from fresh random static and denoises it over a series of steps — and at every step, your prompt acts as a guide. If your prompt says "a red fox in the snow", then at each step the model nudges the emerging shapes toward fox-like forms, red-orange fur, and a bright white ground. Early steps settle broad composition and color masses; later steps resolve fine detail like fur texture and eye highlights.
 
-:::info
+:::info Why it takes time
 This is why generation takes a few seconds rather than being instant. The image is refined through many denoising passes, not produced in one shot — a bit like a photo slowly developing, except the "development" is steered by your words the whole way through.
 :::
 
@@ -63,7 +63,7 @@ Lettering fails for a similar reason. To a diffusion model, text was historicall
 
 Both problems have improved dramatically. Newer models train on higher-resolution data, use text encoders that genuinely understand spelling, and dedicate more capacity to fine structure. Modern ChatGPT and Gemini models handle short signage and hands correctly most of the time — though long text and interlocking hand poses can still slip. When they do, [negative prompts](/blog/negative-prompts-explained) and simple retries are your friends.
 
-:::tip
+:::tip Short text works best
 If you need readable text in an image, keep it short (one to five words), put it in quotes in your prompt, and say where it goes: a poster, a neon sign, a mug. Short quoted text placed on an obvious surface succeeds far more often than a paragraph floating in the scene.
 :::
 
@@ -77,7 +77,7 @@ That starting noise is generated from a number called a seed. Same seed plus sam
 
 Tools expose seeds differently. Midjourney lets you set one directly with a parameter. ChatGPT and Gemini don't give you a visible seed control, which is one reason exact reproduction is hard in conversational tools — and why techniques like reference images matter for [consistent characters across images](/blog/consistent-characters-ai-images).
 
-:::warning
+:::warning Test multiple seeds
 Don't judge a prompt on a single generation. One run might land on an awkward seed while the prompt itself is solid. Generate three or four variations before you decide whether to rewrite — you're sampling from a distribution, not requesting a fixed file.
 :::
 

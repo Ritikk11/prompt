@@ -22,7 +22,7 @@ Anime conversion simplifies your face into lines and flat shapes, so the source 
 - Simple pose. Head-and-shoulders or waist-up converts far more reliably than complex full-body poses.
 - Decent resolution and focus. A blurry input gives the model license to invent a generic anime face.
 
-:::tip
+:::tip Name your identifiers
 Think about what makes you recognizable in a doodle: hair shape, glasses, eyebrows, facial hair, a mole. List those features explicitly in your prompt. Stylization forgives soft details like exact skin texture, but it must keep the anchors or the portrait reads as a stranger.
 :::
 
@@ -36,7 +36,7 @@ Modern anime. Clean digital linework with varied line weight, large expressive e
 
 Watercolor storybook. Soft watercolor washes with visible paper texture, gentle pencil or fine ink underlines, pastel colors that bleed slightly at the edges, a dreamy hand-painted background of loose color blooms, dappled light, and an overall warm, gentle children's-illustration feel.
 
-:::example
+:::example Weak vs strong request
 Compare these two requests for the same photo. Weak: "make me 90s anime style." Strong: "redraw this photo as a 1990s cel anime portrait: hand-inked outlines, flat two-tone cel shading with hard shadow edges, muted warm palette with slight film grain, simple painted sunset background." The second gives the model a checklist, and the output shows it — hard shadow edges and grain actually appear.
 :::
 
@@ -58,7 +58,7 @@ Upload your photo and adapt this template. It is written for the 90s retro look;
 Redraw the person in this photo as a 1990s retro cel anime portrait. Identity: the drawing must be clearly recognizable as me — keep my exact face shape, hairstyle and hair color, eyebrows, glasses, and expression from the photo, same pose and camera angle. Style: hand-drawn ink outlines with slightly imperfect line quality, flat cel shading with hard-edged shadows in two tones, muted warm color palette like aged 90s film, subtle film grain across the whole image, soft analog glow on the highlights. Background: a simple hand-painted city street at golden hour, loose painterly detail, slightly out of focus behind me. Composition: waist-up portrait, subject slightly off-center. Do not add text, watermarks, or extra characters.
 :::
 
-:::info
+:::info Block fake text
 The "do not add text" line matters more than it looks. Anime-styled generations love to sprinkle fake Japanese signage and nonsense captions into backgrounds, and removing them afterward is harder than preventing them.
 :::
 
@@ -73,7 +73,7 @@ A great anime portrait is half background. Match the backdrop's rendering style 
 
 Keep the background description to one or two sentences. Over-specifying the scene steals the model's attention from your face, and the face is the part you actually care about.
 
-:::warning
+:::warning Check the hands
 Check the hands if they are visible in your photo. Stylized generations still fumble finger counts more than faces. If a hand comes back wrong, either crop tighter in a follow-up or ask for "hands hidden in pockets" and regenerate.
 :::
 

@@ -37,7 +37,7 @@ The full-phone-screen format: Instagram Stories and Reels, YouTube Shorts, TikTo
 
 Use it for: Stories, Reels, Shorts backgrounds, phone wallpapers.
 
-:::warning
+:::warning Leave safe space
 Stories and Reels overlay UI elements — username at the top, captions and buttons near the bottom. Keep faces and any text in the middle 60 percent of a 9:16 image, or the platform's own interface will sit on top of them.
 :::
 
@@ -68,7 +68,7 @@ Whatever the tool, put the ratio request at the end of the prompt and keep it un
 Cozy reading nook by a rain-streaked window, warm lamp glow, a sleeping cat on a knitted blanket, stack of well-worn books, soft film photography look with gentle grain, muted amber and slate-blue palette, composition leaves the upper third open for title text, vertical 4:5 aspect ratio.
 :::
 
-:::tip
+:::tip Guide the frame
 If a tool ignores your ratio request, reinforce it through composition language: "tall vertical composition, full-body subject, floor to ceiling" pushes toward portrait framing even when the ratio instruction alone is not enough.
 :::
 
@@ -90,7 +90,7 @@ AI models sometimes place important detail near the frame edge, and platforms so
 
 Cropping a small region out of a large image and enlarging it produces soft, muddy results. If you want a tighter framing, re-prompt for it — "close-up, head and shoulders" — rather than cropping into a wide shot.
 
-:::example
+:::example One image, three crops
 A bakery owner wants one hero image everywhere. Instead of cropping one generation, they run the same prompt three times: "overhead flat lay of fresh croissants on a marble counter, morning window light, steam rising from a coffee cup" — at 4:5 for the Instagram feed, 9:16 with "vertical composition, coffee cup at the bottom" for Stories, and 16:9 with "wide counter scene, space on the right for text" for the website banner.
 :::
 

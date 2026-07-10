@@ -23,7 +23,7 @@ The AI will replace your background and lighting, but it can only preserve produ
 - Fill the frame, keep the whole product inside it, and shoot at the angle you want in the final image. AI changes environments convincingly; rotating a product to a new angle is where labels and proportions start to warp.
 - Take several angles now: straight-on, three-quarter, top-down, and a label close-up. You will want them for a full listing set.
 
-:::tip
+:::tip Control reflections
 If your product is reflective — glass, polished metal, glossy plastic — photograph it with a plain white wall or sheet behind the camera. Whatever is reflected in the surface will survive into the generation, and a cluttered kitchen reflected in a perfume bottle ruins an otherwise perfect shot.
 :::
 
@@ -49,7 +49,7 @@ Lighting words are the difference between "phone photo on a new background" and 
 - "Realistic soft contact shadow beneath the product" — the detail most fakes miss; a product with no grounded shadow looks pasted on.
 - "Gentle reflection on the glossy surface below" — for marble and acrylic surfaces, adds instant production value.
 
-:::info
+:::info Ground the product
 Always specify the shadow. Ungrounded products floating a millimeter above their surface are the single most common giveaway of an AI composite. One sentence — "with a realistic soft shadow grounding the product on the surface" — fixes it almost every time.
 :::
 
@@ -63,7 +63,7 @@ Take the product in this photo and place it in a professional studio product sho
 
 Swap the scene and lighting lines freely; keep the first half of the prompt intact in every variation. For a deeper look at why working from your real photo beats describing a product from scratch, see [reference images vs text prompts](/blog/reference-images-vs-text-prompts).
 
-:::warning
+:::warning Read every label
 Small text is where generations fail silently. A label that says "Lavender Body Butter, 200ml" can come back as "Lavendar Bodv Buttor" in a font that is almost — but not quite — yours. Zoom to full size and read every word of every generated label, every time. If the text keeps breaking, generate the scene with the label facing slightly away, or fix the label region by asking the model to restore it exactly from the original.
 :::
 
@@ -77,7 +77,7 @@ A strong listing mixes a clean hero shot with two or three context images. Reuse
 
 Keep the product angle consistent across the set so the listing feels like one photo session. Generate each image fresh from the original photo — editing an already-generated image degrades quality generation over generation.
 
-:::example
+:::example Real product shoot
 A candle seller's typical session: one window-light photo of the candle, then four generations — white marble hero, dark slate moody variant, bathroom-shelf lifestyle scene, and a hand-held close-up. Three of four were usable on the first try; the lifestyle scene needed one follow-up to fix a warped wick. Total time under twenty minutes.
 :::
 

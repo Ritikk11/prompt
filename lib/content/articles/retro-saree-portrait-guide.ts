@@ -54,7 +54,7 @@ The line "keep my face 100% identical to the uploaded photo" is the most importa
 - Ask for makeup as an addition, not a transformation: "subtle winged eyeliner" is safe; "glamorous makeover" invites a new face.
 - If drift persists, add a second lock at the end: "The person must be clearly recognizable as the same person in the uploaded photo."
 
-:::warning
+:::warning Avoid celebrity phrasing
 "Make me look like a 90s actress" is the single most face-destroying phrase in this trend. It tells the model to replace you with its idea of an actress. Describe the styling elements instead — the saree, the curls, the eyeliner — and let the era emerge from the details while your face stays yours.
 :::
 
@@ -68,7 +68,7 @@ Once the baseline works, change one element per run.
 
 **Era dial.** For a 70s feel: bouffant-influenced hair, bolder winged liner, more saturated colors. For the 90s: soft curls, chiffon in wind, golden haze. For a 60s black-and-white version: "black and white film still, soft studio key light, deep film grain" — and drop the color words entirely.
 
-:::example
+:::example Change one thing
 One-line follow-ups that work well after a good first result: "Same image, but change the saree to mustard yellow chiffon." Then: "Now make the backdrop a mustard field at golden hour." Changing one variable per reply keeps the face and mood stable while you explore.
 :::
 
@@ -83,7 +83,7 @@ The core recipe adapts across regional styles, and small authentic details make 
 
 Name the specific garments and jewelry in your prompt — the model knows terms like gajra, jhumka, and kanjeevaram, and using them beats describing them vaguely.
 
-:::tip
+:::tip Retro style for men
 Men can run this trend too: swap the saree lines for "a cream silk kurta with a dark bandhgala jacket" or "a retro 90s hero look with a leather jacket and windswept hair", and keep the entire lighting, grain, and composition block unchanged. The cinematic treatment is what makes the image, not the specific garment.
 :::
 

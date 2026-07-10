@@ -65,7 +65,7 @@ Editorial illustration for a technology magazine: a small paper boat made of fol
 
 When editing an uploaded photo, describe the change, not the whole image. "Change the background to a rain-soaked Tokyo street at night, keep my face, pose, and glasses exactly the same" outperforms a long scene description, because the photo already carries most of the information. Explicitly stating what must not change ("keep the face identical") is the single highest-leverage habit for Gemini editing prompts. Browse our [Gemini prompts](/tool/gemini) and you will notice almost all of them include a preservation clause like this.
 
-:::tip
+:::tip Keep Gemini edits simple
 When a Gemini edit drifts too far from the original photo, shorten your prompt. Over-describing the scene invites the model to regenerate rather than edit. State the one change you want and lock everything else with "keep everything else unchanged."
 :::
 
@@ -79,7 +79,7 @@ When a Gemini edit drifts too far from the original photo, shorten your prompt. 
 - Trying many quick variations to find a direction: Gemini.
 - Consistent character across a story or comic: ChatGPT for generation, though see the notes in our guide on [how to write better AI image prompts](/blog/how-to-write-better-ai-image-prompts) — consistency is hard everywhere.
 
-:::warning
+:::warning Expect policy refusals
 Both tools apply content policies to images of real people, and Gemini in particular can refuse edits it interprets as misleading or inappropriate. If a reasonable edit gets refused, rephrase to make the creative intent explicit — "a stylized retro film portrait of me" rather than instructions that sound like impersonation.
 :::
 
@@ -87,7 +87,7 @@ Both tools apply content policies to images of real people, and Gemini in partic
 
 A workflow we use constantly: draft the concept in ChatGPT because it follows the brief, then, if the result needs to feel more photographic or needs a real person composited in, move to Gemini for the edit pass. The reverse also works — take a Gemini photo edit and ask ChatGPT to build a designed layout around it. Treating them as two stages of one pipeline beats forcing either to do everything.
 
-:::example
+:::example Split the workflow
 A creator making a YouTube thumbnail: generate the background scene and bold title text in ChatGPT, then use Gemini to insert their own photographed face with matched lighting. Each tool does the part it is best at.
 :::
 

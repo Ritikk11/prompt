@@ -37,7 +37,7 @@ If you have a layout in mind — subject low in the frame, negative space top-ri
 
 Generating an image of a real product from text alone is asking the model to hallucinate your product. Logos drift, proportions shift, label text turns to mush. Upload clear photos of the actual item, instruct the model to preserve it exactly, and describe only the new scene around it.
 
-:::warning
+:::warning Keep products exact
 Even with a reference, models can subtly redraw products — a slightly different cap shape, a reflowed label. Always compare the output against the real product before publishing anything commercial, and regenerate with a firmer "keep the product exactly as shown, do not alter the label" instruction if it drifts.
 :::
 
@@ -65,7 +65,7 @@ The key skill is telling the model explicitly what the reference is for. Don't j
 Using the attached photo, keep this exact person — same face, same hairstyle, same build — but place her in a sunlit Tuscan street market in summer. She is laughing while holding a paper bag of oranges. Warm late-afternoon light, candid travel photography style, 35mm lens look. Do not change her facial features.
 :::
 
-:::tip
+:::tip Preserve-change-style
 Structure combined prompts in three parts: (1) what to preserve from the reference, (2) what to change or add, (3) the style and lighting of the final image. Models follow this preserve-change-style pattern much more reliably than a single tangled sentence. For editing-specific techniques, see our [Gemini photo editing guide](/guides/gemini-photo-editing-guide).
 :::
 
@@ -85,7 +85,7 @@ A frequent failure: attaching a photo of someone in a winter coat, then writing 
 
 Stacking a face reference, a pose reference, a composition reference, and a 200-word style description leaves the model no room to produce a coherent image, and something will give — usually the face. Prioritize: decide which one or two elements truly must match, constrain those, and loosen everything else.
 
-:::example
+:::example Don’t over-constrain
 Over-constrained: three reference photos plus "exact same face, exact same pose as image 2, composition matching image 3, in the style of a 1970s film poster, dramatic rembrandt lighting, symmetrical, shot from below, muted palette..."
 
 Better: one clean face reference plus "keep this person's face exactly. Full-body shot in a 1970s film poster style, muted palette, dramatic lighting." Fewer constraints, and the ones that remain actually hold.

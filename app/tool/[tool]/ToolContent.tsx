@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getGridClasses } from '@/lib/utils';
@@ -26,10 +26,25 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
   const params = useParams();
   const rawTool = params.tool as string;
   const tool = decodeURIComponent(rawTool || '');
+  const normalizedTool = tool.toLowerCase();
+  const displayTool = useMemo(() => {
+    const fromSettings = Object.keys(settings.toolDetails || {}).find(name => name.toLowerCase() === normalizedTool);
+    if (fromSettings) return fromSettings;
+
+    for (const post of posts) {
+      const match = getAllTools(post).find(name => name.toLowerCase() === normalizedTool);
+      if (match) return match;
+    }
+
+    return tool
+      .split(/([\s-]+)/)
+      .map(part => part.toLowerCase() === 'chatgpt' ? 'ChatGPT' : part.charAt(0).toUpperCase() + part.slice(1))
+      .join('');
+  }, [normalizedTool, posts, settings.toolDetails, tool]);
   
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'trending'>('latest');
   const showTrending = settings.features?.trendingAlgorithm;
-  const toolInfo = getToolInfo(tool, settings.toolDetails);
+  const toolInfo = getToolInfo(displayTool, settings.toolDetails);
   const discovery = settings.discoveryPages || {};
   const useCustomRail = Boolean(discovery.useCustomRailOnTools);
   const railItems = discovery.toolRailItems || [];
@@ -37,12 +52,12 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
 
   // Filter public posts that include the aiTool (case insensitive)
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
-  let filtered = publicPosts.filter(p => getAllTools(p).some(item => item.toLowerCase() === tool.toLowerCase()));
+  let filtered = publicPosts.filter(p => getAllTools(p).some(item => item.toLowerCase() === normalizedTool));
   const heroCopy = fillDiscoveryTemplate(
-    discovery.toolDescriptionTemplate || toolHeroCopy[tool.toLowerCase()] || `Browse %count% prompt collections organized for %tool%.`,
-    { tool, count: filtered.length }
+    discovery.toolDescriptionTemplate || toolHeroCopy[normalizedTool] || `Browse %count% prompt collections organized for %tool%.`,
+    { tool: displayTool, count: filtered.length }
   );
-  const heroTitle = fillDiscoveryTemplate(discovery.toolTitleTemplate || '%tool% Prompts', { tool, count: filtered.length });
+  const heroTitle = fillDiscoveryTemplate(discovery.toolTitleTemplate || '%tool% Prompts', { tool: displayTool, count: filtered.length });
   
   if (sortBy === 'latest') {
     filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -62,14 +77,14 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
           <span>/</span>
           <span className="text-surface-500 dark:text-surface-400">Tools</span>
           <span>/</span>
-          <span className="text-surface-900 dark:text-surface-100 font-medium capitalize">{tool}</span>
+          <span className="text-surface-900 dark:text-surface-100 font-medium">{displayTool}</span>
         </div>
 
       <DiscoveryPageHero
-        badge={tool}
+        badge={displayTool}
         title={heroTitle}
         description={heroCopy}
-        icon={toolInfo.logo ? { logo: toolInfo.logo, label: tool, logoScale: toolInfo.logoScale } : <Sparkles className="h-4 w-4" />}
+        icon={toolInfo.logo ? { logo: toolInfo.logo, label: displayTool, logoScale: toolInfo.logoScale } : <Sparkles className="h-4 w-4" />}
         stats={(discovery.showHeroStats ?? true) ? [{ label: 'Prompts', value: filtered.length }] : []}
       />
 
@@ -129,7 +144,7 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
       {filtered.length === 0 && (
         <div className="text-center py-20">
           <p className="text-xl font-semibold text-surface-400">No prompts found</p>
-          <p className="text-sm text-surface-400 mt-2">There are no collections exclusively for {tool} yet.</p>
+          <p className="text-sm text-surface-400 mt-2">There are no collections exclusively for {displayTool} yet.</p>
         </div>
       )}
     </div>

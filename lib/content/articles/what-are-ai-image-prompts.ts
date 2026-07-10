@@ -38,7 +38,7 @@ In conversational tools like ChatGPT and Gemini, you can blend both — describe
 
 The fastest way to understand prompt quality is to compare pairs.
 
-:::example
+:::example Weak vs strong subject
 Weak: "a dog"
 
 Strong: "a golden retriever puppy sitting in tall grass at sunset, backlit by warm golden light, shallow depth of field, shot on an 85mm lens"
@@ -46,7 +46,7 @@ Strong: "a golden retriever puppy sitting in tall grass at sunset, backlit by wa
 The weak version leaves everything to chance — breed, setting, light, framing. The strong version makes five specific decisions, so the model doesn't have to guess.
 :::
 
-:::example
+:::example Weak vs strong scene
 Weak: "a futuristic city, high quality, amazing, 4k, beautiful"
 
 Strong: "aerial view of a futuristic city at night, dense neon-lit towers connected by glass skybridges, light rain, reflections on wet streets, cinematic wide shot"
@@ -72,7 +72,7 @@ A few practical ways to use a prompt library:
 - **Study prompts per tool.** The same idea is phrased differently for different generators. Browse [ChatGPT prompts](/tool/chatgpt) and [Gemini prompts](/tool/gemini) side by side and you'll notice ChatGPT prompts often read like natural instructions while Midjourney prompts lean on compact descriptive phrases.
 - **Collect phrases, not just whole prompts.** When a prompt nails a look you love, save the specific phrase responsible — "volumetric fog", "editorial studio lighting", "risograph print style" — and reuse it in your own work.
 
-:::tip
+:::tip Change one thing
 When you copy a prompt, change exactly one thing at a time — the subject, then the lighting, then the style. You'll learn what each phrase actually does far faster than by rewriting everything at once.
 :::
 
@@ -86,7 +86,7 @@ For example: "an elderly fisherman (subject) with a weathered face and yellow ra
 
 Start with those five slots and fill each one deliberately. You don't need long prompts — you need complete ones. A 25-word prompt that covers all five slots beats a 60-word prompt that repeats "highly detailed" three times.
 
-:::warning
+:::warning Fix one slot
 Don't fight a bad image by piling more words onto the same prompt. If the result is off, identify which slot failed — wrong subject, wrong light, wrong style — and fix that one phrase. More words without more decisions just adds noise.
 :::
 

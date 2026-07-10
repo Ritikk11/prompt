@@ -41,6 +41,8 @@ function revalidateContent(resource: string, data: any, id?: string) {
     revalidatePath('/explore');
     revalidatePath('/blog');
     revalidatePath('/guides');
+    revalidatePath('/submit');
+    revalidatePath('/profile');
     return;
   }
 

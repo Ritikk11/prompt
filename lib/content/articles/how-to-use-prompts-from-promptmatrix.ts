@@ -20,7 +20,7 @@ Start at the [explore page](/explore). It shows the full prompt library as a gri
 
 If you already know which tool you use, go straight to that tool's page instead. The [ChatGPT prompts](/tool/chatgpt) page only shows prompts written and tested for ChatGPT; the [Gemini prompts](/tool/gemini) page does the same for Gemini. This matters more than beginners expect: a prompt tuned for Midjourney's parameter syntax will confuse ChatGPT, and a conversational photo-edit prompt written for Gemini won't do anything useful in Midjourney.
 
-:::tip
+:::tip Filter by tool
 If you only have a free account with one tool, filter by that tool first. Every prompt on a tool page is confirmed to work there, so you skip the trial-and-error of adapting prompts across models.
 :::
 
@@ -33,7 +33,7 @@ Click any card to open the full prompt post. Before you copy anything, take thir
 - **The model notes.** Some posts mention a specific model or mode — for example, an image-editing model inside Gemini versus plain text chat. If the notes say the prompt needs an uploaded photo, that is not optional; the prompt is written to transform an input image, not to generate one from nothing.
 - **The prompt text itself.** The exact wording, displayed with a copy button so you get it character-for-character.
 
-:::info
+:::info Attach reference images
 Reference images matter. If a prompt card's examples clearly show a real person restyled — same face, new outfit or setting — it is a photo-edit prompt. Running it without attaching a photo will produce a generic stranger. If the examples look fully invented, it is a text-to-image prompt and no upload is needed. When in doubt, our post on [reference images vs. text prompts](/blog/reference-images-vs-text-prompts) explains the difference in depth.
 :::
 
@@ -61,7 +61,7 @@ Many prompts include parts that are meant to be swapped: a color, a background, 
 
 The safe way to customize is one change at a time. Swap the color, run it, check the result. Then change the backdrop, run again. If you rewrite four things at once and the output falls apart, you won't know which edit broke it.
 
-:::warning
+:::warning Keep useful phrases
 Don't delete phrases you don't understand. Lines like "shallow depth of field" or "keep the facial features exactly the same" look like filler but are doing real work — the first controls the blurred background look, the second prevents the AI from redrawing your face. Remove them and the result changes in ways you probably didn't want.
 :::
 
@@ -71,7 +71,7 @@ Your first output will often be 80% right. In conversational tools like ChatGPT 
 
 If the result is badly off — wrong subject, wrong style — don't patch it with five follow-ups. Start a fresh chat, re-paste the original prompt, and re-attach your photo. Long editing threads accumulate drift, and a clean start with the tested prompt is usually faster.
 
-:::example
+:::example First session example
 A realistic first session: you copy a retro portrait prompt from the Gemini page, attach a selfie, and get a great image where the outfit color is slightly off. You reply "keep everything identical but make the saree deep emerald green" — done in one follow-up. Total time: about two minutes.
 :::
 

@@ -58,7 +58,7 @@ The most underrated consistency technique is to stop regenerating entirely. If y
 
 Gemini is particularly strong at this conversational editing loop: upload the base image, ask for one change at a time, and the character carries through. The full workflow is covered in our [Gemini photo editing guide](/guides/gemini-photo-editing-guide).
 
-:::tip
+:::tip Edit or generate fresh
 Decide per scene: if the new scene shares the pose and framing of an existing image, edit that image. If the scene is fundamentally different — new angle, new action — generate fresh with the character sheet plus reference image, then pick the best match from several attempts.
 :::
 
@@ -80,7 +80,7 @@ Change the setting to a boardroom and the character gains ten years; change ligh
 
 Putting two recurring characters in one image often blends their features. Fix: describe each with a compressed sheet, anchor them spatially ("Maya on the left... Tomas on the right..."), and expect to need several attempts — or compose them via editing instead.
 
-:::warning
+:::warning Consistency needs selection
 No current tool gives perfect consistency across a long series from text alone. Plan for a selection step: generate three to five candidates per scene and choose the best match. Consistency is a workflow, not a checkbox.
 :::
 

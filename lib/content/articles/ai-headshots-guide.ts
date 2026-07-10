@@ -24,7 +24,7 @@ The single biggest factor in headshot quality is not the prompt — it is the in
 - Expression: a natural, relaxed expression close to what you want in the final image. AI can adjust clothing and backgrounds convincingly; rewriting your expression tends to drift your identity.
 - No heavy filters: beauty filters have already altered your face, and the AI will compound the alteration.
 
-:::tip
+:::tip Use a fresh selfie
 Take a fresh selfie rather than digging through your camera roll. Two minutes by a window with a clean lens beats twenty minutes of scrolling for an old photo that is almost good enough.
 :::
 
@@ -48,7 +48,7 @@ Using this photo of me, create a professional corporate headshot. Critical: keep
 
 Swap the blazer, backdrop, and expression lines to taste. The identity-lock sentence and the "natural skin texture" instruction should stay in every variation — they are doing the heavy lifting.
 
-:::info
+:::info One strong reference
 One strong reference photo usually beats five mediocre ones. If your tool supports multiple reference images, add a second selfie from a slightly different angle only if both are sharp and recent. For the fuller technique, see [reference images vs text prompts](/blog/reference-images-vs-text-prompts).
 :::
 
@@ -63,7 +63,7 @@ Generate, then zoom in and audit. These are the failures that give AI headshots 
 - Ear and jewelry glitches. Earrings that differ between ears, warped ear shapes. Fix: remove jewelry from the equation by asking for none, or specify it precisely.
 - Blazer physics. Collars that merge into the neck, buttons in impossible places. Usually fixed by a simple regenerate.
 
-:::warning
+:::warning Check the likeness
 Show the result to someone who knows you well before publishing it. You are the worst judge of your own likeness — you see yourself in mirrors and selfies, not as others see you. If a friend hesitates before saying "yes, that is you," iterate again.
 :::
 
@@ -77,7 +77,7 @@ Before uploading anywhere, do a last pass:
 - Check the image at thumbnail size — that is how most people will see it.
 - Keep the source selfie and your final prompt saved together, so you can regenerate a matching image later for a conference bio or company page.
 
-:::example
+:::example Real editing flow
 A realistic session looks like this: selfie by a window at 9 a.m., first generation had plastic skin, second generation with the skin-texture line was good but the blazer collar glitched, third generation was publishable. Fifteen minutes end to end, three generations, zero cost.
 :::
 

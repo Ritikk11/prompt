@@ -27,7 +27,7 @@ If you only have a phone, you can still get a very usable capture:
 - Fill the frame with the photo, but leave a small border so nothing gets cropped.
 - Take three or four shots and pick the sharpest one at full zoom.
 
-:::tip
+:::tip Photograph safely
 If the photo is stuck behind glass in a frame, do not force it out — old prints tear. Instead, angle yourself slightly so the window reflection moves off the image, then crop and straighten the shot afterward.
 :::
 
@@ -52,7 +52,7 @@ When the restored image comes back, do not just glance at it — compare it side
 - Text and dates. Handwriting, signs, or a date stamp in the corner often gets rewritten into gibberish.
 - Colors. Colorization is an educated guess. If Uncle's army uniform comes back the wrong shade, tell the model the correct color and regenerate.
 
-:::warning
+:::warning Heavily damaged faces
 The AI does not know your family. If a face was badly damaged in the original — torn, water-stained, or blurred — the model will invent a plausible face, not recover the real one. Treat heavily reconstructed faces as an artist's interpretation, and say so if you share the image with relatives.
 :::
 
@@ -66,7 +66,7 @@ Rarely is the first pass perfect. The good news is you are in a conversation, so
 
 One correction per message works better than a list of five, because each regeneration can introduce new drift. If a result goes badly wrong, re-upload the original scan and start fresh rather than stacking edits. For more on why iterating from the source beats iterating on outputs, see [reference images vs text prompts](/blog/reference-images-vs-text-prompts).
 
-:::example
+:::example Button correction
 A reader restored a 1962 wedding photo with a diagonal fold across the groom's jacket. First pass: fold gone, but the jacket buttons had moved. Follow-up: "Restore the jacket buttons to their exact positions in the original photo." Second pass was clean. Total time, about four minutes.
 :::
 
@@ -79,7 +79,7 @@ Being honest about limits will save you frustration:
 - Group photos with many small faces drift the most. The smaller the face in the frame, the more freely the model redraws it. Crop and restore important faces individually if identity matters.
 - Extremely low-resolution scans limit everything. If your capture is a 400-pixel-wide photo of a photo, rescan before blaming the prompt.
 
-:::info
+:::info Colorization is interpretation
 Colorization is interpretation, not recovery. A black-and-white photo contains no color information at all — the AI infers plausible colors from context. If the exact color of a dress matters to your family, ask relatives first and specify it in the prompt.
 :::
 

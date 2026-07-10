@@ -695,12 +695,12 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               <div className="flex justify-start">{renderMetaInfo()}</div>
             </div>
             <div className="lg:col-span-5 order-1 lg:order-2 relative aspect-[3/4] lg:aspect-auto lg:h-[600px] rounded-[40px] overflow-hidden shadow-2xl skew-y-2 lg:skew-y-0 lg:-rotate-2 hover:rotate-0 transition-transform duration-700">
-               <LoadingImage 
+               <LoadingImage
                 src={mainPromptImageUrl}
-                alt={post.title} 
-                fill 
+                alt={post.title}
+                fill
                 showSkeleton={showSkeleton}
-                className="object-cover" 
+                className="object-contain lg:object-cover"
                 referrerPolicy="no-referrer"
                 priority
               />
@@ -737,12 +737,12 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                     <div className="flex justify-start">{renderMetaInfo()}</div>
                   </div>
                   <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-surface-900 shadow-2xl rotate-1">
-                    <LoadingImage 
+                    <LoadingImage
                       src={mainPromptImageUrl}
-                      alt={post.title} 
-                      fill 
+                      alt={post.title}
+                      fill
                       showSkeleton={showSkeleton}
-                      className="object-cover" 
+                      className="object-contain md:object-cover"
                       referrerPolicy="no-referrer"
                     />
                   </div>
@@ -753,12 +753,12 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       case 'v7': // Full Screen Hero
         return (
           <div className="relative w-full h-[80vh] min-h-[600px] mb-12 rounded-[48px] overflow-hidden group">
-             <LoadingImage 
+             <LoadingImage
               src={mainPromptImageUrl}
-              alt={post.title} 
-              fill 
+              alt={post.title}
+              fill
               showSkeleton={showSkeleton}
-              className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+              className="object-contain md:object-cover transition-transform duration-1000 group-hover:scale-105"
               referrerPolicy="no-referrer"
               priority
             />
@@ -803,12 +803,12 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
              </div>
              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-0 md:-translate-y-1/2 w-[95%] max-w-5xl bg-white dark:bg-surface-900 rounded-[32px] shadow-2xl border border-surface-100 dark:border-surface-800 p-8 md:p-12 flex flex-col md:flex-row gap-10 items-center">
                 <div className="w-full md:w-1/2 aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shrink-0">
-                  <LoadingImage 
+                  <LoadingImage
                     src={mainPromptImageUrl}
-                    alt={post.title} 
-                    fill 
+                    alt={post.title}
+                    fill
                     showSkeleton={showSkeleton}
-                    className="object-cover" 
+                    className="object-contain md:object-cover"
                     referrerPolicy="no-referrer"
                     priority
                   />
@@ -854,7 +854,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             </div>
             <div className="relative mb-12 w-full max-w-5xl mx-auto flex justify-center">
               <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-surface-100 dark:bg-surface-800/30 p-2 sm:p-4">
-                <div className="w-full h-full max-h-[75vh] min-h-[40vh] sm:min-h-[50vh] rounded-[24px] shadow-md relative overflow-hidden">
+                <div className="relative h-[70vh] min-h-[420px] max-h-[760px] w-full rounded-[24px] shadow-md overflow-hidden sm:min-h-[520px]">
                   <LoadingImage
                     src={mainPromptImageUrl}
                     alt={post.title}
