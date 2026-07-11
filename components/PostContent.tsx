@@ -564,17 +564,16 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <Image src={backgroundPromptImageUrl} alt="bg" fill className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
             <div className="relative z-20 p-8 md:p-12 w-full max-w-4xl mx-auto flex flex-col items-center text-center pb-12">
-              <div className="relative w-full max-w-lg aspect-[4/3] mb-8 rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-                <LoadingImage 
+              <LoadingImg
                   src={mainPromptImageUrl}
                   alt={post.title} 
-                  fill 
                   showSkeleton={showSkeleton}
-                  className="object-contain bg-black/20" 
+                  wrapperClassName="mb-8 inline-flex max-w-full justify-center rounded-2xl shadow-2xl"
+                  className="h-auto max-h-[360px] w-auto max-w-full rounded-2xl object-contain md:max-h-[420px]"
                   referrerPolicy="no-referrer"
-                  priority
+                  loading="eager"
+                  fetchPriority="high"
                 />
-              </div>
               <div className="flex flex-wrap gap-2 mb-6">
                 {heroTools.map(tool => {
                   const info = getToolInfo(tool, settings?.toolDetails);
@@ -753,7 +752,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         );
       case 'v7': // Full Screen Hero
         return (
-          <div className="relative w-full h-[80vh] min-h-[600px] mb-12 rounded-[48px] overflow-hidden group">
+          <div className="relative mb-12 h-[520px] w-full overflow-hidden rounded-[32px] group sm:h-[560px] md:h-[80vh] md:min-h-[600px] md:rounded-[48px]">
              <LoadingImage
               src={mainPromptImageUrl}
               alt={post.title}
@@ -764,7 +763,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-            <div className="absolute inset-0 flex flex-col items-center justify-end p-8 md:p-16 text-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-end p-6 text-center sm:p-8 md:p-16">
                <div className="flex flex-wrap gap-2 mb-6 justify-center">
                  {heroTools.map(tool => {
                    const info = getToolInfo(tool, settings?.toolDetails);
@@ -782,10 +781,10 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                    );
                  })}
                </div>
-               <h1 className="text-4xl md:text-7xl font-black text-white mb-6 max-w-5xl leading-tight">
+               <h1 className="text-3xl font-black text-white mb-5 max-w-5xl leading-tight sm:text-4xl md:text-7xl md:mb-6">
                  {post.title}
                </h1>
-               <div className="mb-10 scale-110">{renderMetaInfo()}</div>
+               <div className="mb-4 scale-95 sm:mb-6 md:mb-10 md:scale-110">{renderMetaInfo()}</div>
             </div>
           </div>
         );
@@ -855,7 +854,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             </div>
             <div className="relative mb-12 w-full max-w-5xl mx-auto flex justify-center">
               <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-surface-100 dark:bg-surface-800/30 p-2 sm:p-4">
-                <div className="relative h-[70vh] min-h-[420px] max-h-[760px] w-full rounded-[24px] shadow-md overflow-hidden sm:min-h-[520px]">
+                <div className="relative aspect-[4/5] min-h-0 w-full overflow-hidden rounded-[24px] shadow-md sm:aspect-auto sm:h-[70vh] sm:min-h-[520px] sm:max-h-[760px]">
                   <LoadingImage
                     src={mainPromptImageUrl}
                     alt={post.title}
