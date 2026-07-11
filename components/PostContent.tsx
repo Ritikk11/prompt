@@ -357,10 +357,11 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     const tools = getAllTools(item);
     const firstTool = tools[0];
     const firstToolInfo = firstTool ? getToolInfo(firstTool, settings?.toolDetails) : null;
+    const itemImageUrl = getThumbnailImageUrl(item.thumbnailUrl || item.images?.[0]?.url || '', { width: 220, quality: 72 });
     return (
     <Link href={`/${item.slug || item.id}`} className="group flex gap-3 rounded-2xl border border-surface-200 bg-white p-2.5 transition-colors hover:border-primary-400 dark:border-surface-800 dark:bg-surface-900">
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-800">
-        <LoadingImage src={item.thumbnailUrl || item.images?.[0]?.url || ''} alt="" fill showSkeleton={showSkeleton} className="object-cover transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
+        <LoadingImage src={itemImageUrl} alt="" fill showSkeleton={showSkeleton} className="object-cover transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
       </div>
       <div className="min-w-0 flex-1 py-1">
         <h4 className="line-clamp-2 text-xs font-bold leading-snug text-surface-900 dark:text-white">{item.title}</h4>

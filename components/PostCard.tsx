@@ -7,6 +7,7 @@ import type { Post } from '@/lib/types';
 import { getToolInfo, getAllTools } from '@/lib/constants';
 import { useData } from '@/components/context/DataContext';
 import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
+import { getThumbnailImageUrl } from '@/lib/image-url';
 
 const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; toolName: string; toolInfo: any; className?: string }) => {
   const isIconOnly = style === 'v8';
@@ -53,6 +54,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
   const cardStyle = cardStyleOverride || settings?.cardStyle || 'v1';
   const badgeStyle = badgeStyleOverride || settings?.badgeStyle || 'v1';
   const showSkeleton = settings.features?.skeletonLoaders ?? true;
+  const imageUrl = getThumbnailImageUrl(post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600');
 
   const renderBadges = (className = "") => (
     <div className="flex flex-wrap gap-1">
@@ -85,7 +87,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
         </div>
         <div className="relative aspect-square overflow-hidden rounded-[22px]">
            <LoadingImage
-            src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+            src={imageUrl}
             alt={post.title}
             fill
             showSkeleton={showSkeleton}
@@ -115,7 +117,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
       >
         <div className="relative h-48 sm:h-64 border-b-4 border-black dark:border-white">
            <LoadingImage
-            src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+            src={imageUrl}
             alt={post.title}
             fill
             showSkeleton={showSkeleton}
@@ -147,7 +149,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
         <LoadingImage
-          src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+          src={imageUrl}
           alt={post.title}
           fill
           showSkeleton={showSkeleton}
@@ -180,7 +182,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
         >
           <div className="relative aspect-square rounded-sm overflow-hidden mb-4 bg-surface-100 dark:bg-surface-900">
              <LoadingImage
-              src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+              src={imageUrl}
               alt={post.title}
               fill
               showSkeleton={showSkeleton}
@@ -210,7 +212,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
         <LoadingImage
-          src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+          src={imageUrl}
           alt={post.title}
           fill
           showSkeleton={showSkeleton}
@@ -245,7 +247,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
         <div className={`relative overflow-hidden rounded-[15px] bg-white dark:bg-surface-950 ${aspect ? 'h-full' : ''}`}>
           {aspect ? (
             <LoadingImage
-              src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+              src={imageUrl}
               alt={post.title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -256,7 +258,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
             />
           ) : (
             <LoadingImg
-              src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+              src={imageUrl}
               alt={post.title}
               showSkeleton={showSkeleton}
               className="block h-auto w-full transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
@@ -299,7 +301,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
       >
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-lg overflow-hidden flex-none">
           <LoadingImage
-            src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+            src={imageUrl}
             alt={post.title}
             fill
             sizes="100px"
@@ -332,7 +334,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
       style={{ animationDelay: `${(index || 0) * 80}ms` }}
     >
       <LoadingImage
-        src={post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600'}
+        src={imageUrl}
         alt={post.title}
         width={500}
         height={700}

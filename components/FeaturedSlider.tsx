@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Play, Pause, Eye, Heart, ArrowRight, Bookmar
 import type { Post, SiteSettings } from '@/lib/types';
 import { getToolInfo, getAllTools } from '@/lib/constants';
 import LoadingImage from '@/components/LoadingImage';
+import { getPromptImageUrl } from '@/lib/image-url';
 
 function isNearbySlide(index: number, current: number, total: number) {
   if (total <= 3) return true;
@@ -76,7 +77,10 @@ export default function FeaturedSlider({
   const primaryToolName = allTools[0] || post?.images[0]?.aiTool || '';
   const primaryToolInfo = getToolInfo(primaryToolName, settings?.toolDetails);
   const toolInfo = primaryToolInfo;
-  const currentImageUrl = post.thumbnailUrl || post.images[0]?.url || '';
+  const promptImageUrl = (item?: Post, fallback = '') => (
+    getPromptImageUrl(item?.thumbnailUrl || item?.images[0]?.url || fallback, { width: 960, quality: 78 })
+  );
+  const currentImageUrl = promptImageUrl(post);
 
   if (heroStyle === 'v9') {
     const previewPosts = featured.slice(0, 4);
@@ -161,7 +165,7 @@ export default function FeaturedSlider({
               {previewPosts.map((p, index) => (
                 <div key={p.id} className={`relative aspect-[4/5] overflow-hidden rounded-3xl border border-white/10 bg-white/10 shadow-2xl ${index % 2 ? 'translate-y-6' : ''}`}>
                   <LoadingImage
-                    src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/600/750'}
+                    src={promptImageUrl(p, 'https://picsum.photos/seed/placeholder/600/750')}
                     alt=""
                     fill
                     showSkeleton={false}
@@ -230,12 +234,12 @@ export default function FeaturedSlider({
               {isNearbySlide(i, current, featured.length) ? (
                 <>
                   <Image
-                    src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill
+                    src={promptImageUrl(p, 'https://picsum.photos/seed/placeholder/1200/800')} alt={`bg-${p.title}`} fill
                     className="object-cover blur-xl scale-125 opacity-40 dark:opacity-30" sizes="100vw"
                     loading={i === current ? 'eager' : 'lazy'}
                     referrerPolicy="no-referrer" />
                   <LoadingImage
-                    src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={i === current}
+                    src={promptImageUrl(p, 'https://picsum.photos/seed/placeholder/1200/800')} alt={p.title} fill priority={i === current}
                     showSkeleton={showSkeleton}
                     className="object-contain object-center" sizes="100vw"
                     referrerPolicy="no-referrer" />
@@ -323,12 +327,12 @@ export default function FeaturedSlider({
                   {isNearbySlide(i, current, featured.length) ? (
                     <>
                       <Image
-                        src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={`bg-${p.title}`} fill
+                        src={promptImageUrl(p, 'https://picsum.photos/seed/placeholder/1200/800')} alt={`bg-${p.title}`} fill
                         className="object-cover blur-3xl scale-125 opacity-30 dark:opacity-20" sizes="50vw"
                         loading={i === current ? 'eager' : 'lazy'}
                         referrerPolicy="no-referrer" />
                       <LoadingImage
-                        src={p.thumbnailUrl || p.images[0]?.url || 'https://picsum.photos/seed/placeholder/1200/800'} alt={p.title} fill priority={i === current}
+                        src={promptImageUrl(p, 'https://picsum.photos/seed/placeholder/1200/800')} alt={p.title} fill priority={i === current}
                         showSkeleton={showSkeleton}
                         className="object-contain" sizes="50vw"
                         referrerPolicy="no-referrer" />
@@ -420,9 +424,9 @@ export default function FeaturedSlider({
                      zIndex: relativeIdx === 0 ? 30 : 20,
                    }}
                  >
-                   <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt={`bg-${p.title}`} fill sizes="20vw" className="scale-125 object-cover opacity-50 blur-xl" referrerPolicy="no-referrer" />
+                   <Image src={promptImageUrl(p)} alt={`bg-${p.title}`} fill sizes="20vw" className="scale-125 object-cover opacity-50 blur-xl" referrerPolicy="no-referrer" />
                    <LoadingImage
-                     src={p.thumbnailUrl || p.images[0]?.url || ''}
+                     src={promptImageUrl(p)}
                      alt={p.title}
                      fill
                      sizes="(max-width: 768px) 100vw, 50vw"
@@ -448,8 +452,8 @@ export default function FeaturedSlider({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
           {/* Main Large Item */}
           <Link href={`/${topFeatured[0].slug || topFeatured[0].id}`} className="relative h-[400px] lg:h-[500px] lg:col-span-2 rounded-2xl overflow-hidden group">
-            <Image src={topFeatured[0].thumbnailUrl || topFeatured[0].images[0]?.url || ''} alt={`bg-${topFeatured[0].title}`} fill sizes="20vw" className="object-cover blur-2xl scale-125 opacity-40 dark:opacity-30"  referrerPolicy="no-referrer" />
-            <LoadingImage src={topFeatured[0].thumbnailUrl || topFeatured[0].images[0]?.url || ''} alt="" fill priority sizes="(max-width: 1024px) 100vw, 66vw" showSkeleton={showSkeleton} className="object-contain transition-transform duration-700 group-hover:scale-105"  referrerPolicy="no-referrer" />
+            <Image src={promptImageUrl(topFeatured[0])} alt={`bg-${topFeatured[0].title}`} fill sizes="20vw" className="object-cover blur-2xl scale-125 opacity-40 dark:opacity-30"  referrerPolicy="no-referrer" />
+            <LoadingImage src={promptImageUrl(topFeatured[0])} alt="" fill priority sizes="(max-width: 1024px) 100vw, 66vw" showSkeleton={showSkeleton} className="object-contain transition-transform duration-700 group-hover:scale-105"  referrerPolicy="no-referrer" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
             <div className="absolute inset-0 p-8 flex flex-col justify-end">
               <span className="px-3 py-1 w-max rounded-full text-xs font-bold bg-primary-500 text-white mb-3 shadow-lg">⭐ Main Feature</span>
@@ -461,8 +465,8 @@ export default function FeaturedSlider({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
             {topFeatured.slice(1).map((fPost) => (
               <Link key={fPost.id} href={`/${fPost.slug || fPost.id}`} className="relative h-[200px] sm:h-[250px] lg:h-[calc(250px-4px)] rounded-2xl overflow-hidden group">
-                <Image src={fPost.thumbnailUrl || fPost.images[0]?.url || ''} alt={`bg-${fPost.title}`} fill sizes="20vw" className="object-cover blur-xl scale-125 opacity-40 dark:opacity-30"  referrerPolicy="no-referrer" />
-                <LoadingImage src={fPost.thumbnailUrl || fPost.images[0]?.url || ''} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" showSkeleton={showSkeleton} className="object-contain transition-transform duration-700 group-hover:scale-105"  referrerPolicy="no-referrer" />
+                <Image src={promptImageUrl(fPost)} alt={`bg-${fPost.title}`} fill sizes="20vw" className="object-cover blur-xl scale-125 opacity-40 dark:opacity-30"  referrerPolicy="no-referrer" />
+                <LoadingImage src={promptImageUrl(fPost)} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" showSkeleton={showSkeleton} className="object-contain transition-transform duration-700 group-hover:scale-105"  referrerPolicy="no-referrer" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute inset-0 p-5 flex flex-col justify-end">
                   <h3 className="text-xl font-bold text-white mb-1 leading-tight">{fPost.title}</h3>
@@ -486,12 +490,12 @@ export default function FeaturedSlider({
               {isNearbySlide(i, current, featured.length) ? (
                 <>
                   <Image
-                    src={p.thumbnailUrl || p.images[0]?.url || ''} alt={`bg-${p.title}`} fill
+                    src={promptImageUrl(p)} alt={`bg-${p.title}`} fill
                     className="object-cover object-center blur-2xl scale-125 opacity-30" sizes="100vw"
                     loading={i === current ? 'eager' : 'lazy'}
                     referrerPolicy="no-referrer" />
                   <LoadingImage
-                    src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill priority={i === current}
+                    src={promptImageUrl(p)} alt={p.title} fill priority={i === current}
                     showSkeleton={showSkeleton}
                     className="object-contain object-center opacity-80" sizes="100vw"
                     referrerPolicy="no-referrer" />
@@ -601,7 +605,7 @@ export default function FeaturedSlider({
                    }}
                  >
                    <div className="w-full h-full rounded-[40px] overflow-hidden shadow-2xl border-4 border-white dark:border-surface-700">
-                      <LoadingImage src={p.thumbnailUrl || p.images[0]?.url || ''} alt="" fill showSkeleton={showSkeleton} className="object-cover" referrerPolicy="no-referrer" />
+                      <LoadingImage src={promptImageUrl(p)} alt="" fill showSkeleton={showSkeleton} className="object-cover" referrerPolicy="no-referrer" />
                    </div>
                  </div>
                );
@@ -636,7 +640,7 @@ export default function FeaturedSlider({
                   onClick={() => i !== current && goTo(i)}
                 >
                   <div className={`relative h-full w-full rounded-[2.5rem] overflow-hidden ${i === current ? 'shadow-2xl' : 'shadow-lg saturate-0 hover:saturate-100'}`}>
-                    <LoadingImage src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill showSkeleton={showSkeleton} className="object-cover" referrerPolicy="no-referrer" />
+                    <LoadingImage src={promptImageUrl(p)} alt={p.title} fill showSkeleton={showSkeleton} className="object-cover" referrerPolicy="no-referrer" />
                     {i === current && (
                       <>
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent p-6 md:p-12 flex flex-col justify-end">
@@ -678,11 +682,11 @@ export default function FeaturedSlider({
         {featured.map((p, i) => (
           <div key={p.id} className={`absolute inset-0 transition-all duration-1000 ease-in-out ${i === current ? 'opacity-100 z-10' : 'opacity-0 scale-105 blur-sm z-0'}`}>
             {isNearbySlide(i, current, featured.length) ? (
-              <Image src={p.thumbnailUrl || p.images[0]?.url || ''} alt="" fill className="object-cover scale-105 blur-2xl opacity-20" loading={i === current ? 'eager' : 'lazy'} referrerPolicy="no-referrer" />
+              <Image src={promptImageUrl(p)} alt="" fill className="object-cover scale-105 blur-2xl opacity-20" loading={i === current ? 'eager' : 'lazy'} referrerPolicy="no-referrer" />
             ) : null}
             <div className="relative h-full w-full max-w-6xl mx-auto rounded-[3rem] overflow-hidden shadow-2xl border border-white/10 mt-4 h-full md:h-[90%]">
                {isNearbySlide(i, current, featured.length) ? (
-                 <LoadingImage src={p.thumbnailUrl || p.images[0]?.url || ''} alt={p.title} fill showSkeleton={showSkeleton} className="object-cover" referrerPolicy="no-referrer" priority={i === current} />
+                 <LoadingImage src={promptImageUrl(p)} alt={p.title} fill showSkeleton={showSkeleton} className="object-cover" referrerPolicy="no-referrer" priority={i === current} />
                ) : null}
                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent p-8 md:p-20 flex flex-col justify-end md:justify-center">
                   <div className="max-w-2xl animate-in slide-in-from-bottom-8 duration-700">
