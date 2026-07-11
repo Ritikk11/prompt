@@ -1,6 +1,7 @@
 export const revalidate = 300;
 
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import ToolContent from './ToolContent';
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
@@ -10,8 +11,22 @@ interface Props {
   params: Promise<{ tool: string }>;
 }
 
+type PostSummary = Awaited<ReturnType<typeof fetchPostSummaries>>[number];
+
+function getPublicToolPosts(posts: PostSummary[], tool: string) {
+  const normalizedTool = tool.trim().toLowerCase();
+
+  if (!normalizedTool) return [];
+
+  return posts.filter(post =>
+    (post.status === 'published' || !post.status) &&
+    post.visibility !== 'private' &&
+    getAllTools(post).some(item => item.toLowerCase() === normalizedTool)
+  );
+}
+
 function getDisplayTool(tool: string, posts: Awaited<ReturnType<typeof fetchPostSummaries>>, settings: Awaited<ReturnType<typeof fetchSettings>>) {
-  const normalizedTool = tool.toLowerCase();
+  const normalizedTool = tool.trim().toLowerCase();
   const fromSettings = Object.keys(settings.toolDetails || {}).find(name => name.toLowerCase() === normalizedTool);
   if (fromSettings) return fromSettings;
 
@@ -28,16 +43,19 @@ function getDisplayTool(tool: string, posts: Awaited<ReturnType<typeof fetchPost
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { tool } = await params;
-  const decodedTool = decodeURIComponent(tool);
+  const decodedTool = decodeURIComponent(tool).trim();
   const [posts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
   const displayTool = getDisplayTool(decodedTool, posts, settings);
   const discovery = settings.discoveryPages || {};
-  const count = posts.filter(post =>
-    (post.status === 'published' || !post.status) &&
-    post.visibility !== 'private' &&
-    ((post.aiTools || []).some(item => item.toLowerCase() === decodedTool.toLowerCase()) ||
-      post.images.some(image => (image.aiTools || [image.aiTool]).filter(Boolean).some(item => item.toLowerCase() === decodedTool.toLowerCase())))
-  ).length;
+  const count = getPublicToolPosts(posts, decodedTool).length;
+
+  if (count === 0) {
+    return {
+      title: 'Tool not found',
+      robots: { index: false, follow: false },
+    };
+  }
+
   const title = fillDiscoveryTemplate(
     discovery.toolSeoTitleTemplate || discovery.toolTitleTemplate || 'Best %tool% AI Prompts | AI PromptMatrix',
     { tool: displayTool, count }
@@ -55,8 +73,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ToolPage({ params }: Props) {
+  const { tool } = await params;
+  const decodedTool = decodeURIComponent(tool).trim();
   const posts = await fetchPostSummaries();
   const settings = await fetchSettings();
+
+  if (getPublicToolPosts(posts, decodedTool).length === 0) {
+    notFound();
+  }
   
   return <ToolContent posts={posts} settings={settings} />;
 }

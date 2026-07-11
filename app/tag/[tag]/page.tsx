@@ -1,6 +1,7 @@
 export const revalidate = 300;
 
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import TagContent from './TagContent';
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
@@ -9,16 +10,34 @@ interface Props {
   params: Promise<{ tag: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { tag } = await params;
-  const decodedTag = decodeURIComponent(tag);
-  const [posts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
-  const discovery = settings.discoveryPages || {};
-  const count = posts.filter(post =>
+type PostSummary = Awaited<ReturnType<typeof fetchPostSummaries>>[number];
+
+function getPublicTagPosts(posts: PostSummary[], tag: string) {
+  const normalizedTag = tag.trim().toLowerCase();
+
+  if (!normalizedTag) return [];
+
+  return posts.filter(post =>
     (post.status === 'published' || !post.status) &&
     post.visibility !== 'private' &&
-    post.tags.some(item => item.toLowerCase() === decodedTag.toLowerCase())
-  ).length;
+    post.tags.some(item => item.toLowerCase() === normalizedTag)
+  );
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { tag } = await params;
+  const decodedTag = decodeURIComponent(tag).trim();
+  const [posts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
+  const discovery = settings.discoveryPages || {};
+  const count = getPublicTagPosts(posts, decodedTag).length;
+
+  if (count === 0) {
+    return {
+      title: 'Tag not found',
+      robots: { index: false, follow: false },
+    };
+  }
+
   const title = fillDiscoveryTemplate(
     discovery.tagSeoTitleTemplate || discovery.tagTitleTemplate || '%tag% AI Prompts | AI PromptMatrix',
     { tag: decodedTag, count }
@@ -36,8 +55,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function TagPage({ params }: Props) {
+  const { tag } = await params;
+  const decodedTag = decodeURIComponent(tag).trim();
   const posts = await fetchPostSummaries();
   const settings = await fetchSettings();
+
+  if (getPublicTagPosts(posts, decodedTag).length === 0) {
+    notFound();
+  }
   
   return <TagContent posts={posts} settings={settings} />;
 }
