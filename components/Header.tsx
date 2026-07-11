@@ -15,7 +15,8 @@ import SmartLink from '@/components/SmartLink';
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const { settings, sections, posts } = useData();
-  const accountFeaturesEnabled = Boolean(settings.features?.userProfiles || settings.features?.userSubmissions);
+  const accountFeaturesEnabled = Boolean(settings.features?.userProfiles);
+  const submissionsEnabled = Boolean(settings.features?.userProfiles && settings.features?.userSubmissions);
   const headerSections = sections.filter(s => s.location === 'header' && s.visible).sort((a,b) => a.order - b.order);
   const headerLinks = settings.headerLinks || [];
   const navigate = useRouter();
@@ -292,7 +293,7 @@ export default function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-2">
-          {settings.features?.userSubmissions && (
+          {submissionsEnabled && (
              <Link href="/submit" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
                <Plus className="w-4 h-4 text-primary-500" />
                Submit Prompt
@@ -400,7 +401,7 @@ export default function Header() {
       {menuOpen && (
         <nav className="md:hidden border-t border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-950 slide-in">
           <div className="px-4 py-3 space-y-1">
-            {settings.features?.userSubmissions && (
+            {submissionsEnabled && (
               <Link href="/submit" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800">
                 <Plus className="w-4 h-4 text-primary-500" />
                 Submit Prompt

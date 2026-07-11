@@ -36,11 +36,14 @@ function revalidateContent(resource: string, data: any, id?: string) {
   }
 
   if (resource === 'settings') {
-    // Settings drive homepage copy, SEO templates, and discovery-page text everywhere.
+    // Settings drive the shared layout/header/footer plus homepage copy, SEO
+    // templates, feature-gated public routes, and discovery-page text.
+    revalidatePath('/', 'layout');
     revalidatePath('/');
     revalidatePath('/explore');
     revalidatePath('/blog');
     revalidatePath('/guides');
+    revalidatePath('/login');
     revalidatePath('/submit');
     revalidatePath('/profile');
     return;

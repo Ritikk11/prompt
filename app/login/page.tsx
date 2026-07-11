@@ -1,4 +1,5 @@
 import { fetchSettings } from '@/lib/data';
+import { notFound } from 'next/navigation';
 import LoginClient from './LoginClient';
 
 export const metadata = {
@@ -8,6 +9,7 @@ export const metadata = {
 
 export default async function LoginPage() {
   const settings = await fetchSettings();
+  if (!settings.features?.userProfiles) notFound();
   
   return <LoginClient settings={settings} />;
 }

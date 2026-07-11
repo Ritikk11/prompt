@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
-import type { Post } from '@/lib/types';
+import type { Post, SiteSettings } from '@/lib/types';
 
 function isMissingTableError(error: unknown) {
   const message = typeof error === 'object' && error && 'message' in error ? String((error as any).message) : '';
@@ -43,6 +43,18 @@ export async function GET(request: Request) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const admin = createAdminClient();
+  const { data: settingsRow, error: settingsError } = await admin
+    .from('settings')
+    .select('data')
+    .eq('id', 'global')
+    .maybeSingle();
+  if (settingsError) return NextResponse.json({ error: settingsError.message }, { status: 500 });
+
+  const settings = (settingsRow?.data || {}) as SiteSettings;
+  if (!settings.features?.userProfiles) {
+    return NextResponse.json({ error: 'Profile features are disabled' }, { status: 404 });
+  }
+
   const [bookmarkRows, likeRows, submissionRows, commentRows, legacySubmissionRows, legacyBookmarkRows, legacyLikeRows, legacyCommentRows] = await Promise.all([
     admin.from('user_bookmarks').select('post_id, created_at').eq('user_id', user.id),
     admin.from('user_likes').select('post_id, created_at').eq('user_id', user.id),

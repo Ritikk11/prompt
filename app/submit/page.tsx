@@ -41,7 +41,7 @@ export default function SubmitPage() {
 
   if (authLoading || loading) return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
-  if (!settings.features?.userSubmissions) {
+  if (!settings.features?.userProfiles || !settings.features?.userSubmissions) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
         <div className="rounded-3xl border border-surface-200 bg-white p-8 shadow-sm dark:border-surface-800 dark:bg-surface-900">

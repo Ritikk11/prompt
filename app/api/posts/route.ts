@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     if (settingsError) return NextResponse.json({ error: settingsError.message }, { status: 500 });
 
     const settings = (settingsRow?.data || {}) as SiteSettings;
-    if (!settings.features?.userSubmissions) {
+    if (!settings.features?.userProfiles || !settings.features?.userSubmissions) {
       return NextResponse.json({ error: 'User submissions are disabled' }, { status: 403 });
     }
 
@@ -175,6 +175,10 @@ export async function POST(request: Request) {
         const { error } = await admin.from('posts').update({ data: updated }).eq('id', id);
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
         return NextResponse.json({ ok: true, comment });
+      }
+
+      if (!settings.features?.userProfiles) {
+        return NextResponse.json({ error: 'Saved prompts are disabled' }, { status: 403 });
       }
 
       const existingBookmark = await admin
