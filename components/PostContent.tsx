@@ -629,7 +629,17 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                 <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-surface-100 dark:bg-surface-800/30 flex items-center justify-center p-6 lg:p-10">
                    <Image src={backgroundPromptImageUrl} alt="" fill className="object-cover blur-3xl opacity-20 scale-125 z-0"  referrerPolicy="no-referrer" />
                    <div className="max-h-[400px] w-full max-w-[800px] h-full sm:w-[600px] rounded-[24px] shadow-2xl relative z-10 overflow-hidden">
-                     <LoadingImage src={mainPromptImageUrl} alt={post.title} fill showSkeleton={showSkeleton} className="object-contain" referrerPolicy="no-referrer" priority />
+                     <LoadingImage
+                       src={mainPromptImageUrl}
+                       alt={post.title}
+                       fill
+                       showSkeleton={showSkeleton}
+                       className="object-contain"
+                       referrerPolicy="no-referrer"
+                       priority
+                       fetchPriority="high"
+                       sizes="(max-width: 768px) 100vw, 50vw"
+                     />
                    </div>
                 </div>
              </div>
@@ -659,6 +669,9 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   showSkeleton={showSkeleton}
                   className="object-contain" 
                   referrerPolicy="no-referrer"
+                  priority
+                  fetchPriority="high"
+                  sizes="(max-width: 768px) 100vw, 672px"
                 />
               </div>
             </div>
@@ -703,6 +716,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                 className="object-contain lg:object-cover"
                 referrerPolicy="no-referrer"
                 priority
+                fetchPriority="high"
+                sizes="(max-width: 1024px) 100vw, 42vw"
               />
             </div>
           </div>
@@ -744,6 +759,9 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                       showSkeleton={showSkeleton}
                       className="object-contain md:object-cover"
                       referrerPolicy="no-referrer"
+                      priority
+                      fetchPriority="high"
+                      sizes="(max-width: 1024px) 100vw, 50vw"
                     />
                   </div>
                </div>
@@ -761,6 +779,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               className="object-contain md:object-cover transition-transform duration-1000 group-hover:scale-105"
               referrerPolicy="no-referrer"
               priority
+              fetchPriority="high"
+              sizes="100vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
             <div className="absolute inset-0 flex flex-col items-center justify-end p-6 text-center sm:p-8 md:p-16">
@@ -811,6 +831,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                     className="object-contain md:object-cover"
                     referrerPolicy="no-referrer"
                     priority
+                    fetchPriority="high"
+                    sizes="(max-width: 768px) 95vw, 475px"
                   />
                 </div>
                 <div className="w-full md:w-1/2">
@@ -863,6 +885,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                     className="object-contain"
                     referrerPolicy="no-referrer"
                     priority
+                    fetchPriority="high"
+                    sizes="(max-width: 640px) 100vw, 1024px"
                   />
                 </div>
                 <div className="absolute top-6 left-6 z-20">

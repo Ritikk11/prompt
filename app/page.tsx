@@ -73,9 +73,7 @@ export default async function Home() {
   return (
     <div className="w-full overflow-x-hidden">
       {(settings.features?.showHomepageLibraryHero ?? true) && settings.heroStyle !== 'v9' && (
-        <ScrollReveal>
-          <HomeLibraryHero featuredPosts={featuredPosts} settings={settings} postCount={allPosts.length} />
-        </ScrollReveal>
+        <HomeLibraryHero featuredPosts={featuredPosts} settings={settings} postCount={allPosts.length} />
       )}
 
       {/* Featured Slider */}
