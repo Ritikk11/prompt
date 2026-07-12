@@ -66,7 +66,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
       <head>
         {imagePreconnectOrigins.map((origin) => (
-          <link key={origin} rel="preconnect" href={origin} />
+          <link key={origin} rel="preconnect" href={origin} crossOrigin="" />
         ))}
         {adsensePublisherId && initialSettings.ads?.autoAdsEnabled && (
           <script
