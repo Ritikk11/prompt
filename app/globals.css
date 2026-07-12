@@ -293,17 +293,30 @@ textarea {
 }
 
 @keyframes imageShimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
 }
 
 .image-shimmer {
-  background: linear-gradient(110deg, rgba(226, 232, 240, 0.7) 8%, rgba(248, 250, 252, 0.95) 18%, rgba(226, 232, 240, 0.7) 33%);
-  background-size: 200% 100%;
-  animation: imageShimmer 2.4s ease-in-out infinite;
+  overflow: hidden;
+  background: rgba(226, 232, 240, 0.7);
+  contain: paint;
 }
 
 .dark .image-shimmer {
-  background: linear-gradient(110deg, rgba(30, 41, 59, 0.75) 8%, rgba(51, 65, 85, 0.95) 18%, rgba(30, 41, 59, 0.75) 33%);
-  background-size: 200% 100%;
+  background: rgba(30, 41, 59, 0.75);
+}
+
+.image-shimmer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%);
+  background: linear-gradient(110deg, transparent 8%, rgba(248, 250, 252, 0.95) 45%, transparent 72%);
+  animation: imageShimmer 2.4s ease-in-out infinite;
+  will-change: transform;
+}
+
+.dark .image-shimmer::before {
+  background: linear-gradient(110deg, transparent 8%, rgba(51, 65, 85, 0.95) 45%, transparent 72%);
 }

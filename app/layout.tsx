@@ -15,6 +15,15 @@ const inter = Inter({
   variable: '--font-sans',
 });
 
+function toOrigin(value?: string | null) {
+  if (!value) return '';
+  try {
+    return new URL(value).origin;
+  } catch {
+    return '';
+  }
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await fetchSettings();
   const siteTitle = settings.siteTitle || 'AI PromptMatrix';
@@ -48,10 +57,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     fetchSections(),
   ]);
   const adsensePublisherId = initialSettings.ads?.publisherId || process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
+  const imagePreconnectOrigins = Array.from(new Set([
+    toOrigin(process.env.CLOUDFLARE_UPLOAD_PUBLIC_URL || 'https://uploads.aipromptmatrix.in'),
+    toOrigin(process.env.NEXT_PUBLIC_SUPABASE_URL),
+  ].filter(Boolean)));
 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
       <head>
+        {imagePreconnectOrigins.map((origin) => (
+          <link key={origin} rel="preconnect" href={origin} />
+        ))}
         {adsensePublisherId && initialSettings.ads?.autoAdsEnabled && (
           <script
             async
