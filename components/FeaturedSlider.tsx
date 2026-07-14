@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Play, Pause, Eye, Heart, ArrowRight, Bookmar
 import type { Post, SiteSettings } from '@/lib/types';
 import { getToolInfo, getAllTools } from '@/lib/constants';
 import LoadingImage from '@/components/LoadingImage';
+import ToolBadge from '@/components/ToolBadge';
 import { getPromptImageUrl } from '@/lib/image-url';
 
 function isNearbySlide(index: number, current: number, total: number) {
@@ -254,16 +255,7 @@ export default function FeaturedSlider({
                   {allTools.map(tool => {
                     const info = getToolInfo(tool, settings?.toolDetails);
                     return (
-                      <span key={tool} className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg ${info.color}`}>
-                        {info.logo && (
-                          <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                            <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                              <Image src={info.logo} alt="" width={18} height={18} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
-                            </div>
-                          </div>
-                        )}
-                        {tool}
-                      </span>
+                      <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />
                     );
                   })}
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-sm">⭐ Featured</span>
@@ -294,16 +286,7 @@ export default function FeaturedSlider({
               {allTools.map(tool => {
                 const info = getToolInfo(tool, settings?.toolDetails);
                 return (
-                  <span key={tool} className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg ${info.color}`}>
-                    {info.logo && (
-                      <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                          <Image src={info.logo} alt="" width={18} height={18} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
-                        </div>
-                      </div>
-                    )}
-                    {tool}
-                  </span>
+                  <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />
                 );
               })}
               <span className="px-3 py-1 rounded-full text-xs font-medium bg-surface-200 dark:bg-surface-800 text-surface-700 dark:text-surface-300">⭐ Featured</span>
@@ -376,16 +359,7 @@ export default function FeaturedSlider({
                       {slideTools.map(tool => {
                         const info = getToolInfo(tool, settings?.toolDetails);
                         return (
-                          <span key={tool} className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-bold text-white shadow-lg md:px-4 md:py-1.5 md:text-sm ${info.color}`}>
-                            {info.logo && (
-                              <div className="relative flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/20 p-[1px]">
-                                <div className="relative h-full w-full overflow-hidden rounded-full bg-white shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                                  <Image src={info.logo} alt="" width={18} height={18} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
-                                </div>
-                              </div>
-                            )}
-                            {tool}
-                          </span>
+                          <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />
                         );
                       })}
                     </div>
@@ -511,9 +485,7 @@ export default function FeaturedSlider({
                  {allTools.map(tool => {
                    const info = getToolInfo(tool, settings?.toolDetails);
                    return (
-                     <span key={tool} className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider text-surface-950 shadow-xl ${info.color}`}>
-                       {tool}
-                     </span>
+                     <ToolBadge key={tool} toolName={tool} toolInfo={info} size="lg" />
                    );
                  })}
                </div>
@@ -559,16 +531,7 @@ export default function FeaturedSlider({
                  {allTools.map(tool => {
                    const info = getToolInfo(tool, settings?.toolDetails);
                    return (
-                     <div key={tool} className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black text-white ${info.color} shadow-lg`}>
-                        {info.logo && (
-                          <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-0.5">
-                            <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                              <Image src={info.logo} alt="" width={18} height={18} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
-                            </div>
-                          </div>
-                        )}
-                        {tool}
-                     </div>
+                     <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />
                    );
                  })}
                </div>
@@ -647,16 +610,7 @@ export default function FeaturedSlider({
                           {(() => {
                             const slideToolInfo = getToolInfo(p.images[0].aiTool, settings?.toolDetails);
                             return (
-                              <span className={`inline-flex items-center gap-2 px-3 py-1 w-max rounded-lg text-[10px] font-black text-white ${slideToolInfo.color} mb-4 uppercase tracking-widest shadow-lg`}>
-                                {slideToolInfo.logo && (
-                                  <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                                    <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={slideToolInfo.logoScale ? { transform: `scale(${slideToolInfo.logoScale})` } : undefined}>
-                                      <Image src={slideToolInfo.logo} alt="" width={18} height={18} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
-                                    </div>
-                                  </div>
-                                )}
-                                {p.images[0].aiTool}
-                              </span>
+                              <ToolBadge toolName={p.images[0].aiTool} toolInfo={slideToolInfo} size="sm" className="w-max mb-4" />
                             );
                           })()}
                           <h3 className="text-2xl md:text-4xl font-black text-white mb-4 line-clamp-2 uppercase tracking-wide">{p.title}</h3>

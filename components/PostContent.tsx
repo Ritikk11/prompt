@@ -23,6 +23,7 @@ import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
 import PostCard from '@/components/PostCard';
 import AdSlot from '@/components/AdSlot';
 import ScrollReveal from '@/components/ScrollReveal';
+import ToolBadge from '@/components/ToolBadge';
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -370,14 +371,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <Eye className="h-3 w-3" /> {(item.views || 0).toLocaleString()}
           </p>
           {firstTool && firstToolInfo && (
-            <span className={`inline-flex shrink-0 items-center gap-1 rounded-full ${firstToolInfo.color}/80 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wider text-white shadow-xl backdrop-blur-md border border-white/10`}>
-              {firstToolInfo.logo && (
-                <span className="relative h-3 w-3 shrink-0 overflow-hidden rounded-full bg-white p-[1px]">
-                  <Image src={firstToolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                </span>
-              )}
-              {firstTool}
-            </span>
+            <ToolBadge toolName={firstTool} toolInfo={firstToolInfo} size="sm" className="shrink-0" />
           )}
         </div>
       </div>
@@ -430,7 +424,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         </div>
         <Link
           href={keepExploring.ctaHref || '/explore'}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-xs font-black text-white transition-colors hover:bg-primary-600"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-xs font-black text-white transition-colors hover:bg-primary-700"
         >
           {keepExploring.ctaLabel} <ArrowRight className="h-3.5 w-3.5" />
         </Link>
@@ -497,6 +491,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         </button>
         <button
           onClick={handleBookmark}
+          aria-label={post.bookmarkedByUser ? 'Remove bookmark' : 'Bookmark this post'}
           className={`flex items-center gap-1.5 transition-colors ${
             post.bookmarkedByUser ? 'text-primary-500' : isV2 ? 'hover:text-primary-300' : 'hover:text-primary-500'
           }`}
@@ -522,7 +517,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <span className="text-white text-xs font-black">AI</span>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-widest leading-none mb-1">Published by</p>
+            <p className="text-[10px] font-bold text-surface-600 dark:text-surface-400 uppercase tracking-widest leading-none mb-1">Published by</p>
             <p className="text-xs font-black text-surface-900 dark:text-white leading-tight">{EDITORIAL_TEAM_NAME}</p>
           </div>
         </div>
@@ -549,7 +544,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           )}
         </div>
         <div>
-          <p className="text-[10px] font-bold text-surface-400 dark:text-surface-500 uppercase tracking-widest leading-none mb-1">Submitted by</p>
+          <p className="text-[10px] font-bold text-surface-600 dark:text-surface-400 uppercase tracking-widest leading-none mb-1">Submitted by</p>
           <p className="text-xs font-black text-surface-900 dark:text-white leading-tight">@{username}</p>
         </div>
       </Link>
@@ -577,18 +572,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               <div className="flex flex-wrap gap-2 mb-6">
                 {heroTools.map(tool => {
                   const info = getToolInfo(tool, settings?.toolDetails);
-                  return (
-                    <span key={tool} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-md backdrop-blur-md saturate-150 ${info.color}/90 border border-white/20 uppercase tracking-widest`}>
-                      {info.logo && (
-                        <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                          <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                            <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                          </div>
-                        </div>
-                      )}
-                      {tool}
-                    </span>
-                  );
+                  return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
                 })}
               </div>
               <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight drop-shadow-lg">{post.title}</h1>
@@ -606,18 +590,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                    <div className="flex flex-wrap gap-2">
                      {heroTools.map(tool => {
                        const info = getToolInfo(tool, settings?.toolDetails);
-                       return (
-                         <span key={tool} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white shadow-md ${info.color}/90 uppercase tracking-wider`}>
-                           {info.logo && (
-                             <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                               <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                                 <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                               </div>
-                             </div>
-                           )}
-                           {tool}
-                         </span>
-                       );
+                       return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
                      })}
                    </div>
                      {post.featured && <span className="px-3 py-1 rounded-full text-xs font-medium bg-surface-200 dark:bg-surface-800 text-surface-700 dark:text-surface-300">⭐ Featured</span>}
@@ -648,16 +621,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       case 'v4': // Minimalist Text
         return (
           <div className="mb-12 flex flex-col items-center text-center mt-6 md:mt-10">
-            <span className={`mb-6 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest text-white shadow-lg ${heroToolInfo.color}/90 saturate-150`}>
-                {heroToolInfo.logo && (
-                  <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                    <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={heroToolInfo.logoScale ? { transform: `scale(${heroToolInfo.logoScale})` } : undefined}>
-                      <Image src={heroToolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                    </div>
-                  </div>
-                )}
-                {heroToolName}
-            </span>
+            <ToolBadge toolName={heroToolName} toolInfo={heroToolInfo} size="lg" className="mb-6" />
             <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 tracking-tight leading-tight max-w-4xl">{post.title}</h1>
             <p className="text-surface-600 dark:text-surface-400 text-lg md:text-2xl max-w-3xl leading-relaxed mb-8 font-medium">{post.description}</p>
             <div className="relative w-full max-w-2xl aspect-video mb-10 rounded-3xl overflow-hidden shadow-xl bg-surface-100 dark:bg-surface-800/50 p-4">
@@ -686,16 +650,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               {heroTools.map(tool => {
                 const info = getToolInfo(tool, settings?.toolDetails);
                 return (
-                  <span key={tool} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black text-white ${info.color}/90 uppercase tracking-[0.2em] shadow-md`}>
-                    {info.logo && (
-                      <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                          <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                        </div>
-                      </div>
-                    )}
-                    {tool}
-                  </span>
+                  <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />
                 );
               })}
             </div>
@@ -732,16 +687,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   <div>
                     <div className="flex gap-2 mb-6">
                        <span className="px-2 py-1 bg-black text-white dark:bg-white dark:text-black text-[10px] font-black uppercase tracking-widest">AI GENERATED</span>
-                       <span className={`inline-flex items-center gap-1.5 px-2 py-1 text-white text-[10px] font-black uppercase tracking-widest ${heroToolInfo.color}/90 shadow-md`}>
-                        {heroToolInfo.logo && (
-                          <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                            <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={heroToolInfo.logoScale ? { transform: `scale(${heroToolInfo.logoScale})` } : undefined}>
-                              <Image src={heroToolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                            </div>
-                          </div>
-                        )}
-                        {heroToolName}
-                       </span>
+                       <ToolBadge toolName={heroToolName} toolInfo={heroToolInfo} size="sm" />
                     </div>
                     <h1 className="text-4xl md:text-5xl font-black text-surface-900 dark:text-white mb-6 uppercase tracking-tighter italic">
                       {post.title}
@@ -788,16 +734,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                  {heroTools.map(tool => {
                    const info = getToolInfo(tool, settings?.toolDetails);
                    return (
-                     <span key={tool} className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black text-white ${info.color}/80 backdrop-blur-md uppercase tracking-widest border border-white/20 shadow-xl`}>
-                       {info.logo && (
-                          <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                            <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                              <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                            </div>
-                          </div>
-                        )}
-                       {tool}
-                     </span>
+                     <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />
                    );
                  })}
                </div>
@@ -840,16 +777,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                     {heroTools.map(tool => {
                       const info = getToolInfo(tool, settings?.toolDetails);
                       return (
-                        <span key={tool} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded text-[10px] font-black text-white ${info.color} uppercase tracking-widest shadow-md`}>
-                          {info.logo && (
-                            <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                              <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                                <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                              </div>
-                            </div>
-                          )}
-                          {tool}
-                        </span>
+                        <ToolBadge key={tool} toolName={tool} toolInfo={info} size="sm" />
                       );
                     })}
                   </div>
@@ -890,16 +818,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   />
                 </div>
                 <div className="absolute top-6 left-6 z-20">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white shadow-md backdrop-blur-md saturate-150 ${heroToolInfo.color}/90 border border-white/20 uppercase tracking-widest`}>
-                    {heroToolInfo.logo && (
-                      <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                        <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm" style={heroToolInfo.logoScale ? { transform: `scale(${heroToolInfo.logoScale})` } : undefined}>
-                          <Image src={heroToolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                        </div>
-                      </div>
-                    )}
-                    {heroToolName}
-                  </span>
+                  <ToolBadge toolName={heroToolName} toolInfo={heroToolInfo} size="md" />
                 </div>
                 {post.featured && (
                   <div className="absolute top-6 right-6 z-20">
@@ -951,7 +870,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               <ImageIcon className="w-5 h-5 text-primary-500" />
             </div>
             <h2 className="text-xl md:text-2xl font-bold tracking-tight">
-              Reference Images <span className="text-surface-400 font-medium ml-1">({post.referenceImages.length})</span>
+              Reference Images <span className="text-surface-600 dark:text-surface-400 font-medium ml-1">({post.referenceImages.length})</span>
             </h2>
           </div>
           
@@ -994,7 +913,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <Tag className="w-5 h-5 text-primary-500" />
           </div>
           <h2 className="text-xl md:text-2xl font-bold tracking-tight">
-            Prompt Gallery <span className="text-surface-400 font-medium ml-1">({post.images.length})</span>
+            Prompt Gallery <span className="text-surface-600 dark:text-surface-400 font-medium ml-1">({post.images.length})</span>
           </h2>
         </div>
 
@@ -1023,20 +942,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                       {(img.aiTools || [img.aiTool].filter(Boolean)).map((tool) => {
                         const info = getToolInfo(tool, settings?.toolDetails);
                         return (
-                          <div key={tool} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold text-white shadow-xl backdrop-blur-md ${info.color}/80 border border-white/10 uppercase tracking-wider`}>
-                            {info.logo && (
-                              <div className="relative flex shrink-0 items-center justify-center w-3.5 h-3.5 bg-white/20 rounded-full p-[1px]">
-                                <div 
-                                  className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm flex items-center justify-center p-[1px]"
-                                >
-                                  <div className="relative w-full h-full" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                                    <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                            {tool}
-                          </div>
+                          <ToolBadge key={tool} toolName={tool} toolInfo={info} size="sm" />
                         );
                       })}
                     </div>
@@ -1124,7 +1030,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                       </>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-xs font-bold text-surface-400 uppercase tracking-widest">
+                  <div className="flex items-center gap-2 text-xs font-bold text-surface-600 dark:text-surface-400 uppercase tracking-widest">
                     <Clock className="w-4 h-4 text-primary-500/50" />
                     Model: <span className="text-surface-600 dark:text-surface-200">{img.model || getDefaultImageModel(img.aiTool) || img.aiTool}</span>
                   </div>
@@ -1167,7 +1073,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       <div className="mb-16 rounded-3xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 sm:p-8">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="mb-2 text-xs font-black uppercase tracking-[0.22em] text-primary-500">Quick workflow</p>
+            <p className="mb-2 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">Quick workflow</p>
             <h3 className="text-2xl font-extrabold tracking-tight text-surface-900 dark:text-white md:text-3xl">How to use these prompts</h3>
           </div>
           <p className="max-w-xl text-sm leading-relaxed text-surface-500 dark:text-surface-400">
@@ -1183,7 +1089,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500 text-white shadow-lg shadow-primary-500/20">
                     <StepIcon className="h-5 w-5" />
                   </div>
-                  <span className="text-xs font-black text-surface-300 dark:text-surface-700">0{index + 1}</span>
+                  <span className="text-xs font-black text-surface-600 dark:text-surface-400">0{index + 1}</span>
                 </div>
                 <h4 className="mb-2 text-sm font-bold text-surface-900 dark:text-white">{step.title}</h4>
                 <p className="text-xs leading-relaxed text-surface-500 dark:text-surface-400">{step.text}</p>
@@ -1219,7 +1125,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                 if (!isUserOwned) {
                   return (
                     <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
-                      <p className="mb-3 text-xs font-bold text-surface-400 uppercase tracking-widest">Author</p>
+                      <p className="mb-3 text-xs font-bold text-surface-600 dark:text-surface-400 uppercase tracking-widest">Author</p>
                       <div className="flex items-center gap-3">
                         <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center">
                           <span className="text-white text-xs font-black">AI</span>
@@ -1243,7 +1149,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
                 return (
                   <Link href={authorUrl} className="block rounded-2xl border border-surface-200 bg-white p-4 shadow-sm transition-colors hover:border-primary-300 dark:border-surface-800 dark:bg-surface-900 dark:hover:border-primary-500/50">
-                    <p className="mb-3 text-xs font-bold text-surface-400 uppercase tracking-widest">Author</p>
+                    <p className="mb-3 text-xs font-bold text-surface-600 dark:text-surface-400 uppercase tracking-widest">Author</p>
                     <div className="flex items-center gap-3">
                       <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-primary-500/10">
                         {avatarUrl ? (
@@ -1281,7 +1187,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       {/* Tags */}
       {showTags && (
       <div className="mb-16">
-        <h3 className="text-sm font-bold text-surface-400 uppercase tracking-[0.2em] mb-6">Discovery Tags</h3>
+        <h3 className="text-sm font-bold text-surface-600 dark:text-surface-400 uppercase tracking-[0.2em] mb-6">Discovery Tags</h3>
         <div className="flex flex-wrap gap-2.5">
           {(post.tags || []).map(tag => (
             <Link
@@ -1322,15 +1228,15 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                </div>
             ) : (
                <div>
-                 <p className="text-surface-500 mb-4">Join the discussion and share your results.</p>
-                 <button onClick={handleLogin} className="px-5 py-2.5 rounded-xl text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors">
+                 <p className="text-surface-600 dark:text-surface-400 mb-4">Join the discussion and share your results.</p>
+                 <button onClick={handleLogin} className="px-5 py-2.5 rounded-xl text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors">
                    Sign in to Comment
                  </button>
                </div>
             )}
             
             <div className="mt-12 text-left">
-              <p className="text-sm font-medium text-surface-400 mb-6">
+              <p className="text-sm font-medium text-surface-600 dark:text-surface-400 mb-6">
                 {comments.filter(comment => comment.status === 'approved' || comment.userId === user?.id).length} comments
               </p>
               <div className="space-y-4">
@@ -1382,7 +1288,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               <div className="w-1.5 h-8 bg-primary-500 rounded-full underline-offset-8" />
               <h2 className="text-2xl font-black tracking-tight">Related Prompts</h2>
             </div>
-            <Link href="/explore" className="text-sm font-bold text-primary-500 hover:text-primary-600 flex items-center gap-2 group">
+            <Link href="/explore" className="text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center gap-2 group">
               Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
@@ -1408,7 +1314,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               <div className="flex items-center gap-3">
                 <div className="h-9 w-1.5 rounded-full bg-primary-500" />
                 <div>
-                  <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-500">Guide</p>
+                  <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">Guide</p>
                   <h2 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">Detailed Insights</h2>
                 </div>
               </div>
@@ -1430,7 +1336,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <div className="mb-8 flex items-center gap-3">
               <div className="h-9 w-1.5 rounded-full bg-primary-500" />
               <div>
-                <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-500">FAQ</p>
+                <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">FAQ</p>
                 <h2 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">Frequently Asked Questions</h2>
               </div>
             </div>
@@ -1457,11 +1363,11 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                 <Wand2 className="h-5 w-5" />
               </div>
               <div>
-                <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-500">Next ideas</p>
+                <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">Next ideas</p>
                 <h2 className="text-2xl font-black tracking-tight">Recommended Posts</h2>
               </div>
             </div>
-            <Link href="/explore" className="hidden text-sm font-bold text-primary-500 hover:text-primary-600 sm:flex items-center gap-2 group">
+            <Link href="/explore" className="hidden text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 sm:flex items-center gap-2 group">
               Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
@@ -1516,18 +1422,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                 {lightboxImage.tools.map(tool => {
                   const info = getToolInfo(tool, settings?.toolDetails);
                   return (
-                    <div key={tool} className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold text-white shadow-xl backdrop-blur-md ${info.color}/80 border border-white/10 uppercase tracking-wider`}>
-                      {info.logo && (
-                        <div className="relative flex shrink-0 items-center justify-center w-4 h-4 bg-white/20 rounded-full p-[1px]">
-                          <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm flex items-center justify-center p-[1px]">
-                            <div className="relative w-full h-full" style={info.logoScale ? { transform: `scale(${info.logoScale})` } : undefined}>
-                              <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      {tool}
-                    </div>
+                    <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />
                   );
                 })}
               </div>

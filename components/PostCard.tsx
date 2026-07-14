@@ -7,14 +7,22 @@ import type { Post } from '@/lib/types';
 import { getToolInfo, getAllTools } from '@/lib/constants';
 import { useData } from '@/components/context/DataContext';
 import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
+import ToolBadge from '@/components/ToolBadge';
 import { getThumbnailImageUrl } from '@/lib/image-url';
 
+// Alternate, tool-color-independent badge looks selectable via settings.badgeStyle.
+// The glass default (v1 / v2 / unknown) is the shared, site-wide <ToolBadge>.
+const VARIANT_STYLES = ['v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10'];
+
 const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; toolName: string; toolInfo: any; className?: string }) => {
+  if (!VARIANT_STYLES.includes(style)) {
+    return <ToolBadge toolName={toolName} toolInfo={toolInfo} size="sm" className={className} />;
+  }
+
   const isIconOnly = style === 'v8';
-  
+
   const getBadgeStyle = () => {
     switch(style) {
-      case 'v2': return `backdrop-blur-md ${toolInfo.color}/80 border border-white/10 text-white shadow-xl`;
       case 'v3': return `bg-surface-900 border-2 border-primary-500 text-primary-500 shadow-[0_0_15px_rgba(var(--primary-500),0.5)]`;
       case 'v4': return `bg-surface-100 dark:bg-surface-800 border-b-4 border-r-4 border-surface-300 dark:border-surface-700 text-surface-900 dark:text-white shadow-md active:border-0 active:translate-x-[2px] active:translate-y-[2px]`;
       case 'v5': return `bg-surface-900 dark:bg-white text-white dark:text-black font-bold uppercase tracking-widest text-[8px] px-2 py-0.5 rounded-none`;
@@ -23,7 +31,7 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
       case 'v8': return `bg-black/40 backdrop-blur-md p-1.5 rounded-xl border border-white/10`;
       case 'v9': return `bg-transparent border-2 border-white/50 text-white font-black hover:bg-white hover:text-black transition-colors`;
       case 'v10': return `bg-primary-500 text-white [clip-path:polygon(0_0,100%_0,85%_100%,0%_100%)] pl-3 pr-6 py-1 font-black italic`;
-      default: return `backdrop-blur-md ${toolInfo.color}/80 border border-white/10 text-white shadow-xl`;
+      default: return '';
     }
   };
 
@@ -281,7 +289,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
             {post.title}
           </h3>
           <div className="flex items-center justify-between text-surface-500 dark:text-surface-400">
-             <span className="text-[10px] font-medium opacity-80">{post.images.length} {post.images.length === 1 ? 'Prompt' : 'Prompts'}</span>
+             <span className="text-[10px] font-medium text-surface-600 dark:text-surface-400">{post.images.length} {post.images.length === 1 ? 'Prompt' : 'Prompts'}</span>
              <div className="flex gap-2.5">
                <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-medium"><Eye className="w-3.5 h-3.5" />{post.views}</span>
                <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-medium"><Heart className="w-3.5 h-3.5" />{post.likes}</span>
