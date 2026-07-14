@@ -5,6 +5,7 @@ import Image from 'next/image';
 
 import { Sparkles, ChevronUp } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
+import { getAllTools } from '@/lib/constants';
 import type { FooterLinkGroup } from '@/lib/types';
 
 const fallbackFooterGroups: FooterLinkGroup[] = [
@@ -28,10 +29,13 @@ const fallbackFooterGroups: FooterLinkGroup[] = [
 ];
 
 export default function Footer() {
-  const { settings } = useData();
+  const { settings, posts } = useData();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const footerGroups = settings.footerLinkGroups?.length ? settings.footerLinkGroups : fallbackFooterGroups;
+  // Empty tool pages return 404, so only link tools that have posts.
+  const toolsWithPosts = new Set(posts.flatMap(post => getAllTools(post)));
+  const footerTools = (settings.aiTools || []).filter(tool => toolsWithPosts.has(tool)).slice(0, 10);
   const footerLinkClass = 'block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors';
 
   useEffect(() => {
@@ -113,7 +117,7 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-4">AI Tools</h3>
             <div className="flex flex-wrap gap-2">
-              {(settings.aiTools || []).slice(0, 10).map(tool => (
+              {footerTools.map(tool => (
                 <Link
                   key={tool}
                   href={`/tool/${encodeURIComponent(tool)}`}

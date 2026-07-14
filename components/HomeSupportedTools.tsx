@@ -21,7 +21,11 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
   ) as Record<string, string[]>;
   const toolCounts = new Map<string, number>();
   posts.forEach(post => getAllTools(post).forEach(tool => toolCounts.set(tool, (toolCounts.get(tool) || 0) + 1)));
-  const tools = (settings.aiTools || Array.from(toolCounts.keys())).filter(Boolean).slice(0, 4);
+  const tools = (settings.aiTools || Array.from(toolCounts.keys()))
+    .filter(Boolean)
+    // Empty tool pages return 404, so only link tools that have posts.
+    .filter(tool => (toolCounts.get(tool) || 0) > 0)
+    .slice(0, 4);
   const getNotesForTool = (tool: string) => {
     const normalizedTool = tool.toLowerCase();
     const matchedCustomNotes = Object.entries(toolNotes).find(([name]) => {
@@ -38,7 +42,7 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
     <section className="relative w-full overflow-hidden bg-surface-50 px-5 py-16 dark:bg-surface-950 sm:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-300">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300">
             <Zap className="h-4 w-4" />
             {content.badge || 'PRO-GRADE COMPATIBILITY'}
           </div>
@@ -67,7 +71,7 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
                   <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-[11px] font-bold text-surface-600 dark:bg-surface-800 dark:text-surface-300">
                     <BookmarkCheck className="h-3.5 w-3.5 text-primary-500" /> {toolCounts.get(tool) || 0} prompts
                   </span>
-                  <span className="truncate text-right text-[9px] font-black uppercase tracking-wider text-surface-400">{details?.badge || 'AI prompts library'}</span>
+                  <span className="truncate text-right text-[9px] font-black uppercase tracking-wider text-surface-600 dark:text-surface-400">{details?.badge || 'AI prompts library'}</span>
                 </div>
                 <div className="mx-auto mt-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-50 shadow-sm dark:bg-surface-800">
                   {info.logo ? (
@@ -87,7 +91,7 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
                       <div key={`${stat.label}-${statIndex}`} className="min-w-0 text-center">
                         <Icon className="mx-auto h-3.5 w-3.5 text-surface-400" />
                         <p className="mt-1 truncate text-[10px] font-black text-surface-800 dark:text-white">{stat.value}</p>
-                        <p className="truncate text-[8px] text-surface-500">{stat.label}</p>
+                        <p className="truncate text-[8px] text-surface-600 dark:text-surface-400">{stat.label}</p>
                       </div>
                     );
                   })}

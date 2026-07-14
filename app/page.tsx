@@ -1,6 +1,7 @@
 export const revalidate = 300;
 import type { ReactNode } from 'react';
 import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } from '@/lib/data';
+import { getAllTools } from '@/lib/constants';
 import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
 import HomeLinkBlocks from '@/components/HomeLinkBlocks';
@@ -33,6 +34,12 @@ export default async function Home() {
   const settings = await fetchSettings();
   const allPosts = await fetchPostSummaries();
   const featuredPosts = allPosts.filter(p => p.featured && (p.status === 'published' || !p.status) && p.visibility !== 'private');
+  // Empty tool pages return 404, so hero/slider tool chips only link tools with posts.
+  const toolsWithPosts = new Set(allPosts.flatMap(post => getAllTools(post)));
+  const linkableToolSettings = {
+    ...settings,
+    aiTools: (settings.aiTools || []).filter(tool => toolsWithPosts.has(tool)),
+  };
 
   const homepageSections = sections
     .filter(s => s.visible && (s.location || 'homepage') === 'homepage')
@@ -73,7 +80,7 @@ export default async function Home() {
   return (
     <div className="w-full overflow-x-hidden">
       {(settings.features?.showHomepageLibraryHero ?? true) && settings.heroStyle !== 'v9' && (
-        <HomeLibraryHero featuredPosts={featuredPosts} settings={settings} postCount={allPosts.length} />
+        <HomeLibraryHero featuredPosts={featuredPosts} settings={linkableToolSettings} postCount={allPosts.length} />
       )}
 
       {/* Featured Slider */}
@@ -81,7 +88,7 @@ export default async function Home() {
         <section className="mx-auto max-w-7xl px-1 py-0">
           <FeaturedSlider
             featuredPosts={featuredPosts}
-            settings={settings}
+            settings={linkableToolSettings}
             stats={{ postCount: allPosts.length, sectionCount: homepageSections.length }}
           />
         </section>

@@ -41,7 +41,7 @@ export default function HomeReviewProcess({ settings }: { settings?: SiteSetting
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <div>
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-300">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300">
             <ShieldCheck className="h-4 w-4" />
             {content.badge || 'Review process'}
           </div>
@@ -68,7 +68,7 @@ export default function HomeReviewProcess({ settings }: { settings?: SiteSetting
             return (
               <div key={step.number} className="rounded-2xl border border-surface-200 bg-surface-50 p-5 transition hover:-translate-y-0.5 hover:border-emerald-300 dark:border-surface-800 dark:bg-surface-900/70 dark:hover:border-emerald-500/50">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-xs font-black tracking-[0.2em] text-emerald-500">{step.number}</span>
+                  <span className="text-xs font-black tracking-[0.2em] text-emerald-700 dark:text-emerald-400">{step.number}</span>
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
                     <Icon className="h-5 w-5" />
                   </span>

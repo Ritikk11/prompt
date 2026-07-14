@@ -27,7 +27,7 @@ export default function HomeCreatorFeedback({ settings }: { settings?: SiteSetti
     <section className="relative w-full overflow-hidden bg-white px-5 py-16 dark:bg-surface-950 sm:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-pink-500/10 px-4 py-2 text-xs font-bold text-pink-600 dark:text-pink-300">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-pink-500/10 px-4 py-2 text-xs font-bold text-pink-700 dark:text-pink-300">
             <MessageSquareText className="h-4 w-4" />
             {content.badge || 'Creator-focused'}
           </div>

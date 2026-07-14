@@ -42,7 +42,7 @@ export default function HomePromptOfDay({ post, settings }: { post?: Post; setti
                   loading="lazy"
                 />
               </div>
-              <span className="absolute left-5 top-5 rounded-full bg-black/45 px-4 py-1.5 text-xs font-black text-white backdrop-blur-md">
+              <span className="absolute left-5 top-5 rounded-full bg-black/60 px-4 py-1.5 text-xs font-black text-white backdrop-blur-md">
                 Featured
               </span>
             </Link>
