@@ -37,6 +37,11 @@ export default function Header() {
   const didMountRef = useRef(false);
   const [isVisible, setIsVisible] = useState(true);
   const [routeProgress, setRouteProgress] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const stopRouteTimers = useCallback(() => {
     if (routeTimerRef.current) window.clearTimeout(routeTimerRef.current);
@@ -341,7 +346,7 @@ export default function Header() {
             className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-surface-600" />}
+            {mounted && theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-surface-600" />}
           </button>
         </nav>
 
@@ -360,7 +365,7 @@ export default function Header() {
             className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800"
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-surface-600" />}
+            {mounted && theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-surface-600" />}
           </button>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
