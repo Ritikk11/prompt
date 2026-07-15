@@ -108,6 +108,10 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
 
   useEffect(() => {
     const applyViewerState = async () => {
+      if (!settings.features?.userProfiles) {
+        setLocalBookmarks([]);
+        return;
+      }
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         setLocalBookmarks([]);
@@ -138,7 +142,7 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
       applyViewerState();
     });
     return () => subscription.unsubscribe();
-  }, [supabase]);
+  }, [supabase, settings.features?.userProfiles]);
 
   const resetData = useCallback(async () => {
     try {

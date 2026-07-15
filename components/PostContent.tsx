@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
 import Image from 'next/image';
-import { Copy, Check, Eye, Heart, Calendar, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Wand2, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle, Layers, ClipboardCheck } from 'lucide-react';
+import { Copy, Check, Eye, Heart, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Wand2, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle, Layers, ClipboardCheck } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
 import { getDefaultImageModel, getToolInfo, getAllTools, getToolForImageModel } from '@/lib/constants';
@@ -469,40 +469,39 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     );
   };
 
-  const renderMetaInfo = () => {
-    const isV2 = postHeroStyle === 'v2';
-    const containerClasses = isV2
-      ? 'bg-black/40 border-white/10 text-white/90 backdrop-blur-md'
-      : 'text-surface-500 bg-surface-50/70 dark:bg-surface-900/50 border-surface-200 dark:border-surface-800 backdrop-blur-md';
-    
+  const renderMetaInfo = (align: 'center' | 'start' = 'center') => {
     return (
-      <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm font-medium py-3 px-6 rounded-full border transition-colors ${containerClasses}`}>
-        <span className="flex items-center gap-1.5">
-          <Eye className={`w-4.5 h-4.5 ${isV2 ? 'text-white' : 'text-primary-500'}`} /> {(post.views || 0).toLocaleString()} <span className="hidden sm:inline">views</span>
-        </span>
-        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
-        <button
-          onClick={() => toggleLike(post.id, initialPost)}
-          className={`flex items-center gap-1.5 transition-colors ${
-            post.likedByUser ? 'text-red-500' : isV2 ? 'hover:text-red-400' : 'hover:text-red-500'
-          }`}
-        >
-          <Heart className={`w-4.5 h-4.5 ${post.likedByUser ? 'fill-current animate-heart-pop text-red-500' : ''}`} /> {(post.likes || 0).toLocaleString()} <span className="hidden sm:inline">likes</span>
-        </button>
-        <button
-          onClick={handleBookmark}
-          aria-label={post.bookmarkedByUser ? 'Remove bookmark' : 'Bookmark this post'}
-          className={`flex items-center gap-1.5 transition-colors ${
-            post.bookmarkedByUser ? 'text-primary-500' : isV2 ? 'hover:text-primary-300' : 'hover:text-primary-500'
-          }`}
-        >
-          <Bookmark className={`w-4.5 h-4.5 ${post.bookmarkedByUser ? 'fill-current' : ''}`} />
-          <span className="hidden sm:inline">{post.bookmarkedByUser ? 'saved' : 'save'}</span>
-        </button>
-        <span className={`w-1 h-1 rounded-full ${isV2 ? 'bg-white/30' : 'bg-surface-300 dark:bg-surface-700'}`} />
-        <span className="flex items-center gap-1.5">
-          <Clock className="w-4.5 h-4.5" /> {formatDate(post.createdAt)}
-        </span>
+      <div className={`flex flex-col items-center gap-5 sm:gap-4 ${align === 'start' ? 'lg:items-start' : ''}`}>
+        <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-5 rounded-[32px] border border-white/20 bg-black/25 py-2.5 px-4 sm:py-3 sm:px-7 text-xs sm:text-sm font-medium text-white/75 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_-1px_0_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.5),0_0_30px_rgba(129,140,248,0.25),0_0_60px_rgba(139,92,246,0.15)] transition-shadow duration-300 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_-1px_0_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.5),0_0_40px_rgba(129,140,248,0.35),0_0_80px_rgba(139,92,246,0.2)]">
+          <span className="flex items-center gap-2 sm:gap-2.5">
+            <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+              <Eye className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.7)]" />
+            </span>
+            {(post.views || 0).toLocaleString()} views
+          </span>
+          <span className="h-5 w-px bg-white/15" />
+          <button
+            onClick={() => toggleLike(post.id, initialPost)}
+            className="flex items-center gap-2 sm:gap-2.5 transition-all duration-300 hover:text-white hover:scale-105 active:scale-95"
+          >
+            <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+              <Heart className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${post.likedByUser ? 'text-red-500 fill-red-500 animate-heart-pop drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]' : 'text-violet-400 drop-shadow-[0_0_8px_rgba(167,139,250,0.7)]'}`} />
+            </span>
+            {(post.likes || 0).toLocaleString()} likes
+          </button>
+          <span className="h-5 w-px bg-white/15" />
+          <button
+            onClick={handleBookmark}
+            aria-label={post.bookmarkedByUser ? 'Remove bookmark' : 'Bookmark this post'}
+            className="flex items-center gap-2 sm:gap-2.5 transition-all duration-300 hover:text-white hover:scale-105 active:scale-95"
+          >
+            <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+              <Bookmark className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${post.bookmarkedByUser ? 'text-indigo-300 fill-indigo-300' : 'text-indigo-400'} drop-shadow-[0_0_8px_rgba(129,140,248,0.7)]`} />
+            </span>
+            {post.bookmarkedByUser ? 'saved' : 'save'}
+          </button>
+        </div>
+        {renderAuthorByline()}
       </div>
     );
   };
@@ -512,13 +511,17 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
     if (!isUserOwned) {
       return (
-        <div className="mb-6 inline-flex items-center gap-3 rounded-2xl border border-surface-200 bg-white/80 px-4 py-3 text-left shadow-sm dark:border-surface-800 dark:bg-surface-900/80">
-          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center">
-            <span className="text-white text-xs font-black">AI</span>
+        <div className="flex items-center gap-3">
+          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center ring-2 ring-white/20">
+            {settings.siteLogo ? (
+              <Image src={settings.siteLogo} alt="" fill sizes="40px" className="object-cover" referrerPolicy="no-referrer" />
+            ) : (
+              <span className="text-white text-xs font-black">AI</span>
+            )}
           </div>
-          <div>
-            <p className="text-[10px] font-bold text-surface-600 dark:text-surface-400 uppercase tracking-widest leading-none mb-1">Published by</p>
-            <p className="text-xs font-black text-surface-900 dark:text-white leading-tight">{EDITORIAL_TEAM_NAME}</p>
+          <div className="min-w-0 text-left">
+            <p className="text-sm font-semibold text-white leading-tight">{EDITORIAL_TEAM_NAME}</p>
+            <p className="mt-0.5 text-xs text-white/60">Published on {formatDate(post.createdAt)}</p>
           </div>
         </div>
       );
@@ -530,22 +533,19 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     const authorUrl = `/user/${post.authorId}`;
 
     return (
-      <Link
-        href={authorUrl}
-        className="mb-6 inline-flex items-center gap-3 rounded-2xl border border-surface-200 bg-white/80 px-4 py-3 text-left shadow-sm transition-colors hover:border-primary-300 hover:bg-white dark:border-surface-800 dark:bg-surface-900/80 dark:hover:border-primary-500/50"
-      >
-        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary-500/10">
+      <Link href={authorUrl} className="group flex items-center gap-3">
+        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary-500/20 ring-2 ring-white/20">
           {avatarUrl ? (
-            <Image src={avatarUrl} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+            <Image src={avatarUrl} alt="" fill sizes="40px" className="object-cover" referrerPolicy="no-referrer" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-sm font-black text-primary-500">
+            <div className="flex h-full w-full items-center justify-center text-sm font-black text-white">
               {displayName.slice(0, 1).toUpperCase()}
             </div>
           )}
         </div>
-        <div>
-          <p className="text-[10px] font-bold text-surface-600 dark:text-surface-400 uppercase tracking-widest leading-none mb-1">Submitted by</p>
-          <p className="text-xs font-black text-surface-900 dark:text-white leading-tight">@{username}</p>
+        <div className="min-w-0 text-left">
+          <p className="text-sm font-semibold text-white leading-tight transition-colors group-hover:text-primary-300">@{username}</p>
+          <p className="mt-0.5 text-xs text-white/60">Submitted on {formatDate(post.createdAt)}</p>
         </div>
       </Link>
     );
@@ -558,26 +558,28 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-surface-900 shadow-2xl group min-h-[500px] flex items-end">
             <Image src={backgroundPromptImageUrl} alt="bg" fill className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
-            <div className="relative z-20 p-8 md:p-12 w-full max-w-4xl mx-auto flex flex-col items-center text-center pb-12">
+            <div className="relative z-20 w-full max-w-6xl mx-auto flex flex-col items-center gap-8 p-8 pb-12 text-center lg:flex-row lg:items-center lg:gap-12 lg:p-12 lg:text-left">
               <LoadingImg
                   src={mainPromptImageUrl}
-                  alt={post.title} 
+                  alt={post.title}
                   showSkeleton={showSkeleton}
-                  wrapperClassName="mb-8 inline-flex max-w-full justify-center rounded-2xl shadow-2xl"
-                  className="h-auto max-h-[360px] w-auto max-w-full rounded-2xl object-contain md:max-h-[420px]"
+                  wrapperClassName="inline-flex max-w-full shrink-0 justify-center rounded-2xl shadow-2xl"
+                  className="h-auto max-h-[360px] w-auto max-w-full rounded-2xl object-contain lg:max-h-[460px]"
                   referrerPolicy="no-referrer"
                   loading="eager"
                   fetchPriority="high"
                 />
-              <div className="flex flex-wrap gap-2 mb-6">
-                {heroTools.map(tool => {
-                  const info = getToolInfo(tool, settings?.toolDetails);
-                  return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
-                })}
+              <div className="flex min-w-0 flex-col items-center lg:items-start">
+                <div className="flex flex-wrap justify-center gap-2 mb-6 lg:justify-start">
+                  {heroTools.map(tool => {
+                    const info = getToolInfo(tool, settings?.toolDetails);
+                    return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
+                  })}
+                </div>
+                <h1 className="text-4xl md:text-5xl xl:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight drop-shadow-lg">{post.title}</h1>
+                <p className="text-white/80 text-lg md:text-xl max-w-2xl leading-relaxed mb-8 drop-shadow">{post.description}</p>
+                {renderMetaInfo('start')}
               </div>
-              <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight drop-shadow-lg">{post.title}</h1>
-              <p className="text-white/80 text-lg md:text-xl max-w-2xl leading-relaxed mb-8 drop-shadow">{post.description}</p>
-              {renderMetaInfo()}
             </div>
           </div>
         );
@@ -797,7 +799,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         return (
           <>
             <div className="mb-6 flex flex-col items-center text-center">
-              {renderAuthorByline()}
               <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 tracking-tight leading-tight max-w-4xl">{post.title}</h1>
               <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg max-w-3xl leading-relaxed mb-6">{post.description}</p>
               {renderMetaInfo()}
@@ -851,11 +852,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
       {/* Post Header & Hero styles */}
       {renderHero()}
-      {postHeroStyle !== 'v1' && (
-        <div className="flex justify-center">
-          {renderAuthorByline()}
-        </div>
-      )}
 
       <AdSlot placement="postTop" />
 

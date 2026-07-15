@@ -1,7 +1,9 @@
 export const revalidate = 300;
 import type { ReactNode } from 'react';
+import { preload } from 'react-dom';
 import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } from '@/lib/data';
 import { getAllTools } from '@/lib/constants';
+import { getPromptImageUrl } from '@/lib/image-url';
 import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
 import HomeLinkBlocks from '@/components/HomeLinkBlocks';
@@ -34,6 +36,13 @@ export default async function Home() {
   const settings = await fetchSettings();
   const allPosts = await fetchPostSummaries();
   const featuredPosts = allPosts.filter(p => p.featured && (p.status === 'published' || !p.status) && p.visibility !== 'private');
+  // Preload the first hero slide (the LCP image) so the browser fetches it
+  // before the client slider hydrates. Must match FeaturedSlider's URL params.
+  const firstSlide = featuredPosts[0];
+  if (settings.heroEnabled && firstSlide) {
+    const lcpImageUrl = getPromptImageUrl(firstSlide.thumbnailUrl || firstSlide.images[0]?.url || '', { width: 960, quality: 78 });
+    if (lcpImageUrl) preload(lcpImageUrl, { as: 'image', fetchPriority: 'high' });
+  }
   // Empty tool pages return 404, so hero/slider tool chips only link tools with posts.
   const toolsWithPosts = new Set(allPosts.flatMap(post => getAllTools(post)));
   const linkableToolSettings = {

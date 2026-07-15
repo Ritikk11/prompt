@@ -3,13 +3,15 @@ export type ImageOptimizePreset = 'thumbnail' | 'prompt' | 'reference' | 'logo';
 type OptimizeOptions = {
   maxSizeKB: number;
   maxDimension: number;
+  /** Scale to this exact width (aspect ratio preserved); maxDimension then acts as a height cap. */
+  targetWidth?: number;
   minQuality?: number;
   startQuality?: number;
   mimeType?: 'image/webp' | 'image/jpeg';
 };
 
 const presets: Record<ImageOptimizePreset, OptimizeOptions> = {
-  thumbnail: { maxSizeKB: 90, maxDimension: 820, startQuality: 0.72, minQuality: 0.32, mimeType: 'image/webp' },
+  thumbnail: { maxSizeKB: 90, targetWidth: 720, maxDimension: 1100, startQuality: 0.72, minQuality: 0.32, mimeType: 'image/webp' },
   prompt: { maxSizeKB: 360, maxDimension: 1400, startQuality: 0.78, minQuality: 0.44, mimeType: 'image/webp' },
   reference: { maxSizeKB: 650, maxDimension: 1400, startQuality: 0.8, minQuality: 0.44, mimeType: 'image/webp' },
   logo: { maxSizeKB: 45, maxDimension: 240, startQuality: 0.82, minQuality: 0.45, mimeType: 'image/webp' },
@@ -42,7 +44,13 @@ export async function optimizeImageFile(file: File, preset: ImageOptimizePreset 
     await img.decode();
 
     let { width, height } = img;
-    if (width > options.maxDimension || height > options.maxDimension) {
+    if (options.targetWidth) {
+      // Fixed-width scaling: consistent widths across aspect ratios, with
+      // maxDimension as a height backstop for extreme portraits.
+      const ratio = Math.min(options.targetWidth / width, options.maxDimension / height, 1);
+      width = Math.max(1, Math.round(width * ratio));
+      height = Math.max(1, Math.round(height * ratio));
+    } else if (width > options.maxDimension || height > options.maxDimension) {
       const ratio = Math.min(options.maxDimension / width, options.maxDimension / height);
       width = Math.max(1, Math.round(width * ratio));
       height = Math.max(1, Math.round(height * ratio));
