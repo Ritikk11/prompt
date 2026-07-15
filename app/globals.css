@@ -71,19 +71,7 @@ html {
   }
 }
 
-/* Mobile Googlebot / mobile screenshots can capture the page before
-   IntersectionObserver-driven reveal states have fired. Keep mobile content
-   visible by default so crawlers and small devices never see large blank gaps. */
-@media (max-width: 767px) {
-  .reveal-root:not(.reveal-visible) {
-    opacity: 1;
-    pointer-events: auto;
-  }
 
-  .reveal-root.reveal-visible {
-    animation: none;
-  }
-}
 
 /* Scroll-reveal inner stagger: inside a ScrollReveal, direct children of any
    [data-reveal-stagger] container cascade in after the section reveals.
@@ -123,13 +111,7 @@ html {
   }
 }
 
-@media (max-width: 767px) {
-  .reveal-root:not(.reveal-visible) [data-reveal-stagger] > *,
-  .reveal-root.reveal-visible [data-reveal-stagger] > * {
-    opacity: 1 !important;
-    animation: none !important;
-  }
-}
+
 
 body {
   @apply bg-white text-surface-900 dark:bg-surface-950 dark:text-surface-100 transition-colors duration-300;
