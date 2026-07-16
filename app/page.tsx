@@ -1,13 +1,12 @@
 export const revalidate = 300;
 import type { ReactNode } from 'react';
 import { preload } from 'react-dom';
+import dynamic from 'next/dynamic';
 import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } from '@/lib/data';
 import { getAllTools } from '@/lib/constants';
 import { getPromptImageUrl } from '@/lib/image-url';
 import FeaturedSlider from '@/components/FeaturedSlider';
-import HomeSection from '@/components/HomeSection';
 import HomeLinkBlocks from '@/components/HomeLinkBlocks';
-import HomeHowItWorks from '@/components/HomeHowItWorks';
 import HomeLibraryHero from '@/components/HomeLibraryHero';
 import HomeReviewProcess from '@/components/HomeReviewProcess';
 import HomePromptOfDay from '@/components/HomePromptOfDay';
@@ -16,6 +15,12 @@ import HomeSupportedTools from '@/components/HomeSupportedTools';
 import HomeGuides from '@/components/HomeGuides';
 import HomeCreatorFeedback from '@/components/HomeCreatorFeedback';
 import ScrollReveal from '@/components/ScrollReveal';
+
+// Below-fold client components: code-split their JS out of the critical path
+// so the LCP element paints without main-thread blocking. SSR stays enabled
+// (default) so content/SEO is unaffected — only the hydration JS is deferred.
+const HomeSection = dynamic(() => import('@/components/HomeSection'));
+const HomeHowItWorks = dynamic(() => import('@/components/HomeHowItWorks'));
 
 const defaultHomepageBlockOrder = [
   'howTo',
