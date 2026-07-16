@@ -13,6 +13,7 @@ import HomePromptOfDay from '@/components/HomePromptOfDay';
 import HomeCreativeDirections from '@/components/HomeCreativeDirections';
 import HomeSupportedTools from '@/components/HomeSupportedTools';
 import HomeGuides from '@/components/HomeGuides';
+import HomeBlog from '@/components/HomeBlog';
 import HomeCreatorFeedback from '@/components/HomeCreatorFeedback';
 import ScrollReveal from '@/components/ScrollReveal';
 
@@ -23,6 +24,7 @@ const defaultHomepageBlockOrder = [
   'supportedTools',
   'creativeDirections',
   'guides',
+  'blog',
   'creatorFeedback',
 ];
 
@@ -74,6 +76,7 @@ export default async function Home() {
     creativeDirections: (settings.features?.showHomepageCreativeDirections ?? true) ? <HomeCreativeDirections posts={allPosts} settings={settings} /> : null,
     creatorFeedback: (settings.features?.showHomepageCreatorFeedback ?? true) ? <HomeCreatorFeedback settings={settings} /> : null,
     guides: (settings.features?.showHomepageGuides ?? true) ? <HomeGuides settings={settings} /> : null,
+    blog: (settings.features?.showHomepageBlog ?? true) ? <HomeBlog settings={settings} /> : null,
   };
   const homepageSectionPosts = new Map(homepageSections.map((section, index) => [section.id, sectionPostsData[index]]));
   const homepageSectionsById = new Map(homepageSections.map(section => [section.id, section]));

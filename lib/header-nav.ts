@@ -2,7 +2,7 @@ import type { NavLink, Section, SiteSettings } from './types';
 import { getSectionPath } from './sections';
 
 export type HeaderNavItem =
-  | { kind: 'builtin'; key: 'submit' | 'home' | 'explore'; navKey: string; label: string; href: string }
+  | { kind: 'builtin'; key: 'submit' | 'home' | 'explore' | 'blog'; navKey: string; label: string; href: string }
   | { kind: 'section'; navKey: string; sectionId: string; label: string; href: string }
   | { kind: 'link'; navKey: string; linkIndex: number; label: string; href: string };
 
@@ -29,6 +29,11 @@ export function buildHeaderNavItems(
   }
   items.push({ kind: 'builtin', key: 'home', navKey: 'home', label: 'Home', href: '/' });
   items.push({ kind: 'builtin', key: 'explore', navKey: 'explore', label: 'Explore', href: '/explore' });
+  // Built-in Blog item — skipped when the admin already added a custom /blog link.
+  const hasCustomBlogLink = (settings.headerLinks || []).some(link => (link.href || '').replace(/\/+$/, '') === '/blog');
+  if (!hasCustomBlogLink) {
+    items.push({ kind: 'builtin', key: 'blog', navKey: 'blog', label: 'Blog', href: '/blog' });
+  }
 
   for (const section of headerSections) {
     items.push({

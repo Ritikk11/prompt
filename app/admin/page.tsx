@@ -10,7 +10,7 @@ import {
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload,
   Settings, Check, Filter, Search, RotateCcw, GripVertical, Image as ImageIcon,
   Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass, Menu, Mail,
-  Ban, Shield, Flag, CheckCircle, Cpu, BookOpen
+  Ban, Shield, Flag, CheckCircle, Cpu, BookOpen, Newspaper, Share2
 } from 'lucide-react';
 
 import Image from 'next/image';
@@ -32,6 +32,7 @@ import HomeSupportedTools from '@/components/HomeSupportedTools';
 import HomeCreativeDirections from '@/components/HomeCreativeDirections';
 import HomeCreatorFeedback from '@/components/HomeCreatorFeedback';
 import HomeGuides from '@/components/HomeGuides';
+import HomeBlog from '@/components/HomeBlog';
 import ArticleThumbnail, { articleIconList } from '@/components/ArticleThumbnail';
 import { getArticlesForSettings } from '@/lib/content';
 
@@ -90,15 +91,19 @@ function cleanAdminPublicCopy(value?: string) {
 
 function cleanAdminHomepageContent(content: Record<string, HomepageBlockContent> = {}) {
   return Object.fromEntries(
-    Object.entries(content).map(([key, block]) => [
-      key,
-      {
-        ...block,
-        title: cleanAdminPublicCopy(block.title),
-        badge: cleanAdminPublicCopy(block.badge),
-        description: cleanAdminPublicCopy(block.description),
-      },
-    ])
+    Object.entries(content)
+      // Drop content for blocks that no longer exist (e.g. the removed
+      // newsletter section) so saving settings purges the dead data.
+      .filter(([key]) => homepageBlockOptions.some(option => option.key === key))
+      .map(([key, block]) => [
+        key,
+        {
+          ...block,
+          title: cleanAdminPublicCopy(block.title),
+          badge: cleanAdminPublicCopy(block.badge),
+          description: cleanAdminPublicCopy(block.description),
+        },
+      ])
   );
 }
 
@@ -149,6 +154,7 @@ const homepageBlockOptions = [
   { key: 'supportedTools', featureKey: 'showHomepageSupportedTools', title: 'Supported AI tools' },
   { key: 'creativeDirections', featureKey: 'showHomepageCreativeDirections', title: 'Creative directions' },
   { key: 'guides', featureKey: 'showHomepageGuides', title: 'Guides' },
+  { key: 'blog', featureKey: 'showHomepageBlog', title: 'Blog' },
   { key: 'creatorFeedback', featureKey: 'showHomepageCreatorFeedback', title: 'Creator feedback' },
 ] as const;
 const defaultHomepageBlockOrder = homepageBlockOptions.map(item => item.key);
@@ -496,6 +502,7 @@ function HomepageBlockPreview({
     if (blockKey === 'creativeDirections') return <HomeCreativeDirections posts={previewPosts} settings={previewSettings} />;
     if (blockKey === 'creatorFeedback') return <HomeCreatorFeedback settings={previewSettings} />;
     if (blockKey === 'guides') return <HomeGuides settings={previewSettings} />;
+    if (blockKey === 'blog') return <HomeBlog settings={previewSettings} />;
     return null;
   })();
 
@@ -1135,6 +1142,7 @@ function AdminInner() {
     settings.creativeDirectionItems || []
   );
   const [footerLinkGroups, setFooterLinkGroups] = useState<FooterLinkGroup[]>(settings.footerLinkGroups || defaultFooterLinkGroups);
+  const [socialLinks, setSocialLinks] = useState<NonNullable<SiteSettings['socialLinks']>>(settings.socialLinks || {});
   const [imageProvider, setImageProvider] = useState<UploadProvider>(
     settings.imageProvider === 'cloudflare' ? 'cloudflare' : 'supabase'
   );
@@ -1170,6 +1178,7 @@ function AdminInner() {
       showHomepageCreativeDirections: true,
       showHomepageSupportedTools: true,
       showHomepageGuides: true,
+      showHomepageBlog: true,
       showHomepageCreatorFeedback: true,
       showScrollProgress: true,
       showFaqSchema: true,
@@ -1290,6 +1299,7 @@ function AdminInner() {
     if (settings.discoveryPages?.sectionRailItems !== undefined) setSectionRailItems(settings.discoveryPages.sectionRailItems || []);
     if (settings.creativeDirectionItems !== undefined) setCreativeDirectionItems(settings.creativeDirectionItems || []);
     if (settings.footerLinkGroups !== undefined) setFooterLinkGroups(settings.footerLinkGroups || defaultFooterLinkGroups);
+    if (settings.socialLinks !== undefined) setSocialLinks(settings.socialLinks || {});
     if (settings.imageProvider !== undefined) {
       setImageProvider(settings.imageProvider === 'cloudflare' ? 'cloudflare' : 'supabase');
     }
@@ -1310,6 +1320,7 @@ function AdminInner() {
   const selectedArticle = selectedArticleSlug ? managedArticles.find(article => article.slug === selectedArticleSlug) : undefined;
   const selectedArticleIsCustom = Boolean(selectedArticle && customArticles.some(article => article.slug === selectedArticle.slug));
   const guideArticles = managedArticles.filter(article => article.category === 'guide');
+  const blogArticles = managedArticles.filter(article => article.category === 'blog');
   const featuredPosts = publicPosts.filter(post => post.featured);
   const promptOfDayContent = homepageContent.promptOfDay || {};
   const pinnedPromptOfDayId = promptOfDayContent.pinnedPostId;
@@ -1379,6 +1390,10 @@ function AdminInner() {
     if (key === 'guides') {
       const selectedCount = homepageContent.guides?.selectedGuideSlugs?.length || 0;
       return selectedCount > 0 ? `${selectedCount} manually selected guide${selectedCount === 1 ? '' : 's'}` : 'Auto: featured/latest guides';
+    }
+    if (key === 'blog') {
+      const selectedCount = homepageContent.blog?.selectedBlogSlugs?.length || 0;
+      return selectedCount > 0 ? `${selectedCount} manually selected blog post${selectedCount === 1 ? '' : 's'}` : 'Auto: latest blog posts';
     }
     return 'Homepage block';
   };
@@ -1964,6 +1979,41 @@ function AdminInner() {
     });
   };
 
+  const toggleHomepageBlogPost = (slug: string) => {
+    setHomepageContent(prev => {
+      const current = prev.blog || {};
+      const selected = current.selectedBlogSlugs || [];
+      const nextSelected = selected.includes(slug)
+        ? selected.filter(item => item !== slug)
+        : [...selected, slug].slice(0, 4);
+      return {
+        ...prev,
+        blog: {
+          ...current,
+          selectedBlogSlugs: nextSelected,
+        },
+      };
+    });
+  };
+
+  const moveHomepageBlogPost = (slug: string, direction: -1 | 1) => {
+    setHomepageContent(prev => {
+      const current = prev.blog || {};
+      const selected = [...(current.selectedBlogSlugs || [])];
+      const index = selected.indexOf(slug);
+      const nextIndex = index + direction;
+      if (index < 0 || nextIndex < 0 || nextIndex >= selected.length) return prev;
+      [selected[index], selected[nextIndex]] = [selected[nextIndex], selected[index]];
+      return {
+        ...prev,
+        blog: {
+          ...current,
+          selectedBlogSlugs: selected,
+        },
+      };
+    });
+  };
+
   const updateHomepageItem = (key: string, index: number, field: 'title' | 'text' | 'checks', value: string) => {
     setHomepageContent(prev => {
       const current = prev[key] || {};
@@ -2151,6 +2201,13 @@ function AdminInner() {
       exploreFilterItems: cleanRailItems(exploreFilterItems),
       creativeDirectionItems: cleanCreativeDirectionItems(creativeDirectionItems),
       footerLinkGroups: cleanFooterGroups(footerLinkGroups),
+      socialLinks: {
+        twitter: socialLinks.twitter?.trim() || undefined,
+        instagram: socialLinks.instagram?.trim() || undefined,
+        youtube: socialLinks.youtube?.trim() || undefined,
+        facebook: socialLinks.facebook?.trim() || undefined,
+        pinterest: socialLinks.pinterest?.trim() || undefined,
+      },
       aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
       ads: adsConfig,
       imageProvider,
@@ -5587,6 +5644,7 @@ function AdminInner() {
                       blockKey === 'creativeDirections' ? <Compass className="w-4 h-4 text-rose-500" /> :
                       blockKey === 'creatorFeedback' ? <Users className="w-4 h-4 text-pink-500" /> :
                       blockKey === 'guides' ? <BookOpen className="w-4 h-4 text-indigo-500" /> :
+                      blockKey === 'blog' ? <Newspaper className="w-4 h-4 text-cyan-500" /> :
                       <Layers className="w-4 h-4 text-primary-500" />
                     );
                     return (
@@ -5747,7 +5805,7 @@ function AdminInner() {
                             )}
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <input value={blockContent.badge || ''} onChange={e => updateHomepageContent(blockKey, 'badge', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Badge / eyebrow" />
-                                {(blockKey === 'reviewProcess' || blockKey === 'promptOfDay' || blockKey === 'guides') && <input value={blockContent.ctaLabel || ''} onChange={e => updateHomepageContent(blockKey, 'ctaLabel', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Button label" />}
+                                {(blockKey === 'reviewProcess' || blockKey === 'promptOfDay' || blockKey === 'guides' || blockKey === 'blog') && <input value={blockContent.ctaLabel || ''} onChange={e => updateHomepageContent(blockKey, 'ctaLabel', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Button label" />}
                                 {blockKey === 'reviewProcess' && (
                                   <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm font-bold text-surface-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200">
                                     <span>Show submit button</span>
@@ -5877,6 +5935,67 @@ function AdminInner() {
                                     )}
                                   </div>
                                 )}
+                                {blockKey === 'blog' && (
+                                  <div className="space-y-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50 sm:col-span-2">
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                      <div>
+                                        <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">Homepage blog picker</p>
+                                        <p className="mt-1 text-[11px] text-surface-500">Optional override. Leave empty to show the latest blog posts.</p>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => updateHomepageContent('blog', 'selectedBlogSlugs', [])}
+                                        className="self-start rounded-md bg-white px-2 py-1 text-[10px] font-bold text-surface-600 hover:bg-surface-100 dark:bg-surface-900 dark:text-surface-200 dark:hover:bg-surface-800 sm:self-auto"
+                                      >
+                                        Auto mode
+                                      </button>
+                                    </div>
+                                    <div className="grid max-h-72 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+                                      {blogArticles.map(article => {
+                                        const selectedSlugs = blockContent.selectedBlogSlugs || [];
+                                        const selectedIndex = selectedSlugs.indexOf(article.slug);
+                                        const selected = selectedIndex >= 0;
+                                        return (
+                                          <div
+                                            key={article.slug}
+                                            className={`rounded-lg border p-2 transition ${
+                                              selected
+                                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10'
+                                                : 'border-surface-200 bg-white hover:border-primary-300 dark:border-surface-700 dark:bg-surface-900'
+                                            }`}
+                                          >
+                                            <button
+                                              type="button"
+                                              onClick={() => toggleHomepageBlogPost(article.slug)}
+                                              className="flex w-full items-start justify-between gap-3 text-left"
+                                            >
+                                              <span className="min-w-0">
+                                                <span className="line-clamp-2 text-xs font-black text-surface-950 dark:text-white">{article.title}</span>
+                                                <span className="mt-1 block text-[10px] font-bold uppercase tracking-wide text-surface-400">{article.readMinutes} min read</span>
+                                              </span>
+                                              <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black ${selected ? 'bg-primary-500 text-white' : 'bg-surface-100 text-surface-500 dark:bg-surface-800'}`}>
+                                                {selected ? `#${selectedIndex + 1}` : 'Pick'}
+                                              </span>
+                                            </button>
+                                            {selected && (
+                                              <div className="mt-2 flex gap-1">
+                                                <button type="button" onClick={() => moveHomepageBlogPost(article.slug, -1)} className="rounded-md bg-white px-2 py-1 text-[10px] font-bold text-surface-600 hover:bg-surface-100 disabled:opacity-40 dark:bg-surface-900 dark:text-surface-200 dark:hover:bg-surface-800" disabled={selectedIndex === 0}>
+                                                  Up
+                                                </button>
+                                                <button type="button" onClick={() => moveHomepageBlogPost(article.slug, 1)} className="rounded-md bg-white px-2 py-1 text-[10px] font-bold text-surface-600 hover:bg-surface-100 disabled:opacity-40 dark:bg-surface-900 dark:text-surface-200 dark:hover:bg-surface-800" disabled={selectedIndex === selectedSlugs.length - 1}>
+                                                  Down
+                                                </button>
+                                              </div>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                    {blogArticles.length === 0 && (
+                                      <p className="rounded-lg bg-white px-3 py-2 text-[11px] text-surface-500 dark:bg-surface-900">Create blog posts in the Articles tab first.</p>
+                                    )}
+                                  </div>
+                                )}
                                 <input value={blockContent.title || ''} onChange={e => updateHomepageContent(blockKey, 'title', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Heading" />
                                 <textarea value={blockContent.description || ''} onChange={e => updateHomepageContent(blockKey, 'description', e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Description" />
                                 {['howTo', 'reviewProcess', 'supportedTools', 'creatorFeedback'].includes(blockKey) && (
@@ -5918,7 +6037,7 @@ function AdminInner() {
                                 </div>
                                 )}
                                 {blockKey === 'creativeDirections' && <input value={blockContent.itemDescription || ''} onChange={e => updateHomepageContent(blockKey, 'itemDescription', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Card description line" />}
-                                {(blockKey === 'reviewProcess' || blockKey === 'guides') && <input value={blockContent.ctaHref || ''} onChange={e => updateHomepageContent(blockKey, 'ctaHref', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Button URL" />}
+                                {(blockKey === 'reviewProcess' || blockKey === 'guides' || blockKey === 'blog') && <input value={blockContent.ctaHref || ''} onChange={e => updateHomepageContent(blockKey, 'ctaHref', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Button URL" />}
                             </div>
                           </div>
                         )}
@@ -6267,6 +6386,40 @@ function AdminInner() {
           )}
 
           {settingsSubTab === 'footer' && (
+            <>
+            <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 mb-4">
+              <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                <Share2 className="w-4 h-4 text-primary-500" /> Social Links
+              </h3>
+              <p className="text-xs text-surface-500 mb-4">
+                Shown as icons under the site description in the footer. Leave a field empty to hide that icon.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {([
+                  ['twitter', 'X (Twitter)', 'https://x.com/yourhandle'],
+                  ['instagram', 'Instagram', 'https://instagram.com/yourhandle'],
+                  ['youtube', 'YouTube', 'https://youtube.com/@yourchannel'],
+                  ['facebook', 'Facebook', 'https://facebook.com/yourpage'],
+                  ['pinterest', 'Pinterest', 'https://pinterest.com/yourprofile'],
+                ] as const).map(([key, label, placeholder]) => (
+                  <div key={key}>
+                    <label className="mb-1 block text-xs font-bold text-surface-500">{label}</label>
+                    <input
+                      value={socialLinks[key] || ''}
+                      onChange={e => setSocialLinks(prev => ({ ...prev, [key]: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      placeholder={placeholder}
+                    />
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={handleSaveSettings}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-4"
+              >
+                <Save className="w-4 h-4" /> Save Social Links
+              </button>
+            </div>
             <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
               <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
                 <LayoutGrid className="w-4 h-4 text-primary-500" /> Footer Links
@@ -6380,6 +6533,7 @@ function AdminInner() {
                 <Save className="w-4 h-4" /> Save Footer Links
               </button>
             </div>
+            </>
           )}
 
           {settingsSubTab === 'ads' && (

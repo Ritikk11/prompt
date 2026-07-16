@@ -52,6 +52,7 @@ const defaultSettings: SiteSettings = {
     'supportedTools',
     'creativeDirections',
     'guides',
+    'blog',
     'creatorFeedback',
   ],
   homepageContent: {
@@ -136,6 +137,13 @@ const defaultSettings: SiteSettings = {
       description: 'Hands-on tutorials that take you from a blank prompt box to a finished image — trends, edits, and pro techniques included.',
       ctaLabel: 'Browse all guides',
       ctaHref: '/guides',
+    },
+    blog: {
+      badge: 'From the blog',
+      title: 'Latest From Our Blog',
+      description: 'News, prompt trends, and deep dives on getting more out of every AI image tool.',
+      ctaLabel: 'Read the blog',
+      ctaHref: '/blog',
     },
   },
   footerLinkGroups: [
@@ -239,6 +247,7 @@ const defaultSettings: SiteSettings = {
     showHomepageCreativeDirections: true,
     showHomepageSupportedTools: true,
     showHomepageGuides: true,
+    showHomepageBlog: true,
     showHomepageCreatorFeedback: true,
     showScrollProgress: true,
     showFaqSchema: true,
@@ -363,8 +372,9 @@ function sanitizeSettings(settings: SiteSettings): SiteSettings {
       )
     : undefined;
   const savedHomepageContent = settings.homepageContent || {};
+  // Only known blocks are kept — saved content for removed blocks (e.g. the old
+  // newsletter section) is dead data and shouldn't ship to every visitor.
   const homepageContent = {
-    ...savedHomepageContent,
     ...Object.fromEntries(
       Object.entries(defaultSettings.homepageContent || {}).map(([key, content]) => [
         key,

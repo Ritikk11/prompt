@@ -36,9 +36,9 @@ export default function CopyButton({ text, eventName = 'prompt_copied' }: Props)
   return (
     <button
       onClick={handleCopy}
-      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all shadow border border-transparent ${
+      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all shadow border border-transparent press-anim ${
         copied
-          ? 'bg-green-500 text-white shadow-green-500/20'
+          ? 'bg-green-500 text-white shadow-green-500/20 copy-pulse'
           : 'bg-white dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 hover:border-surface-200 dark:hover:border-surface-600'
       }`}
     >

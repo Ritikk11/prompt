@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Sparkles, ChevronUp } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import type { FooterLinkGroup } from '@/lib/types';
+import { XLogo, InstagramLogo, YouTubeLogo, FacebookLogo, PinterestLogo } from '@/components/SocialLogos';
 
 const fallbackFooterGroups: FooterLinkGroup[] = [
   {
@@ -32,10 +33,31 @@ export default function Footer() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const footerGroups = settings.footerLinkGroups?.length ? settings.footerLinkGroups : fallbackFooterGroups;
+  // Built-in content links (Blog / Guides) — shown automatically unless the
+  // admin already added them to a custom footer group.
+  const existingHrefs = new Set(
+    footerGroups.flatMap(group => group.links.map(link => (link.href || '').replace(/\/+$/, '') || '/'))
+  );
+  const contentLinks = [
+    { label: 'Blog', href: '/blog' },
+    { label: 'Guides', href: '/guides' },
+  ].filter(link => !existingHrefs.has(link.href));
+  const displayGroups: FooterLinkGroup[] = contentLinks.length
+    ? [...footerGroups, { title: 'Content', links: contentLinks }]
+    : footerGroups;
   // Tools configured in settings always render a page (empty state when no
   // posts yet), so link them all.
   const footerTools = (settings.aiTools || []).slice(0, 10);
-  const footerLinkClass = 'block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors';
+  // w-fit keeps the clickable area on the text only, not the whole column width.
+  const footerLinkClass = 'block w-fit text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors';
+  const social = settings.socialLinks || {};
+  const socialItems = [
+    { key: 'twitter', href: social.twitter, label: 'X (Twitter)', icon: <XLogo className="h-4 w-4" /> },
+    { key: 'instagram', href: social.instagram, label: 'Instagram', icon: <InstagramLogo className="h-4 w-4" /> },
+    { key: 'youtube', href: social.youtube, label: 'YouTube', icon: <YouTubeLogo className="h-4 w-4" /> },
+    { key: 'facebook', href: social.facebook, label: 'Facebook', icon: <FacebookLogo className="h-4 w-4" /> },
+    { key: 'pinterest', href: social.pinterest, label: 'Pinterest', icon: <PinterestLogo className="h-4 w-4" /> },
+  ].filter(item => (item.href || '').trim());
 
   useEffect(() => {
     let frame: number | null = null;
@@ -72,10 +94,10 @@ export default function Footer() {
   return (
     <footer className="border-t border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-900/50 mt-16 relative">
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Brand */}
-          <div>
-            <Link href="/" className="flex items-center gap-2 mb-4">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
+          {/* Brand: logo, description, then social icons and AI tool chips (no headings) */}
+          <div className="lg:col-span-4">
+            <Link href="/" className="flex items-center gap-2 mb-4 w-fit">
               {settings.siteLogo ? (
                 <Image src={settings.siteLogo} alt={settings.siteTitle} width={36} height={36} className="w-9 h-9 rounded-xl object-cover"  referrerPolicy="no-referrer" />
               ) : (
@@ -88,10 +110,39 @@ export default function Footer() {
             <p className="text-sm text-surface-500 dark:text-surface-400 leading-relaxed">
               {settings.siteDescription}
             </p>
+            {socialItems.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {socialItems.map(item => (
+                  <a
+                    key={item.key}
+                    href={item.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={item.label}
+                    title={item.label}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-100 text-surface-500 hover:bg-primary-500 hover:text-white dark:bg-surface-800 dark:text-surface-300 press-anim"
+                  >
+                    {item.icon}
+                  </a>
+                ))}
+              </div>
+            )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {footerTools.map(tool => (
+                <Link
+                  key={tool}
+                  href={`/tool/${encodeURIComponent(tool)}`}
+                  className="px-3 py-1 rounded-full text-xs font-medium bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 press-anim"
+                >
+                  {tool}
+                </Link>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {footerGroups.slice(0, 4).map((group) => (
+          {/* Link groups spread across the remaining width */}
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-8">
+            {displayGroups.slice(0, 6).map((group) => (
               <div key={group.title}>
                 <h3 className="font-semibold mb-4 text-surface-900 dark:text-white">{group.title}</h3>
                 <div className="space-y-2">
@@ -110,22 +161,6 @@ export default function Footer() {
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* AI Tools */}
-          <div>
-            <h3 className="font-semibold mb-4">AI Tools</h3>
-            <div className="flex flex-wrap gap-2">
-              {footerTools.map(tool => (
-                <Link
-                  key={tool}
-                  href={`/tool/${encodeURIComponent(tool)}`}
-                  className="px-3 py-1 rounded-full text-xs font-medium bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
-                >
-                  {tool}
-                </Link>
-              ))}
-            </div>
           </div>
         </div>
 

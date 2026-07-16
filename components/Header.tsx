@@ -19,6 +19,8 @@ export default function Header() {
   const submissionsEnabled = Boolean(settings.features?.userProfiles && settings.features?.userSubmissions);
   const headerSections = sections.filter(s => s.location === 'header' && s.visible).sort((a,b) => a.order - b.order);
   const headerLinks = settings.headerLinks || [];
+  // Built-in Blog nav item — hidden when the admin already added a custom /blog link.
+  const hasCustomBlogLink = headerLinks.some(l => (l.href || '').replace(/\/+$/, '') === '/blog');
   const navigate = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -294,24 +296,29 @@ export default function Header() {
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-2">
           {submissionsEnabled && (
-             <Link href="/submit" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+             <Link href="/submit" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
                <Plus className="w-4 h-4 text-primary-500" />
                Submit Prompt
              </Link>
           )}
-          <Link href="/" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+          <Link href="/" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
             Home
           </Link>
-          <Link href="/explore" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+          <Link href="/explore" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
             Explore
           </Link>
+          {!hasCustomBlogLink && (
+            <Link href="/blog" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
+              Blog
+            </Link>
+          )}
           {headerSections.map(s => (
-            <Link key={s.id} href={getSectionPath(s)} prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+            <Link key={s.id} href={getSectionPath(s)} prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
               {s.name}
             </Link>
           ))}
           {headerLinks.map(link => (
-            <SmartLink key={`${link.href}-${link.label}`} href={link.href} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+            <SmartLink key={`${link.href}-${link.label}`} href={link.href} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
               {link.label}
             </SmartLink>
           ))}
@@ -320,15 +327,15 @@ export default function Header() {
             <div className="flex items-center ml-2 border-l border-surface-200 dark:border-surface-700 pl-4 gap-2">
               {user ? (
                 <>
-                  <Link href="/profile" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+                  <Link href="/profile" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
                     <UserIcon className="w-4 h-4" /> Profile
                   </Link>
-                  <button onClick={handleLogout} className="p-2 rounded-lg text-surface-400 hover:text-red-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors" title="Logout">
+                  <button onClick={handleLogout} className="p-2 rounded-lg text-surface-400 hover:text-red-500 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim" title="Logout">
                     <LogOut className="w-4 h-4" />
                   </button>
                 </>
               ) : (
-                <button onClick={handleLogin} className="px-4 py-2 rounded-xl text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors">
+                <button onClick={handleLogin} className="px-4 py-2 rounded-xl text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 press-anim">
                   Sign In
                 </button>
               )}
@@ -338,7 +345,7 @@ export default function Header() {
           <div className="w-px h-6 bg-surface-200 dark:bg-surface-700 mx-1" />
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+            className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 press-anim"
             aria-label="Toggle theme"
           >
             {theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-surface-600" />}
@@ -349,7 +356,7 @@ export default function Header() {
         <div className="flex md:hidden items-center gap-1">
           <button
             onClick={() => setSearchOpen(!searchOpen)}
-            className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800"
+            className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 press-anim"
             aria-label={searchOpen ? 'Close search' : 'Open search'}
             aria-expanded={searchOpen}
           >
@@ -357,14 +364,14 @@ export default function Header() {
           </button>
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800"
+            className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 press-anim"
             aria-label="Toggle theme"
           >
             {theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-surface-600" />}
           </button>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800"
+            className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 press-anim"
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
           >
@@ -402,24 +409,29 @@ export default function Header() {
         <nav className="md:hidden border-t border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-950 slide-in">
           <div className="px-4 py-3 space-y-1">
             {submissionsEnabled && (
-              <Link href="/submit" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800">
+              <Link href="/submit" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
                 <Plus className="w-4 h-4 text-primary-500" />
                 Submit Prompt
               </Link>
             )}
-            <Link href="/" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
+            <Link href="/" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
               Home
             </Link>
-            <Link href="/explore" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
+            <Link href="/explore" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
               Explore
             </Link>
+            {!hasCustomBlogLink && (
+              <Link href="/blog" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
+                Blog
+              </Link>
+            )}
             {headerSections.map(s => (
-              <Link key={s.id} href={getSectionPath(s)} prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
+              <Link key={s.id} href={getSectionPath(s)} prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
                 {s.name}
               </Link>
             ))}
             {headerLinks.map(link => (
-              <SmartLink key={`${link.href}-${link.label}`} href={link.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800">
+              <SmartLink key={`${link.href}-${link.label}`} href={link.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
                 {link.label}
               </SmartLink>
             ))}
@@ -427,7 +439,7 @@ export default function Header() {
               <div className="pt-2 mt-2 border-t border-surface-100 dark:border-surface-800">
                 {user ? (
                    <>
-                    <Link href="/profile" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800">
+                    <Link href="/profile" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
                       <UserIcon className="w-4 h-4" /> Profile
                     </Link>
                     <button onClick={() => { handleLogout(); setMenuOpen(false); }} className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">

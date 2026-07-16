@@ -74,7 +74,7 @@ export default function TemplatePrompt({ originalPrompt }: Props) {
         ))}
       </div>
 
-      <div className="max-h-[360px] overflow-y-auto bg-surface-50 dark:bg-surface-800/50 rounded-2xl p-5 mb-4 border border-surface-200/50 dark:border-surface-700/50 group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
+      <div className="no-scrollbar max-h-[360px] overflow-y-auto bg-surface-50 dark:bg-surface-800/50 rounded-2xl p-5 mb-4 border border-surface-200/50 dark:border-surface-700/50 group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
         <p className="text-sm md:text-base leading-relaxed text-surface-700 dark:text-surface-300 font-mono whitespace-pre-wrap">
           {generatedPrompt}
         </p>

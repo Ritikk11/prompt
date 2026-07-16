@@ -165,6 +165,16 @@ textarea {
   scroll-snap-align: start;
 }
 
+/* Scrollable areas that should scroll without showing a scrollbar track
+   (e.g. the prompt text box on post pages). */
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* old Edge */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
 /* Slider animations */
 .slider-slide {
   transition: opacity 0.6s ease-in-out;
@@ -178,6 +188,19 @@ textarea {
 }
 .copy-pulse {
   animation: copyPulse 0.3s ease-in-out;
+}
+
+/* Micro-interaction for buttons/pills/nav links: subtle lift on hover,
+   press-down on tap. Transform-only (GPU composited) and applied on
+   interaction, never on initial paint — zero LCP cost. */
+.press-anim {
+  transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.press-anim:hover {
+  transform: translateY(-1px);
+}
+.press-anim:active {
+  transform: scale(0.95);
 }
 
 /* Card hover effect */

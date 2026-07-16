@@ -106,6 +106,7 @@ export interface SiteFeatures {
   showHomepageCreativeDirections?: boolean;
   showHomepageSupportedTools?: boolean;
   showHomepageGuides?: boolean;
+  showHomepageBlog?: boolean;
   showHomepageCreatorFeedback?: boolean;
   showScrollProgress?: boolean;
   showFaqSchema?: boolean;
@@ -221,6 +222,7 @@ export interface HomepageBlockContent {
   itemDescription?: string;
   pinnedPostId?: string;
   selectedGuideSlugs?: string[];
+  selectedBlogSlugs?: string[];
   items?: {
     title: string;
     text: string;
@@ -324,6 +326,8 @@ export interface SiteSettings {
     twitter?: string;
     instagram?: string;
     youtube?: string;
+    facebook?: string;
+    pinterest?: string;
   };
   shareSettings?: ShareSettings;
   keepExploring?: KeepExploringSettings;

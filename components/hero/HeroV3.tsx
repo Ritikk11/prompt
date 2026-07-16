@@ -54,12 +54,12 @@ export default function HeroV3({ featuredPosts: featured, settings }: HeroProps)
             })}
           </div>
           <div className="flex w-full flex-row items-center justify-center gap-2 md:justify-start md:gap-4">
-            <Link href={`/${post.slug || post.id}`} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-surface-900 px-4 py-2.5 text-xs font-bold text-white shadow-xl transition-all duration-300 hover:scale-105 dark:bg-white dark:text-surface-900 md:flex-none md:rounded-2xl md:px-8 md:py-4 md:text-base">
+            <Link href={`/${post.slug || post.id}`} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-surface-900 px-4 py-2.5 text-xs font-bold text-white shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 dark:bg-white dark:text-surface-900 md:flex-none md:rounded-2xl md:px-8 md:py-4 md:text-base">
               Get Prompt <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
             </Link>
             <div className="flex shrink-0 gap-1.5 md:gap-2">
-              <button onClick={() => goTo(current - 1)} aria-label="Previous featured prompt" className="rounded-xl bg-white/50 p-2.5 text-surface-900 shadow-sm backdrop-blur transition-all hover:bg-white dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronLeft className="h-4 w-4 md:h-5 md:w-5"/></button>
-              <button onClick={() => goTo(current + 1)} aria-label="Next featured prompt" className="rounded-xl bg-white/50 p-2.5 text-surface-900 shadow-sm backdrop-blur transition-all hover:bg-white dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronRight className="h-4 w-4 md:h-5 md:w-5"/></button>
+              <button onClick={() => goTo(current - 1)} aria-label="Previous featured prompt" className="rounded-xl bg-white/50 p-2.5 text-surface-900 shadow-sm backdrop-blur transition-all hover:bg-white active:scale-90 dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronLeft className="h-4 w-4 md:h-5 md:w-5"/></button>
+              <button onClick={() => goTo(current + 1)} aria-label="Next featured prompt" className="rounded-xl bg-white/50 p-2.5 text-surface-900 shadow-sm backdrop-blur transition-all hover:bg-white active:scale-90 dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronRight className="h-4 w-4 md:h-5 md:w-5"/></button>
             </div>
           </div>
         </div>

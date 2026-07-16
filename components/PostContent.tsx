@@ -313,7 +313,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           <button
             key={target}
             onClick={() => handleShare(target)}
-            className={`flex items-center justify-center rounded-xl bg-surface-100 p-2 dark:bg-surface-800 ${shareButtonMeta[target].className}`}
+            className={`flex items-center justify-center rounded-xl bg-surface-100 p-2 press-anim dark:bg-surface-800 ${shareButtonMeta[target].className}`}
             title={shareButtonMeta[target].title}
             aria-label={shareButtonMeta[target].title}
           >
@@ -411,7 +411,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               <Link
                 key={`${item.label}:${item.href}`}
                 href={item.href}
-                className="group flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-xs font-bold text-surface-700 transition-colors hover:border-primary-300 hover:bg-white hover:text-primary-600 dark:border-surface-800 dark:bg-surface-950/60 dark:text-surface-300 dark:hover:border-primary-500/50 dark:hover:bg-surface-900 dark:hover:text-white"
+                className="group flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-xs font-bold text-surface-700 press-anim hover:border-primary-300 hover:bg-white hover:text-primary-600 dark:border-surface-800 dark:bg-surface-950/60 dark:text-surface-300 dark:hover:border-primary-500/50 dark:hover:bg-surface-900 dark:hover:text-white"
               >
                 <span className="flex items-center gap-2">
                   <Icon className="h-3.5 w-3.5 text-primary-500" />
@@ -424,7 +424,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         </div>
         <Link
           href={keepExploring.ctaHref || '/explore'}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-xs font-black text-white transition-colors hover:bg-primary-700"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-xs font-black text-white press-anim hover:bg-primary-700"
         >
           {keepExploring.ctaLabel} <ArrowRight className="h-3.5 w-3.5" />
         </Link>
@@ -452,7 +452,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           <button
             key={tool}
             onClick={() => handleTryTool(tool, prompt)}
-            className="inline-flex items-center gap-2 rounded-xl border border-surface-200 bg-white px-3 py-2 text-xs font-bold text-surface-700 transition-colors hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:text-white"
+            className="inline-flex items-center gap-2 rounded-xl border border-surface-200 bg-white px-3 py-2 text-xs font-bold text-surface-700 press-anim hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:text-white"
           >
             {info.logo && (
               <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white p-[1px] shadow-sm">
@@ -1011,7 +1011,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                           </div>
                           <CopyButton text={img.prompt} />
                         </div>
-                        <div className={`mb-4 overflow-hidden rounded-2xl border border-surface-200/50 bg-surface-50 p-5 transition-colors group-hover:bg-primary-50/20 dark:border-surface-700/50 dark:bg-surface-800/50 dark:group-hover:bg-primary-900/10 sm:p-6 md:max-h-[460px] md:overflow-y-auto ${expandedPrompts[img.id] ? 'max-h-none md:max-h-[460px]' : 'max-h-[260px]'}`}>
+                        <div className={`no-scrollbar mb-4 overflow-hidden rounded-2xl border border-surface-200/50 bg-surface-50 p-5 transition-colors group-hover:bg-primary-50/20 dark:border-surface-700/50 dark:bg-surface-800/50 dark:group-hover:bg-primary-900/10 sm:p-6 md:max-h-[460px] md:overflow-y-auto ${expandedPrompts[img.id] ? 'max-h-none md:max-h-[460px]' : 'max-h-[260px]'}`}>
                           <p className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-surface-700 dark:text-surface-300 md:text-base">
                             {img.prompt}
                           </p>
@@ -1106,64 +1106,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               {showSidebarShareButtons && (
                 renderShareCard()
               )}
-
-              <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
-                <h3 className="mb-3 text-sm font-black text-surface-900 dark:text-white">Prompt details</h3>
-                <div className="space-y-2 text-xs text-surface-500 dark:text-surface-400">
-                  <p><span className="font-bold text-surface-800 dark:text-surface-200">{post.images.length}</span> prompt{post.images.length === 1 ? '' : 's'}</p>
-                  <p><span className="font-bold text-surface-800 dark:text-surface-200">{heroTools.join(', ') || 'AI tool'}</span></p>
-                  <p>{(post.tags || []).slice(0, 4).map(tag => `#${tag}`).join(' ')}</p>
-                </div>
-              </div>
-
-              {(() => {
-                const isUserOwned = isUserOwnedPost(post.authorId);
-                if (!isUserOwned) {
-                  return (
-                    <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
-                      <p className="mb-3 text-xs font-bold text-surface-600 dark:text-surface-400 uppercase tracking-widest">Author</p>
-                      <div className="flex items-center gap-3">
-                        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center">
-                          <span className="text-white text-xs font-black">AI</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-black text-surface-900 dark:text-white">{EDITORIAL_TEAM_NAME}</p>
-                          <p className="text-xs text-surface-500 dark:text-surface-400">Official Publisher</p>
-                        </div>
-                      </div>
-                      <p className="mt-3 text-xs leading-relaxed text-surface-500 dark:text-surface-400">
-                        Official AI PromptMatrix Editorial Team curating high-quality prompts for the community.
-                      </p>
-                    </div>
-                  );
-                }
-
-                const displayName = post.authorName || 'Creator';
-                const username = post.authorUsername || 'creator';
-                const avatarUrl = post.authorAvatar;
-                const authorUrl = `/user/${post.authorId}`;
-
-                return (
-                  <Link href={authorUrl} className="block rounded-2xl border border-surface-200 bg-white p-4 shadow-sm transition-colors hover:border-primary-300 dark:border-surface-800 dark:bg-surface-900 dark:hover:border-primary-500/50">
-                    <p className="mb-3 text-xs font-bold text-surface-600 dark:text-surface-400 uppercase tracking-widest">Author</p>
-                    <div className="flex items-center gap-3">
-                      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-primary-500/10">
-                        {avatarUrl ? (
-                          <Image src={avatarUrl} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-sm font-black text-primary-500">
-                            {displayName.slice(0, 1).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-surface-900 dark:text-white">{displayName}</p>
-                        <p className="text-xs text-primary-500 font-semibold">@{username}</p>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })()}
 
               {renderExploreAllPromptsBlock()}
 
