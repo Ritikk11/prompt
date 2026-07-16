@@ -3921,17 +3921,22 @@ function AdminInner() {
                     />
                   </div>
                 )}
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Post Limit</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={50}
-                    value={newSectionLimit}
-                    onChange={e => setNewSectionLimit(parseInt(e.target.value) || 8)}
-                    className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                  />
-                </div>
+                {/* Post limit only affects how many cards the homepage block renders;
+                    header/footer sections are just nav links to /section/[slug], which shows all posts. */}
+                {newSectionLocation === 'homepage' && (
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Post Limit</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={newSectionLimit}
+                      onChange={e => setNewSectionLimit(parseInt(e.target.value) || 8)}
+                      className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    />
+                    <p className="text-[11px] text-surface-400">Cards shown in the homepage block. The section page always shows all posts.</p>
+                  </div>
+                )}
                 <div className="sm:col-span-2 grid gap-4 lg:grid-cols-[1fr_300px] lg:items-start">
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Card Style Override</label>
@@ -4115,18 +4120,22 @@ function AdminInner() {
                               </select>
                               <p className="text-[11px] text-surface-400">Where this section appears</p>
                             </div>
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Post Limit</label>
-                              <input
-                                type="number"
-                                min={1}
-                                max={50}
-                                value={editSectionLimit}
-                                onChange={e => setEditSectionLimit(parseInt(e.target.value) || 8)}
-                                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
-                              />
-                              <p className="text-[11px] text-surface-400">Number of cards to show</p>
-                            </div>
+                            {/* Post limit only affects the homepage block; header/footer sections
+                                are nav links to /section/[slug], which shows all posts. */}
+                            {(editSectionLocation || 'homepage') === 'homepage' && (
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Post Limit</label>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={50}
+                                  value={editSectionLimit}
+                                  onChange={e => setEditSectionLimit(parseInt(e.target.value) || 8)}
+                                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                />
+                                <p className="text-[11px] text-surface-400">Cards shown in the homepage block. The section page always shows all posts.</p>
+                              </div>
+                            )}
                             <div className="space-y-1.5">
                               <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Card Style</label>
                               <select

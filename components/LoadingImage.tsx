@@ -39,7 +39,10 @@ export default function LoadingImage({
   ...props
 }: LoadingImageProps) {
   const imageRef = useRef<HTMLImageElement | null>(null);
-  const enabled = skeleton ?? showSkeleton;
+  // Priority images are LCP candidates — never gate them behind the skeleton's
+  // opacity-0, or the browser can't paint them until hydration + onLoad, which
+  // adds seconds of LCP render delay on mobile.
+  const enabled = (skeleton ?? showSkeleton) && !props.priority;
   const srcValue = props.src;
   const [imageState, setImageState] = useState<ImageLoadState>({
     src: srcValue,

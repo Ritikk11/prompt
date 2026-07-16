@@ -13,6 +13,15 @@ interface Props {
 
 type PostSummary = Awaited<ReturnType<typeof fetchPostSummaries>>[number];
 
+// Tools configured in settings get a page even with no posts yet (ToolContent
+// renders an empty state); anything else only exists if a post uses it.
+function isKnownTool(tool: string, posts: PostSummary[], settings: Awaited<ReturnType<typeof fetchSettings>>) {
+  const normalizedTool = tool.trim().toLowerCase();
+  if (!normalizedTool) return false;
+  if ((settings.aiTools || []).some(name => name.toLowerCase() === normalizedTool)) return true;
+  return getPublicToolPosts(posts, tool).length > 0;
+}
+
 function getPublicToolPosts(posts: PostSummary[], tool: string) {
   const normalizedTool = tool.trim().toLowerCase();
 
@@ -49,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const discovery = settings.discoveryPages || {};
   const count = getPublicToolPosts(posts, decodedTool).length;
 
-  if (count === 0) {
+  if (!isKnownTool(decodedTool, posts, settings)) {
     return {
       title: 'Tool not found',
       robots: { index: false, follow: false },
@@ -78,7 +87,7 @@ export default async function ToolPage({ params }: Props) {
   const posts = await fetchPostSummaries();
   const settings = await fetchSettings();
 
-  if (getPublicToolPosts(posts, decodedTool).length === 0) {
+  if (!isKnownTool(decodedTool, posts, settings)) {
     notFound();
   }
   

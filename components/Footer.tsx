@@ -5,7 +5,6 @@ import Image from 'next/image';
 
 import { Sparkles, ChevronUp } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
-import { getAllTools } from '@/lib/constants';
 import type { FooterLinkGroup } from '@/lib/types';
 
 const fallbackFooterGroups: FooterLinkGroup[] = [
@@ -29,13 +28,13 @@ const fallbackFooterGroups: FooterLinkGroup[] = [
 ];
 
 export default function Footer() {
-  const { settings, posts } = useData();
+  const { settings } = useData();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const footerGroups = settings.footerLinkGroups?.length ? settings.footerLinkGroups : fallbackFooterGroups;
-  // Empty tool pages return 404, so only link tools that have posts.
-  const toolsWithPosts = new Set(posts.flatMap(post => getAllTools(post)));
-  const footerTools = (settings.aiTools || []).filter(tool => toolsWithPosts.has(tool)).slice(0, 10);
+  // Tools configured in settings always render a page (empty state when no
+  // posts yet), so link them all.
+  const footerTools = (settings.aiTools || []).slice(0, 10);
   const footerLinkClass = 'block text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors';
 
   useEffect(() => {

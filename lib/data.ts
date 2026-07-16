@@ -2,6 +2,7 @@ import { cache } from 'react';
 import { createPublicClient } from './supabase-public';
 import type { Post, PostComment, Section, SiteSettings } from './types';
 import { seedPosts, seedSections } from './data/seedData';
+import { getAllTools } from './constants';
 import { filterPostsForSection } from './sections';
 import { getThumbnailImageUrl } from './image-url';
 
@@ -422,6 +423,9 @@ function publicImageUrl(post: Post) {
 export function toPostSummary(post: Post): Post {
   const imageUrl = getThumbnailImageUrl(publicImageUrl(post));
   const primaryImage = post.images?.[0];
+  // Aggregate tools from all images before they're trimmed to the primary one,
+  // so tool filters (hero/footer/supported tools) still see every tool used.
+  const allTools = getAllTools(post);
 
   return {
     id: post.id,
@@ -435,14 +439,14 @@ export function toPostSummary(post: Post): Post {
         url: imageUrl,
         prompt: '',
         aiTool: primaryImage?.aiTool || post.aiTools?.[0] || '',
-        aiTools: primaryImage?.aiTools || post.aiTools,
+        aiTools: allTools,
         model: primaryImage?.model,
       },
     ],
     tags: post.tags || [],
     category: post.category,
     categories: post.categories,
-    aiTools: post.aiTools,
+    aiTools: allTools,
     featured: post.featured,
     views: post.views,
     likes: post.likes,

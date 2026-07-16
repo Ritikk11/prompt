@@ -20,11 +20,15 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
     ])
   ) as Record<string, string[]>;
   const toolCounts = new Map<string, number>();
-  posts.forEach(post => getAllTools(post).forEach(tool => toolCounts.set(tool, (toolCounts.get(tool) || 0) + 1)));
+  // Count by lowercased name so settings.aiTools casing doesn't hide tools.
+  posts.forEach(post => getAllTools(post).forEach(tool => {
+    const key = tool.toLowerCase();
+    toolCounts.set(key, (toolCounts.get(key) || 0) + 1);
+  }));
   const tools = (settings.aiTools || Array.from(toolCounts.keys()))
     .filter(Boolean)
-    // Empty tool pages return 404, so only link tools that have posts.
-    .filter(tool => (toolCounts.get(tool) || 0) > 0)
+    // Tools configured in settings always render a page (empty state when no
+    // posts yet), so no has-posts filter here.
     .slice(0, 4);
   const getNotesForTool = (tool: string) => {
     const normalizedTool = tool.toLowerCase();
@@ -69,7 +73,7 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
                 <div className={`h-1 rounded-full ${['bg-emerald-500', 'bg-blue-500', 'bg-orange-500', 'bg-fuchsia-500'][index % 4]}`} />
                 <div className="mt-5 flex items-center justify-between gap-2">
                   <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-[11px] font-bold text-surface-600 dark:bg-surface-800 dark:text-surface-300">
-                    <BookmarkCheck className="h-3.5 w-3.5 text-primary-500" /> {toolCounts.get(tool) || 0} prompts
+                    <BookmarkCheck className="h-3.5 w-3.5 text-primary-500" /> {toolCounts.get(tool.toLowerCase()) || 0} prompts
                   </span>
                   <span className="truncate text-right text-[9px] font-black uppercase tracking-wider text-surface-600 dark:text-surface-400">{details?.badge || 'AI prompts library'}</span>
                 </div>

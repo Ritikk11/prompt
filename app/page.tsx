@@ -2,7 +2,6 @@ export const revalidate = 300;
 import type { ReactNode } from 'react';
 import { preload } from 'react-dom';
 import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } from '@/lib/data';
-import { getAllTools } from '@/lib/constants';
 import { getPromptImageUrl } from '@/lib/image-url';
 import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
@@ -43,13 +42,6 @@ export default async function Home() {
     const lcpImageUrl = getPromptImageUrl(firstSlide.thumbnailUrl || firstSlide.images[0]?.url || '', { width: 960, quality: 78 });
     if (lcpImageUrl) preload(lcpImageUrl, { as: 'image', fetchPriority: 'high' });
   }
-  // Empty tool pages return 404, so hero/slider tool chips only link tools with posts.
-  const toolsWithPosts = new Set(allPosts.flatMap(post => getAllTools(post)));
-  const linkableToolSettings = {
-    ...settings,
-    aiTools: (settings.aiTools || []).filter(tool => toolsWithPosts.has(tool)),
-  };
-
   const homepageSections = sections
     .filter(s => s.visible && (s.location || 'homepage') === 'homepage')
     .sort((a, b) => a.order - b.order);
@@ -89,19 +81,20 @@ export default async function Home() {
   return (
     <div className="w-full overflow-x-hidden">
       {(settings.features?.showHomepageLibraryHero ?? true) && settings.heroStyle !== 'v9' && (
-        <HomeLibraryHero featuredPosts={featuredPosts} settings={linkableToolSettings} postCount={allPosts.length} />
+        <HomeLibraryHero featuredPosts={featuredPosts} settings={settings} postCount={allPosts.length} />
       )}
 
-      {/* Featured Slider */}
-      <ScrollReveal delay={100}>
-        <section className="mx-auto max-w-7xl px-1 py-0">
-          <FeaturedSlider
-            featuredPosts={featuredPosts}
-            settings={linkableToolSettings}
-            stats={{ postCount: allPosts.length, sectionCount: homepageSections.length }}
-          />
-        </section>
-      </ScrollReveal>
+      {/* Featured Slider — NOT wrapped in ScrollReveal: the reveal hides content
+          at opacity 0 until hydration + IntersectionObserver run, which delays the
+          LCP image paint by seconds on throttled mobile CPUs. Above-fold content
+          must be visible in the server-rendered HTML. */}
+      <section className="mx-auto max-w-7xl px-1 py-0">
+        <FeaturedSlider
+          featuredPosts={featuredPosts}
+          settings={settings}
+          stats={{ postCount: allPosts.length, sectionCount: homepageSections.length }}
+        />
+      </section>
 
       <ScrollReveal delay={200}>
         <div className="mx-auto max-w-7xl px-1 py-0">
