@@ -32,6 +32,10 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     webpackBuildWorker: false,
+    // Inline the (~25KB) global stylesheet into the HTML instead of loading it
+    // as a separate render-blocking request — removes ~340ms from the mobile
+    // critical rendering path (PSI "render blocking requests").
+    inlineCss: true,
   },
   turbopack: {},
   // Allow access to remote image placeholder.
