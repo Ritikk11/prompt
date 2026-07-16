@@ -246,7 +246,7 @@ export default function Header() {
     >
       <div
         ref={progressFillRef}
-        className="relative h-1 rounded-full bg-gradient-to-r from-primary-500 via-fuchsia-500 to-purple-500 transition-[width] duration-150 ease-linear after:absolute after:-inset-[50px] after:bg-[linear-gradient(-45deg,rgba(255,255,255,.22)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.22)_50%,rgba(255,255,255,.22)_75%,transparent_75%,transparent)] after:bg-[length:50px_50px] after:content-[''] after:animate-[movePgrs_2s_linear_infinite] after:will-change-transform"
+        className="relative h-1 rounded-full bg-gradient-to-r from-primary-500 via-fuchsia-500 to-purple-500 transition-[width] duration-150 ease-linear after:absolute after:inset-0 after:bg-[linear-gradient(-45deg,rgba(255,255,255,.22)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.22)_50%,rgba(255,255,255,.22)_75%,transparent_75%,transparent)] after:bg-[length:50px_50px] after:content-[''] after:animate-[movePgrs_2s_linear_infinite]"
         style={{ width: '0%' }}
       />
     </div>
