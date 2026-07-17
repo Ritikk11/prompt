@@ -14,7 +14,7 @@ import SmartLink from '@/components/SmartLink';
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
-  const { settings, sections, posts } = useData();
+  const { settings, sections, posts, ensurePostsLoaded } = useData();
   const accountFeaturesEnabled = Boolean(settings.features?.userProfiles);
   const submissionsEnabled = Boolean(settings.features?.userProfiles && settings.features?.userSubmissions);
   const headerSections = sections.filter(s => s.location === 'header' && s.visible).sort((a,b) => a.order - b.order);
@@ -152,6 +152,16 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Post summaries load on demand the first time the search is used.
+  const [postsLoading, setPostsLoading] = useState(false);
+  const activateSearch = useCallback(() => {
+    setShowLiveResults(true);
+    if (posts.length === 0) {
+      setPostsLoading(true);
+      ensurePostsLoaded().finally(() => setPostsLoading(false));
+    }
+  }, [posts.length, ensurePostsLoaded]);
+
   const getLiveResults = () => {
     if (!query.trim()) return [];
     const q = query.toLowerCase();
@@ -225,6 +235,11 @@ export default function Header() {
               </Link>
             ))}
           </div>
+        ) : postsLoading ? (
+          <div className="p-4 flex items-center justify-center gap-2 text-sm text-surface-500">
+            <span className="w-4 h-4 rounded-full border-2 border-surface-300 border-t-primary-500 animate-spin" />
+            Searching…
+          </div>
         ) : (
           <div className="p-4 text-center text-sm text-surface-500">
             No matches found for &quot;{query}&quot;
@@ -282,9 +297,9 @@ export default function Header() {
                 value={query}
                 onChange={e => {
                   setQuery(e.target.value);
-                  setShowLiveResults(true);
+                  activateSearch();
                 }}
-                onFocus={() => setShowLiveResults(true)}
+                onFocus={activateSearch}
                 placeholder="Search prompts, categories, AI tools..."
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-100 dark:bg-surface-800 border border-transparent focus:border-primary-500 focus:bg-white dark:focus:bg-surface-900 focus:ring-4 focus:ring-primary-500/10 outline-none text-sm transition-all shadow-inner focus:shadow-sm"
               />
@@ -348,7 +363,10 @@ export default function Header() {
             className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 press-anim"
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-surface-600" />}
+            <span className="relative block w-5 h-5">
+              <Sun className={`absolute inset-0 w-5 h-5 text-yellow-400 transition-all duration-300 ease-out ${theme === 'dark' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-90 scale-50'}`} />
+              <Moon className={`absolute inset-0 w-5 h-5 text-surface-600 transition-all duration-300 ease-out ${theme === 'dark' ? 'opacity-0 -rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
+            </span>
           </button>
         </nav>
 
@@ -360,14 +378,20 @@ export default function Header() {
             aria-label={searchOpen ? 'Close search' : 'Open search'}
             aria-expanded={searchOpen}
           >
-            <Search className="w-5 h-5" />
+            <span className="relative block w-5 h-5">
+              <Search className={`absolute inset-0 w-5 h-5 transition-all duration-300 ease-out ${searchOpen ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
+              <X className={`absolute inset-0 w-5 h-5 transition-all duration-300 ease-out ${searchOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'}`} />
+            </span>
           </button>
           <button
             onClick={toggleTheme}
             className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 press-anim"
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-surface-600" />}
+            <span className="relative block w-5 h-5">
+              <Sun className={`absolute inset-0 w-5 h-5 text-yellow-400 transition-all duration-300 ease-out ${theme === 'dark' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-90 scale-50'}`} />
+              <Moon className={`absolute inset-0 w-5 h-5 text-surface-600 transition-all duration-300 ease-out ${theme === 'dark' ? 'opacity-0 -rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
+            </span>
           </button>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
@@ -375,14 +399,17 @@ export default function Header() {
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
           >
-            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            <span className="relative block w-5 h-5">
+              <Menu className={`absolute inset-0 w-5 h-5 transition-all duration-300 ease-out ${menuOpen ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
+              <X className={`absolute inset-0 w-5 h-5 transition-all duration-300 ease-out ${menuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'}`} />
+            </span>
           </button>
         </div>
       </div>
 
       {/* Mobile search bar */}
       {searchOpen && (
-        <div ref={mobileSearchRef} className="md:hidden px-4 pb-3 fade-in relative">
+        <div ref={mobileSearchRef} className="md:hidden px-4 pt-2.5 pb-3 fade-in relative">
           <form onSubmit={handleSearch}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
@@ -391,9 +418,9 @@ export default function Header() {
                 value={query}
                 onChange={e => {
                   setQuery(e.target.value);
-                  setShowLiveResults(true);
+                  activateSearch();
                 }}
-                onFocus={() => setShowLiveResults(true)}
+                onFocus={activateSearch}
                 placeholder="Search prompts..."
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-100 dark:bg-surface-800 border border-transparent focus:border-primary-500 outline-none text-sm"
                 autoFocus

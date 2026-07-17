@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode, useMemo } from 'react';
 import type { Post, Section, SiteSettings } from '@/lib/types';
 import { createClient } from '@/lib/supabase-client';
 
@@ -19,6 +19,7 @@ interface DataContextType {
   updateSettings: (settings: SiteSettings) => Promise<void>;
   getPostById: (id: string) => Post | undefined;
   searchPosts: (query: string) => Post[];
+  ensurePostsLoaded: () => Promise<void>;
   resetData: () => void;
   deleteMockData: () => void;
   loadAdminData: () => Promise<any>;
@@ -80,6 +81,25 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
   const [loading, setLoading] = useState(false);
   const [localLikes, setLocalLikes] = useState<string[]>([]);
   const [localBookmarks, setLocalBookmarks] = useState<string[]>([]);
+  const postsFetchRef = useRef<Promise<void> | null>(null);
+
+  // The root layout mounts DataProvider with initialPosts=[] to keep every page's
+  // HTML payload small, so header live-search must pull the catalog on demand.
+  const ensurePostsLoaded = useCallback(async () => {
+    if (posts.length > 0) return;
+    if (!postsFetchRef.current) {
+      postsFetchRef.current = fetch('/api/posts')
+        .then(res => (res.ok ? res.json() : Promise.reject(new Error(`posts fetch ${res.status}`))))
+        .then(json => {
+          if (Array.isArray(json.posts) && json.posts.length > 0) setPosts(json.posts);
+        })
+        .catch(err => {
+          postsFetchRef.current = null;
+          console.error('Posts load failed', err);
+        });
+    }
+    await postsFetchRef.current;
+  }, [posts.length]);
   
   const supabase = useMemo(() => {
     return createClient();
@@ -366,7 +386,7 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     <DataContext.Provider value={{
       posts: enrichedPosts, sections, settings, addPost, updatePost, deletePost,
       incrementViews, toggleLike, toggleBookmark, addSection, updateSection, deleteSection,
-      updateSettings, getPostById, searchPosts, resetData, deleteMockData, 
+      updateSettings, getPostById, searchPosts, ensurePostsLoaded, resetData, deleteMockData,
       loadAdminData, setPosts, setSections, loading
     }}>
       {children}

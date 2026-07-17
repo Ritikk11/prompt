@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { fetchPostSummaries } from '@/lib/data';
 import type { Post, PostComment, SiteSettings } from '@/lib/types';
 
 function getAllToolsFromPost(post: Partial<Post>) {
@@ -42,6 +43,14 @@ async function getUserFromRequest(request: Request) {
 
 function isPublicPost(post: Pick<Post, 'status' | 'visibility'>) {
   return (post.status === 'published' || !post.status) && post.visibility !== 'private';
+}
+
+export async function GET() {
+  const posts = await fetchPostSummaries();
+  return NextResponse.json(
+    { posts },
+    { headers: { 'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600' } },
+  );
 }
 
 export async function POST(request: Request) {
