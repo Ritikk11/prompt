@@ -10,20 +10,21 @@ import { XLogo, InstagramLogo, YouTubeLogo, FacebookLogo, PinterestLogo } from '
 
 const fallbackFooterGroups: FooterLinkGroup[] = [
   {
-    title: 'Legal',
-    links: [
-      { label: 'Privacy Policy', href: '/privacy' },
-      { label: 'Terms of Service', href: '/terms' },
-      { label: 'DMCA Notice', href: '/dmca' },
-      { label: 'Disclaimer', href: '/disclaimer' },
-    ],
-  },
-  {
     title: 'Platform',
     links: [
       { label: 'Explore', href: '/explore' },
       { label: 'About Us', href: '/about' },
       { label: 'Contact', href: '/contact' },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms of Service', href: '/terms' },
+      { label: 'Cookie Policy', href: '/cookies' },
+      { label: 'DMCA Notice', href: '/dmca' },
+      { label: 'Disclaimer', href: '/disclaimer' },
     ],
   },
 ];

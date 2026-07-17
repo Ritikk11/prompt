@@ -31,14 +31,37 @@ We use first- and third-party cookies for several reasons. Some cookies are requ
 
 ## Types of cookies we use
 
-- **Essential website cookies:** These cookies are strictly necessary to provide you with services available through our website and to use some of its features, such as access to secure areas.
-- **Performance and functionality cookies:** These cookies are used to enhance the performance and functionality of our website but are non-essential to its use. However, without these cookies, certain functionality may become unavailable.
+- **Essential website cookies:** These cookies are strictly necessary to provide you with services available through our website and to use some of its features, such as access to secure areas, account authentication, and remembering your cookie preferences. Because they are essential, they cannot be switched off in our systems.
+- **Performance and functionality cookies:** These cookies are used to enhance the performance and functionality of our website but are non-essential to its use — for example, remembering your theme preference (light or dark mode) or your recently viewed prompts. Without these cookies, certain functionality may become unavailable.
 - **Analytics and customization cookies:** These cookies collect information that is used either in aggregate form to help us understand how our website is being used or how effective our marketing campaigns are, or to help us customize our website for you.
 - **Advertising cookies:** These cookies are used to make advertising messages more relevant to you. They perform functions like preventing the same ad from continuously reappearing, ensuring that ads are properly displayed for advertisers, and in some cases selecting advertisements that are based on your interests. We use Google AdSense for displaying advertisements.
 
+## Cookies we set
+
+| Cookie | Type | Purpose | Duration |
+| --- | --- | --- | --- |
+| Authentication tokens (Supabase) | Essential | Keeps you signed in to your account | Session / up to 1 year |
+| Theme preference | Functionality | Remembers your light/dark mode choice | 1 year |
+| Local likes and bookmarks | Functionality | Remembers prompts you liked or saved on this device | Persistent (local storage) |
+| Google AdSense (e.g. \`__gads\`, \`__gpi\`) | Advertising | Ad delivery, frequency capping, and measurement | Up to 13 months |
+| Google Analytics (e.g. \`_ga\`) | Analytics | Distinguishes visitors and measures site usage | Up to 2 years |
+
+Exact cookie names and durations may vary as our providers update their services. Local storage entries (such as likes) are similar to cookies but remain on your device until you clear your browser data.
+
 ## How can I control cookies?
 
-You have the right to decide whether to accept or reject cookies. You can exercise your cookie rights by amending your web browser controls to accept or refuse cookies. If you choose to reject cookies, you may still use our website, though your access to some functionality and areas of our website may be restricted.
+You have the right to decide whether to accept or reject cookies. You can exercise your cookie rights in several ways:
+
+- **Browser controls.** Most browsers let you refuse or delete cookies through their settings. Instructions are available for [Chrome](https://support.google.com/chrome/answer/95647), [Firefox](https://support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-desktop), [Safari](https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac), and [Edge](https://support.microsoft.com/en-us/microsoft-edge/delete-cookies-in-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09).
+- **Advertising opt-outs.** Visit [Google Ads Settings](https://adssettings.google.com/authenticated), [aboutads.info](https://www.aboutads.info/choices/), or [youronlinechoices.eu](https://www.youronlinechoices.eu/) (EU users) to opt out of personalized advertising.
+- **Analytics opt-out.** Google provides a [browser add-on](https://tools.google.com/dlpage/gaoptout) that prevents Google Analytics from using your data.
+- **Do Not Track.** Some browsers send a "Do Not Track" signal. Because no industry standard for responding to these signals currently exists, we do not respond to them at this time.
+
+If you choose to reject cookies, you may still use our website, though your access to some functionality and areas of our website may be restricted — for example, you will not be able to stay signed in.
+
+## Consent
+
+Where required by law (such as in the EEA and UK), we ask for your consent before placing non-essential cookies. You can withdraw or change your consent at any time using the methods described above. Essential cookies do not require consent as the website cannot function without them.
 
 ## Google AdSense and the DoubleClick cookie
 

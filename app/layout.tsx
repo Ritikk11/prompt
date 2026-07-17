@@ -38,7 +38,12 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in'),
     title: `${siteTitle} - AI Prompts`,
     description,
-    ...(ogImage ? { openGraph: { images: [{ url: ogImage }] } } : {}),
+    applicationName: siteTitle,
+    openGraph: {
+      siteName: siteTitle,
+      type: 'website',
+      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
+    },
     ...(publisherId ? { other: { 'google-adsense-account': publisherId } } : {}),
   };
 }
@@ -48,7 +53,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'AI PromptMatrix',
-    alternateName: ['AI PromptMatrix', 'Prompt Matrix'],
     url: 'https://aipromptmatrix.in',
   };
 
