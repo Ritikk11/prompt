@@ -7,7 +7,7 @@ import { Search, Sun, Moon, Menu, X, Sparkles, Shield, User as UserIcon, LogOut,
 import Image from 'next/image';
 import { useTheme } from '@/components/context/ThemeContext';
 import { useData } from '@/components/context/DataContext';
-import { createClient } from '@/lib/supabase-client';
+import { getSupabaseClient } from '@/lib/supabase-lazy';
 import type { User } from '@supabase/supabase-js';
 import { getPostPath, getSectionPath } from '@/lib/sections';
 import SmartLink from '@/components/SmartLink';
@@ -159,14 +159,21 @@ export default function Header() {
   useEffect(() => stopRouteTimers, [stopRouteTimers]);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    let subscription: { unsubscribe: () => void } | undefined;
+    let cancelled = false;
+    getSupabaseClient().then(supabase => {
+      if (cancelled) return;
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setUser(session?.user ?? null);
+      });
+      ({ data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null);
+      }));
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription?.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -222,7 +229,7 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      const supabase = createClient();
+      const supabase = await getSupabaseClient();
       await supabase.auth.signOut();
     } catch (e) {
       console.error(e);

@@ -11,7 +11,7 @@ import { getGridClasses } from '@/lib/utils';
 import { getDefaultImageModel, getToolInfo, getAllTools, getToolForImageModel } from '@/lib/constants';
 import { isUserOwnedPost, EDITORIAL_TEAM_NAME } from '@/lib/authors';
 import TemplatePrompt from '@/components/TemplatePrompt';
-import { createClient } from '@/lib/supabase-client';
+import { getSupabaseClient } from '@/lib/supabase-lazy';
 import type { User } from '@supabase/supabase-js';
 import type { Post, ShareTarget } from '@/lib/types';
 

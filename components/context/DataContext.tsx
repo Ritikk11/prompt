@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode, useMemo } from 'react';
 import type { Post, Section, SiteSettings } from '@/lib/types';
-import { createClient } from '@/lib/supabase-client';
+import { getSupabaseClient } from '@/lib/supabase-lazy';
 
 interface DataContextType {
   posts: Post[];
@@ -31,7 +31,7 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 async function adminRequest(payload?: any) {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   let { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) {
     const { data } = await supabase.auth.refreshSession().catch(() => ({ data: { session: null } as any }));
@@ -55,7 +55,7 @@ async function adminRequest(payload?: any) {
 }
 
 async function postRequest(payload: any) {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   let { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) {
     const { data } = await supabase.auth.refreshSession().catch(() => ({ data: { session: null } as any }));
@@ -100,10 +100,6 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     }
     await postsFetchRef.current;
   }, [posts.length]);
-  
-  const supabase = useMemo(() => {
-    return createClient();
-  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -127,11 +123,14 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
   }, [localLikes]);
 
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | undefined;
+    let cancelled = false;
     const applyViewerState = async () => {
       if (!settings.features?.userProfiles) {
         setLocalBookmarks([]);
         return;
       }
+      const supabase = await getSupabaseClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         setLocalBookmarks([]);
@@ -157,12 +156,18 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
       }
     };
 
-    applyViewerState();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+    getSupabaseClient().then(supabase => {
+      if (cancelled) return;
       applyViewerState();
+      ({ data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+        applyViewerState();
+      }));
     });
-    return () => subscription.unsubscribe();
-  }, [supabase, settings.features?.userProfiles]);
+    return () => {
+      cancelled = true;
+      subscription?.unsubscribe();
+    };
+  }, [settings.features?.userProfiles]);
 
   const resetData = useCallback(async () => {
     try {
@@ -255,24 +260,26 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
          setPosts(prev => prev.map(p => p.id === id ? { ...p, views: (p.views || 0) + 1 } : p));
       } else {
          // Load from DB
+         const supabase = await getSupabaseClient();
          const { data: dbData } = await supabase.from('posts').select('data').eq('id', id).single();
          if (dbData) post = dbData.data;
          if (!post) return;
       }
-      
+
       await postRequest({ action: 'view', id });
     } catch {}
-  }, [posts, supabase]);
+  }, [posts]);
 
   const toggleLike = useCallback(async (id: string, fallbackPost?: Post) => {
     const liked = localLikes.includes(id);
     let post = posts.find(p => p.id === id);
-    
+
     try {
       if (!post) {
          if (fallbackPost) {
              post = fallbackPost;
          } else {
+             const supabase = await getSupabaseClient();
              const { data: dbData } = await supabase.from('posts').select('data').eq('id', id).single();
              if (dbData) post = dbData.data;
          }
@@ -295,9 +302,10 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
         await postRequest({ action: 'like', id, liked: true });
       }
     } catch {}
-  }, [localLikes, posts, supabase]);
+  }, [localLikes, posts]);
 
   const toggleBookmark = useCallback(async (id: string, fallbackPost?: Post) => {
+    const supabase = await getSupabaseClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) return null;
 
@@ -321,7 +329,7 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
       }
       throw error;
     }
-  }, [posts, supabase]);
+  }, [posts]);
 
   const addSection = useCallback(async (section: Section) => {
     const cleanSection = JSON.parse(JSON.stringify(section));
