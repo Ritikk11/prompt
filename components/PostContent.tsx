@@ -106,14 +106,24 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const comments = commentState.postId === post.id ? commentState.items : (post.comments || []);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
+    getSupabaseClient().then((supabase) => {
+      if (cancelled) return;
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!cancelled) setUser(session?.user ?? null);
+      });
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null);
+      });
+      unsubscribe = () => subscription.unsubscribe();
+    }).catch((error) => {
+      console.error('Failed to load Supabase auth client:', error);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
   }, []);
 
   const hasTemplateVariables = (prompt: string) => /(?:\[[^\]]+\]|\{[^}]+\})/.test(prompt);
@@ -148,7 +158,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     if (text.length < 2) return;
     setCommentSubmitting(true);
     try {
-      const supabase = createClient();
+      const supabase = await getSupabaseClient();
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/posts', {
         method: 'POST',
