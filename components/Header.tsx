@@ -57,23 +57,37 @@ export default function Header() {
   const scrollFrameRef = useRef<number | null>(null);
   const routeTimerRef = useRef<number | null>(null);
   const routeIntervalRef = useRef<number | null>(null);
+  const routeFallbackRef = useRef<number | null>(null);
   const [isVisible, setIsVisible] = useState(true);
   const [routeProgress, setRouteProgress] = useState(0);
 
   const stopRouteTimers = useCallback(() => {
     if (routeTimerRef.current) window.clearTimeout(routeTimerRef.current);
     if (routeIntervalRef.current) window.clearInterval(routeIntervalRef.current);
+    if (routeFallbackRef.current) window.clearTimeout(routeFallbackRef.current);
     routeTimerRef.current = null;
     routeIntervalRef.current = null;
+    routeFallbackRef.current = null;
   }, []);
 
-  const startRouteProgress = useCallback(() => {
+  const startRouteProgress = useCallback((targetHref?: string) => {
     stopRouteTimers();
     setRouteProgress(10);
     routeTimerRef.current = window.setTimeout(() => setRouteProgress(34), 120);
     routeIntervalRef.current = window.setInterval(() => {
       setRouteProgress(prev => (prev > 0 && prev < 88 ? Math.min(prev + 8, 88) : prev));
     }, 420);
+    // Soft-navigation rescue: on flaky mobile networks (or a stale build after
+    // a deploy) the router's RSC fetch can hang or reject, leaving the bar
+    // stuck and the page never changing. If the route hasn't changed after 8s,
+    // fall back to a full browser navigation, which always works.
+    if (targetHref) {
+      const from = window.location.pathname + window.location.search;
+      routeFallbackRef.current = window.setTimeout(() => {
+        const now = window.location.pathname + window.location.search;
+        if (now === from) window.location.assign(targetHref);
+      }, 8000);
+    }
   }, [stopRouteTimers]);
 
   useEffect(() => {
@@ -135,7 +149,7 @@ export default function Header() {
       if (nextUrl.origin !== currentUrl.origin) return;
       if (nextUrl.pathname === currentUrl.pathname && nextUrl.search === currentUrl.search) return;
 
-      startRouteProgress();
+      startRouteProgress(nextUrl.pathname + nextUrl.search);
     };
 
     document.addEventListener('click', handleDocumentClick, true);
@@ -192,8 +206,9 @@ export default function Header() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      startRouteProgress();
-      navigate.push(`/search?q=${encodeURIComponent(query.trim())}`);
+      const target = `/search?q=${encodeURIComponent(query.trim())}`;
+      startRouteProgress(target);
+      navigate.push(target);
       setQuery('');
       setSearchOpen(false);
       setShowLiveResults(false);
