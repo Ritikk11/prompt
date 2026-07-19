@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchPosts, fetchSettings } from '@/lib/data';
+import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import { Post, SiteSettings } from '@/lib/types';
 
 
@@ -13,8 +13,10 @@ export async function GET() {
     const siteTitle = settings?.siteTitle || 'AI PromptMatrix';
     const siteDescription = settings?.siteDescription || 'Curated AI Prompts';
 
-    // 2. Fetch posts
-    const posts = await fetchPosts() as Post[];
+    // 2. Fetch posts — use the lightweight summary source since RSS only
+    // renders list-level fields (slug, title, description, createdAt) and
+    // doesn't need full prompt bodies, galleries, or comments.
+    const posts = await fetchPostSummaries() as Post[];
     const publishedPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private')
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 50); // only last 50 for RSS

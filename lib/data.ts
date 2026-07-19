@@ -1,34 +1,34 @@
 import { cache } from 'react';
 import { createPublicClient } from './supabase-public';
-import type { Post, PostComment, Section, SiteSettings } from './types';
+import type { Post, PostComment, PostSummary, Section, SiteSettings } from './types';
 import { seedPosts, seedSections } from './data/seedData';
 import { getAllTools } from './constants';
 import { filterPostsForSection } from './sections';
 import { getThumbnailImageUrl } from './image-url';
 
 const defaultArticleThumbnails: Record<string, string> = {
-  '3d-figurine-photo-trend-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/3d-figurine-photo-trend-guide.webp',
-  'ai-headshots-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/ai-headshots-guide.webp',
-  'ai-image-aspect-ratios-explained': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/ai-image-aspect-ratios-explained.webp',
-  'ai-photo-trends-2026': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/ai-photo-trends-2026.webp',
-  'ai-product-photography-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/ai-product-photography-guide.webp',
-  'anatomy-of-a-perfect-ai-image-prompt': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/anatomy-of-a-perfect-ai-image-prompt.webp',
-  'anime-portrait-prompts-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/anime-portrait-prompts-guide.webp',
-  'chatgpt-image-generation-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/chatgpt-image-generation-guide.webp',
-  'chatgpt-vs-gemini-image-generation': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/chatgpt-vs-gemini-image-generation.webp',
-  'common-ai-prompt-mistakes': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/common-ai-prompt-mistakes.webp',
-  'consistent-characters-ai-images': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/consistent-characters-ai-images.webp',
-  'couple-portrait-prompts-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/couple-portrait-prompts-guide.webp',
-  'gemini-photo-editing-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/gemini-photo-editing-guide.webp',
-  'how-ai-image-generators-work': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/how-ai-image-generators-work.webp',
-  'how-to-use-prompts-from-promptmatrix': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/how-to-use-prompts-from-promptmatrix.webp',
-  'how-to-write-better-ai-image-prompts': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/how-to-write-better-ai-image-prompts.webp',
-  'negative-prompts-explained': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/negative-prompts-explained.webp',
-  'reference-images-vs-text-prompts': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/reference-images-vs-text-prompts.webp',
-  'restore-old-photos-with-ai': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/restore-old-photos-with-ai.webp',
-  'retro-saree-portrait-guide': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/retro-saree-portrait-guide.webp',
-  'what-are-ai-image-prompts': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/what-are-ai-image-prompts.webp',
-  'who-owns-ai-generated-images': 'https://fcmmcgyqovqbxbqfeaho.supabase.co/storage/v1/object/public/images/thumbnails/who-owns-ai-generated-images.webp',
+  '3d-figurine-photo-trend-guide': 'https://uploads.aipromptmatrix.in/thumbnails/3d-figurine-photo-trend-guide.webp',
+  'ai-headshots-guide': 'https://uploads.aipromptmatrix.in/thumbnails/ai-headshots-guide.webp',
+  'ai-image-aspect-ratios-explained': 'https://uploads.aipromptmatrix.in/thumbnails/ai-image-aspect-ratios-explained.webp',
+  'ai-photo-trends-2026': 'https://uploads.aipromptmatrix.in/thumbnails/ai-photo-trends-2026.webp',
+  'ai-product-photography-guide': 'https://uploads.aipromptmatrix.in/thumbnails/ai-product-photography-guide.webp',
+  'anatomy-of-a-perfect-ai-image-prompt': 'https://uploads.aipromptmatrix.in/thumbnails/anatomy-of-a-perfect-ai-image-prompt.webp',
+  'anime-portrait-prompts-guide': 'https://uploads.aipromptmatrix.in/thumbnails/anime-portrait-prompts-guide.webp',
+  'chatgpt-image-generation-guide': 'https://uploads.aipromptmatrix.in/thumbnails/chatgpt-image-generation-guide.webp',
+  'chatgpt-vs-gemini-image-generation': 'https://uploads.aipromptmatrix.in/thumbnails/chatgpt-vs-gemini-image-generation.webp',
+  'common-ai-prompt-mistakes': 'https://uploads.aipromptmatrix.in/thumbnails/common-ai-prompt-mistakes.webp',
+  'consistent-characters-ai-images': 'https://uploads.aipromptmatrix.in/thumbnails/consistent-characters-ai-images.webp',
+  'couple-portrait-prompts-guide': 'https://uploads.aipromptmatrix.in/thumbnails/couple-portrait-prompts-guide.webp',
+  'gemini-photo-editing-guide': 'https://uploads.aipromptmatrix.in/thumbnails/gemini-photo-editing-guide.webp',
+  'how-ai-image-generators-work': 'https://uploads.aipromptmatrix.in/thumbnails/how-ai-image-generators-work.webp',
+  'how-to-use-prompts-from-promptmatrix': 'https://uploads.aipromptmatrix.in/thumbnails/how-to-use-prompts-from-promptmatrix.webp',
+  'how-to-write-better-ai-image-prompts': 'https://uploads.aipromptmatrix.in/thumbnails/how-to-write-better-ai-image-prompts.webp',
+  'negative-prompts-explained': 'https://uploads.aipromptmatrix.in/thumbnails/negative-prompts-explained.webp',
+  'reference-images-vs-text-prompts': 'https://uploads.aipromptmatrix.in/thumbnails/reference-images-vs-text-prompts.webp',
+  'restore-old-photos-with-ai': 'https://uploads.aipromptmatrix.in/thumbnails/restore-old-photos-with-ai.webp',
+  'retro-saree-portrait-guide': 'https://uploads.aipromptmatrix.in/thumbnails/retro-saree-portrait-guide.webp',
+  'what-are-ai-image-prompts': 'https://uploads.aipromptmatrix.in/thumbnails/what-are-ai-image-prompts.webp',
+  'who-owns-ai-generated-images': 'https://uploads.aipromptmatrix.in/thumbnails/who-owns-ai-generated-images.webp',
 };
 
 const defaultSettings: SiteSettings = {
@@ -273,10 +273,22 @@ function isNextDynamicServerError(error: unknown) {
   return err?.digest === 'DYNAMIC_SERVER_USAGE' || err?.message?.includes('Dynamic server usage');
 }
 
+// Detects "relation not deployed yet" errors so callers can fall back to the
+// legacy path instead of hard-failing. Covers both the Postgres shape
+// (42P01 / "does not exist") and the PostgREST shape returned over the REST
+// API: PGRST205 for a missing view/table and PGRST202 for a missing RPC, both
+// with "in the schema cache" in the message.
 function isMissingTableError(error: unknown) {
   const message = typeof error === 'object' && error && 'message' in error ? String((error as any).message) : '';
   const code = typeof error === 'object' && error && 'code' in error ? String((error as any).code) : '';
-  return code === '42P01' || message.includes('Could not find the table') || message.includes('does not exist');
+  return (
+    code === '42P01' ||
+    code === 'PGRST205' ||
+    code === 'PGRST202' ||
+    message.includes('Could not find the table') ||
+    message.includes('Could not find the function') ||
+    message.includes('does not exist')
+  );
 }
 
 export async function fetchPosts() {
@@ -485,12 +497,115 @@ export function toPublicPost(post: Post): Post {
   };
 }
 
-export async function fetchPostSummaries() {
-  const posts = await fetchPosts();
-  return posts.filter(isPublicPost).map(toPostSummary);
+// Shape returned by the `public_post_summaries` view (snake_case columns).
+// The view is `security_invoker`, so RLS already restricts anon/authenticated
+// readers to published, non-private posts — same visibility rule as
+// `isPublicPost`, enforced at the database instead of in JS.
+type PostSummaryRow = {
+  id: string;
+  slug: string | null;
+  title: string | null;
+  description: string | null;
+  seo_keywords: string[] | null;
+  thumbnail_url: string | null;
+  tags: string[] | null;
+  category: string | null;
+  categories: string[] | null;
+  ai_tools: string[] | null;
+  featured: boolean;
+  views: number;
+  likes: number;
+  is_premium: boolean;
+  is_template: boolean;
+  status: string | null;
+  visibility: string | null;
+  created_at: string | null;
+  images: Array<{
+    id: string;
+    url: string;
+    prompt: string;
+    aiTool: string;
+    aiTools: string[] | null;
+    model: string | null;
+  }> | null;
+};
+
+// Mirrors `toPostSummary` but works off the lightweight view row instead of a
+// full Post: same thumbnail resolution (incl. the `/api/image/:id` fallback for
+// legacy inline images). The view's `ai_tools` column already unions post- and
+// image-level tools (matching getAllTools), so it is the source of truth here.
+function resolveSummaryThumbnail(row: PostSummaryRow): string {
+  const raw = row.thumbnail_url || '';
+  if (raw && !isInlineImage(raw)) return raw;
+  if (isInlineImage(raw) || (row.images || []).some((img) => isInlineImage(img?.url))) {
+    return `/api/image/${row.id}`;
+  }
+  return '';
 }
 
-export async function fetchSections() {
+function mapSummaryRow(row: PostSummaryRow): PostSummary {
+  const primaryImage = row.images?.[0];
+  const thumbnailUrl = getThumbnailImageUrl(resolveSummaryThumbnail(row));
+  const allTools = row.ai_tools || [];
+
+  return {
+    id: row.id,
+    slug: row.slug || '',
+    title: row.title || '',
+    description: row.description || '',
+    seoKeywords: row.seo_keywords || [],
+    thumbnailUrl,
+    images: [
+      {
+        id: primaryImage?.id || row.id,
+        url: thumbnailUrl,
+        prompt: '',
+        aiTool: primaryImage?.aiTool || allTools[0] || '',
+        aiTools: allTools,
+        model: primaryImage?.model || undefined,
+      },
+    ],
+    tags: row.tags || [],
+    category: row.category || undefined,
+    categories: row.categories || [],
+    aiTools: allTools,
+    featured: row.featured,
+    views: row.views,
+    likes: row.likes,
+    isPremium: row.is_premium,
+    isTemplate: row.is_template,
+    status: (row.status || 'published') as Post['status'],
+    visibility: (row.visibility || 'public') as Post['visibility'],
+    createdAt: row.created_at || '',
+  };
+}
+
+export async function fetchPostSummaries(): Promise<Post[]> {
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase.from('public_post_summaries').select('*');
+    if (error) {
+      // Fall back to the full loader if the view isn't deployed yet so a missing
+      // migration never takes the site down — list pages just run the old path.
+      if (isMissingTableError(error)) {
+        const posts = await fetchPosts();
+        return posts.filter(isPublicPost).map(toPostSummary);
+      }
+      console.error('Supabase post summaries fetch error:', error);
+      return [];
+    }
+    const rows = (data || []) as unknown as PostSummaryRow[];
+    return rows
+      .map(mapSummaryRow)
+      .filter((p) => isPublicPost(p));
+  } catch (error) {
+    if (isNextDynamicServerError(error)) throw error;
+    console.error('Supabase post summaries fetch error:', error);
+    return [];
+  }
+}
+
+export const fetchSections = cache(async () => {
   try {
     const supabase = createPublicClient();
     const { data, error } = await supabase.from('sections').select('data');
@@ -504,7 +619,7 @@ export async function fetchSections() {
     console.error('Supabase sections fetch error:', error);
     return [];
   }
-}
+});
 
 export const fetchSettings = cache(async () => {
   try {
@@ -525,9 +640,61 @@ export const fetchSettings = cache(async () => {
 });
 
 export async function getPostBySlugOrId(idOrSlug: string) {
-  const posts = await fetchPosts();
-  const post = posts.find((p) => p.slug === idOrSlug || p.id === idOrSlug);
-  return post ? toPublicPost(post) : null;
+  if (!idOrSlug) return null;
+  try {
+    const supabase = createPublicClient();
+    // RPC is `security invoker`, so RLS already hides drafts/private posts from
+    // anon. We still run `isPublicPost` as defense-in-depth in case the
+    // migration's RLS assumption is ever loosened.
+    const { data, error } = await supabase
+      .rpc('get_public_post_by_slug_or_id', { p_slug_or_id: idOrSlug })
+      .maybeSingle();
+    if (error) {
+      if (isMissingTableError(error)) {
+        // View/RPC not deployed yet — keep detail pages working via the old path.
+        const posts = await fetchPosts();
+        const post = posts.find((p) => p.slug === idOrSlug || p.id === idOrSlug);
+        return post ? toPublicPost(post) : null;
+      }
+      console.error('Supabase post lookup error:', error);
+      return null;
+    }
+    if (!data) return null;
+    const post = (data as { id: string; data: Post }).data;
+    if (!post || !isPublicPost(post)) return null;
+
+    // Fetch only this post's approved comments instead of every comment
+    // site-wide (the old path merged the full comments table in JS).
+    const { data: commentRows, error: commentsError } = await supabase
+      .from('comments')
+      .select('id, post_id, user_id, user_name, user_avatar, text, status, created_at')
+      .eq('status', 'approved')
+      .eq('post_id', post.id);
+    if (commentsError && !isMissingTableError(commentsError)) {
+      console.error('Supabase comments fetch error:', commentsError);
+    }
+    const tableComments: PostComment[] = (commentRows || []).map((row) => ({
+      id: row.id,
+      postId: row.post_id,
+      userId: row.user_id,
+      userName: row.user_name,
+      userAvatar: row.user_avatar,
+      text: row.text,
+      status: row.status,
+      createdAt: row.created_at,
+    }));
+    const legacyComments = post.comments || [];
+    const mergedComments = [
+      ...legacyComments.filter((c) => !tableComments.some((t) => t.id === c.id)),
+      ...tableComments,
+    ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    return toPublicPost({ ...post, comments: mergedComments });
+  } catch (error) {
+    if (isNextDynamicServerError(error)) throw error;
+    console.error('Supabase post lookup error:', error);
+    return null;
+  }
 }
 
 export async function getSectionBySlug(slug: string) {

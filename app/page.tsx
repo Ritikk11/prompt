@@ -33,9 +33,14 @@ function normalizeBlockToken(key: string) {
 }
 
 export default async function Home() {
-  const sections = await fetchSections();
-  const settings = await fetchSettings();
-  const allPosts = await fetchPostSummaries();
+  // Parallelize the three independent homepage reads (settings, sections,
+  // post summaries) instead of awaiting them sequentially — cuts the
+  // data-fetch waterfall that was adding latency to every homepage render.
+  const [sections, settings, allPosts] = await Promise.all([
+    fetchSections(),
+    fetchSettings(),
+    fetchPostSummaries(),
+  ]);
   const featuredPosts = allPosts.filter(p => p.featured && (p.status === 'published' || !p.status) && p.visibility !== 'private');
   // Preload the first hero slide (the LCP image) so the browser fetches it
   // before the client slider hydrates. Must match FeaturedSlider's URL params.

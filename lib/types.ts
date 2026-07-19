@@ -51,6 +51,29 @@ export interface Post {
   createdAt: string;
 }
 
+export type PostSummary = Pick<
+  Post,
+  | 'id'
+  | 'slug'
+  | 'title'
+  | 'description'
+  | 'seoKeywords'
+  | 'thumbnailUrl'
+  | 'images'
+  | 'tags'
+  | 'category'
+  | 'categories'
+  | 'aiTools'
+  | 'featured'
+  | 'views'
+  | 'likes'
+  | 'isPremium'
+  | 'isTemplate'
+  | 'status'
+  | 'visibility'
+  | 'createdAt'
+>;
+
 export interface PostComment {
   id: string;
   postId: string;
