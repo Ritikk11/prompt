@@ -10,7 +10,7 @@ import { promptImageUrl, isNearbySlide, useFeaturedSlider, SliderProgress, type 
 
 // V1: Classic Slider (Previous Default)
 export default function HeroV1({ featuredPosts: featured, settings }: HeroProps) {
-  const { current, playing, setPlaying, progress, goTo, handleTouchStart, handleTouchMove, handleTouchEnd } =
+  const { current, playing, setPlaying, goTo, handleTouchStart, handleTouchMove, handleTouchEnd } =
     useFeaturedSlider(featured, settings.heroAutoPlay ?? true);
   const showSkeleton = settings.features?.skeletonLoaders ?? false;
   const post: Post = featured[current];
@@ -65,7 +65,7 @@ export default function HeroV1({ featuredPosts: featured, settings }: HeroProps)
         <button onClick={() => goTo(current - 1)} aria-label="Previous featured prompt" className="absolute left-3 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm opacity-100 md:opacity-0 group-hover:opacity-100 transition-all shadow-lg"><ChevronLeft className="w-5 h-5" /></button>
         <button onClick={() => goTo(current + 1)} aria-label="Next featured prompt" className="absolute right-3 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-sm opacity-100 md:opacity-0 group-hover:opacity-100 transition-all shadow-lg"><ChevronRight className="w-5 h-5" /></button>
       </div>
-      <SliderProgress featured={featured} current={current} progress={progress} playing={playing} goTo={goTo} setPlaying={setPlaying} />
+      <SliderProgress featured={featured} current={current} playing={playing} goTo={goTo} setPlaying={setPlaying} />
     </div>
   );
 }

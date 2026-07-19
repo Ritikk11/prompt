@@ -10,7 +10,7 @@ import { promptImageUrl, isNearbySlide, useFeaturedSlider, SliderProgress, type 
 
 // V2: Split Screen
 export default function HeroV2({ featuredPosts: featured, settings }: HeroProps) {
-  const { current, playing, setPlaying, progress, goTo, handleTouchStart, handleTouchMove, handleTouchEnd } =
+  const { current, playing, setPlaying, goTo, handleTouchStart, handleTouchMove, handleTouchEnd } =
     useFeaturedSlider(featured, settings.heroAutoPlay ?? true);
   const showSkeleton = settings.features?.skeletonLoaders ?? false;
   const post: Post = featured[current];
@@ -64,7 +64,7 @@ export default function HeroV2({ featuredPosts: featured, settings }: HeroProps)
             ))}
         </div>
       </div>
-      <SliderProgress featured={featured} current={current} progress={progress} playing={playing} goTo={goTo} setPlaying={setPlaying} />
+      <SliderProgress featured={featured} current={current} playing={playing} goTo={goTo} setPlaying={setPlaying} />
     </div>
   );
 }

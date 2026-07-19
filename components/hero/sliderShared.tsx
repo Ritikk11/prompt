@@ -20,29 +20,26 @@ export const promptImageUrl = (item?: Post, fallback = '') => (
   getPromptImageUrl(item?.thumbnailUrl || item?.images[0]?.url || fallback, { width: 960, quality: 78 })
 );
 
+// Matches the old 1.5%-per-100ms progress ticker (~6.7s per slide).
+export const SLIDE_DURATION_MS = 6700;
+
 export function useFeaturedSlider(featured: Post[], autoPlay: boolean) {
   const [current, setCurrent] = useState(0);
   const [playing, setPlaying] = useState(autoPlay);
-  const [progress, setProgress] = useState(0);
 
   const goTo = useCallback((i: number) => {
     if (featured.length === 0) return;
     setCurrent(((i % featured.length) + featured.length) % featured.length);
-    setProgress(0);
   }, [featured.length]);
 
+  // One state update per slide change. The progress bar is a CSS animation
+  // (SliderProgress), NOT ticked state: a 100ms setProgress interval re-rendered
+  // the whole hero tree 10×/second for the page's lifetime, which dominated
+  // main-thread time in Lighthouse.
   useEffect(() => {
-    if (!playing || featured.length === 0) return;
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          goTo(current + 1);
-          return 0;
-        }
-        return prev + 1.5;
-      });
-    }, 100);
-    return () => clearInterval(interval);
+    if (!playing || featured.length <= 1) return;
+    const timer = setInterval(() => goTo(current + 1), SLIDE_DURATION_MS);
+    return () => clearInterval(timer);
   }, [playing, current, goTo, featured.length]);
 
   const [touchStart, setTouchStart] = useState(0);
@@ -59,29 +56,36 @@ export function useFeaturedSlider(featured: Post[], autoPlay: boolean) {
     setTouchEnd(0);
   };
 
-  return { current, playing, setPlaying, progress, goTo, handleTouchStart, handleTouchMove, handleTouchEnd };
+  return { current, playing, setPlaying, goTo, handleTouchStart, handleTouchMove, handleTouchEnd };
 }
 
 // Common Nav & Progress Controls (used by v1 and v2)
 export function SliderProgress({
   featured,
   current,
-  progress,
   playing,
   goTo,
   setPlaying,
 }: {
   featured: Post[];
   current: number;
-  progress: number;
   playing: boolean;
   goTo: (i: number) => void;
   setPlaying: (playing: boolean) => void;
 }) {
   return (
     <div className="relative z-30">
-      <div className="h-1 bg-surface-200 dark:bg-surface-800">
-        <div className="h-full bg-primary-500 transition-all duration-100 ease-linear" style={{ width: `${progress}%` }} />
+      <div className="h-1 overflow-hidden bg-surface-200 dark:bg-surface-800">
+        {/* Keyed by slide so the fill animation restarts on every change;
+            paused via animation-play-state instead of JS ticks. */}
+        <div
+          key={current}
+          className="h-full origin-left bg-primary-500"
+          style={{
+            animation: `heroProgressFill ${SLIDE_DURATION_MS}ms linear forwards`,
+            animationPlayState: playing ? 'running' : 'paused',
+          }}
+        />
       </div>
       <div className="flex items-center justify-between px-5 py-2.5 bg-surface-50 dark:bg-surface-900 border-t border-surface-200 dark:border-surface-800">
         <div className="flex items-center gap-2">
