@@ -24,7 +24,7 @@ export default function HomeCreatorFeedback({ settings }: { settings?: SiteSetti
   const content = settings?.homepageContent?.creatorFeedback || {};
   const items = content.items?.length ? content.items : feedback;
   return (
-    <section className="relative w-full overflow-hidden bg-white px-5 py-16 dark:bg-surface-950 sm:px-8">
+    <section className="relative w-full overflow-clip bg-white px-5 py-16 dark:bg-surface-950 sm:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-pink-500/10 px-4 py-2 text-xs font-bold text-pink-700 dark:text-pink-300">

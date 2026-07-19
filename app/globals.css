@@ -46,6 +46,7 @@ html {
     opacity: 0;
     transform: translateY(32px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -66,6 +67,7 @@ html {
     opacity: 1;
     pointer-events: auto;
   }
+
   .reveal-root.reveal-visible {
     animation: none;
   }
@@ -82,33 +84,72 @@ html {
     opacity: 0;
     transform: translateY(16px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.reveal-root:not(.reveal-visible) [data-reveal-stagger] > * {
+.reveal-root:not(.reveal-visible) [data-reveal-stagger]>* {
   opacity: 0;
 }
 
-.reveal-root.reveal-visible [data-reveal-stagger] > * {
+.reveal-root.reveal-visible [data-reveal-stagger]>* {
   animation: reveal-stagger-in 0.55s ease-out backwards;
 }
 
-.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(1) { animation-delay: 0.1s; }
-.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(2) { animation-delay: 0.19s; }
-.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(3) { animation-delay: 0.28s; }
-.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(4) { animation-delay: 0.37s; }
-.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(5) { animation-delay: 0.46s; }
-.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(6) { animation-delay: 0.55s; }
-.reveal-root.reveal-visible [data-reveal-stagger] > *:nth-child(n+7) { animation-delay: 0.64s; }
+.reveal-root.reveal-visible [data-reveal-stagger]>*:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.reveal-root.reveal-visible [data-reveal-stagger]>*:nth-child(2) {
+  animation-delay: 0.19s;
+}
+
+.reveal-root.reveal-visible [data-reveal-stagger]>*:nth-child(3) {
+  animation-delay: 0.28s;
+}
+
+.reveal-root.reveal-visible [data-reveal-stagger]>*:nth-child(4) {
+  animation-delay: 0.37s;
+}
+
+.reveal-root.reveal-visible [data-reveal-stagger]>*:nth-child(5) {
+  animation-delay: 0.46s;
+}
+
+.reveal-root.reveal-visible [data-reveal-stagger]>*:nth-child(6) {
+  animation-delay: 0.55s;
+}
+
+.reveal-root.reveal-visible [data-reveal-stagger]>*:nth-child(n+7) {
+  animation-delay: 0.64s;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal-root [data-reveal-stagger] > * {
+  .reveal-root [data-reveal-stagger]>* {
     opacity: 1 !important;
     animation: none !important;
   }
+}
+
+/* Fade-only stagger variant (data-reveal-stagger="fade") for children of
+   horizontal scroll rows. There translateY can't be used: overflow-x:auto
+   forces the row's overflow-y to `auto`, so the 16px offset momentarily
+   overflows the row and flashes a vertical scrollbar that shifts the cards. */
+@keyframes reveal-stagger-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.reveal-root.reveal-visible [data-reveal-stagger='fade']>* {
+  animation-name: reveal-stagger-fade-in;
 }
 
 
@@ -146,12 +187,15 @@ textarea {
   width: 8px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   @apply bg-surface-100 dark:bg-surface-900;
 }
+
 ::-webkit-scrollbar-thumb {
   @apply bg-surface-300 dark:bg-surface-700 rounded-full;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-surface-400 dark:bg-surface-600;
 }
@@ -161,18 +205,23 @@ textarea {
   scrollbar-width: thin;
   scroll-snap-type: x mandatory;
 }
-.scroll-section > * {
+
+.scroll-section>* {
   scroll-snap-align: start;
 }
 
 /* Scrollable areas that should scroll without showing a scrollbar track
    (e.g. the prompt text box on post pages). */
 .no-scrollbar {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* old Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* old Edge */
 }
+
 .no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
+  /* Chrome/Safari */
 }
 
 /* Slider animations */
@@ -182,10 +231,19 @@ textarea {
 
 /* Copy animation */
 @keyframes copyPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
+
 .copy-pulse {
   animation: copyPulse 0.3s ease-in-out;
 }
@@ -196,9 +254,11 @@ textarea {
 .press-anim {
   transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
+
 .press-anim:hover {
   transform: translateY(-1px);
 }
+
 .press-anim:active {
   transform: scale(0.95);
 }
@@ -207,9 +267,10 @@ textarea {
 .card-hover {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
 .card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 /* Gradient text */
@@ -222,39 +283,87 @@ textarea {
 
 /* Mobile menu animation */
 @keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
+
 .slide-in {
   animation: slideIn 0.3s ease-out;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 .fade-in {
   animation: fadeIn 0.4s ease-out;
 }
 
 @keyframes headerDropdownIn {
-  from { opacity: 0; transform: translateY(-8px) scale(0.98); filter: blur(2px); }
-  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+    filter: blur(2px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 
 @keyframes headerMenuIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes headerDropdownOut {
-  from { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-  to { opacity: 0; transform: translateY(-8px) scale(0.98); filter: blur(2px); }
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+    filter: blur(2px);
+  }
 }
 
 @keyframes headerMenuOut {
-  from { opacity: 1; transform: translateY(0); }
-  to { opacity: 0; transform: translateY(-10px); }
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
 }
 
 .header-dropdown-in {
@@ -280,7 +389,9 @@ textarea {
     scroll-behavior: auto;
   }
 
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
@@ -289,17 +400,29 @@ textarea {
 }
 
 @keyframes shimmer {
-  100% { transform: translateX(100%); }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes movePgrs {
-  0% { background-position: 0 0; }
-  100% { background-position: 50px 50px; }
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 50px 50px;
+  }
 }
 
 @keyframes imageShimmer {
-  0% { transform: translateX(-120%); }
-  100% { transform: translateX(120%); }
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(120%);
+  }
 }
 
 .image-shimmer {

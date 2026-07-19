@@ -114,10 +114,12 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           </button>
 
-          {/* Scrollable row */}
+          {/* Scrollable row. Fade-only stagger: the translateY variant would
+              momentarily overflow this overflow-x-auto row vertically and
+              flash a scrollbar that shifts the cards. */}
           <div
             ref={scrollRef}
-            data-reveal-stagger
+            data-reveal-stagger="fade"
             className="flex gap-2 sm:gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-thin"
             style={{ scrollbarWidth: 'thin' }}
           >

@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
 import { Inter } from 'next/font/google';
 import './globals.css';
- // Global styles
+// Global styles
 import { ThemeProvider } from '@/components/context/ThemeContext';
 import { DataProvider } from '@/components/context/DataContext';
 import Header from '@/components/Header';
@@ -93,16 +92,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen flex flex-col overflow-x-hidden font-sans transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100 bg-white text-gray-900" suppressHydrationWarning>
+      {/* overflow-x-clip on body (not -hidden): `hidden` turns body into a
+          scroll container, so any transient vertical overflow (scroll-reveal
+          translateY) flashes a second scrollbar and shifts the layout. */}
+      <body className="min-h-screen flex flex-col overflow-x-clip font-sans transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100 bg-white text-gray-900" suppressHydrationWarning>
         <ThemeProvider>
-          <DataProvider 
+          <DataProvider
             initialSettings={initialSettings}
             initialSections={initialSections}
             initialPosts={[]}
           >
-            <Suspense fallback={null}>
-              <Header />
-            </Suspense>
+            {/* No Suspense around Header: a boundary here lets React stream the
+                header after the page body, so it pops in late and shifts the
+                whole page down. The useSearchParams() call that once required
+                a boundary is isolated inside Header (RouteChangeComplete). */}
+            <Header />
             <AdSlot placement="header" className="max-w-7xl mx-auto w-full px-4" />
             <main className="flex-1 w-full min-h-[80vh]">
               {children}

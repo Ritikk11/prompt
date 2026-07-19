@@ -17,7 +17,7 @@ export default function HomeBlog({ settings }: { settings?: SiteSettings }) {
   if (articles.length === 0) return null;
 
   return (
-    <section className="relative w-full overflow-hidden bg-white px-5 py-16 text-surface-950 dark:bg-surface-950 dark:text-white sm:px-8">
+    <section className="relative w-full overflow-clip bg-white px-5 py-16 text-surface-950 dark:bg-surface-950 dark:text-white sm:px-8">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_22%,rgba(56,189,248,0.14),transparent_32%),radial-gradient(circle_at_18%_18%,rgba(139,92,246,0.12),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(248,250,252,0.98)_100%)] dark:bg-[radial-gradient(circle_at_80%_22%,rgba(56,189,248,0.12),transparent_32%),radial-gradient(circle_at_18%_18%,rgba(139,92,246,0.2),transparent_34%),linear-gradient(180deg,#0f172a_0%,#020617_100%)]" />
       <div className="relative mx-auto max-w-6xl">
         <div className="mx-auto mb-10 max-w-2xl text-center">

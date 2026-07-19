@@ -53,7 +53,7 @@ export default function HomeHowItWorks({ settings }: { settings?: SiteSettings }
   const ActiveIcon = active.icon;
 
   return (
-    <section id="how-it-works" className="relative w-full overflow-hidden bg-white px-5 py-16 dark:bg-surface-950 sm:px-8">
+    <section id="how-it-works" className="relative w-full overflow-clip bg-white px-5 py-16 dark:bg-surface-950 sm:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="mb-10 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-50 px-4 py-2 text-xs font-bold text-primary-700">

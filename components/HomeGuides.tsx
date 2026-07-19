@@ -16,7 +16,7 @@ export default function HomeGuides({ settings }: { settings?: SiteSettings }) {
   const guides = [...selectedGuides, ...fallbackGuides].slice(0, 4);
 
   return (
-    <section className="relative w-full overflow-hidden bg-surface-50 px-5 py-16 text-surface-950 dark:bg-surface-950 dark:text-white sm:px-8">
+    <section className="relative w-full overflow-clip bg-surface-50 px-5 py-16 text-surface-950 dark:bg-surface-950 dark:text-white sm:px-8">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(139,92,246,0.16),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(56,189,248,0.14),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(248,250,252,0.96)_100%)] dark:bg-[radial-gradient(circle_at_20%_20%,rgba(139,92,246,0.23),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(56,189,248,0.1),transparent_30%),linear-gradient(180deg,#020617_0%,#0f172a_100%)]" />
       <div className="relative mx-auto max-w-6xl">
         <div className="mx-auto mb-10 max-w-2xl text-center">

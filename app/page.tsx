@@ -82,7 +82,12 @@ export default async function Home() {
   const homepageSectionsById = new Map(homepageSections.map(section => [section.id, section]));
 
   return (
-    <div className="w-full overflow-x-hidden">
+    /* overflow-x-clip, NOT overflow-x-hidden: `hidden` forces overflow-y to
+       compute to `auto`, making this div a scroll container. The scroll-reveal
+       translateY(32px) then momentarily overflows it, flashing a vertical
+       scrollbar that shifts the whole page sideways on Windows. `clip` never
+       creates a scroll container. */
+    <div className="w-full overflow-x-clip">
       {(settings.features?.showHomepageLibraryHero ?? true) && settings.heroStyle !== 'v9' && (
         <HomeLibraryHero featuredPosts={featuredPosts} settings={settings} postCount={allPosts.length} />
       )}

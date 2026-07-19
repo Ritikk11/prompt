@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
@@ -12,6 +12,28 @@ import type { User } from '@supabase/supabase-js';
 import { getPostPath, getSectionPath } from '@/lib/sections';
 import SmartLink from '@/components/SmartLink';
 
+/* useSearchParams() forces everything up to the nearest <Suspense> boundary
+   into client-only rendering — with the whole Header inside that hook's
+   component, the server HTML had no header at all and the page jumped down
+   by the header height once React mounted it. Isolate the hook in a
+   render-nothing child so the header itself stays in the server HTML. */
+function RouteChangeComplete({ onRouteChange }: { onRouteChange: () => void }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const didMountRef = useRef(false);
+
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    onRouteChange();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, searchParams]);
+
+  return null;
+}
+
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const { settings, sections, posts, ensurePostsLoaded } = useData();
@@ -23,7 +45,6 @@ export default function Header() {
   const hasCustomBlogLink = headerLinks.some(l => (l.href || '').replace(/\/+$/, '') === '/blog');
   const navigate = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -36,7 +57,6 @@ export default function Header() {
   const scrollFrameRef = useRef<number | null>(null);
   const routeTimerRef = useRef<number | null>(null);
   const routeIntervalRef = useRef<number | null>(null);
-  const didMountRef = useRef(false);
   const [isVisible, setIsVisible] = useState(true);
   const [routeProgress, setRouteProgress] = useState(0);
 
@@ -97,18 +117,11 @@ export default function Header() {
     };
   }, [menuOpen, searchOpen, showLiveResults]);
 
-  useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true;
-      return;
-    }
-
+  const finishRouteProgress = useCallback(() => {
     stopRouteTimers();
     setRouteProgress(100);
     routeTimerRef.current = window.setTimeout(() => setRouteProgress(0), 320);
-
-    return stopRouteTimers;
-  }, [pathname, searchParams, stopRouteTimers]);
+  }, [stopRouteTimers]);
 
   useEffect(() => {
     const handleDocumentClick = (event: MouseEvent) => {
@@ -251,6 +264,9 @@ export default function Header() {
 
   return (
     <>
+    <Suspense fallback={null}>
+      <RouteChangeComplete onRouteChange={finishRouteProgress} />
+    </Suspense>
     <div className="fixed inset-x-0 top-0 z-[9999] h-[3px] bg-transparent pointer-events-none">
       <div
         className="h-full origin-left bg-gradient-to-r from-primary-500 via-fuchsia-500 to-purple-500 shadow-[0_0_14px_rgba(168,85,247,0.55)] transition-[transform,opacity] duration-200 ease-out"

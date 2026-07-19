@@ -12,12 +12,12 @@ interface AdSlotProps {
 export default function AdSlot({ placement, className = '', inFeedIndex }: AdSlotProps) {
   const { settings } = useData();
   const adRef = useRef<HTMLDivElement>(null);
-  
+
   const adConfig = settings?.ads?.[placement];
-  
+
   useEffect(() => {
     if (!adConfig?.enabled || !adConfig.code || !adRef.current) return;
-    
+
     // For inFeed ads, only show at specified frequency
     if (placement === 'inFeed' && inFeedIndex !== undefined) {
       const frequency = settings?.ads?.inFeed?.frequency || 6;
@@ -28,7 +28,7 @@ export default function AdSlot({ placement, className = '', inFeedIndex }: AdSlo
       const range = document.createRange();
       range.selectNode(document.body);
       const documentFragment = range.createContextualFragment(adConfig.code);
-      
+
       adRef.current.innerHTML = '';
       adRef.current.appendChild(documentFragment);
     } catch (e) {
@@ -42,11 +42,11 @@ export default function AdSlot({ placement, className = '', inFeedIndex }: AdSlo
 
   if (!adConfig?.enabled || !adConfig.code) {
     if (process.env.NODE_ENV === 'development') {
-        // Return null instead of a placeholder in dev by default, or maybe placeholder
+      // Return null instead of a placeholder in dev by default, or maybe placeholder
     }
     return null;
   }
-  
+
   if (placement === 'inFeed' && inFeedIndex !== undefined) {
     const frequency = settings?.ads?.inFeed?.frequency || 6;
     if ((inFeedIndex + 1) % frequency !== 0) return null;

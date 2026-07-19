@@ -37,7 +37,7 @@ export default function HomeReviewProcess({ settings }: { settings?: SiteSetting
     text: content.items?.[index]?.text || step.text,
   })) : reviewSteps;
   return (
-    <section className="relative w-full overflow-hidden bg-surface-50 px-5 py-16 dark:bg-surface-950 sm:px-8">
+    <section className="relative w-full overflow-clip bg-surface-50 px-5 py-16 dark:bg-surface-950 sm:px-8">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <div>
