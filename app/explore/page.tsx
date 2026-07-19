@@ -3,7 +3,10 @@ import ExploreClient from './ExploreClient';
 import type { Metadata } from 'next';
 
 
-export const revalidate = 300;
+// 1h TTL: on-demand revalidation (admin edits) refreshes pages instantly, so the
+// time-based fallback only bounds staleness of view/like counts, which update the
+// DB without revalidatePath. 300s caused a cold ~2.5s SSR miss every 5 minutes.
+export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await fetchSettings();
