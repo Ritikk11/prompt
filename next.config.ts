@@ -32,11 +32,9 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     webpackBuildWorker: false,
-    // Inline all CSS into the HTML instead of render-blocking <link> requests.
-    // PageSpeed showed the 29KB Tailwind stylesheet blocking first paint for
-    // ~1s on mobile; pages are edge-cached HTML anyway, so the size trade-off
-    // (+~30KB per document, no extra round trip) wins.
-    inlineCss: true,
+    // NOTE: do not enable experimental.inlineCss here — it embeds the CSS into
+    // every prerendered page inside the worker bundle, which blows past the
+    // Cloudflare free-plan 3 MiB Worker size limit and fails deploy.
   },
   turbopack: {},
   // Allow access to remote image placeholder.
