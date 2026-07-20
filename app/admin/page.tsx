@@ -4289,6 +4289,16 @@ function AdminInner() {
                             <p className="text-xs text-surface-400 mb-4">The dedicated page configuration at /section/{editSectionSlug || 'slug'}</p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Page Hero Badge</label>
+                                <input
+                                  value={editSectionHeroBadge}
+                                  onChange={e => setEditSectionHeroBadge(e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  placeholder="Leave blank to use 'Section'"
+                                />
+                                <p className="text-[11px] text-surface-400">Small label shown above the hero title.</p>
+                              </div>
+                              <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Page Hero Title</label>
                                 <input
                                   value={editSectionHeroTitle}
@@ -4451,6 +4461,7 @@ function AdminInner() {
                                 setEditSectionSlug(section.slug || '');
                                 setEditSectionLimit(section.limit);
                                 setEditSectionCardStyle(section.cardStyle || '');
+                                setEditSectionHeroBadge(section.heroBadge || '');
                                 setEditSectionHeroTitle(section.heroTitle || '');
                                 setEditSectionHeroDescription(section.heroDescription || '');
                                 setEditSectionSeoTitle(section.seoTitle || '');
