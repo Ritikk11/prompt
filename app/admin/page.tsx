@@ -1078,6 +1078,8 @@ function AdminInner() {
   const [editSectionLimit, setEditSectionLimit] = useState(8);
   const [editSectionCardStyle, setEditSectionCardStyle] = useState<Section['cardStyle'] | ''>('');
   const [editSectionFilterTags, setEditSectionFilterTags] = useState('');
+  const [editSectionHeroTitle, setEditSectionHeroTitle] = useState('');
+  const [editSectionHeroDescription, setEditSectionHeroDescription] = useState('');
   const [editSectionSeoTitle, setEditSectionSeoTitle] = useState('');
   const [editSectionSeoDescription, setEditSectionSeoDescription] = useState('');
   const [editSectionIntroContent, setEditSectionIntroContent] = useState('');
@@ -1827,6 +1829,8 @@ function AdminInner() {
     setEditSectionSlug(section.slug || '');
     setEditSectionLimit(section.limit);
     setEditSectionCardStyle(section.cardStyle || '');
+    setEditSectionHeroTitle(section.heroTitle || '');
+    setEditSectionHeroDescription(section.heroDescription || '');
     setEditSectionSeoTitle(section.seoTitle || '');
     setEditSectionSeoDescription(section.seoDescription || '');
     setEditSectionIntroContent(section.introContent || '');
@@ -1848,6 +1852,8 @@ function AdminInner() {
       slug: editSectionSlug || slugify(editSectionName),
       limit: editSectionLimit,
       cardStyle: editSectionCardStyle || undefined,
+      heroTitle: editSectionHeroTitle || undefined,
+      heroDescription: editSectionHeroDescription || undefined,
       seoTitle: editSectionSeoTitle || undefined,
       seoDescription: editSectionSeoDescription || undefined,
       introContent: editSectionIntroContent || undefined,
@@ -4259,20 +4265,42 @@ function AdminInner() {
                               <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Page Hero Title</label>
                                 <input
-                                  value={editSectionSeoTitle}
-                                  onChange={e => setEditSectionSeoTitle(e.target.value)}
+                                  value={editSectionHeroTitle}
+                                  onChange={e => setEditSectionHeroTitle(e.target.value)}
                                   className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
                                   placeholder="Leave blank to use section name"
                                 />
+                                <p className="text-[11px] text-surface-400">The big heading shown on the section page.</p>
                               </div>
                               <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Page Hero Description</label>
                                 <input
-                                  value={editSectionSeoDescription}
-                                  onChange={e => setEditSectionSeoDescription(e.target.value)}
+                                  value={editSectionHeroDescription}
+                                  onChange={e => setEditSectionHeroDescription(e.target.value)}
                                   className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
                                   placeholder="Short introductory text under title"
                                 />
+                                <p className="text-[11px] text-surface-400">Sub-text under the hero heading.</p>
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">SEO Title</label>
+                                <input
+                                  value={editSectionSeoTitle}
+                                  onChange={e => setEditSectionSeoTitle(e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  placeholder="Leave blank to use hero title"
+                                />
+                                <p className="text-[11px] text-surface-400">Browser tab &amp; search-result title (&lt;title&gt; tag).</p>
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">SEO Description</label>
+                                <input
+                                  value={editSectionSeoDescription}
+                                  onChange={e => setEditSectionSeoDescription(e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  placeholder="Leave blank to use hero description"
+                                />
+                                <p className="text-[11px] text-surface-400">Meta description for search engines.</p>
                               </div>
                               <div className="space-y-1.5 md:col-span-2">
                                 <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Intro Content (Markdown support)</label>
@@ -4397,6 +4425,8 @@ function AdminInner() {
                                 setEditSectionSlug(section.slug || '');
                                 setEditSectionLimit(section.limit);
                                 setEditSectionCardStyle(section.cardStyle || '');
+                                setEditSectionHeroTitle(section.heroTitle || '');
+                                setEditSectionHeroDescription(section.heroDescription || '');
                                 setEditSectionSeoTitle(section.seoTitle || '');
                                 setEditSectionSeoDescription(section.seoDescription || '');
                                 setEditSectionIntroContent(section.introContent || '');
@@ -5750,7 +5780,9 @@ function AdminInner() {
                                 <CardStylePreview style={editSectionCardStyle || cardStyle} badgeStyle={badgeStyle} label={editSectionCardStyle ? 'Section override preview' : 'Global style preview'} />
                               </div>
                               <input value={editSectionFilterTags} onChange={e => setEditSectionFilterTags(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Filter rail tags: anime, realistic" />
-                              <input value={editSectionSeoTitle} onChange={e => setEditSectionSeoTitle(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="SEO title" />
+                              <input value={editSectionHeroTitle} onChange={e => setEditSectionHeroTitle(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Hero title (blank = section name)" />
+                              <input value={editSectionHeroDescription} onChange={e => setEditSectionHeroDescription(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Hero description" />
+                              <input value={editSectionSeoTitle} onChange={e => setEditSectionSeoTitle(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="SEO title (blank = hero title)" />
                               <textarea value={editSectionSeoDescription} onChange={e => setEditSectionSeoDescription(e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="SEO description" />
                               <textarea value={editSectionIntroContent} onChange={e => setEditSectionIntroContent(e.target.value)} rows={3} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Intro content" />
                             </div>

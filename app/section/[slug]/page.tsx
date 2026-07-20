@@ -5,17 +5,11 @@ export const revalidate = 3600;
 
 import { Metadata } from 'next';
 import { getSectionBySlug, fetchPostSummaries, fetchSettings } from '@/lib/data';
-import PostCard from '@/components/PostCard';
 import type { Post, Section } from '@/lib/types';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
 import { filterPostsForSection } from '@/lib/sections';
-import MarkdownRenderer from '@/components/MarkdownRenderer';
-import FilterChipRail from '@/components/FilterChipRail';
-import DiscoveryPageHero from '@/components/DiscoveryPageHero';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
-import ScrollReveal from '@/components/ScrollReveal';
+import SectionContent from './SectionContent';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -36,11 +30,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   const filteredPosts = filterPostsForSection(section, allPosts, settings, false);
   const discovery = settings.discoveryPages || {};
-  const title = section.seoTitle || fillDiscoveryTemplate(
+  const title = section.seoTitle || section.heroTitle || fillDiscoveryTemplate(
     discovery.sectionSeoTitleTemplate || '%section% | AI PromptMatrix',
     { section: section.name, count: filteredPosts.length }
   );
-  const description = section.seoDescription || fillDiscoveryTemplate(
+  const description = section.seoDescription || section.heroDescription || fillDiscoveryTemplate(
     discovery.sectionSeoDescriptionTemplate || discovery.sectionDescriptionTemplate || 'Explore prompts from the %section% collection.',
     { section: section.name, count: filteredPosts.length }
   );
@@ -65,77 +59,23 @@ export default async function SectionPage({ params }: Props) {
 
   const filteredPosts = filterPostsForSection(section, allPosts, settings, false);
   const discovery = settings.discoveryPages || {};
-  const sectionDescription = section.seoDescription || fillDiscoveryTemplate(
+  // Hero fields are independent of SEO fields (Explore-page pattern):
+  // heroTitle/heroDescription drive the visible hero, seoTitle/seoDescription
+  // drive metadata (see generateMetadata above).
+  const heroTitle = section.heroTitle || section.name;
+  const heroDescription = section.heroDescription || fillDiscoveryTemplate(
     discovery.sectionDescriptionTemplate || 'Discover a curated collection of %count% prompts.',
     { count: filteredPosts.length, section: section.name }
   );
-  const useCustomRail = Boolean(discovery.useCustomRailOnSections);
-  const railItems = discovery.sectionRailItems || [];
-  const showCustomRail = useCustomRail && railItems.length > 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
-      <nav className="flex items-center gap-2 text-sm text-surface-400 mb-8 font-medium">
-        <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
-        <ChevronRight className="w-3.5 h-3.5 opacity-50" />
-        <span className="text-surface-900 dark:text-white">{section.name}</span>
-      </nav>
-
-      <DiscoveryPageHero
-        badge="Section"
-        title={section.name}
-        description={sectionDescription}
-        stats={(discovery.showHeroStats ?? true) ? [{ label: 'Prompts', value: filteredPosts.length }] : []}
-      />
-      {section.introContent && (
-        <div className="max-w-3xl mb-12">
-          <MarkdownRenderer>{section.introContent}</MarkdownRenderer>
-        </div>
-      )}
-
-      {filteredPosts.length === 0 ? (
-        <div className="text-center py-20 bg-surface-50 dark:bg-surface-900 rounded-[32px] border border-dashed border-surface-200 dark:border-surface-800">
-          <p className="text-surface-500 font-medium">No prompts found in this section yet.</p>
-          <Link href="/explore" className="mt-4 inline-block text-primary-500 font-bold hover:underline">
-            Explore other prompts
-          </Link>
-        </div>
-      ) : showCustomRail ? (
-        <ScrollReveal>
-          <FilterChipRail
-            posts={filteredPosts}
-            items={railItems}
-            tools={[]}
-            tags={[]}
-            settings={settings}
-            cardStyleOverride={section.cardStyle}
-            renderGrid
-          />
-        </ScrollReveal>
-      ) : section.filterTags?.length ? (
-        <ScrollReveal>
-          <FilterChipRail
-            posts={filteredPosts}
-            tools={[]}
-            tags={section.filterTags}
-            showTools={false}
-            settings={settings}
-            cardStyleOverride={section.cardStyle}
-            renderGrid
-          />
-        </ScrollReveal>
-      ) : (
-        <ScrollReveal>
-        <div data-reveal-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
-          {filteredPosts.map((post, i) => (
-            <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
-              <PostCard post={post} index={i} cardStyleOverride={section.cardStyle} />
-            </div>
-          ))}
-        </div>
-        </ScrollReveal>
-      )}
-    </div>
+    <SectionContent
+      section={section}
+      posts={filteredPosts}
+      heroTitle={heroTitle}
+      heroDescription={heroDescription}
+      settings={settings}
+    />
   );
 }
 
