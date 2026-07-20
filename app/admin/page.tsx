@@ -1115,6 +1115,7 @@ function AdminInner() {
   const [adminEmailsStr, setAdminEmailsStr] = useState((settings.adminEmails || []).join(', '));
   const [headerLinks, setHeaderLinks] = useState<NavLink[]>(() => withHeaderLinkIds(settings.headerLinks || []));
   const [headerNavOrder, setHeaderNavOrder] = useState<string[]>(settings.headerNavOrder || []);
+  const [headerBuiltins, setHeaderBuiltins] = useState<NonNullable<SiteSettings['headerBuiltins']>>(settings.headerBuiltins || {});
   const [homeLinkBlocks, setHomeLinkBlocks] = useState<HomeLinkBlock[]>(settings.homeLinkBlocks || []);
   const [homepageContent, setHomepageContent] = useState<Record<string, HomepageBlockContent>>(cleanAdminHomepageContent(settings.homepageContent || {}));
   const [articleOverrides, setArticleOverrides] = useState<Record<string, ArticleSettingsOverride>>(settings.articleOverrides || {});
@@ -1143,6 +1144,7 @@ function AdminInner() {
   const [creativeDirectionItems, setCreativeDirectionItems] = useState<CreativeDirectionItem[]>(
     settings.creativeDirectionItems || []
   );
+  const [expandedCreativeIndex, setExpandedCreativeIndex] = useState<number | null>(null);
   const [footerLinkGroups, setFooterLinkGroups] = useState<FooterLinkGroup[]>(settings.footerLinkGroups || defaultFooterLinkGroups);
   const [socialLinks, setSocialLinks] = useState<NonNullable<SiteSettings['socialLinks']>>(settings.socialLinks || {});
   const [imageProvider, setImageProvider] = useState<UploadProvider>(
@@ -1277,6 +1279,7 @@ function AdminInner() {
     if (settings.adminEmails !== undefined) setAdminEmailsStr((settings.adminEmails || []).join(', '));
     if (settings.headerLinks !== undefined) setHeaderLinks(withHeaderLinkIds(settings.headerLinks || []));
     if (settings.headerNavOrder !== undefined) setHeaderNavOrder(settings.headerNavOrder || []);
+    if (settings.headerBuiltins !== undefined) setHeaderBuiltins(settings.headerBuiltins || {});
     if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocks(settings.homeLinkBlocks || []);
     if (settings.homepageContent !== undefined) setHomepageContent(cleanAdminHomepageContent(settings.homepageContent || {}));
     if (settings.articleOverrides !== undefined) setArticleOverrides(settings.articleOverrides || {});
@@ -1899,7 +1902,9 @@ function AdminInner() {
   };
 
   const headerNavSections = sections.filter(s => s.location === 'header' && s.visible).sort((a, b) => a.order - b.order);
-  const headerNavItems = buildHeaderNavItems({ features: settings.features, headerLinks, headerNavOrder }, headerNavSections);
+  // includeHiddenBuiltins: keep hidden built-ins in the editor list so they can
+  // be toggled back on. The public header omits them.
+  const headerNavItems = buildHeaderNavItems({ features: settings.features, headerLinks, headerNavOrder, headerBuiltins }, headerNavSections, true);
 
   const moveHeaderNavItem = (navKey: string, dir: -1 | 1) => {
     const keys = headerNavItems.map(item => item.navKey);
@@ -1909,6 +1914,14 @@ function AdminInner() {
     const next = [...keys];
     [next[from], next[to]] = [next[to], next[from]];
     setHeaderNavOrder(next);
+  };
+
+  type HeaderBuiltinKey = 'home' | 'explore' | 'blog' | 'submit';
+  const toggleHeaderBuiltinHidden = (key: HeaderBuiltinKey) => {
+    setHeaderBuiltins(prev => ({ ...prev, [key]: { ...prev[key], hidden: !prev[key]?.hidden } }));
+  };
+  const updateHeaderBuiltinLabel = (key: HeaderBuiltinKey, label: string) => {
+    setHeaderBuiltins(prev => ({ ...prev, [key]: { ...prev[key], label } }));
   };
 
   const addHeaderLink = () => {
@@ -2095,6 +2108,15 @@ function AdminInner() {
     if (list === 'section') setSectionRailItems(remove);
   };
 
+  const moveRailItem = (list: RailListKey, index: number, dir: -1 | 1) => {
+    const move = <T,>(prev: T[]) => moveArrayItem(prev, index, index + dir);
+    if (list === 'creative') { setCreativeDirectionItems(move); return; }
+    if (list === 'explore') setExploreFilterItems(move);
+    if (list === 'tool') setToolRailItems(move);
+    if (list === 'tag') setTagRailItems(move);
+    if (list === 'section') setSectionRailItems(move);
+  };
+
   const moveHomepageItem = (index: number, direction: 'up' | 'down') => {
     const nextIndex = direction === 'up' ? index - 1 : index + 1;
     if (nextIndex < 0 || nextIndex >= orderedHomepageItems.length) return;
@@ -2190,6 +2212,7 @@ function AdminInner() {
       adminEmails: adminEmailsStr.split(',').map(e => e.trim()).filter(Boolean),
       headerLinks: cleanNavLinks(headerLinks),
       headerNavOrder,
+      headerBuiltins,
       homeLinkBlocks: cleanHomeBlocks(homeLinkBlocks),
       homepageContent: cleanAdminHomepageContent(homepageContent),
       articleOverrides,
@@ -5310,7 +5333,11 @@ function AdminInner() {
                           </div>
                           <div className="space-y-3">
                             {activeRailConfig.items.map((item, index) => (
-                              <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_140px_1fr_auto]">
+                              <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[auto_1fr_140px_1fr_auto]">
+                                <div className="flex sm:flex-col gap-1">
+                                  <button type="button" onClick={() => moveRailItem(activeRailConfig.key, index, -1)} disabled={index === 0} className="p-1 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed" title="Move up"><ChevronUp className="w-3.5 h-3.5" /></button>
+                                  <button type="button" onClick={() => moveRailItem(activeRailConfig.key, index, 1)} disabled={index === activeRailConfig.items.length - 1} className="p-1 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed" title="Move down"><ChevronDown className="w-3.5 h-3.5" /></button>
+                                </div>
                                 <input value={item.label} onChange={e => updateRailItem(activeRailConfig.key, index, 'label', e.target.value)} className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm text-surface-900 dark:text-white" placeholder="Visible title, e.g. Anime" />
                                 <select value={item.type} onChange={e => updateRailItem(activeRailConfig.key, index, 'type', e.target.value)} className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm text-surface-900 dark:text-white">
                                   <option value="tag">Tag</option>
@@ -5354,7 +5381,7 @@ function AdminInner() {
                   <LayoutGrid className="w-4 h-4 text-primary-500" /> Header Navigation Order
                 </h3>
                 <p className="text-xs text-surface-500 mb-4">
-                  Drag order with the arrows to arrange every header item — built-in links, header sections, and your custom links — in one list. Built-in links and sections can be reordered here; edit section names in the Sections tab. Custom links are fully editable below.
+                  Reorder every header item with the arrows — built-in items (Home, Explore, Blog, Submit), header sections, and custom links, all in one list. Built-in items are the ones the site ships with: rename them by typing a new label (leave blank for the default) or hide them with the Hide button. Edit section names in the Sections tab. Custom links are fully editable below.
                 </p>
                 <div className="space-y-2">
                   {headerNavItems.map((item, index) => (
@@ -5398,6 +5425,29 @@ function AdminInner() {
                             Remove
                           </button>
                         </>
+                      ) : item.kind === 'builtin' ? (
+                        (() => {
+                          const bk = item.key as HeaderBuiltinKey;
+                          const hidden = Boolean(headerBuiltins[bk]?.hidden);
+                          return (
+                            <>
+                              <input
+                                value={headerBuiltins[bk]?.label ?? ''}
+                                onChange={e => updateHeaderBuiltinLabel(bk, e.target.value)}
+                                className={`px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm ${hidden ? 'opacity-50' : ''}`}
+                                placeholder={item.label}
+                              />
+                              <div className="px-1 text-xs text-surface-500 truncate">{item.href}</div>
+                              <button
+                                onClick={() => toggleHeaderBuiltinHidden(bk)}
+                                className={`justify-self-start sm:justify-self-end px-3 py-2 rounded-lg text-sm font-medium ${hidden ? 'bg-primary-500 text-white hover:bg-primary-600' : 'text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800'}`}
+                                title={hidden ? 'Show this item' : 'Hide this item'}
+                              >
+                                {hidden ? 'Hidden' : 'Hide'}
+                              </button>
+                            </>
+                          );
+                        })()
                       ) : (
                         <>
                           <div className="flex items-center gap-2 px-1 text-sm font-medium">
@@ -5405,7 +5455,7 @@ function AdminInner() {
                           </div>
                           <div className="px-1 text-xs text-surface-500 truncate">{item.href}</div>
                           <span className="justify-self-start sm:justify-self-end px-2 py-1 rounded-md bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-[10px] uppercase tracking-wider font-semibold text-surface-500">
-                            {item.kind === 'section' ? 'Section' : 'Built-in'}
+                            Section
                           </span>
                         </>
                       )}
@@ -6139,8 +6189,37 @@ function AdminInner() {
                       No saved custom cards. The homepage cards above are auto-generated from current post tags/categories.
                     </div>
                   )}
-                  {creativeDirectionItems.map((item, index) => (
-                    <div key={index} className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_140px_1fr_auto] items-center p-3.5 bg-surface-50/50 dark:bg-surface-950/20 border border-surface-200/60 dark:border-surface-800/80 rounded-xl">
+                  {creativeDirectionItems.map((item, index) => {
+                    const isExpanded = expandedCreativeIndex === index;
+                    return (
+                    <div key={index} className="bg-surface-50/50 dark:bg-surface-950/20 border border-surface-200/60 dark:border-surface-800/80 rounded-xl overflow-hidden">
+                      {/* Collapsed row: label + match summary, reorder arrows, edit/remove */}
+                      <div className="flex items-center gap-2 p-3">
+                        <div className="flex flex-col">
+                          <button type="button" onClick={() => moveRailItem('creative', index, -1)} disabled={index === 0} className="p-0.5 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed" title="Move up"><ChevronUp className="w-3.5 h-3.5" /></button>
+                          <button type="button" onClick={() => moveRailItem('creative', index, 1)} disabled={index === creativeDirectionItems.length - 1} className="p-0.5 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed" title="Move down"><ChevronDown className="w-3.5 h-3.5" /></button>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-surface-950 dark:text-white">{item.label || <span className="text-surface-400 font-normal">Untitled card</span>}</p>
+                          <p className="mt-0.5 text-[11px] text-surface-500">{item.type} - {item.value || '—'}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setExpandedCreativeIndex(isExpanded ? null : index)}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-surface-100 dark:bg-surface-800 px-3 py-1.5 text-xs font-semibold text-surface-700 dark:text-surface-100 hover:bg-surface-200 dark:hover:bg-surface-700"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" /> {isExpanded ? 'Close' : 'Edit'}
+                        </button>
+                        <button
+                          onClick={() => { removeRailItem('creative', index); if (isExpanded) setExpandedCreativeIndex(null); }}
+                          className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                          title="Remove Card"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {isExpanded && (
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_140px_1fr] items-start px-3 pb-3 pt-1 border-t border-surface-200/60 dark:border-surface-800/80">
                       <div className="space-y-1">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Card Display Label</span>
                         <input
@@ -6171,14 +6250,7 @@ function AdminInner() {
                           placeholder="Match value, e.g. anime"
                         />
                       </div>
-                      <button
-                        onClick={() => removeRailItem('creative', index)}
-                        className="p-2 mt-4 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs self-center transition-colors"
-                        title="Remove Card"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                      <div className="grid grid-cols-1 gap-3 sm:col-span-4 sm:grid-cols-[140px_1fr]">
+                      <div className="grid grid-cols-1 gap-3 sm:col-span-3 sm:grid-cols-[140px_1fr]">
                         <div className="space-y-1">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Icon</span>
                           <select
@@ -6224,8 +6296,11 @@ function AdminInner() {
                           </label>
                         </div>
                       </div>
+                      </div>
+                      )}
                     </div>
-                  ))}
+                    );
+                  })}
                   <button
                     onClick={() => addRailItem('creative')}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-medium"

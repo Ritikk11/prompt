@@ -9,7 +9,8 @@ import { useTheme } from '@/components/context/ThemeContext';
 import { useData } from '@/components/context/DataContext';
 import { getSupabaseClient } from '@/lib/supabase-lazy';
 import type { User } from '@supabase/supabase-js';
-import { getPostPath, getSectionPath } from '@/lib/sections';
+import { getPostPath } from '@/lib/sections';
+import { buildHeaderNavItems } from '@/lib/header-nav';
 import SmartLink from '@/components/SmartLink';
 
 /* useSearchParams() forces everything up to the nearest <Suspense> boundary
@@ -40,9 +41,10 @@ export default function Header() {
   const accountFeaturesEnabled = Boolean(settings.features?.userProfiles);
   const submissionsEnabled = Boolean(settings.features?.userProfiles && settings.features?.userSubmissions);
   const headerSections = sections.filter(s => s.location === 'header' && s.visible).sort((a,b) => a.order - b.order);
-  const headerLinks = settings.headerLinks || [];
-  // Built-in Blog nav item — hidden when the admin already added a custom /blog link.
-  const hasCustomBlogLink = headerLinks.some(l => (l.href || '').replace(/\/+$/, '') === '/blog');
+  // Single ordered nav list (built-ins + sections + custom links), honoring the
+  // saved header order and built-in hide/rename overrides. The Submit item is
+  // rendered with its Plus icon; everything else is a plain link.
+  const navItems = buildHeaderNavItems(settings, headerSections);
   const navigate = useRouter();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -348,34 +350,29 @@ export default function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-2">
-          {submissionsEnabled && (
-             <Link href="/submit" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
-               <Plus className="w-4 h-4 text-primary-500" />
-               Submit Prompt
-             </Link>
-          )}
-          <Link href="/" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
-            Home
-          </Link>
-          <Link href="/explore" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
-            Explore
-          </Link>
-          {!hasCustomBlogLink && (
-            <Link href="/blog" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
-              Blog
-            </Link>
-          )}
-          {headerSections.map(s => (
-            <Link key={s.id} href={getSectionPath(s)} prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
-              {s.name}
-            </Link>
-          ))}
-          {headerLinks.map(link => (
-            <SmartLink key={`${link.href}-${link.label}`} href={link.href} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
-              {link.label}
-            </SmartLink>
-          ))}
-          
+          {navItems.map(item => {
+            if (item.kind === 'builtin' && item.key === 'submit') {
+              return submissionsEnabled ? (
+                <Link key={item.navKey} href={item.href} prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
+                  <Plus className="w-4 h-4 text-primary-500" />
+                  {item.label}
+                </Link>
+              ) : null;
+            }
+            if (item.kind === 'link') {
+              return (
+                <SmartLink key={item.navKey} href={item.href} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
+                  {item.label}
+                </SmartLink>
+              );
+            }
+            return (
+              <Link key={item.navKey} href={item.href} prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
+                {item.label}
+              </Link>
+            );
+          })}
+
           {accountFeaturesEnabled && (
             <div className="flex items-center ml-2 border-l border-surface-200 dark:border-surface-700 pl-4 gap-2">
               {user ? (
@@ -473,33 +470,28 @@ export default function Header() {
       {menuOpen && (
         <nav className="md:hidden border-t border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-950 slide-in">
           <div className="px-4 py-3 space-y-1">
-            {submissionsEnabled && (
-              <Link href="/submit" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
-                <Plus className="w-4 h-4 text-primary-500" />
-                Submit Prompt
-              </Link>
-            )}
-            <Link href="/" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
-              Home
-            </Link>
-            <Link href="/explore" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
-              Explore
-            </Link>
-            {!hasCustomBlogLink && (
-              <Link href="/blog" prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
-                Blog
-              </Link>
-            )}
-            {headerSections.map(s => (
-              <Link key={s.id} href={getSectionPath(s)} prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
-                {s.name}
-              </Link>
-            ))}
-            {headerLinks.map(link => (
-              <SmartLink key={`${link.href}-${link.label}`} href={link.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
-                {link.label}
-              </SmartLink>
-            ))}
+            {navItems.map(item => {
+              if (item.kind === 'builtin' && item.key === 'submit') {
+                return submissionsEnabled ? (
+                  <Link key={item.navKey} href={item.href} prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
+                    <Plus className="w-4 h-4 text-primary-500" />
+                    {item.label}
+                  </Link>
+                ) : null;
+              }
+              if (item.kind === 'link') {
+                return (
+                  <SmartLink key={item.navKey} href={item.href} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
+                    {item.label}
+                  </SmartLink>
+                );
+              }
+              return (
+                <Link key={item.navKey} href={item.href} prefetch={false} onClick={() => setMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
+                  {item.label}
+                </Link>
+              );
+            })}
             {accountFeaturesEnabled && (
               <div className="pt-2 mt-2 border-t border-surface-100 dark:border-surface-800">
                 {user ? (

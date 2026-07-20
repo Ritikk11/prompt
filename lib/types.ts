@@ -333,6 +333,8 @@ export interface SiteSettings {
   headerLinks?: NavLink[];
   /** Ordered nav-item keys (home, explore, submit, section:<id>, link:<id>) for the header. */
   headerNavOrder?: string[];
+  /** Hide/rename overrides for the built-in header items (home, explore, blog, submit). */
+  headerBuiltins?: Partial<Record<'home' | 'explore' | 'blog' | 'submit', { hidden?: boolean; label?: string }>>;
   homeLinkBlocks?: HomeLinkBlock[];
   homepageBlockOrder?: string[];
   homepageContent?: Record<string, HomepageBlockContent>;
