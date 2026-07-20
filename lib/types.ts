@@ -89,6 +89,7 @@ export interface Section {
   id: string;
   slug?: string;
   name: string;
+  heroBadge?: string;
   heroTitle?: string;
   heroDescription?: string;
   seoTitle?: string;

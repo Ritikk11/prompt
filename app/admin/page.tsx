@@ -1080,6 +1080,7 @@ function AdminInner() {
   const [editSectionFilterTags, setEditSectionFilterTags] = useState('');
   const [editSectionHeroTitle, setEditSectionHeroTitle] = useState('');
   const [editSectionHeroDescription, setEditSectionHeroDescription] = useState('');
+  const [editSectionHeroBadge, setEditSectionHeroBadge] = useState('');
   const [editSectionSeoTitle, setEditSectionSeoTitle] = useState('');
   const [editSectionSeoDescription, setEditSectionSeoDescription] = useState('');
   const [editSectionIntroContent, setEditSectionIntroContent] = useState('');
@@ -1834,6 +1835,7 @@ function AdminInner() {
     setEditSectionCardStyle(section.cardStyle || '');
     setEditSectionHeroTitle(section.heroTitle || '');
     setEditSectionHeroDescription(section.heroDescription || '');
+    setEditSectionHeroBadge(section.heroBadge || '');
     setEditSectionSeoTitle(section.seoTitle || '');
     setEditSectionSeoDescription(section.seoDescription || '');
     setEditSectionIntroContent(section.introContent || '');
@@ -1855,6 +1857,7 @@ function AdminInner() {
       slug: editSectionSlug || slugify(editSectionName),
       limit: editSectionLimit,
       cardStyle: editSectionCardStyle || undefined,
+      heroBadge: editSectionHeroBadge || undefined,
       heroTitle: editSectionHeroTitle || undefined,
       heroDescription: editSectionHeroDescription || undefined,
       seoTitle: editSectionSeoTitle || undefined,
@@ -5831,6 +5834,7 @@ function AdminInner() {
                               </div>
                               <input value={editSectionFilterTags} onChange={e => setEditSectionFilterTags(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Filter rail tags: anime, realistic" />
                               <input value={editSectionHeroTitle} onChange={e => setEditSectionHeroTitle(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Hero title (blank = section name)" />
+                              <input value={editSectionHeroBadge} onChange={e => setEditSectionHeroBadge(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Hero badge (blank = Section)" />
                               <input value={editSectionHeroDescription} onChange={e => setEditSectionHeroDescription(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Hero description" />
                               <input value={editSectionSeoTitle} onChange={e => setEditSectionSeoTitle(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="SEO title (blank = hero title)" />
                               <textarea value={editSectionSeoDescription} onChange={e => setEditSectionSeoDescription(e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="SEO description" />

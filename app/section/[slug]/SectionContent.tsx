@@ -61,7 +61,7 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
       </nav>
 
       <DiscoveryPageHero
-        badge="Section"
+        badge={section.heroBadge || 'Section'}
         title={heroTitle}
         description={heroDescription}
         stats={(settings.discoveryPages?.showHeroStats ?? true) ? [{ label: 'Prompts', value: filtered.length }] : []}
