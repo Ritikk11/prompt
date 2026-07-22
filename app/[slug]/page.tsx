@@ -181,8 +181,34 @@ export default async function PostPage({ params }: Props) {
     url: `${siteUrl}/${post.slug || post.id}`,
   };
 
-  if (mainImage) {
-    mainJsonLd.image = [mainImage];
+  if (post.images?.length) {
+    mainJsonLd.image = post.images
+      .filter((img: any) => img.url)
+      .map((img: any) => ({
+        '@type': 'ImageObject',
+        url: img.url,
+        contentUrl: img.url,
+        name: img.prompt ? img.prompt.slice(0, 120) : post.title,
+        description: img.prompt || post.description,
+        creator: {
+          '@type': 'Organization',
+          name: settings.siteTitle || 'AI PromptMatrix',
+          url: siteUrl,
+        },
+      }));
+  } else if (mainImage) {
+    mainJsonLd.image = [{
+      '@type': 'ImageObject',
+      url: mainImage,
+      contentUrl: mainImage,
+      name: post.title,
+      description: post.description,
+      creator: {
+        '@type': 'Organization',
+        name: settings.siteTitle || 'AI PromptMatrix',
+        url: siteUrl,
+      },
+    }];
   }
 
   if (schemaType === 'HowTo') {

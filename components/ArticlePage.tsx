@@ -46,7 +46,19 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
     author: { '@type': 'Organization', name: 'AI PromptMatrix Editorial Team', url: `${siteUrl}/about` },
     publisher: { '@type': 'Organization', name: 'AI PromptMatrix', url: siteUrl },
     mainEntityOfPage: `${siteUrl}${listHref}/${article.slug}`,
-    ...(thumbnailUrl || article.thumbnailUrl ? { image: thumbnailUrl || article.thumbnailUrl } : {}),
+    ...((thumbnailUrl || article.thumbnailUrl) ? {
+      image: {
+        '@type': 'ImageObject',
+        url: thumbnailUrl || article.thumbnailUrl,
+        contentUrl: thumbnailUrl || article.thumbnailUrl,
+        name: article.title,
+        creator: {
+          '@type': 'Organization',
+          name: 'AI PromptMatrix',
+          url: siteUrl,
+        },
+      },
+    } : {}),
   };
 
   const faqs = extractFaqsFromMarkdown(article.body || '');
