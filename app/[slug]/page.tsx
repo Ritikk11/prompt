@@ -215,36 +215,30 @@ export default async function PostPage({ params }: Props) {
 
   let breadcrumbJsonLd = null;
   if (settings.seoSettings?.enableBreadcrumbList !== false) {
+    const primaryTool = post.aiTools?.[0] || post.images?.[0]?.aiTool || '';
+    const toolSlug = primaryTool.toLowerCase().replace(/[\s-]+/g, '-');
+
+    const items: { name: string; item: string }[] = [
+      { name: 'Home', item: siteUrl },
+      { name: 'Prompts', item: `${siteUrl}/explore` },
+    ];
+
+    if (primaryTool) {
+      items.push({ name: primaryTool, item: `${siteUrl}/tool/${toolSlug}` });
+    }
+
+    items.push({ name: post.title, item: `${siteUrl}/${post.slug || post.id}` });
+
     breadcrumbJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
-      itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          name: 'Home',
-          item: siteUrl,
-        },
-      ],
-    };
-
-    let position = 2;
-    if (post.category) {
-      breadcrumbJsonLd.itemListElement.push({
+      itemListElement: items.map((entry, i) => ({
         '@type': 'ListItem',
-        position,
-        name: post.category,
-        item: `${siteUrl}/explore`,
-      });
-      position++;
-    }
-
-    breadcrumbJsonLd.itemListElement.push({
-      '@type': 'ListItem',
-      position,
-      name: post.title,
-      item: `${siteUrl}/${post.slug || post.id}`,
-    });
+        position: i + 1,
+        name: entry.name,
+        item: entry.item,
+      })),
+    };
   }
 
   return (

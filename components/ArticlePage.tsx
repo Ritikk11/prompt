@@ -65,6 +65,7 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
 
   let breadcrumbJsonLd = null;
   if (settings?.seoSettings?.enableBreadcrumbList !== false) {
+    const breadcrumbLabel = isGuide ? 'Guides' : 'Blog';
     breadcrumbJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
@@ -78,7 +79,7 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
         {
           '@type': 'ListItem',
           position: 2,
-          name: listLabel,
+          name: breadcrumbLabel,
           item: `${siteUrl}${listHref}`,
         },
         {
