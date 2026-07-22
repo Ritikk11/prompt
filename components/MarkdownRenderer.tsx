@@ -2,6 +2,7 @@
 import { Children, type ReactNode, useState } from 'react';
 import { AlertTriangle, Check, CheckCircle2, Copy, Flame, Info, Lightbulb, Palette, Quote, Sparkles, Target, Wand2, XCircle } from 'lucide-react';
 import Markdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 
 type CalloutType = 'tip' | 'warning' | 'info' | 'note' | 'success' | 'danger' | 'highlight' | 'quote' | 'prompt' | 'example' | 'creative' | 'model' | 'important';
 type MarkdownBlock =
@@ -189,6 +190,7 @@ function renderInline(children: ReactNode) {
 function renderMarkdown(content: string) {
   return (
     <Markdown
+      rehypePlugins={[rehypeRaw]}
       components={{
         h2: (props) => (
           <h2 className="mt-10 mb-6 border-b border-surface-100 pb-3 text-3xl font-bold tracking-tight text-surface-900 dark:border-surface-800 dark:text-white">
