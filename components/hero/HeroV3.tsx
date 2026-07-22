@@ -82,12 +82,11 @@ export default function HeroV3({ featuredPosts: featured, settings }: HeroProps)
                    zIndex: relativeIdx === 0 ? 30 : 20,
                  }}
                >
-                 <Image src={promptImageUrl(p)} alt={`bg-${p.title}`} fill sizes="20vw" className="scale-125 object-cover opacity-50 blur-xl" loading={relativeIdx === 0 ? 'eager' : 'lazy'} referrerPolicy="no-referrer" />
+                 <Image src={promptImageUrl(p)} alt={`bg-${p.title}`} fill sizes="20vw" className="scale-125 object-cover opacity-50 blur-xl" loading="lazy" referrerPolicy="no-referrer" />
                  <LoadingImage
                    src={promptImageUrl(p)}
                    alt={p.title}
                    fill
-                   priority={relativeIdx === 0}
                    sizes="(max-width: 768px) 100vw, 50vw"
                    showSkeleton={showSkeleton}
                    className="object-contain transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]"
