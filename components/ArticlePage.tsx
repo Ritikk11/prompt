@@ -8,6 +8,28 @@ import ArticleCard, { formatArticleDate } from '@/components/ArticleCard';
 import ArticleThumbnail from '@/components/ArticleThumbnail';
 import ScrollReveal from '@/components/ScrollReveal';
 
+function extractFaqsFromMarkdown(markdown: string) {
+  const faqs: { question: string; answer: string }[] = [];
+  const faqSectionRegex = /##\s*Frequently Asked Questions\s*([\s\S]*?)(?=##\s|$)/i;
+  const match = markdown.match(faqSectionRegex);
+  
+  if (match && match[1]) {
+    const faqContent = match[1];
+    const questionBlocks = faqContent.split(/###\s+/).filter(Boolean);
+    
+    for (const block of questionBlocks) {
+      const lines = block.split(/\r?\n/);
+      const question = lines[0].trim();
+      const answer = lines.slice(1).join('\n').trim();
+      
+      if (question && answer) {
+        faqs.push({ question, answer });
+      }
+    }
+  }
+  return faqs;
+}
+
 export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }: { article: Article; siteUrl: string; settings?: SiteSettings; thumbnailUrl?: string }) {
   const isGuide = article.category === 'guide';
   const listHref = isGuide ? '/guides' : '/blog';
@@ -27,9 +49,26 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
     ...(thumbnailUrl || article.thumbnailUrl ? { image: thumbnailUrl || article.thumbnailUrl } : {}),
   };
 
+  const faqs = extractFaqsFromMarkdown(article.body || '');
+  const faqJsonLd = faqs.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(faq => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer
+      }
+    }))
+  } : null;
+
   return (
     <div className="mx-auto max-w-5xl px-5 py-8 sm:px-6 sm:py-12 lg:px-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {faqJsonLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      )}
       <Link href={listHref} className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-500 hover:text-primary-600">
         <ArrowLeft className="h-3.5 w-3.5" /> {listLabel}
       </Link>

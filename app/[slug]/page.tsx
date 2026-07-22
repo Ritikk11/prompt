@@ -155,11 +155,11 @@ export default async function PostPage({ params }: Props) {
     .slice(0, 4);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
-  const schemaType = settings.seoSettings?.schemaType || 'HowTo';
-  const howToJsonLd = {
+  const schemaType = post.schemaType || settings.seoSettings?.schemaType || 'HowTo';
+  const mainJsonLd: any = {
     '@context': 'https://schema.org',
     '@type': schemaType,
-    name: `How to use ${post.title}`,
+    name: schemaType === 'HowTo' ? `How to use ${post.title}` : post.title,
     description: post.description,
     author: {
       '@type': 'Organization',
@@ -176,7 +176,11 @@ export default async function PostPage({ params }: Props) {
     },
     datePublished: post.createdAt,
     dateModified: post.createdAt,
-    step: [
+    url: `${siteUrl}/${post.slug || post.id}`,
+  };
+
+  if (schemaType === 'HowTo') {
+    mainJsonLd.step = [
       'Open the AI tool listed with the prompt.',
       'Copy the prompt.',
       'Upload a reference image if the prompt asks for one.',
@@ -186,9 +190,8 @@ export default async function PostPage({ params }: Props) {
       '@type': 'HowToStep',
       position: index + 1,
       name,
-    })),
-    url: `${siteUrl}/${post.slug || post.id}`,
-  };
+    }));
+  }
   const faqJsonLd = post.faqs?.length ? {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -210,7 +213,7 @@ export default async function PostPage({ params }: Props) {
         <>
           <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }}
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(mainJsonLd) }}
           />
           {faqJsonLd && (
             <script

@@ -23,6 +23,7 @@ export interface Post {
   seoTitle?: string;
   seoDescription?: string;
   seoKeywords?: string[];
+  schemaType?: 'Article' | 'CreativeWork' | 'HowTo';
   faqs?: PostFaq[];
   thumbnailUrl?: string;
   referenceImages?: string[];

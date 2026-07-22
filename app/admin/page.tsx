@@ -1046,6 +1046,7 @@ function AdminInner() {
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
+  const [schemaType, setSchemaType] = useState<Post['schemaType']>('HowTo');
   const [faqs, setFaqs] = useState<PostFaq[]>([]);
   const [tagsStr, setTagsStr] = useState('');
   const [category, setCategory] = useState('');
@@ -1405,7 +1406,7 @@ function AdminInner() {
   };
 
   const resetForm = () => {
-    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setFaqs([]); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
+    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setSchemaType('HowTo'); setFaqs([]); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
     setStatus('published'); setVisibility('public');
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
@@ -1421,6 +1422,7 @@ function AdminInner() {
     setReferenceImages(post.referenceImages || []);
     setSeoTitle(post.seoTitle || '');
     setSeoDescription(post.seoDescription || '');
+    setSchemaType(post.schemaType || 'HowTo');
     setFaqs(post.faqs || []);
     setTagsStr(post.tags.join(', '));
     setCategory(post.category || '');
@@ -1677,6 +1679,7 @@ function AdminInner() {
       title: title || 'Untitled Post',
       description: description || '',
       extendedDescription: extendedDescription || '',
+      schemaType: schemaType || undefined,
       faqs: faqs
         .map(item => ({ question: item.question.trim(), answer: item.answer.trim() }))
         .filter(item => item.question && item.answer),
@@ -3145,6 +3148,22 @@ function AdminInner() {
                       <option value="public">Public</option>
                       <option value="private">Private</option>
                     </select>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
+                  <div className="mb-4 flex flex-col gap-3">
+                    <label className="text-xs font-bold uppercase tracking-wider text-surface-500">Schema Type</label>
+                    <select
+                      value={schemaType || 'HowTo'}
+                      onChange={e => setSchemaType(e.target.value as any)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    >
+                      <option value="Article">Article</option>
+                      <option value="CreativeWork">CreativeWork</option>
+                      <option value="HowTo">HowTo</option>
+                    </select>
+                    <p className="mt-1 text-xs text-surface-500">Tells Google how to display this post in search results.</p>
                   </div>
                 </div>
 
