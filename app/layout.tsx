@@ -31,13 +31,28 @@ export async function generateMetadata(): Promise<Metadata> {
     settings.siteDescription ||
     'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.';
   const publisherId = settings.ads?.publisherId || process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
-  const ogImage = settings.seoSettings?.defaultOgImage;
+  const ogImage = settings.seoSettings?.defaultOgImage || '/og-image.png';
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in'),
     title: `${siteTitle} - AI Prompts`,
     description,
     applicationName: siteTitle,
+    icons: {
+      icon: [
+        { url: '/favicon.ico' },
+        { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+        { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+        { url: '/favicon-48x48.png', sizes: '48x48', type: 'image/png' },
+        { url: '/icon-256x256.png', sizes: '256x256', type: 'image/png' },
+        { url: '/icon-1024x1024.png', sizes: '1024x1024', type: 'image/png' },
+      ],
+      apple: [
+        { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      ],
+      shortcut: '/favicon.ico',
+    },
+    manifest: '/site.webmanifest',
     openGraph: {
       siteName: siteTitle,
       type: 'website',
@@ -68,6 +83,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
         {imagePreconnectOrigins.map((origin) => (
           <link key={origin} rel="preconnect" href={origin} crossOrigin="" />
         ))}

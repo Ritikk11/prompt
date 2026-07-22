@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const metaTitle = post!.seoTitle || templateTitle;
   const metaDescription = post!.seoDescription || post!.description || seoSettings?.defaultMetaDescription || settings.siteDescription;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
-  const ogImage = isBase64 ? `${siteUrl}/placeholder-image.png` : firstImageUrl || seoSettings?.defaultOgImage || `${siteUrl}/placeholder-image.png`;
+  const ogImage = isBase64 ? `${siteUrl}/og-image.png` : firstImageUrl || seoSettings?.defaultOgImage || `${siteUrl}/og-image.png`;
 
   return {
     title: metaTitle,

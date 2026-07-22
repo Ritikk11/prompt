@@ -25,7 +25,7 @@ export const fallbackToolInfo: Record<string, { color: string; logo: string; log
   },
   'DALL-E': {
     color: 'bg-[#ef4444]',
-    logo: 'https://www.vectorlogo.zone/logos/openai/openai-icon.svg'
+    logo: '/tool-logos/chatgpt.svg'
   },
   'Stable Diffusion': {
     color: 'bg-[#7c3aed]',

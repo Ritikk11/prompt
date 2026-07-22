@@ -313,17 +313,9 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" prefetch={false} className="flex items-center gap-2 shrink-0" onClick={() => setMenuOpen(false)}>
-          {settings.siteLogo ? (
-            <>
-              <div className="w-9 h-9 text-transparent rounded-xl overflow-hidden shrink-0 relative">
-                <Image src={settings.siteLogo} alt={settings.siteTitle} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" />
-              </div>
-            </>
-          ) : (
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-          )}
+          <div className="w-9 h-9 shrink-0 relative">
+            <Image src={settings.siteLogo || '/icon-1024x1024.png'} alt={settings.siteTitle} fill sizes="36px" className="object-contain" referrerPolicy="no-referrer" />
+          </div>
           <span className="text-xl font-bold gradient-text">{settings.siteTitle}</span>
         </Link>
 

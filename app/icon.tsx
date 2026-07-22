@@ -16,10 +16,15 @@ export default async function Icon() {
   } catch(e) {}
 
   if (siteLogo) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+    const logoUrl = siteLogo.startsWith('http://') || siteLogo.startsWith('https://') || siteLogo.startsWith('data:')
+      ? siteLogo
+      : `${siteUrl}${siteLogo.startsWith('/') ? '' : '/'}${siteLogo}`;
+
     return new ImageResponse(
       (
         <div style={{ width: '100%', height: '100%', display: 'flex' }}>
-          <img src={siteLogo} alt="Site Logo" width={32} height={32} style={{ objectFit: 'contain' }} />
+          <img src={logoUrl} alt="Site Logo" width={32} height={32} style={{ objectFit: 'contain' }} />
         </div>
       ),
       { ...size }

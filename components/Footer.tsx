@@ -99,13 +99,9 @@ export default function Footer() {
           {/* Brand: logo, description, then social icons and AI tool chips (no headings) */}
           <div className="lg:col-span-4">
             <Link href="/" className="flex items-center gap-2 mb-4 w-fit">
-              {settings.siteLogo ? (
-                <Image src={settings.siteLogo} alt={settings.siteTitle} width={36} height={36} className="w-9 h-9 rounded-xl object-cover"  referrerPolicy="no-referrer" />
-              ) : (
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-              )}
+              <div className="w-9 h-9 shrink-0 relative">
+                <Image src={settings.siteLogo || '/icon-1024x1024.png'} alt={settings.siteTitle} fill sizes="36px" className="object-contain" referrerPolicy="no-referrer" />
+              </div>
               <span className="text-xl font-bold gradient-text">{settings.siteTitle}</span>
             </Link>
             <p className="text-sm text-surface-500 dark:text-surface-400 leading-relaxed">

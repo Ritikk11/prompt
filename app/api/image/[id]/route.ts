@@ -49,7 +49,7 @@ export async function GET(_request: NextRequest, { params }: Props) {
     : post.images?.find((image: { url?: string }) => image.url?.startsWith('data:image'))?.url;
 
   if (!imageUrl) {
-    return NextResponse.redirect(new URL('/placeholder-image.png', _request.url));
+    return NextResponse.redirect(new URL('/og-image.png', _request.url));
   }
 
   const response = dataUrlToResponse(imageUrl);
