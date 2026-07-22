@@ -48,7 +48,7 @@ export default function HomeHowItWorks({ settings }: { settings?: SiteSettings }
     text: content.items?.[index]?.text || step.text,
     checks: content.items?.[index]?.checks?.length ? content.items[index].checks! : step.checks,
   })) : steps;
-  const [activeIndex, setActiveIndex] = useState(1);
+  const [activeIndex, setActiveIndex] = useState(0);
   const active = editableSteps[activeIndex] || editableSteps[0];
   const ActiveIcon = active.icon;
 
