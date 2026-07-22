@@ -155,7 +155,9 @@ export default async function PostPage({ params }: Props) {
     .slice(0, 4);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
-  const schemaType = post.schemaType || settings.seoSettings?.schemaType || 'HowTo';
+  const schemaType = post.schemaType || settings.seoSettings?.schemaType || 'Article';
+  const mainImage = post.thumbnailUrl || post.images[0]?.url;
+  
   const mainJsonLd: any = {
     '@context': 'https://schema.org',
     '@type': schemaType,
@@ -178,6 +180,10 @@ export default async function PostPage({ params }: Props) {
     dateModified: post.createdAt,
     url: `${siteUrl}/${post.slug || post.id}`,
   };
+
+  if (mainImage) {
+    mainJsonLd.image = [mainImage];
+  }
 
   if (schemaType === 'HowTo') {
     mainJsonLd.step = [
@@ -207,6 +213,40 @@ export default async function PostPage({ params }: Props) {
       })),
   } : null;
 
+  let breadcrumbJsonLd = null;
+  if (settings.seoSettings?.enableBreadcrumbList !== false) {
+    breadcrumbJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: siteUrl,
+        },
+      ],
+    };
+
+    let position = 2;
+    if (post.category) {
+      breadcrumbJsonLd.itemListElement.push({
+        '@type': 'ListItem',
+        position,
+        name: post.category,
+        item: `${siteUrl}/explore`,
+      });
+      position++;
+    }
+
+    breadcrumbJsonLd.itemListElement.push({
+      '@type': 'ListItem',
+      position,
+      name: post.title,
+      item: `${siteUrl}/${post.slug || post.id}`,
+    });
+  }
+
   return (
     <>
       {(settings.seoSettings?.enableJsonLd ?? settings.features?.showFaqSchema ?? true) && (
@@ -215,6 +255,12 @@ export default async function PostPage({ params }: Props) {
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(mainJsonLd) }}
           />
+          {breadcrumbJsonLd && (
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+            />
+          )}
           {faqJsonLd && (
             <script
               type="application/ld+json"

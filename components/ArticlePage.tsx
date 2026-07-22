@@ -38,7 +38,7 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
 
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': isGuide ? 'HowTo' : 'Article',
+    '@type': 'Article',
     headline: article.title,
     description: article.description,
     datePublished: article.datePublished,
@@ -63,9 +63,40 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
     }))
   } : null;
 
+  let breadcrumbJsonLd = null;
+  if (settings?.seoSettings?.enableBreadcrumbList !== false) {
+    breadcrumbJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: siteUrl,
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: listLabel,
+          item: `${siteUrl}${listHref}`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: article.title,
+          item: `${siteUrl}${listHref}/${article.slug}`,
+        }
+      ],
+    };
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-5 py-8 sm:px-6 sm:py-12 lg:px-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {breadcrumbJsonLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      )}
       {faqJsonLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       )}
