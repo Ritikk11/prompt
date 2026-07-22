@@ -34,7 +34,7 @@ const defaultArticleThumbnails: Record<string, string> = {
 const defaultSettings: SiteSettings = {
   siteTitle: 'AI PromptMatrix',
   siteDescription: 'A curated prompt library for image creators. Discover tested examples, copy the workflow, and make stronger artwork.',
-  siteLogo: '/icon-1024x1024.png',
+  siteLogo: '/icon-256x256.png',
   heroTitle: 'Better Image Prompts Start Here',
   heroSubtitle: 'Browse a curated library of tested prompts for ChatGPT, Gemini, Grok, and more — each with example images and the exact text that created them.',
   heroEnabled: true,

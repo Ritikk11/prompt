@@ -314,7 +314,7 @@ export default function Header() {
         {/* Logo */}
         <Link href="/" prefetch={false} className="flex items-center gap-2 shrink-0" onClick={() => setMenuOpen(false)}>
           <div className="w-9 h-9 shrink-0 relative">
-            <Image src={settings.siteLogo || '/icon-1024x1024.png'} alt={settings.siteTitle} fill sizes="36px" className="object-contain" referrerPolicy="no-referrer" priority />
+            <Image src={settings.siteLogo || '/icon-256x256.png'} alt={settings.siteTitle} fill sizes="36px" className="object-contain" referrerPolicy="no-referrer" priority />
           </div>
           <span className="text-xl font-bold gradient-text">{settings.siteTitle}</span>
         </Link>
