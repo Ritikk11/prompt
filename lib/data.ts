@@ -211,7 +211,7 @@ const defaultSettings: SiteSettings = {
     googleVerification: '',
     bingVerification: '',
     pinterestVerification: '',
-    robotsText: 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\n\nSitemap: https://aipromptmatrix.in/sitemap.xml',
+    robotsText: 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\nDisallow: /api/\nDisallow: /search/\nDisallow: /submit/\nDisallow: /login/\n\nSitemap: https://aipromptmatrix.in/sitemap.xml',
     sitemapInclude: {
       posts: true,
       sections: true,
