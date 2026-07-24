@@ -1412,6 +1412,11 @@ function AdminInner() {
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
   };
 
+  const closePostForm = () => {
+    resetForm();
+    router.push('/admin?tab=posts', { scroll: false });
+  };
+
   const startEdit = (post: Post) => {
     setEditingPost(post);
     setTitle(post.title);
@@ -1724,7 +1729,7 @@ function AdminInner() {
       }
 
       await loadAdminData();
-      resetForm();
+      closePostForm();
       alert(!isFinished && status === 'published'
         ? 'Post saved as draft because some required fields (title, description, or images) are missing.'
         : 'Post saved successfully.');
@@ -3095,7 +3100,7 @@ function AdminInner() {
             <div className="max-w-3xl">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold">{editingPost ? 'Edit Post' : 'Create New Post'}</h2>
-                <button onClick={resetForm} className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800">
+                <button onClick={closePostForm} className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -3674,7 +3679,8 @@ function AdminInner() {
                     <Save className="w-4 h-4" /> {editingPost ? 'Update Post' : 'Create Post'}
                   </button>
                   <button
-                    onClick={resetForm}
+                    type="button"
+                    onClick={closePostForm}
                     className="px-6 py-2.5 rounded-xl border border-surface-200 dark:border-surface-700 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
                   >
                     Cancel
