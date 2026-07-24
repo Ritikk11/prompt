@@ -3044,7 +3044,8 @@ function AdminInner() {
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault(); e.stopPropagation();
                           const url = `${window.location.origin}/${post.slug || post.id}`;
                           navigator.clipboard.writeText(url);
                           alert('Link copied to clipboard!');
@@ -3055,34 +3056,34 @@ function AdminInner() {
                         <svg className="w-4 h-4 text-surface-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                       </button>
                       <button
-                        onClick={() => updatePost({ ...post, visibility: post.visibility === 'private' ? 'public' : 'private' })}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); updatePost({ ...post, visibility: post.visibility === 'private' ? 'public' : 'private' }); }}
                         className={`p-2 rounded-lg transition-colors ${post.visibility === 'private' ? 'bg-red-50 dark:bg-red-900/20' : 'hover:bg-surface-100 dark:hover:bg-surface-800'}`}
                         title={post.visibility === 'private' ? 'Make Public' : 'Make Private'}
                       >
                         {post.visibility === 'private' ? <EyeOff className="w-4 h-4 text-red-500" /> : <Eye className="w-4 h-4 text-surface-400" />}
                       </button>
                       <button
-                        onClick={() => updatePost({ ...post, featured: !post.featured })}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); updatePost({ ...post, featured: !post.featured }); }}
                         className={`p-2 rounded-lg transition-colors ${post.featured ? 'bg-yellow-50 dark:bg-yellow-900/20' : 'hover:bg-surface-100 dark:hover:bg-surface-800'}`}
                         title={post.featured ? 'Remove from hero' : 'Add to hero'}
                       >
                         {post.featured ? <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> : <StarOff className="w-4 h-4 text-surface-400" />}
                       </button>
                       <button
-                        onClick={() => duplicatePost(post)}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); duplicatePost(post); }}
                         className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
                         title="Duplicate as private draft"
                       >
                         <FileText className="w-4 h-4 text-surface-400" />
                       </button>
                       <button
-                        onClick={() => openEditPost(post)}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); openEditPost(post); }}
                         className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
                       >
                         <Edit3 className="w-4 h-4 text-primary-500" />
                       </button>
                       <button
-                        onClick={() => { if (confirm('Delete this post?')) deletePost(post.id); }}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (confirm('Delete this post?')) deletePost(post.id); }}
                         className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
