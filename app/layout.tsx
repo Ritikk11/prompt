@@ -56,7 +56,14 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       siteName: siteTitle,
       type: 'website',
-      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
+      ...(ogImage ? { images: [{ url: ogImage, width: 1200, height: 630, alt: siteTitle }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${siteTitle} - AI Prompts`,
+      description,
+      site: settings.seoSettings?.twitterHandle || undefined,
+      ...(ogImage ? { images: [ogImage] } : {}),
     },
     ...(publisherId ? { other: { 'google-adsense-account': publisherId } } : {}),
   };
@@ -83,12 +90,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/site.webmanifest" />
+        {/* Favicons, apple-touch-icon and manifest are declared once via the
+            Metadata `icons`/`manifest` fields in generateMetadata — do not add
+            manual <link> tags here or the same sizes get emitted twice. */}
         {imagePreconnectOrigins.map((origin) => (
           <link key={origin} rel="preconnect" href={origin} crossOrigin="" />
         ))}

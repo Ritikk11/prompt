@@ -158,10 +158,17 @@ export default async function PostPage({ params }: Props) {
   const schemaType = post.schemaType || settings.seoSettings?.schemaType || 'Article';
   const mainImage = post.thumbnailUrl || post.images[0]?.url;
   
+  const rawLogo = settings.siteLogo || '/icon-256x256.png';
+  const publisherLogoUrl = rawLogo.startsWith('http') || rawLogo.startsWith('data:')
+    ? rawLogo
+    : `${siteUrl}${rawLogo.startsWith('/') ? '' : '/'}${rawLogo}`;
+
   const mainJsonLd: any = {
     '@context': 'https://schema.org',
     '@type': schemaType,
     name: schemaType === 'HowTo' ? `How to use ${post.title}` : post.title,
+    // Article rich results key off `headline`, not `name`; HowTo uses `name`.
+    ...(schemaType !== 'HowTo' ? { headline: post.title } : {}),
     description: post.description,
     author: {
       '@type': 'Organization',
@@ -171,10 +178,10 @@ export default async function PostPage({ params }: Props) {
     publisher: {
       '@type': 'Organization',
       name: settings.siteTitle || 'AI PromptMatrix',
-      logo: settings.siteLogo ? {
+      logo: {
         '@type': 'ImageObject',
-        url: settings.siteLogo,
-      } : undefined,
+        url: publisherLogoUrl,
+      },
     },
     datePublished: post.createdAt,
     dateModified: post.createdAt,

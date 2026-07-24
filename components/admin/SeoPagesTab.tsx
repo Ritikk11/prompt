@@ -47,7 +47,6 @@ const defaultSeoSettings: SeoSettings = {
   enableJsonLd: true,
   schemaType: 'HowTo',
   enableBreadcrumbList: true,
-  enableSitelinksSearchbox: true,
   redirects: [],
 };
 
@@ -328,10 +327,6 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
             <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
               <span>BreadcrumbList</span>
               <ToggleSwitch checked={seoSettings.enableBreadcrumbList ?? true} onChange={checked => updateSeoSettings({ enableBreadcrumbList: checked })} />
-            </div>
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
-              <span>WebSite sitelinks searchbox</span>
-              <ToggleSwitch checked={seoSettings.enableSitelinksSearchbox ?? true} onChange={checked => updateSeoSettings({ enableSitelinksSearchbox: checked })} />
             </div>
             <div>
               <label className="block text-xs font-medium text-surface-500 mb-1">Schema type</label>

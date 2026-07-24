@@ -36,6 +36,11 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
   const listLabel = isGuide ? 'All guides' : 'All articles';
   const related = getRelatedArticlesForSettings(article, settings, 3);
 
+  const rawLogo = settings?.siteLogo || '/icon-256x256.png';
+  const publisherLogoUrl = rawLogo.startsWith('http') || rawLogo.startsWith('data:')
+    ? rawLogo
+    : `${siteUrl}${rawLogo.startsWith('/') ? '' : '/'}${rawLogo}`;
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -44,7 +49,12 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
     datePublished: article.datePublished,
     dateModified: article.dateModified || article.datePublished,
     author: { '@type': 'Organization', name: 'AI PromptMatrix Editorial Team', url: `${siteUrl}/about` },
-    publisher: { '@type': 'Organization', name: 'AI PromptMatrix', url: siteUrl },
+    publisher: {
+      '@type': 'Organization',
+      name: 'AI PromptMatrix',
+      url: siteUrl,
+      logo: { '@type': 'ImageObject', url: publisherLogoUrl },
+    },
     mainEntityOfPage: `${siteUrl}${listHref}/${article.slug}`,
     ...((thumbnailUrl || article.thumbnailUrl) ? {
       image: {

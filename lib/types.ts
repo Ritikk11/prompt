@@ -202,7 +202,6 @@ export interface SeoSettings {
   enableJsonLd?: boolean;
   schemaType?: 'Article' | 'CreativeWork' | 'HowTo';
   enableBreadcrumbList?: boolean;
-  enableSitelinksSearchbox?: boolean;
   redirects?: { from: string; to: string; status: 301 | 302 }[];
 }
 

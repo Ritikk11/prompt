@@ -222,7 +222,6 @@ const defaultSettings: SiteSettings = {
     enableJsonLd: true,
     schemaType: 'HowTo',
     enableBreadcrumbList: true,
-    enableSitelinksSearchbox: true,
     redirects: [],
   },
   features: {
