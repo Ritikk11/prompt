@@ -17,10 +17,11 @@ import type { Post, ShareTarget } from '@/lib/types';
 
 import CopyButton from '@/components/CopyButton';
 import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
-import MarkdownRenderer from '@/components/MarkdownRenderer';
-import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
+import dynamic from 'next/dynamic';
 
-import PostCard from '@/components/PostCard';
+const MarkdownRenderer = dynamic(() => import('@/components/MarkdownRenderer'), { ssr: true });
+const PostCard = dynamic(() => import('@/components/PostCard'), { ssr: true });
+import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
 import AdSlot from '@/components/AdSlot';
 import ScrollReveal from '@/components/ScrollReveal';
 import ToolBadge from '@/components/ToolBadge';
@@ -108,7 +109,10 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
     let cancelled = false;
-    getSupabaseClient().then((supabase) => {
+    let timeoutId: number;
+
+    const initAuth = () => {
+      getSupabaseClient().then((supabase) => {
       if (cancelled) return;
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (!cancelled) setUser(session?.user ?? null);
@@ -118,11 +122,17 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       });
       unsubscribe = () => subscription.unsubscribe();
     }).catch((error) => {
-      console.error('Failed to load Supabase auth client:', error);
+      console.error("Auth init error:", error);
     });
+    };
+
+    // Defer Supabase auth initialization to free up the main thread during initial hydration on mobile
+    timeoutId = window.setTimeout(initAuth, 2000);
+
     return () => {
       cancelled = true;
-      unsubscribe?.();
+      clearTimeout(timeoutId);
+      if (unsubscribe) unsubscribe();
     };
   }, []);
 
@@ -578,6 +588,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   referrerPolicy="no-referrer"
                   loading="eager"
                   fetchPriority="high"
+                  width={1280}
+                  height={1280}
                 />
               <div className="flex min-w-0 flex-col items-center lg:items-start">
                 <div className="flex flex-wrap justify-center gap-2 mb-6 lg:justify-start">
