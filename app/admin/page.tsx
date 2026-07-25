@@ -1646,6 +1646,8 @@ function AdminInner() {
       if (data.extendedDescription) setExtendedDescription(data.extendedDescription);
       if (data.category && !category) setCategory(data.category);
       if (data.tags && Array.isArray(data.tags)) setTagsStr(data.tags.join(', '));
+      if (data.schemaType) setSchemaType(data.schemaType);
+      if (data.faqs && Array.isArray(data.faqs)) setFaqs(data.faqs);
 
       alert("Generated details successfully!");
     } catch (err: any) {
