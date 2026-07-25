@@ -76,11 +76,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     discovery.toolSeoDescriptionTemplate || discovery.toolDescriptionTemplate || 'Explore the best AI prompts and images for %tool%.',
     { tool: displayTool, count }
   );
-  
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+
   return {
     title,
     description,
-    keywords: [displayTool, 'AI prompts', 'templates'],
+    alternates: { canonical: `${siteUrl}/tool/${encodeURIComponent(decodedTool)}` },
+    openGraph: {
+      title,
+      description,
+    },
   };
 }
 

@@ -14,9 +14,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = discovery.exploreSeoTitle || discovery.exploreTitle || 'Explore AI Image Prompts | AI PromptMatrix';
   const description = discovery.exploreSeoDescription || discovery.exploreDescription || settings.seoSettings?.defaultMetaDescription || settings.siteDescription;
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+
   return {
     title,
     description,
+    alternates: { canonical: `${siteUrl}/explore` },
     openGraph: discovery.exploreOgImage ? {
       title,
       description,

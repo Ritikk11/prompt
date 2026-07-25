@@ -49,10 +49,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     discovery.tagSeoDescriptionTemplate || discovery.tagDescriptionTemplate || 'Browse curated AI prompts for %tag%.',
     { tag: decodedTag, count }
   );
-  
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+
   return {
     title,
     description,
+    alternates: { canonical: `${siteUrl}/tag/${encodeURIComponent(decodedTag)}` },
     keywords: [decodedTag, 'AI prompts', 'midjourney', 'dall-e'],
   };
 }
