@@ -509,22 +509,9 @@ export default function Header() {
                 ? "text-primary-600 dark:text-primary-400 bg-primary-50/50 dark:bg-primary-500/5"
                 : "text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-900/50 hover:text-surface-900 dark:hover:text-white";
               
-              const getIcon = (key: string) => {
-                const k = (key || '').toLowerCase();
-                const iconClass = `w-5 h-5 ${isActive ? 'text-primary-500' : 'opacity-70'}`;
-                if (k.includes('home')) return <Home className={iconClass} />;
-                if (k.includes('explore')) return <Compass className={iconClass} />;
-                if (k.includes('blog')) return <BookOpen className={iconClass} />;
-                if (k.includes('submit')) return <Plus className={iconClass} />;
-                if (k.includes('chatgpt') || k.includes('text')) return <MessageSquare className={iconClass} />;
-                if (k.includes('gemini') || k.includes('ai')) return <Sparkles className={iconClass} />;
-                if (k.includes('midjourney') || k.includes('image')) return <LayoutGrid className={iconClass} />;
-                return <Hash className={iconClass} />;
-              };
-
               return (
                 <div key={item.navKey} className="flex flex-col">
-                  {index > 0 && <div className="h-[1px] bg-gradient-to-r from-transparent via-surface-300 dark:via-surface-700 to-transparent mx-6 my-1" />}
+                  {index > 0 && <div className="h-[1px] bg-gradient-to-r from-transparent via-primary-500/50 to-transparent mx-6 my-1" />}
                   <Link 
                     href={item.href} 
                     prefetch={false} 
@@ -534,7 +521,6 @@ export default function Header() {
                     {isActive && (
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-500 rounded-r-full" />
                     )}
-                    {getIcon(item.key || item.label)}
                     {item.label}
                   </Link>
                 </div>
