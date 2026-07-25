@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       : '';
 
     const customInstructionText = promptInstruction 
-      ? `\nSpecial User Instructions: ${String(promptInstruction).slice(0, 2000)}\n`
+      ? `\nSpecial User Instructions: ${String(promptInstruction).slice(0, 2000)}\n\nCRITICAL RULE: If the user's instructions specifically ask you to focus on or generate ONLY certain fields (e.g., "generate title", "just write faqs"), you MUST omit all other fields from the JSON. Only return the exact fields requested in the JSON object. Do not return empty strings or default arrays for the rest.\n`
       : '';
 
     const systemPrompt = `You are an expert copywriter and SEO specialist for an AI image prompt gallery.
@@ -45,7 +45,7 @@ ${recentPostsText}${customInstructionText}
 Here are the text prompts the user used to create the images:
 ${formattedImages}
 
-Please visually analyze the attached images (lighting, composition, art style, subject matter) and combine that with the text prompts to generate the following fields in JSON format:
+Please visually analyze the attached images (lighting, composition, art style, subject matter) and combine that with the text prompts to generate the following fields in JSON format (NOTE: Omit any fields not explicitly requested if the Special User Instructions say to focus on specific fields):
 1. "title": A catchy, highly clickable, and human-like title. Do NOT use generic AI words like "Delve", "Explore", or "A collection of". Make it sound natural.
 2. "seoTitle": An SEO-optimized title (different from main title, max 60 chars).
 3. "description": A short, engaging summary (1-2 sentences).

@@ -3534,7 +3534,30 @@ function AdminInner() {
                 <div className="rounded-2xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900 sm:p-4">
                   <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <label className="text-sm font-medium">Extended Description / Content (Optional, useful for AdSense)</label>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {aiUndoStack[`post-ext-desc`] !== undefined && (
+                        <button
+                          type="button"
+                          onClick={() => handleAiUndo(`post-ext-desc`, setExtendedDescription)}
+                          className="inline-flex items-center gap-1 rounded-xl px-2 py-1 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
+                        >
+                          <RotateCcw className="h-3 w-3" /> Undo
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        disabled={activeAiLoaders[`post-ext-desc`]}
+                        onClick={() => handleMagicWand(
+                          `post-ext-desc`, 
+                          extendedDescription, 
+                          setExtendedDescription, 
+                          `Write a longer, detailed Markdown-formatted article about this AI Prompt post titled "${title}". Make it conversational and engaging, using paragraphs and bullet points if needed. Do not use H1 (#). Prefer H2 (##) and H3 (###). Use the site's custom markdown styles when useful: :::tip, :::creative, :::model, :::prompt.`
+                        )}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-primary-50 px-2 py-1 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
+                      >
+                        {activeAiLoaders[`post-ext-desc`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
+                        Auto-write
+                      </button>
                       <div className="grid grid-cols-2 rounded-xl bg-surface-100 p-1 text-xs font-semibold dark:bg-surface-800">
                         <button
                           type="button"
@@ -3594,7 +3617,34 @@ function AdminInner() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Custom Search Title (SEO)</label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-sm font-medium">Custom Search Title (SEO)</label>
+                      <div className="flex items-center gap-2">
+                        {aiUndoStack[`post-seo-title`] !== undefined && (
+                          <button
+                            type="button"
+                            onClick={() => handleAiUndo(`post-seo-title`, setSeoTitle)}
+                            className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
+                          >
+                            <RotateCcw className="h-3 w-3" /> Undo
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          disabled={activeAiLoaders[`post-seo-title`]}
+                          onClick={() => handleMagicWand(
+                            `post-seo-title`, 
+                            seoTitle, 
+                            setSeoTitle, 
+                            `Write an SEO-optimized title (max 60 characters) for an AI Prompt post titled "${title}". Make it rank well for relevant keywords.`
+                          )}
+                          className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
+                        >
+                          {activeAiLoaders[`post-seo-title`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
+                          Auto-write
+                        </button>
+                      </div>
+                    </div>
                     <textarea
                       value={seoTitle}
                       onChange={e => setSeoTitle(e.target.value)}
@@ -3604,7 +3654,34 @@ function AdminInner() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Custom Search Description (SEO)</label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-sm font-medium">Custom Search Description (SEO)</label>
+                      <div className="flex items-center gap-2">
+                        {aiUndoStack[`post-seo-desc`] !== undefined && (
+                          <button
+                            type="button"
+                            onClick={() => handleAiUndo(`post-seo-desc`, setSeoDescription)}
+                            className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
+                          >
+                            <RotateCcw className="h-3 w-3" /> Undo
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          disabled={activeAiLoaders[`post-seo-desc`]}
+                          onClick={() => handleMagicWand(
+                            `post-seo-desc`, 
+                            seoDescription, 
+                            setSeoDescription, 
+                            `Write an SEO-optimized meta description (max 155 characters) for an AI Prompt post titled "${title}". Use high-volume keywords.`
+                          )}
+                          className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
+                        >
+                          {activeAiLoaders[`post-seo-desc`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
+                          Auto-write
+                        </button>
+                      </div>
+                    </div>
                     <textarea
                       value={seoDescription}
                       onChange={e => setSeoDescription(e.target.value)}
@@ -3617,7 +3694,34 @@ function AdminInner() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Tags (comma separated)</label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-sm font-medium">Tags (comma separated)</label>
+                      <div className="flex items-center gap-2">
+                        {aiUndoStack[`post-tags`] !== undefined && (
+                          <button
+                            type="button"
+                            onClick={() => handleAiUndo(`post-tags`, setTagsStr)}
+                            className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
+                          >
+                            <RotateCcw className="h-3 w-3" /> Undo
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          disabled={activeAiLoaders[`post-tags`]}
+                          onClick={() => handleMagicWand(
+                            `post-tags`, 
+                            tagsStr, 
+                            setTagsStr, 
+                            `Generate 5 to 8 relevant, comma-separated tags for an AI Prompt post titled "${title}". Return ONLY the comma-separated string.`
+                          )}
+                          className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
+                        >
+                          {activeAiLoaders[`post-tags`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
+                          Auto-write
+                        </button>
+                      </div>
+                    </div>
                     <textarea
                       value={tagsStr}
                       onChange={e => setTagsStr(e.target.value)}
@@ -3627,7 +3731,34 @@ function AdminInner() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Categories (comma separated)</label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-sm font-medium">Categories (comma separated)</label>
+                      <div className="flex items-center gap-2">
+                        {aiUndoStack[`post-categories`] !== undefined && (
+                          <button
+                            type="button"
+                            onClick={() => handleAiUndo(`post-categories`, setCategoriesStr)}
+                            className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
+                          >
+                            <RotateCcw className="h-3 w-3" /> Undo
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          disabled={activeAiLoaders[`post-categories`]}
+                          onClick={() => handleMagicWand(
+                            `post-categories`, 
+                            categoriesStr, 
+                            setCategoriesStr, 
+                            `Suggest a single, broad category for an AI Prompt post titled "${title}". Return ONLY the category string.`
+                          )}
+                          className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
+                        >
+                          {activeAiLoaders[`post-categories`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
+                          Auto-write
+                        </button>
+                      </div>
+                    </div>
                     <textarea
                       value={categoriesStr}
                       onChange={e => setCategoriesStr(e.target.value)}
