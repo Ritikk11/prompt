@@ -100,7 +100,7 @@ export default function Footer() {
           <div className="lg:col-span-4">
             <Link href="/" className="flex items-center gap-2 mb-4 w-fit">
               <div className="w-9 h-9 shrink-0 relative">
-                <Image src={settings.siteLogo || '/icon-160x160.png'} alt={settings.siteTitle} fill sizes="36px" className="object-contain" referrerPolicy="no-referrer" />
+                <Image src={settings.siteLogo || '/icon-190x190.png'} alt={settings.siteTitle} fill sizes="36px" className="object-contain" referrerPolicy="no-referrer" />
               </div>
               <span className="text-xl font-bold gradient-text">{settings.siteTitle}</span>
             </Link>
