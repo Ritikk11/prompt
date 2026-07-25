@@ -1261,6 +1261,27 @@ function AdminInner() {
     }
   };
 
+  const handleMagicWandFaqs = async () => {
+    const prompt = `Based on the following tags "${tagsStr}" and title "${title}", generate 3 relevant Frequently Asked Questions and their answers. Return ONLY valid JSON in this exact format: [{"question": "...", "answer": "..."}]. Do not include markdown blocks or any other text.`;
+    setAiUndoStack(prev => ({ ...prev, 'post-faqs': JSON.stringify(faqs) }));
+    setActiveAiLoaders(prev => ({ ...prev, 'post-faqs': true }));
+    try {
+      const response = await askAi(prompt);
+      if (response) {
+        const cleaned = response.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(cleaned);
+        if (Array.isArray(parsed)) {
+          setFaqs(parsed);
+        }
+      }
+    } catch (err) {
+      console.error('Magic Wand FAQs Error:', err);
+      alert('Failed to generate FAQs automatically. Please try again.');
+    } finally {
+      setActiveAiLoaders(prev => ({ ...prev, 'post-faqs': false }));
+    }
+  };
+
   const handleAiStudioSubmit = async () => {
     if (!aiStudioPrompt.trim()) return;
     setIsAiStudioLoading(true);
@@ -2684,7 +2705,7 @@ function AdminInner() {
     },
     {
       title: 'Content Engine',
-      items: tabs.filter(t => ['posts', 'sections', 'articles', 'pages'].includes(t.key))
+      items: tabs.filter(t => ['posts', 'sections', 'articles', 'pages', 'ai-studio'].includes(t.key))
     },
     {
       title: 'Community & Feedback',
@@ -3246,13 +3267,38 @@ function AdminInner() {
                       <h4 className="text-sm font-bold">FAQs</h4>
                       <p className="mt-1 text-xs text-surface-500">Questions shown on the post page and used for FAQ structured data.</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setFaqs(prev => [...prev, { question: '', answer: '' }])}
-                      className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-3 py-2 text-xs font-bold text-white hover:bg-primary-600"
-                    >
-                      <Plus className="h-3.5 w-3.5" /> Add FAQ
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {aiUndoStack[`post-faqs`] !== undefined && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (aiUndoStack['post-faqs']) {
+                              setFaqs(JSON.parse(aiUndoStack['post-faqs']));
+                              setAiUndoStack(prev => { const n = { ...prev }; delete n['post-faqs']; return n; });
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-bold text-surface-600 hover:bg-surface-200 dark:text-surface-300 dark:hover:bg-surface-700"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" /> Undo
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        disabled={activeAiLoaders[`post-faqs`]}
+                        onClick={handleMagicWandFaqs}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-primary-50 px-3 py-2 text-xs font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
+                      >
+                        {activeAiLoaders[`post-faqs`] ? <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3.5 w-3.5" />}
+                        Auto-generate FAQs
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFaqs(prev => [...prev, { question: '', answer: '' }])}
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-3 py-2 text-xs font-bold text-white hover:bg-primary-600"
+                      >
+                        <Plus className="h-3.5 w-3.5" /> Add FAQ
+                      </button>
+                    </div>
                   </div>
 
                   {faqs.length === 0 ? (
@@ -3298,7 +3344,34 @@ function AdminInner() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Title *</label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-sm font-medium">Title *</label>
+                      <div className="flex items-center gap-2">
+                        {aiUndoStack[`post-title`] !== undefined && (
+                          <button
+                            type="button"
+                            onClick={() => handleAiUndo(`post-title`, (v) => { setTitle(v); if (!editingPost) setSlug(slugify(v)); })}
+                            className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
+                          >
+                            <RotateCcw className="h-3 w-3" /> Undo
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          disabled={activeAiLoaders[`post-title`]}
+                          onClick={() => handleMagicWand(
+                            `post-title`, 
+                            title, 
+                            (v) => { setTitle(v); if (!editingPost) setSlug(slugify(v)); }, 
+                            `Write a catchy, short, and highly clickable title (max 60 characters) for an AI Prompt post containing these tags: ${tagsStr || 'various ai tools'}`
+                          )}
+                          className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
+                        >
+                          {activeAiLoaders[`post-title`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
+                          Auto-write
+                        </button>
+                      </div>
+                    </div>
                     <input
                       value={title}
                       onChange={e => {
@@ -3321,7 +3394,34 @@ function AdminInner() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">Description *</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-sm font-medium">Description *</label>
+                    <div className="flex items-center gap-2">
+                      {aiUndoStack[`post-desc`] !== undefined && (
+                        <button
+                          type="button"
+                          onClick={() => handleAiUndo(`post-desc`, setDescription)}
+                          className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
+                        >
+                          <RotateCcw className="h-3 w-3" /> Undo
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        disabled={activeAiLoaders[`post-desc`]}
+                        onClick={() => handleMagicWand(
+                          `post-desc`, 
+                          description, 
+                          setDescription, 
+                          `Write a detailed 2-paragraph description for an AI Prompt post titled "${title}". Focus on the visual style and instructions for the prompt.`
+                        )}
+                        className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
+                      >
+                        {activeAiLoaders[`post-desc`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
+                        Auto-write
+                      </button>
+                    </div>
+                  </div>
                   <textarea
                     value={description}
                     onChange={e => setDescription(e.target.value)}
