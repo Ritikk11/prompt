@@ -39,8 +39,7 @@ export default function HomePromptOfDay({ post, settings }: { post?: Post; setti
                   sizes="(max-width: 1024px) 100vw, 42vw"
                   className="max-h-[520px] w-auto max-w-full rounded-3xl object-contain transition duration-700 group-hover:scale-[1.02]"
                   referrerPolicy="no-referrer"
-                  loading="eager"
-                  fetchPriority="high"
+                  loading="lazy"
                 />
               </div>
               <span className="absolute left-5 top-5 rounded-full bg-black/60 px-4 py-1.5 text-xs font-black text-white backdrop-blur-md">
