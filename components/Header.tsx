@@ -161,22 +161,34 @@ export default function Header() {
   useEffect(() => stopRouteTimers, [stopRouteTimers]);
 
   useEffect(() => {
+    // Globally skip loading Supabase auth client on every page if the feature is disabled
+    if (!accountFeaturesEnabled) return;
+
     let subscription: { unsubscribe: () => void } | undefined;
     let cancelled = false;
-    getSupabaseClient().then(supabase => {
-      if (cancelled) return;
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setUser(session?.user ?? null);
+    let timeoutId: number;
+
+    const initAuth = () => {
+      getSupabaseClient().then(supabase => {
+        if (cancelled) return;
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          setUser(session?.user ?? null);
+        });
+        ({ data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          setUser(session?.user ?? null);
+        }));
       });
-      ({ data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        setUser(session?.user ?? null);
-      }));
-    });
+    };
+
+    // Defer initialization to avoid blocking the main thread during hydration globally
+    timeoutId = window.setTimeout(initAuth, 2500);
+
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
       subscription?.unsubscribe();
     };
-  }, []);
+  }, [accountFeaturesEnabled]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
