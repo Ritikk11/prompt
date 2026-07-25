@@ -7096,10 +7096,10 @@ function AdminInner() {
                               <div className="flex items-center justify-between mb-1">
                                 <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300">Description</label>
                                 <div className="flex items-center gap-2">
-                                  {aiUndoStack[`aitool-desc-${editAiToolName}`] !== undefined && (
+                                  {aiUndoStack[`aitool-desc-${tool}`] !== undefined && (
                                     <button
                                       type="button"
-                                      onClick={() => handleAiUndo(`aitool-desc-${editAiToolName}`, setEditAiToolDescription)}
+                                      onClick={() => handleAiUndo(`aitool-desc-${tool}`, setEditAiToolDescription)}
                                       className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
                                     >
                                       <RotateCcw className="h-3 w-3" /> Undo
@@ -7107,16 +7107,16 @@ function AdminInner() {
                                   )}
                                   <button
                                     type="button"
-                                    disabled={activeAiLoaders[`aitool-desc-${editAiToolName}`] || !editAiToolName}
+                                    disabled={activeAiLoaders[`aitool-desc-${tool}`] || !tool}
                                     onClick={() => handleMagicWand(
-                                      `aitool-desc-${editAiToolName}`, 
+                                      `aitool-desc-${tool}`, 
                                       editAiToolDescription, 
                                       setEditAiToolDescription, 
-                                      `Write a concise 2-sentence description for the AI tool named "${editAiToolName}". Focus on its main capabilities.`
+                                      `Write a concise 2-sentence description for the AI tool named "${tool}". Focus on its main capabilities.`
                                     )}
                                     className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
                                   >
-                                    {activeAiLoaders[`aitool-desc-${editAiToolName}`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
+                                    {activeAiLoaders[`aitool-desc-${tool}`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
                                     Auto-write
                                   </button>
                                 </div>
@@ -8606,7 +8606,7 @@ function AdminInner() {
                     </button>
                   </div>
                   <div className="prose prose-sm prose-surface dark:prose-invert max-w-none">
-                    <MarkdownRenderer content={aiStudioResponse} />
+                    <MarkdownRenderer>{aiStudioResponse}</MarkdownRenderer>
                   </div>
                 </div>
               )}
