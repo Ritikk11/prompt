@@ -1262,7 +1262,7 @@ function AdminInner() {
   };
 
   const handleMagicWandFaqs = async () => {
-    const prompt = `Based on the following tags "${tagsStr}" and title "${title}", generate 3 relevant Frequently Asked Questions and their answers. Return ONLY valid JSON in this exact format: [{"question": "...", "answer": "..."}]. Do not include markdown blocks or any other text.`;
+    const prompt = `You are an expert SEO copywriter for 'AI PromptMatrix', an AI prompt gallery. Based on the tags "${tagsStr}" and title "${title}", generate 3 highly relevant and helpful Frequently Asked Questions (with answers) about using this specific AI prompt or recreating this art style. Return ONLY valid JSON in this exact format: [{"question": "...", "answer": "..."}]. Do not include markdown blocks or any other text.`;
     setAiUndoStack(prev => ({ ...prev, 'post-faqs': JSON.stringify(faqs) }));
     setActiveAiLoaders(prev => ({ ...prev, 'post-faqs': true }));
     try {
@@ -3363,7 +3363,7 @@ function AdminInner() {
                             `post-title`, 
                             title, 
                             (v) => { setTitle(v); if (!editingPost) setSlug(slugify(v)); }, 
-                            `Write a catchy, short, and highly clickable title (max 60 characters) for an AI Prompt post containing these tags: ${tagsStr || 'various ai tools'}`
+                            `You are an expert copywriter for 'AI PromptMatrix', a premium AI prompt gallery. Write a single catchy, highly clickable, and human-sounding title (max 60 chars) for a new AI Prompt post containing these tags: ${tagsStr || 'various ai tools'}. Avoid generic AI words like "Delve", "Explore", or "A collection of". Return ONLY the title text, nothing else.`
                           )}
                           className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
                         >
@@ -3413,7 +3413,7 @@ function AdminInner() {
                           `post-desc`, 
                           description, 
                           setDescription, 
-                          `Write a short, engaging 1-to-2 sentence summary description for an AI Prompt post titled "${title}". Keep it punchy and concise.`
+                          `You are an expert copywriter for 'AI PromptMatrix', an AI prompt gallery. Write a short, punchy, engaging 1-to-2 sentence summary for an AI Prompt post titled "${title}". Focus on the visual aesthetic and what the prompt achieves. Return ONLY the description text, no quotes.`
                         )}
                         className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
                       >
@@ -3551,7 +3551,7 @@ function AdminInner() {
                           `post-ext-desc`, 
                           extendedDescription, 
                           setExtendedDescription, 
-                          `Write a longer, detailed Markdown-formatted article about this AI Prompt post titled "${title}". Make it conversational and engaging, using paragraphs and bullet points if needed. Do not use H1 (#). Prefer H2 (##) and H3 (###). Use the site's custom markdown styles when useful: :::tip, :::creative, :::model, :::prompt.`
+                          `You are writing for 'AI PromptMatrix', a premium AI prompt gallery. Write a detailed, Markdown-formatted article about the AI Prompt post titled "${title}". Make it conversational, engaging, and focused on art direction, visual style, and tips for using the prompt. Do not use H1 (#). Use H2 (##) and H3 (###). Use the site's custom markdown blocks: :::tip for practical advice, :::creative for art direction notes, :::model for AI model behaviors, :::prompt for prompt snippets. Keep it highly structured and readable.`
                         )}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-primary-50 px-2 py-1 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
                       >
@@ -3636,7 +3636,7 @@ function AdminInner() {
                             `post-seo-title`, 
                             seoTitle, 
                             setSeoTitle, 
-                            `Write an SEO-optimized title (max 60 characters) for an AI Prompt post titled "${title}". Make it rank well for relevant keywords.`
+                            `You are an SEO expert for 'AI PromptMatrix'. Write a strict SEO-optimized title (max 60 chars) for an AI Prompt post titled "${title}". Focus on high-volume search keywords related to AI art, prompt generation, and the visual subject. Return ONLY the title text, no quotes.`
                           )}
                           className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
                         >
@@ -3673,7 +3673,7 @@ function AdminInner() {
                             `post-seo-desc`, 
                             seoDescription, 
                             setSeoDescription, 
-                            `Write an SEO-optimized meta description (max 155 characters) for an AI Prompt post titled "${title}". Use high-volume keywords.`
+                            `You are an SEO expert for 'AI PromptMatrix'. Write a strict SEO-optimized meta description (max 155 characters) for an AI Prompt post titled "${title}". Weave in high-volume keywords related to AI prompts and the visual aesthetic. Return ONLY the description text, no quotes.`
                           )}
                           className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
                         >
@@ -3713,7 +3713,7 @@ function AdminInner() {
                             `post-tags`, 
                             tagsStr, 
                             setTagsStr, 
-                            `Generate 5 to 8 relevant, comma-separated tags for an AI Prompt post titled "${title}". Return ONLY the comma-separated string.`
+                            `For an AI Prompt gallery post titled "${title}", generate 5 to 8 highly relevant, descriptive, comma-separated tags (e.g. aesthetic, art style, subject). Return ONLY the comma-separated string, no quotes.`
                           )}
                           className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
                         >
@@ -3750,7 +3750,7 @@ function AdminInner() {
                             `post-categories`, 
                             categoriesStr, 
                             setCategoriesStr, 
-                            `Suggest a single, broad category for an AI Prompt post titled "${title}". Return ONLY the category string.`
+                            `For an AI Prompt gallery post titled "${title}", suggest a single, broad category (e.g., Anime, Realism, Photography, UI/UX, 3D Render). Return ONLY the category name, no quotes.`
                           )}
                           className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
                         >
@@ -4116,7 +4116,7 @@ function AdminInner() {
                                 `article-desc-${selectedArticle.slug}`, 
                                 selectedArticle.description, 
                                 (v) => updateManagedArticle(selectedArticle.slug, { description: v }), 
-                                `Write a 150-character SEO meta description for an article titled "${selectedArticle.title}"`
+                                `You are an SEO expert for 'AI PromptMatrix'. Write a strict 150-character SEO meta description for an article titled "${selectedArticle.title}". Return ONLY the description text, no quotes.`
                               )}
                               className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
                             >
@@ -7343,7 +7343,7 @@ function AdminInner() {
                                       `aitool-desc-${tool}`, 
                                       editAiToolDescription, 
                                       setEditAiToolDescription, 
-                                      `Write a concise 2-sentence description for the AI tool named "${tool}". Focus on its main capabilities.`
+                                      `You are writing for 'AI PromptMatrix', an AI Prompt database. Write a concise 2-sentence description for the AI generation tool named "${tool}". Focus on its main capabilities and visual generation strengths. Return ONLY the description text, no quotes.`
                                     )}
                                     className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
                                   >
