@@ -202,6 +202,10 @@ export default async function PostPage({ params }: Props) {
           name: settings.siteTitle || 'AI PromptMatrix',
           url: siteUrl,
         },
+        creditText: settings.siteTitle || 'AI PromptMatrix',
+        license: `${siteUrl}/terms`,
+        acquireLicensePage: `${siteUrl}/contact`,
+        copyrightNotice: `© ${new Date().getFullYear()} ${settings.siteTitle || 'AI PromptMatrix'}`,
       }));
   } else if (mainImage) {
     mainJsonLd.image = [{
@@ -215,6 +219,10 @@ export default async function PostPage({ params }: Props) {
         name: settings.siteTitle || 'AI PromptMatrix',
         url: siteUrl,
       },
+      creditText: settings.siteTitle || 'AI PromptMatrix',
+      license: `${siteUrl}/terms`,
+      acquireLicensePage: `${siteUrl}/contact`,
+      copyrightNotice: `© ${new Date().getFullYear()} ${settings.siteTitle || 'AI PromptMatrix'}`,
     }];
   }
 

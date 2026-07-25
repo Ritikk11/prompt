@@ -67,6 +67,10 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
           name: 'AI PromptMatrix',
           url: siteUrl,
         },
+        creditText: 'AI PromptMatrix',
+        license: `${siteUrl}/terms`,
+        acquireLicensePage: `${siteUrl}/contact`,
+        copyrightNotice: `© ${new Date().getFullYear()} AI PromptMatrix`,
       },
     } : {}),
   };
