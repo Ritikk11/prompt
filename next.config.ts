@@ -37,6 +37,20 @@ const nextConfig: NextConfig = {
     // Cloudflare free-plan 3 MiB Worker size limit and fails deploy.
   },
   turbopack: {},
+  async redirects() {
+    return [
+      {
+        source: '/tags/:tag',
+        destination: '/tag/:tag',
+        permanent: true, // This is a 301 redirect which tells Google to update its index
+      },
+      {
+        source: '/tools/:tool',
+        destination: '/tool/:tool',
+        permanent: true,
+      }
+    ];
+  },
   // Allow access to remote image placeholder.
   images: {
     // On Cloudflare/OpenNext, proxying every remote image through /_next/image can
