@@ -326,7 +326,7 @@ export default function Header() {
         {/* Logo */}
         <Link href="/" prefetch={false} className="flex items-center gap-2 shrink-0" onClick={() => setMenuOpen(false)}>
           <div className="w-9 h-9 shrink-0 relative overflow-hidden rounded-xl">
-            <Image src={settings.siteLogo || '/icon-190x190.png'} alt={settings.siteTitle} fill sizes="36px" className="object-contain" referrerPolicy="no-referrer" priority />
+            <Image src={settings.siteLogo || '/icon-190x190.jpg'} alt={settings.siteTitle} fill sizes="36px" className="object-contain" referrerPolicy="no-referrer" priority />
           </div>
           <span className="text-xl font-bold gradient-text">{settings.siteTitle}</span>
         </Link>
@@ -497,7 +497,7 @@ export default function Header() {
           <div className="px-5 h-16 flex items-center justify-between border-b border-surface-100 dark:border-surface-800/50 shrink-0">
             <Link href="/" prefetch={false} className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
               <div className="w-8 h-8 shrink-0 relative overflow-hidden rounded-xl">
-                <Image src={settings.siteLogo || '/icon-190x190.png'} alt={settings.siteTitle} fill sizes="32px" className="object-contain" referrerPolicy="no-referrer" />
+                <Image src={settings.siteLogo || '/icon-190x190.jpg'} alt={settings.siteTitle} fill sizes="32px" className="object-contain" referrerPolicy="no-referrer" />
               </div>
               <span className="text-lg font-bold text-surface-900 dark:text-white">{settings.siteTitle}</span>
             </Link>

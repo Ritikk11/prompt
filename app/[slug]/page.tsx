@@ -158,7 +158,7 @@ export default async function PostPage({ params }: Props) {
   const schemaType = post.schemaType || settings.seoSettings?.schemaType || 'Article';
   const mainImage = post.thumbnailUrl || post.images[0]?.url;
   
-  const rawLogo = settings.siteLogo || '/icon-256x256.png';
+  const rawLogo = settings.siteLogo || '/icon-256x256.jpg';
   const publisherLogoUrl = rawLogo.startsWith('http') || rawLogo.startsWith('data:')
     ? rawLogo
     : `${siteUrl}${rawLogo.startsWith('/') ? '' : '/'}${rawLogo}`;

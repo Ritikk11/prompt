@@ -36,7 +36,7 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
   const listLabel = isGuide ? 'All guides' : 'All articles';
   const related = getRelatedArticlesForSettings(article, settings, 3);
 
-  const rawLogo = settings?.siteLogo || '/icon-256x256.png';
+  const rawLogo = settings?.siteLogo || '/icon-256x256.jpg';
   const publisherLogoUrl = rawLogo.startsWith('http') || rawLogo.startsWith('data:')
     ? rawLogo
     : `${siteUrl}${rawLogo.startsWith('/') ? '' : '/'}${rawLogo}`;
