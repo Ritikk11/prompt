@@ -7,7 +7,7 @@ import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
   Plus, Trash2, Edit3, Eye, EyeOff, ChevronUp, ChevronDown,
-  Save, X, FileText, LayoutGrid, Star, StarOff, Upload,
+  Save, X, FileText, LayoutGrid, Star, StarOff, Upload, Copy,
   Settings, Check, Filter, Search, RotateCcw, GripVertical, Image as ImageIcon,
   Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass, Menu, Mail,
   Ban, Shield, Flag, CheckCircle, Cpu, BookOpen, Newspaper, Share2
@@ -36,11 +36,13 @@ import HomeBlog from '@/components/HomeBlog';
 import ArticleThumbnail, { articleIconList } from '@/components/ArticleThumbnail';
 import { getArticlesForSettings } from '@/lib/content';
 
-type AdminTab = 'dashboard' | 'posts' | 'sections' | 'articles' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages';
+type AdminTab = 'dashboard' | 'posts' | 'sections' | 'articles' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages' | 'ai-studio';
+export const DiscoveryPageIds = ['explore', 'tool', 'tag'] as const;
+export type DiscoveryPageId = typeof DiscoveryPageIds[number];
 type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share';
 type SectionLocationFilter = 'homepage' | 'header' | 'footer' | 'all';
 
-const adminTabKeys: AdminTab[] = ['dashboard', 'posts', 'sections', 'articles', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages'];
+const adminTabKeys: AdminTab[] = ['dashboard', 'posts', 'sections', 'articles', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages', 'ai-studio'];
 const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'discovery', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share'];
 const sectionLocationKeys: SectionLocationFilter[] = ['homepage', 'header', 'footer', 'all'];
 
@@ -1211,6 +1213,68 @@ function AdminInner() {
   const [markdownMode, setMarkdownMode] = useState<'edit' | 'preview'>('edit');
   const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
   const [isBackfillingModels, setIsBackfillingModels] = useState(false);
+
+  // AI Studio and Magic Wand state
+  const [aiStudioPrompt, setAiStudioPrompt] = useState('');
+  const [aiStudioResponse, setAiStudioResponse] = useState('');
+  const [isAiStudioLoading, setIsAiStudioLoading] = useState(false);
+  const [aiUndoStack, setAiUndoStack] = useState<Record<string, string>>({});
+  const [activeAiLoaders, setActiveAiLoaders] = useState<Record<string, boolean>>({});
+
+  const askAi = async (prompt: string, systemContext?: string) => {
+    const supabase = createSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch('/api/generate-text', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
+      body: JSON.stringify({ prompt, systemContext })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    return data.text;
+  };
+
+  const handleMagicWand = async (fieldId: string, currentValue: string, setter: (val: string) => void, prompt: string, systemContext?: string) => {
+    try {
+      setActiveAiLoaders(prev => ({ ...prev, [fieldId]: true }));
+      const newText = await askAi(prompt, systemContext);
+      setAiUndoStack(prev => ({ ...prev, [fieldId]: currentValue }));
+      setter(newText);
+    } catch (err: any) {
+      alert("AI Generation failed: " + err.message);
+    } finally {
+      setActiveAiLoaders(prev => ({ ...prev, [fieldId]: false }));
+    }
+  };
+
+  const handleAiUndo = (fieldId: string, setter: (val: string) => void) => {
+    if (aiUndoStack[fieldId] !== undefined) {
+      setter(aiUndoStack[fieldId]);
+      setAiUndoStack(prev => {
+        const next = { ...prev };
+        delete next[fieldId];
+        return next;
+      });
+    }
+  };
+
+  const handleAiStudioSubmit = async () => {
+    if (!aiStudioPrompt.trim()) return;
+    setIsAiStudioLoading(true);
+    try {
+      const existingPostsContext = posts.slice(0, 5).map(p => ({ title: p.title, description: p.description }));
+      const sysCtx = `You are the AI assistant for an AI Prompt Gallery. Here are 5 recent posts to understand the site's content and style: ${JSON.stringify(existingPostsContext)}`;
+      const response = await askAi(aiStudioPrompt, sysCtx);
+      setAiStudioResponse(response);
+    } catch (err: any) {
+      alert("Failed to generate: " + err.message);
+    } finally {
+      setIsAiStudioLoading(false);
+    }
+  };
 
   const pushAdminRoute = (
     nextTab: AdminTab,
@@ -2464,6 +2528,7 @@ function AdminInner() {
     { key: 'users', label: 'Users', icon: <Users className="w-4 h-4" />, count: adminUsers.length },
     { key: 'pages', label: 'Pages', icon: <FileText className="w-4 h-4" /> },
     { key: 'seo', label: 'SEO', icon: <LayoutTemplate className="w-4 h-4" /> },
+    { key: 'ai-studio', label: 'AI Studio', icon: <Wand2 className="w-4 h-4" /> },
   ];
   if (authLoading || adminChecking) {
     return <div className="flex h-[50vh] items-center justify-center text-surface-400">Loading admin...</div>;
@@ -3801,7 +3866,34 @@ function AdminInner() {
                         </select>
                       </label>
                       <label className="space-y-1 sm:col-span-2">
-                        <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Description</span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Description</span>
+                          <div className="flex items-center gap-2">
+                            {aiUndoStack[`article-desc-${selectedArticle.slug}`] !== undefined && (
+                              <button
+                                type="button"
+                                onClick={() => handleAiUndo(`article-desc-${selectedArticle.slug}`, (v) => updateManagedArticle(selectedArticle.slug, { description: v }))}
+                                className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
+                              >
+                                <RotateCcw className="h-3 w-3" /> Undo
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              disabled={activeAiLoaders[`article-desc-${selectedArticle.slug}`]}
+                              onClick={() => handleMagicWand(
+                                `article-desc-${selectedArticle.slug}`, 
+                                selectedArticle.description, 
+                                (v) => updateManagedArticle(selectedArticle.slug, { description: v }), 
+                                `Write a 150-character SEO meta description for an article titled "${selectedArticle.title}"`
+                              )}
+                              className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
+                            >
+                              {activeAiLoaders[`article-desc-${selectedArticle.slug}`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
+                              Auto-write
+                            </button>
+                          </div>
+                        </div>
                         <textarea value={selectedArticle.description} onChange={e => updateManagedArticle(selectedArticle.slug, { description: e.target.value })} rows={3} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
                       </label>
                       <label className="space-y-1">
@@ -7001,7 +7093,34 @@ function AdminInner() {
                             </div>
 
                             <div>
-                              <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mb-1">Description</label>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300">Description</label>
+                                <div className="flex items-center gap-2">
+                                  {aiUndoStack[`aitool-desc-${editAiToolName}`] !== undefined && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAiUndo(`aitool-desc-${editAiToolName}`, setEditAiToolDescription)}
+                                      className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
+                                    >
+                                      <RotateCcw className="h-3 w-3" /> Undo
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    disabled={activeAiLoaders[`aitool-desc-${editAiToolName}`] || !editAiToolName}
+                                    onClick={() => handleMagicWand(
+                                      `aitool-desc-${editAiToolName}`, 
+                                      editAiToolDescription, 
+                                      setEditAiToolDescription, 
+                                      `Write a concise 2-sentence description for the AI tool named "${editAiToolName}". Focus on its main capabilities.`
+                                    )}
+                                    className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
+                                  >
+                                    {activeAiLoaders[`aitool-desc-${editAiToolName}`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
+                                    Auto-write
+                                  </button>
+                                </div>
+                              </div>
                               <textarea
                                 value={editAiToolDescription}
                                 onChange={e => setEditAiToolDescription(e.target.value)}
@@ -8432,6 +8551,78 @@ function AdminInner() {
           ) : (
             <SeoPagesTab settings={settings} updateSettings={updateSettings} mode="pages" />
           )}
+        </div>
+      )}
+      {tab === 'ai-studio' && (
+        <div className="w-full max-w-4xl mx-auto space-y-6 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4 border-b border-surface-100 dark:border-surface-800 pb-5">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-surface-900 dark:text-white">
+                <Wand2 className="w-6 h-6 text-primary-500" /> AI Studio
+              </h1>
+              <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
+                Your dedicated AI assistant tailored for this site.
+              </p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                <label className="block text-sm font-bold text-surface-900 dark:text-white mb-2">What do you want to generate?</label>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <button onClick={() => setAiStudioPrompt("Write a full markdown article about 'How to write Midjourney Prompts'. Include headers, practical tips, and a conclusion.")} className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-semibold rounded-lg text-surface-700 dark:text-surface-300 transition-colors">Write an Article</button>
+                  <button onClick={() => setAiStudioPrompt("Brainstorm 5 new AI Tool categories that are currently popular.")} className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-semibold rounded-lg text-surface-700 dark:text-surface-300 transition-colors">Brainstorm Tags</button>
+                  <button onClick={() => setAiStudioPrompt("Write a catchy 160-character SEO meta description for my site's homepage.")} className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-semibold rounded-lg text-surface-700 dark:text-surface-300 transition-colors">Write SEO Meta</button>
+                </div>
+                <textarea 
+                  value={aiStudioPrompt}
+                  onChange={e => setAiStudioPrompt(e.target.value)}
+                  placeholder="Ask the AI to write articles, descriptions, or brainstorm ideas..."
+                  className="w-full min-h-[120px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-3 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 resize-y mb-4"
+                />
+                <button
+                  onClick={handleAiStudioSubmit}
+                  disabled={isAiStudioLoading || !aiStudioPrompt.trim()}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold text-sm transition-colors disabled:opacity-50"
+                >
+                  {isAiStudioLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                  {isAiStudioLoading ? 'Generating...' : 'Generate Text'}
+                </button>
+              </div>
+
+              {aiStudioResponse && (
+                <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-surface-900 dark:text-white">AI Response</h3>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(aiStudioResponse);
+                        alert('Copied to clipboard!');
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-bold rounded-lg text-surface-700 dark:text-surface-300 transition-colors"
+                    >
+                      <Copy className="w-3.5 h-3.5" /> Copy
+                    </button>
+                  </div>
+                  <div className="prose prose-sm prose-surface dark:prose-invert max-w-none">
+                    <MarkdownRenderer content={aiStudioResponse} />
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-primary-200 bg-primary-50 p-5 dark:border-primary-900/30 dark:bg-primary-500/10">
+                <h4 className="font-bold text-primary-700 dark:text-primary-400 mb-2 flex items-center gap-2">
+                  <Info className="w-4 h-4" /> Context Aware
+                </h4>
+                <p className="text-xs text-primary-600/80 dark:text-primary-300/80 leading-relaxed">
+                  The AI Studio is fully aware of your existing content. It will adapt to your site's tone and style when writing articles or SEO tags.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
           </div>
