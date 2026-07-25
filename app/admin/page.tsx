@@ -37,7 +37,7 @@ import ArticleThumbnail, { articleIconList } from '@/components/ArticleThumbnail
 import { getArticlesForSettings } from '@/lib/content';
 
 type AdminTab = 'dashboard' | 'posts' | 'sections' | 'articles' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages' | 'ai-studio';
-export const DiscoveryPageIds = ['explore', 'tool', 'tag'] as const;
+const DiscoveryPageIds = ['explore', 'tool', 'tag'] as const;
 export type DiscoveryPageId = typeof DiscoveryPageIds[number];
 type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share';
 type SectionLocationFilter = 'homepage' | 'header' | 'footer' | 'all';
@@ -176,7 +176,7 @@ const MARKDOWN_HELP_EXAMPLE = `## Main section
 ### Question style heading
 #### Small subpoint
 
-:::tip
+:::tip Reference images do the heavy lifting
 Add reference images for more accurate outputs.
 :::
 
@@ -184,9 +184,11 @@ Add reference images for more accurate outputs.
 Use cinematic lighting, a clear subject, and one strong visual style.
 :::
 
-:::prompt
+:::prompt Copy-ready poster prompt
 Ultra detailed poster art, dramatic lighting, sharp composition
 :::
+
+Callout titles are optional: text after the type (e.g. ":::tip Your title") becomes the label; with none, the block renders without a header.
 
 Use {mark:highlights}, {primary:primary notes}, {green:recommended}, {red:avoid}, and {kbd:Ctrl+C}.`;
 
@@ -1221,6 +1223,8 @@ function AdminInner() {
   const [isAiStudioLoading, setIsAiStudioLoading] = useState(false);
   const [aiUndoStack, setAiUndoStack] = useState<Record<string, string>>({});
   const [activeAiLoaders, setActiveAiLoaders] = useState<Record<string, boolean>>({});
+  const [articleAiInstruction, setArticleAiInstruction] = useState('');
+  const [isGeneratingArticleAi, setIsGeneratingArticleAi] = useState(false);
 
   const askAi = async (prompt: string, systemContext?: string, imageUrl?: string) => {
     const supabase = createSupabaseClient();
@@ -1296,6 +1300,7 @@ Site structure notes:
 - "tags" are short, lowercase, search/filter keywords (concrete nouns for subject/style/tool) — not generic blog hashtags. Existing tags on the site: ${existingTags.length ? existingTags.join(', ') : '(none yet)'}
 - "category" is one broad grouping shared across many posts. Existing categories: ${existingCategories.length ? existingCategories.join(', ') : '(none yet)'}
 - Long-form article bodies support this site's custom markdown callouts: :::tip, :::creative, :::model, :::prompt, :::warning, and inline highlights like {mark:...}, {primary:...}, {green:...}, {red:...}. Use them where relevant, don't overuse.
+- Callout titles: the word after ::: only picks the block's color and is never shown as a label. Add a short, specific title on the same line (e.g. ":::tip Lock the pose with a reference") or leave it untitled (just ":::tip"); never use the bare words "Tip"/"Warning" as a title. Close each block with ::: on its own line.
 - Do not use H1 (#) headings in article bodies; the post title is already displayed separately.
 
 Here are 5 recent posts to understand the site's tone and style: ${JSON.stringify(existingPostsContext)}`;
@@ -1757,6 +1762,79 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
       alert("Failed to generate details. " + err.message);
     } finally {
       setIsGeneratingAi(false);
+    }
+  };
+
+  const handleGenerateArticleDetails = async () => {
+    if (!selectedArticle) return;
+
+    const hasTopic = selectedArticle.title.trim() && selectedArticle.title.trim() !== 'New Article';
+    if (!hasTopic && !articleAiInstruction.trim()) {
+      alert('Set a working title first, or describe the article you want in the instructions box.');
+      return;
+    }
+
+    setIsGeneratingArticleAi(true);
+    try {
+      // Existing articles for tone/style context + tag reuse, like the post generator.
+      const existingArticlesContext = managedArticles
+        .filter(a => a.slug !== selectedArticle.slug)
+        .slice(0, 15)
+        .map(a => ({ title: a.title, description: a.description }));
+      const existingArticleTags = Array.from(new Set(managedArticles.flatMap(a => a.tags || [])));
+
+      const supabase = createSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const res = await fetch('/api/generate-article', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({
+          topic: hasTopic ? selectedArticle.title : '',
+          category: selectedArticle.category,
+          promptInstruction: articleAiInstruction,
+          existingArticles: existingArticlesContext,
+          existingTags: existingArticleTags,
+          currentBody: selectedArticle.body,
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+
+      const data = await res.json();
+
+      const patch: Partial<ArticleSettingsOverride> = {};
+      if (data.title) patch.title = data.title;
+      if (data.description) patch.description = data.description;
+      if (Array.isArray(data.tags) && data.tags.length) patch.tags = data.tags;
+      if (data.body) {
+        patch.body = data.body;
+        patch.readMinutes = Math.max(1, Math.round(data.body.trim().split(/\s+/).length / 200));
+      }
+
+      // For brand-new custom articles still on their placeholder slug, derive
+      // the real slug from the generated title.
+      if (data.title && selectedArticleIsCustom && selectedArticle.slug.startsWith('new-article-')) {
+        const nextSlug = slugify(data.title);
+        if (nextSlug && !managedArticles.some(a => a.slug === nextSlug)) {
+          patch.slug = nextSlug;
+        }
+      }
+
+      updateManagedArticle(selectedArticle.slug, patch);
+      if (patch.slug) setSelectedArticleSlug(patch.slug);
+
+      alert('Generated article details successfully! Review the fields, then hit Save Articles.');
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to generate article. ' + err.message);
+    } finally {
+      setIsGeneratingArticleAi(false);
     }
   };
 
@@ -3568,7 +3646,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           `post-ext-desc`, 
                           extendedDescription, 
                           setExtendedDescription, 
-                          `You are writing for 'AI PromptMatrix', a premium AI prompt gallery. Write a detailed, Markdown-formatted article about the AI Prompt post titled "${title}". Make it conversational, engaging, and focused on art direction, visual style, and tips for using the prompt. Do not use H1 (#). Use H2 (##) and H3 (###). Use the site's custom markdown blocks: :::tip for practical advice, :::creative for art direction notes, :::model for AI model behaviors, :::prompt for prompt snippets. Keep it highly structured and readable.`
+                          `You are writing for 'AI PromptMatrix', a premium AI prompt gallery. Write a detailed, Markdown-formatted article about the AI Prompt post titled "${title}". Make it conversational, engaging, and focused on art direction, visual style, and tips for using the prompt. Do not use H1 (#). Use H2 (##) and H3 (###). Use the site's custom markdown blocks: :::tip for practical advice, :::creative for art direction notes, :::model for AI model behaviors, :::prompt for prompt snippets. Callout titles: the word after ::: only picks the block's color and is never shown as a label - add a short, specific title on the same line (e.g. ":::tip Lock the pose with a reference") or leave it untitled (just ":::tip"); never use the bare words "Tip"/"Warning" as a title, and close each block with ::: on its own line. Keep it highly structured and readable.`
                         )}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-primary-50 px-2 py-1 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
                       >
@@ -4086,6 +4164,29 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
 
             {selectedArticle && (
               <div className="space-y-5">
+                <div className="rounded-2xl border border-primary-200 bg-primary-50 p-5 space-y-4 dark:border-primary-800/30 dark:bg-primary-900/10">
+                  <div className="flex items-center gap-2 font-medium text-primary-600 dark:text-primary-400">
+                    <Zap className="h-5 w-5" />
+                    <h3>Auto-Generate Article with AI</h3>
+                  </div>
+                  <p className="text-sm text-surface-600 dark:text-surface-400">
+                    Set a working title above (or describe the article below) and the AI writes the title, description, tags, and full body in your site&apos;s style. Mention a specific field (e.g. &quot;rewrite the body&quot;) to regenerate only that field.
+                  </p>
+                  <textarea
+                    value={articleAiInstruction}
+                    onChange={e => setArticleAiInstruction(e.target.value)}
+                    placeholder="(Optional) E.g., 'A beginner guide to negative prompts in Midjourney', 'Keep it under 1000 words', 'Only rewrite the body', etc."
+                    className="w-full min-h-20 resize-y rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                  />
+                  <button
+                    onClick={handleGenerateArticleDetails}
+                    disabled={isGeneratingArticleAi}
+                    className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+                  >
+                    {isGeneratingArticleAi ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Zap className="h-4 w-4" />}
+                    {isGeneratingArticleAi ? 'Generating Article...' : 'Generate Article'}
+                  </button>
+                </div>
                 <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
                   <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
                     <div className="grid gap-3 sm:grid-cols-2">
