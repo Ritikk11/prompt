@@ -3413,7 +3413,7 @@ function AdminInner() {
                           `post-desc`, 
                           description, 
                           setDescription, 
-                          `Write a detailed 2-paragraph description for an AI Prompt post titled "${title}". Focus on the visual style and instructions for the prompt.`
+                          `Write a short, engaging 1-to-2 sentence summary description for an AI Prompt post titled "${title}". Keep it punchy and concise.`
                         )}
                         className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
                       >
