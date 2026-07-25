@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-client';
 
 export type UploadProvider = 'supabase' | 'cloudflare';
-export type UploadPreset = 'prompt' | 'thumbnail' | 'reference' | 'avatar' | 'logo';
+export type UploadPreset = 'prompt' | 'thumbnail' | 'reference' | 'avatar' | 'logo' | 'aistudio';
 
 function extFor(file: File) {
   return file.name.split('.').pop() || 'webp';

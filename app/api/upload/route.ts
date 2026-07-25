@@ -11,7 +11,7 @@ type R2BucketLike = {
 };
 
 const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
-const SAFE_PRESETS = new Set(['prompt', 'thumbnail', 'reference', 'avatar', 'logo']);
+const SAFE_PRESETS = new Set(['prompt', 'thumbnail', 'reference', 'avatar', 'logo', 'aistudio']);
 
 function extensionFor(file: File) {
   const fromName = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '');

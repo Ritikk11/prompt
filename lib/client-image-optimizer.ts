@@ -1,4 +1,4 @@
-export type ImageOptimizePreset = 'thumbnail' | 'prompt' | 'reference' | 'logo';
+export type ImageOptimizePreset = 'thumbnail' | 'prompt' | 'reference' | 'logo' | 'aistudio';
 
 type OptimizeOptions = {
   maxSizeKB: number;
@@ -15,6 +15,7 @@ const presets: Record<ImageOptimizePreset, OptimizeOptions> = {
   prompt: { maxSizeKB: 360, maxDimension: 1400, startQuality: 0.78, minQuality: 0.44, mimeType: 'image/webp' },
   reference: { maxSizeKB: 650, maxDimension: 1400, startQuality: 0.8, minQuality: 0.44, mimeType: 'image/webp' },
   logo: { maxSizeKB: 45, maxDimension: 240, startQuality: 0.82, minQuality: 0.45, mimeType: 'image/webp' },
+  aistudio: { maxSizeKB: 500, maxDimension: 1400, startQuality: 0.78, minQuality: 0.44, mimeType: 'image/webp' },
 };
 
 function outputName(fileName: string, mimeType: string) {
