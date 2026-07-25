@@ -1217,11 +1217,12 @@ function AdminInner() {
   // AI Studio and Magic Wand state
   const [aiStudioPrompt, setAiStudioPrompt] = useState('');
   const [aiStudioResponse, setAiStudioResponse] = useState('');
+  const [aiStudioImageUrl, setAiStudioImageUrl] = useState<string>('');
   const [isAiStudioLoading, setIsAiStudioLoading] = useState(false);
   const [aiUndoStack, setAiUndoStack] = useState<Record<string, string>>({});
   const [activeAiLoaders, setActiveAiLoaders] = useState<Record<string, boolean>>({});
 
-  const askAi = async (prompt: string, systemContext?: string) => {
+  const askAi = async (prompt: string, systemContext?: string, imageUrl?: string) => {
     const supabase = createSupabaseClient();
     const { data: { session } } = await supabase.auth.getSession();
     const res = await fetch('/api/generate-text', {
@@ -1230,7 +1231,7 @@ function AdminInner() {
         'Content-Type': 'application/json',
         ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
       },
-      body: JSON.stringify({ prompt, systemContext })
+      body: JSON.stringify({ prompt, systemContext, imageUrl })
     });
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
@@ -1287,8 +1288,18 @@ function AdminInner() {
     setIsAiStudioLoading(true);
     try {
       const existingPostsContext = posts.slice(0, 5).map(p => ({ title: p.title, description: p.description }));
-      const sysCtx = `You are the AI assistant for an AI Prompt Gallery. Here are 5 recent posts to understand the site's content and style: ${JSON.stringify(existingPostsContext)}`;
-      const response = await askAi(aiStudioPrompt, sysCtx);
+      const existingCategories = Array.from(new Set(posts.map(p => p.category).filter(Boolean))).slice(0, 60);
+      const existingTags = Array.from(new Set(posts.flatMap(p => p.tags || []))).slice(0, 150);
+      const sysCtx = `You are the AI assistant for aipromptmatrix.in, a gallery/library of AI image-generation prompts (for tools like ChatGPT/DALL-E, Gemini, Grok, Qwen, Midjourney, etc). Visitors come here to find ready-to-use prompts and see the example images those prompts produce.
+Site structure notes:
+- A "post" bundles one or more images generated from a text prompt, plus editorial content.
+- "tags" are short, lowercase, search/filter keywords (concrete nouns for subject/style/tool) — not generic blog hashtags. Existing tags on the site: ${existingTags.length ? existingTags.join(', ') : '(none yet)'}
+- "category" is one broad grouping shared across many posts. Existing categories: ${existingCategories.length ? existingCategories.join(', ') : '(none yet)'}
+- Long-form article bodies support this site's custom markdown callouts: :::tip, :::creative, :::model, :::prompt, :::warning, and inline highlights like {mark:...}, {primary:...}, {green:...}, {red:...}. Use them where relevant, don't overuse.
+- Do not use H1 (#) headings in article bodies; the post title is already displayed separately.
+
+Here are 5 recent posts to understand the site's tone and style: ${JSON.stringify(existingPostsContext)}`;
+      const response = await askAi(aiStudioPrompt, sysCtx, aiStudioImageUrl);
       setAiStudioResponse(response);
     } catch (err: any) {
       alert("Failed to generate: " + err.message);
@@ -1701,6 +1712,10 @@ function AdminInner() {
     try {
       // Get last 5 posts for style context
       const existingPostsContext = posts.slice(0, 5).map(p => ({ title: p.title, description: p.description }));
+      // Give the AI the real site taxonomy so it reuses existing categories/tags
+      // instead of inventing near-duplicates every time.
+      const existingCategories = Array.from(new Set(posts.map(p => p.category).filter(Boolean)));
+      const existingTags = Array.from(new Set(posts.flatMap(p => p.tags || [])));
       const supabase = createSupabaseClient();
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -1713,7 +1728,9 @@ function AdminInner() {
         body: JSON.stringify({
           images: usedImages,
           existingPosts: existingPostsContext,
-          promptInstruction: aiPromptInstruction
+          promptInstruction: aiPromptInstruction,
+          existingCategories,
+          existingTags
         })
       });
 
@@ -8812,6 +8829,43 @@ function AdminInner() {
                   placeholder="Ask the AI to write articles, descriptions, or brainstorm ideas..."
                   className="w-full min-h-[120px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-3 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 resize-y mb-4"
                 />
+
+                <div className="mb-4">
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0 text-xs font-semibold text-surface-700 dark:text-surface-300">
+                      <Upload className="w-3.5 h-3.5" />
+                      {aiStudioImageUrl && !aiStudioImageUrl.startsWith('Uploading') ? 'Change Image' : 'Attach Image (Optional)'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async e => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                             try {
+                               setAiStudioImageUrl('Uploading...');
+                               const url = await uploadImageFile(file, 'aistudio');
+                               setAiStudioImageUrl(url);
+                             } catch (err) {
+                               console.error(err);
+                               alert('Failed to upload image');
+                               setAiStudioImageUrl('');
+                             }
+                          }
+                        }}
+                      />
+                    </label>
+                    {aiStudioImageUrl === 'Uploading...' && <span className="text-xs text-primary-500 font-medium">Uploading...</span>}
+                    {aiStudioImageUrl && !aiStudioImageUrl.startsWith('Uploading') && (
+                      <div className="flex items-center gap-2">
+                        <div className="relative w-8 h-8 rounded overflow-hidden border border-surface-200 dark:border-surface-700">
+                          <Image src={aiStudioImageUrl} alt="Attached" fill className="object-cover" unoptimized />
+                        </div>
+                        <button onClick={() => setAiStudioImageUrl('')} className="text-xs text-red-500 font-medium hover:underline">Remove</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <button
                   onClick={handleAiStudioSubmit}
                   disabled={isAiStudioLoading || !aiStudioPrompt.trim()}

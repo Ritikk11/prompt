@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const auth = await requireAdmin(req);
     if (auth.error) return auth.error;
 
-    const { prompt, systemContext } = await req.json();
+    const { prompt, systemContext, imageUrl } = await req.json();
 
     if (!prompt) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
@@ -29,9 +29,31 @@ export async function POST(req: NextRequest) {
       fullPrompt = `System Context:\n${systemContext}\n\nUser Prompt:\n${prompt}\n\nPlease respond with just the raw text output requested, with no conversational filler like "Here is the text:" or surrounding markdown quotes unless markdown formatting is explicitly requested.`;
     }
 
+    const contents: any[] = [{ text: fullPrompt }];
+
+    if (imageUrl) {
+      try {
+        const imgRes = await fetch(imageUrl);
+        if (imgRes.ok) {
+          const arrayBuffer = await imgRes.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          const base64Data = buffer.toString('base64');
+          const mimeType = imgRes.headers.get('content-type') || 'image/jpeg';
+          contents.push({
+            inlineData: {
+              data: base64Data,
+              mimeType
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch image for AI Studio:', err);
+      }
+    }
+
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: fullPrompt,
+      contents: contents,
     });
 
     const text = response.text || "";
