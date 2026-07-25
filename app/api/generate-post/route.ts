@@ -30,12 +30,10 @@ const FIELD_INSTRUCTIONS: Record<FieldKey, string> = {
   seoTitle: `"seoTitle": An SEO-optimized title (different from main title, max 60 chars).`,
   description: `"description": A short, engaging summary (1-2 sentences).`,
   seoDescription: `"seoDescription": An SEO-optimized meta description (max 160 chars) weaving in high-volume visual keywords.`,
-  extendedDescription: `"extendedDescription": A longer, detailed Markdown-formatted article about these prompts, the style they create, the vibe, and tips for using them. Make it conversational and engaging, using paragraphs and bullet points if needed. Do not use H1 (#) as the main title is already displayed. Prefer H2 (##), H3 (###), H4 (####), and occasional H5 (#####) headings. Use the site's custom markdown styles when useful:
-- :::tip ... ::: for practical advice.
-- :::creative ... ::: for art direction and visual style notes.
-- :::model ... ::: for model-specific behavior.
-- :::prompt ... ::: for reusable prompt snippets.
-- :::warning ... ::: only for real cautions.
+  extendedDescription: `"extendedDescription": A longer, detailed Markdown-formatted article about these prompts, the style they create, the vibe, and tips for using them. Make it conversational and engaging, using paragraphs and bullet points if needed. Do not use H1 (#) as the main title is already displayed. Prefer H2 (##), H3 (###), H4 (####), and occasional H5 (#####) headings. Use the site's custom markdown callout blocks when useful:
+- :::tip for practical advice, :::creative for art direction and visual style notes, :::model for model-specific behavior, :::prompt for reusable prompt snippets, :::warning only for real cautions.
+- CALLOUT TITLE RULE: the word after ::: only picks the block's color/purpose and is NEVER shown as a label. Either write a short, specific title after the type on the same line (e.g. ":::tip Lock the pose with a reference" or ":::warning Style stacking backfires here") or leave it untitled (just ":::tip" on its own line) when the content speaks for itself. Never title a block with the bare words "Tip", "Warning", "Note", etc., and never repeat the same title twice.
+- Close every callout with ::: on its own line.
 - Inline highlights like {mark:important phrase}, {primary:key style}, {green:recommended}, or {red:avoid this} sparingly.
 Keep custom blocks concise and mobile-friendly.`,
   tags: `"tags": An array of 5-8 relevant tags (strings). See tag rules in SITE CONTEXT above.`,

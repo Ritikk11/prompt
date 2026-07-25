@@ -8,8 +8,8 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 const MARKDOWN_HELP_EXAMPLE = `## Main section
 ### Question style heading
 
-:::tip
-Use short, useful callouts.
+:::tip Keep callouts short
+Use short, useful callouts. The text after the type becomes the label; leave it off for an untitled block.
 :::
 
 :::important
