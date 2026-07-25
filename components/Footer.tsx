@@ -99,7 +99,7 @@ export default function Footer() {
           {/* Brand: logo, description, then social icons and AI tool chips (no headings) */}
           <div className="lg:col-span-4">
             <Link href="/" className="flex items-center gap-2 mb-4 w-fit">
-              <div className="w-9 h-9 shrink-0 relative overflow-hidden rounded-full">
+              <div className="w-9 h-9 shrink-0 relative overflow-hidden rounded-xl">
                 <Image src={settings.siteLogo || '/icon-190x190.png'} alt={settings.siteTitle} fill sizes="36px" className="object-contain" referrerPolicy="no-referrer" />
               </div>
               <span className="text-xl font-bold gradient-text">{settings.siteTitle}</span>

@@ -313,7 +313,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" prefetch={false} className="flex items-center gap-2 shrink-0" onClick={() => setMenuOpen(false)}>
-          <div className="w-9 h-9 shrink-0 relative overflow-hidden rounded-full">
+          <div className="w-9 h-9 shrink-0 relative overflow-hidden rounded-xl">
             <Image src={settings.siteLogo || '/icon-190x190.png'} alt={settings.siteTitle} fill sizes="36px" className="object-contain" referrerPolicy="no-referrer" priority />
           </div>
           <span className="text-xl font-bold gradient-text">{settings.siteTitle}</span>
