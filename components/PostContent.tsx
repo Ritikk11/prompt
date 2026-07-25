@@ -107,23 +107,27 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const comments = commentState.postId === post.id ? commentState.items : (post.comments || []);
 
   useEffect(() => {
+    // If login/user profiles are disabled, we do not need to check for a logged in user at all.
+    // This saves downloading and executing the 50KB Supabase bundle.
+    if (!settings.features?.userProfiles) return;
+
     let unsubscribe: (() => void) | undefined;
     let cancelled = false;
     let timeoutId: number;
 
     const initAuth = () => {
       getSupabaseClient().then((supabase) => {
-      if (cancelled) return;
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (!cancelled) setUser(session?.user ?? null);
+        if (cancelled) return;
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (!cancelled) setUser(session?.user ?? null);
+        });
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          setUser(session?.user ?? null);
+        });
+        unsubscribe = () => subscription.unsubscribe();
+      }).catch((error) => {
+        console.error("Auth init error:", error);
       });
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        setUser(session?.user ?? null);
-      });
-      unsubscribe = () => subscription.unsubscribe();
-    }).catch((error) => {
-      console.error("Auth init error:", error);
-    });
     };
 
     // Defer Supabase auth initialization to free up the main thread during initial hydration on mobile
@@ -134,7 +138,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       clearTimeout(timeoutId);
       if (unsubscribe) unsubscribe();
     };
-  }, []);
+  }, [settings.features?.userProfiles]);
 
   const hasTemplateVariables = (prompt: string) => /(?:\[[^\]]+\]|\{[^}]+\})/.test(prompt);
 
