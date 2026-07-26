@@ -19,6 +19,9 @@ import { imageModelOptions, getAllTools, getDefaultImageModel, getImageModelForT
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
+import { MagicWandProvider, WandButton, useMagicWand } from '@/components/admin/MagicWand';
+import { askAi } from '@/lib/admin/ai';
+import { postPrompts, articlePrompts, generalPrompts, discoveryPrompts, homepagePrompts, aiToolPrompts, featurePrompts } from '@/lib/admin/wandPrompts';
 import { filterPostsForSection, getSectionPath } from '@/lib/sections';
 import { buildHeaderNavItems, headerLinkKey } from '@/lib/header-nav';
 import { getFilterTagsFromPosts } from '@/lib/filter-tags';
@@ -531,7 +534,9 @@ function HomepageBlockPreview({
 export default function Admin() {
   return (
     <Suspense fallback={null}>
-      <AdminInner />
+      <MagicWandProvider>
+        <AdminInner />
+      </MagicWandProvider>
     </Suspense>
   );
 }
@@ -1221,71 +1226,17 @@ function AdminInner() {
   const [aiStudioResponse, setAiStudioResponse] = useState('');
   const [aiStudioImageUrl, setAiStudioImageUrl] = useState<string>('');
   const [isAiStudioLoading, setIsAiStudioLoading] = useState(false);
-  const [aiUndoStack, setAiUndoStack] = useState<Record<string, string>>({});
-  const [activeAiLoaders, setActiveAiLoaders] = useState<Record<string, boolean>>({});
+  const { loaders: activeAiLoaders, undoStack: aiUndoStack, runJsonWand, undo: wandUndo } = useMagicWand();
   const [articleAiInstruction, setArticleAiInstruction] = useState('');
   const [isGeneratingArticleAi, setIsGeneratingArticleAi] = useState(false);
 
-  const askAi = async (prompt: string, systemContext?: string, imageUrl?: string) => {
-    const supabase = createSupabaseClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch('/api/generate-text', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-      },
-      body: JSON.stringify({ prompt, systemContext, imageUrl })
-    });
-    if (!res.ok) throw new Error(await res.text());
-    const data = await res.json();
-    return data.text;
-  };
-
-  const handleMagicWand = async (fieldId: string, currentValue: string, setter: (val: string) => void, prompt: string, systemContext?: string) => {
-    try {
-      setActiveAiLoaders(prev => ({ ...prev, [fieldId]: true }));
-      const newText = await askAi(prompt, systemContext);
-      setAiUndoStack(prev => ({ ...prev, [fieldId]: currentValue }));
-      setter(newText);
-    } catch (err: any) {
-      alert("AI Generation failed: " + err.message);
-    } finally {
-      setActiveAiLoaders(prev => ({ ...prev, [fieldId]: false }));
-    }
-  };
-
-  const handleAiUndo = (fieldId: string, setter: (val: string) => void) => {
-    if (aiUndoStack[fieldId] !== undefined) {
-      setter(aiUndoStack[fieldId]);
-      setAiUndoStack(prev => {
-        const next = { ...prev };
-        delete next[fieldId];
-        return next;
-      });
-    }
-  };
-
-  const handleMagicWandFaqs = async () => {
-    const prompt = `You are an expert SEO copywriter for 'AI PromptMatrix', an AI prompt gallery. Based on the tags "${tagsStr}" and title "${title}", generate 3 highly relevant and helpful Frequently Asked Questions (with answers) about using this specific AI prompt or recreating this art style. Return ONLY valid JSON in this exact format: [{"question": "...", "answer": "..."}]. Do not include markdown blocks or any other text.`;
-    setAiUndoStack(prev => ({ ...prev, 'post-faqs': JSON.stringify(faqs) }));
-    setActiveAiLoaders(prev => ({ ...prev, 'post-faqs': true }));
-    try {
-      const response = await askAi(prompt);
-      if (response) {
-        const cleaned = response.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(cleaned);
-        if (Array.isArray(parsed)) {
-          setFaqs(parsed);
-        }
-      }
-    } catch (err) {
-      console.error('Magic Wand FAQs Error:', err);
-      alert('Failed to generate FAQs automatically. Please try again.');
-    } finally {
-      setActiveAiLoaders(prev => ({ ...prev, 'post-faqs': false }));
-    }
-  };
+  const handleMagicWandFaqs = () => runJsonWand<PostFaq[]>(
+    'post-faqs',
+    JSON.stringify(faqs),
+    (parsed) => { if (Array.isArray(parsed)) setFaqs(parsed); },
+    (json) => setFaqs(JSON.parse(json)),
+    postPrompts.faqs(title, tagsStr),
+  );
 
   const handleAiStudioSubmit = async () => {
     if (!aiStudioPrompt.trim()) return;
@@ -1304,7 +1255,7 @@ Site structure notes:
 - Do not use H1 (#) headings in article bodies; the post title is already displayed separately.
 
 Here are 5 recent posts to understand the site's tone and style: ${JSON.stringify(existingPostsContext)}`;
-      const response = await askAi(aiStudioPrompt, sysCtx, aiStudioImageUrl);
+      const response = await askAi(aiStudioPrompt, { systemContext: sysCtx, imageUrl: aiStudioImageUrl });
       setAiStudioResponse(response);
     } catch (err: any) {
       alert("Failed to generate: " + err.message);
@@ -3366,12 +3317,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       {aiUndoStack[`post-faqs`] !== undefined && (
                         <button
                           type="button"
-                          onClick={() => {
-                            if (aiUndoStack['post-faqs']) {
-                              setFaqs(JSON.parse(aiUndoStack['post-faqs']));
-                              setAiUndoStack(prev => { const n = { ...prev }; delete n['post-faqs']; return n; });
-                            }
-                          }}
+                          onClick={() => wandUndo('post-faqs')}
                           className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-bold text-surface-600 hover:bg-surface-200 dark:text-surface-300 dark:hover:bg-surface-700"
                         >
                           <RotateCcw className="h-3.5 w-3.5" /> Undo
@@ -3441,31 +3387,12 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="block text-sm font-medium">Title *</label>
-                      <div className="flex items-center gap-2">
-                        {aiUndoStack[`post-title`] !== undefined && (
-                          <button
-                            type="button"
-                            onClick={() => handleAiUndo(`post-title`, (v) => { setTitle(v); if (!editingPost) setSlug(slugify(v)); })}
-                            className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
-                          >
-                            <RotateCcw className="h-3 w-3" /> Undo
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          disabled={activeAiLoaders[`post-title`]}
-                          onClick={() => handleMagicWand(
-                            `post-title`, 
-                            title, 
-                            (v) => { setTitle(v); if (!editingPost) setSlug(slugify(v)); }, 
-                            `You are an expert copywriter for 'AI PromptMatrix', a premium AI prompt gallery. Write a single catchy, highly clickable, and human-sounding title (max 60 chars) for a new AI Prompt post containing these tags: ${tagsStr || 'various ai tools'}. Avoid generic AI words like "Delve", "Explore", or "A collection of". Return ONLY the title text, nothing else.`
-                          )}
-                          className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
-                        >
-                          {activeAiLoaders[`post-title`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
-                          Auto-write
-                        </button>
-                      </div>
+                      <WandButton
+                        fieldId="post-title"
+                        value={title}
+                        onChange={(v) => { setTitle(v); if (!editingPost) setSlug(slugify(v)); }}
+                        prompt={() => postPrompts.title(tagsStr)}
+                      />
                     </div>
                     <input
                       value={title}
@@ -3491,31 +3418,12 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-sm font-medium">Description *</label>
-                    <div className="flex items-center gap-2">
-                      {aiUndoStack[`post-desc`] !== undefined && (
-                        <button
-                          type="button"
-                          onClick={() => handleAiUndo(`post-desc`, setDescription)}
-                          className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
-                        >
-                          <RotateCcw className="h-3 w-3" /> Undo
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        disabled={activeAiLoaders[`post-desc`]}
-                        onClick={() => handleMagicWand(
-                          `post-desc`, 
-                          description, 
-                          setDescription, 
-                          `You are an expert copywriter for 'AI PromptMatrix', an AI prompt gallery. Write a short, punchy, engaging 1-to-2 sentence summary for an AI Prompt post titled "${title}". Focus on the visual aesthetic and what the prompt achieves. Return ONLY the description text, no quotes.`
-                        )}
-                        className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
-                      >
-                        {activeAiLoaders[`post-desc`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
-                        Auto-write
-                      </button>
-                    </div>
+                    <WandButton
+                      fieldId="post-desc"
+                      value={description}
+                      onChange={setDescription}
+                      prompt={() => postPrompts.description(title)}
+                    />
                   </div>
                   <textarea
                     value={description}
@@ -3630,29 +3538,12 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <label className="text-sm font-medium">Extended Description / Content (Optional, useful for AdSense)</label>
                     <div className="flex flex-wrap items-center gap-2">
-                      {aiUndoStack[`post-ext-desc`] !== undefined && (
-                        <button
-                          type="button"
-                          onClick={() => handleAiUndo(`post-ext-desc`, setExtendedDescription)}
-                          className="inline-flex items-center gap-1 rounded-xl px-2 py-1 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
-                        >
-                          <RotateCcw className="h-3 w-3" /> Undo
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        disabled={activeAiLoaders[`post-ext-desc`]}
-                        onClick={() => handleMagicWand(
-                          `post-ext-desc`, 
-                          extendedDescription, 
-                          setExtendedDescription, 
-                          `You are writing for 'AI PromptMatrix', a premium AI prompt gallery. Write a detailed, Markdown-formatted article about the AI Prompt post titled "${title}". Make it conversational, engaging, and focused on art direction, visual style, and tips for using the prompt. Do not use H1 (#). Use H2 (##) and H3 (###). Use the site's custom markdown blocks: :::tip for practical advice, :::creative for art direction notes, :::model for AI model behaviors, :::prompt for prompt snippets. Callout titles: the word after ::: only picks the block's color and is never shown as a label - add a short, specific title on the same line (e.g. ":::tip Lock the pose with a reference") or leave it untitled (just ":::tip"); never use the bare words "Tip"/"Warning" as a title, and close each block with ::: on its own line. Keep it highly structured and readable.`
-                        )}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-primary-50 px-2 py-1 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
-                      >
-                        {activeAiLoaders[`post-ext-desc`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
-                        Auto-write
-                      </button>
+                      <WandButton
+                        fieldId="post-ext-desc"
+                        value={extendedDescription}
+                        onChange={setExtendedDescription}
+                        prompt={() => postPrompts.extendedDescription(title)}
+                      />
                       <div className="grid grid-cols-2 rounded-xl bg-surface-100 p-1 text-xs font-semibold dark:bg-surface-800">
                         <button
                           type="button"
@@ -3714,31 +3605,12 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="block text-sm font-medium">Custom Search Title (SEO)</label>
-                      <div className="flex items-center gap-2">
-                        {aiUndoStack[`post-seo-title`] !== undefined && (
-                          <button
-                            type="button"
-                            onClick={() => handleAiUndo(`post-seo-title`, setSeoTitle)}
-                            className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
-                          >
-                            <RotateCcw className="h-3 w-3" /> Undo
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          disabled={activeAiLoaders[`post-seo-title`]}
-                          onClick={() => handleMagicWand(
-                            `post-seo-title`, 
-                            seoTitle, 
-                            setSeoTitle, 
-                            `You are an SEO expert for 'AI PromptMatrix'. Write a strict SEO-optimized title (max 60 chars) for an AI Prompt post titled "${title}". Focus on high-volume search keywords related to AI art, prompt generation, and the visual subject. Return ONLY the title text, no quotes.`
-                          )}
-                          className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
-                        >
-                          {activeAiLoaders[`post-seo-title`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
-                          Auto-write
-                        </button>
-                      </div>
+                      <WandButton
+                        fieldId="post-seo-title"
+                        value={seoTitle}
+                        onChange={setSeoTitle}
+                        prompt={() => postPrompts.seoTitle(title)}
+                      />
                     </div>
                     <textarea
                       value={seoTitle}
@@ -3751,31 +3623,12 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="block text-sm font-medium">Custom Search Description (SEO)</label>
-                      <div className="flex items-center gap-2">
-                        {aiUndoStack[`post-seo-desc`] !== undefined && (
-                          <button
-                            type="button"
-                            onClick={() => handleAiUndo(`post-seo-desc`, setSeoDescription)}
-                            className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
-                          >
-                            <RotateCcw className="h-3 w-3" /> Undo
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          disabled={activeAiLoaders[`post-seo-desc`]}
-                          onClick={() => handleMagicWand(
-                            `post-seo-desc`, 
-                            seoDescription, 
-                            setSeoDescription, 
-                            `You are an SEO expert for 'AI PromptMatrix'. Write a strict SEO-optimized meta description (max 155 characters) for an AI Prompt post titled "${title}". Weave in high-volume keywords related to AI prompts and the visual aesthetic. Return ONLY the description text, no quotes.`
-                          )}
-                          className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
-                        >
-                          {activeAiLoaders[`post-seo-desc`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
-                          Auto-write
-                        </button>
-                      </div>
+                      <WandButton
+                        fieldId="post-seo-desc"
+                        value={seoDescription}
+                        onChange={setSeoDescription}
+                        prompt={() => postPrompts.seoDescription(title)}
+                      />
                     </div>
                     <textarea
                       value={seoDescription}
@@ -3791,31 +3644,12 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="block text-sm font-medium">Tags (comma separated)</label>
-                      <div className="flex items-center gap-2">
-                        {aiUndoStack[`post-tags`] !== undefined && (
-                          <button
-                            type="button"
-                            onClick={() => handleAiUndo(`post-tags`, setTagsStr)}
-                            className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
-                          >
-                            <RotateCcw className="h-3 w-3" /> Undo
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          disabled={activeAiLoaders[`post-tags`]}
-                          onClick={() => handleMagicWand(
-                            `post-tags`, 
-                            tagsStr, 
-                            setTagsStr, 
-                            `For an AI Prompt gallery post titled "${title}", generate 5 to 8 highly relevant, descriptive, comma-separated tags (e.g. aesthetic, art style, subject). Return ONLY the comma-separated string, no quotes.`
-                          )}
-                          className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
-                        >
-                          {activeAiLoaders[`post-tags`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
-                          Auto-write
-                        </button>
-                      </div>
+                      <WandButton
+                        fieldId="post-tags"
+                        value={tagsStr}
+                        onChange={setTagsStr}
+                        prompt={() => postPrompts.tags(title)}
+                      />
                     </div>
                     <textarea
                       value={tagsStr}
@@ -3828,31 +3662,12 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="block text-sm font-medium">Categories (comma separated)</label>
-                      <div className="flex items-center gap-2">
-                        {aiUndoStack[`post-categories`] !== undefined && (
-                          <button
-                            type="button"
-                            onClick={() => handleAiUndo(`post-categories`, setCategoriesStr)}
-                            className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
-                          >
-                            <RotateCcw className="h-3 w-3" /> Undo
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          disabled={activeAiLoaders[`post-categories`]}
-                          onClick={() => handleMagicWand(
-                            `post-categories`, 
-                            categoriesStr, 
-                            setCategoriesStr, 
-                            `For an AI Prompt gallery post titled "${title}", suggest a single, broad category (e.g., Anime, Realism, Photography, UI/UX, 3D Render). Return ONLY the category name, no quotes.`
-                          )}
-                          className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
-                        >
-                          {activeAiLoaders[`post-categories`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
-                          Auto-write
-                        </button>
-                      </div>
+                      <WandButton
+                        fieldId="post-categories"
+                        value={categoriesStr}
+                        onChange={setCategoriesStr}
+                        prompt={() => postPrompts.category(title)}
+                      />
                     </div>
                     <textarea
                       value={categoriesStr}
@@ -4217,31 +4032,12 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       <label className="space-y-1 sm:col-span-2">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Description</span>
-                          <div className="flex items-center gap-2">
-                            {aiUndoStack[`article-desc-${selectedArticle.slug}`] !== undefined && (
-                              <button
-                                type="button"
-                                onClick={() => handleAiUndo(`article-desc-${selectedArticle.slug}`, (v) => updateManagedArticle(selectedArticle.slug, { description: v }))}
-                                className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
-                              >
-                                <RotateCcw className="h-3 w-3" /> Undo
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              disabled={activeAiLoaders[`article-desc-${selectedArticle.slug}`]}
-                              onClick={() => handleMagicWand(
-                                `article-desc-${selectedArticle.slug}`, 
-                                selectedArticle.description, 
-                                (v) => updateManagedArticle(selectedArticle.slug, { description: v }), 
-                                `You are an SEO expert for 'AI PromptMatrix'. Write a strict 150-character SEO meta description for an article titled "${selectedArticle.title}". Return ONLY the description text, no quotes.`
-                              )}
-                              className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
-                            >
-                              {activeAiLoaders[`article-desc-${selectedArticle.slug}`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
-                              Auto-write
-                            </button>
-                          </div>
+                          <WandButton
+                            fieldId={`article-desc-${selectedArticle.slug}`}
+                            value={selectedArticle.description}
+                            onChange={(v) => updateManagedArticle(selectedArticle.slug, { description: v })}
+                            prompt={() => articlePrompts.metaDescription(selectedArticle.title)}
+                          />
                         </div>
                         <textarea value={selectedArticle.description} onChange={e => updateManagedArticle(selectedArticle.slug, { description: e.target.value })} rows={3} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
                       </label>
@@ -4778,7 +4574,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                 <p className="text-[11px] text-surface-400">The big heading shown on the section page.</p>
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Page Hero Description</label>
+                                <div className="flex items-center justify-between">
+                                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Page Hero Description</label>
+                                  <WandButton
+                                    fieldId="section-hero-desc"
+                                    value={editSectionHeroDescription}
+                                    onChange={setEditSectionHeroDescription}
+                                    prompt={() => homepagePrompts.sectionHeroDescription(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
+                                  />
+                                </div>
                                 <input
                                   value={editSectionHeroDescription}
                                   onChange={e => setEditSectionHeroDescription(e.target.value)}
@@ -4788,7 +4592,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                 <p className="text-[11px] text-surface-400">Sub-text under the hero heading.</p>
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">SEO Title</label>
+                                <div className="flex items-center justify-between">
+                                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">SEO Title</label>
+                                  <WandButton
+                                    fieldId="section-seo-title"
+                                    value={editSectionSeoTitle}
+                                    onChange={setEditSectionSeoTitle}
+                                    prompt={() => homepagePrompts.sectionSeoTitle(editSectionHeroTitle || editSectionName)}
+                                  />
+                                </div>
                                 <input
                                   value={editSectionSeoTitle}
                                   onChange={e => setEditSectionSeoTitle(e.target.value)}
@@ -4798,7 +4610,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                 <p className="text-[11px] text-surface-400">Browser tab &amp; search-result title (&lt;title&gt; tag).</p>
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">SEO Description</label>
+                                <div className="flex items-center justify-between">
+                                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">SEO Description</label>
+                                  <WandButton
+                                    fieldId="section-seo-desc"
+                                    value={editSectionSeoDescription}
+                                    onChange={setEditSectionSeoDescription}
+                                    prompt={() => homepagePrompts.sectionSeoDescription(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
+                                  />
+                                </div>
                                 <input
                                   value={editSectionSeoDescription}
                                   onChange={e => setEditSectionSeoDescription(e.target.value)}
@@ -4808,7 +4628,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                 <p className="text-[11px] text-surface-400">Meta description for search engines.</p>
                               </div>
                               <div className="space-y-1.5 md:col-span-2">
-                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Intro Content (Markdown support)</label>
+                                <div className="flex items-center justify-between">
+                                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Intro Content (Markdown support)</label>
+                                  <WandButton
+                                    fieldId="section-intro-content"
+                                    value={editSectionIntroContent}
+                                    onChange={setEditSectionIntroContent}
+                                    prompt={() => homepagePrompts.sectionIntroContent(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
+                                  />
+                                </div>
                                 <textarea
                                   value={editSectionIntroContent}
                                   onChange={e => setEditSectionIntroContent(e.target.value)}
@@ -5255,7 +5083,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-surface-400 mb-1">Site Description</label>
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="block text-xs font-medium text-surface-400">Site Description</label>
+                  <WandButton
+                    fieldId="general-site-desc"
+                    value={siteDescription}
+                    onChange={setSiteDescription}
+                    prompt={() => generalPrompts.siteDescription(siteTitle)}
+                  />
+                </div>
                 <textarea
                   value={siteDescription}
                   onChange={e => setSiteDescription(e.target.value)}
@@ -5512,7 +5348,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Hero heading</label>
+                            <div className="mb-1.5 flex items-center justify-between">
+                              <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400">Hero heading</label>
+                              <WandButton
+                                fieldId="discovery-explore-title"
+                                value={discoveryPages.exploreTitle || ''}
+                                onChange={(v) => setDiscoveryPages(prev => ({ ...prev, exploreTitle: v }))}
+                                prompt={discoveryPrompts.exploreHeading}
+                              />
+                            </div>
                             <input
                               value={discoveryPages.exploreTitle || ''}
                               onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreTitle: e.target.value }))}
@@ -5522,7 +5366,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           </div>
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Hero description</label>
+                          <div className="mb-1.5 flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400">Hero description</label>
+                            <WandButton
+                              fieldId="discovery-explore-desc"
+                              value={discoveryPages.exploreDescription || ''}
+                              onChange={(v) => setDiscoveryPages(prev => ({ ...prev, exploreDescription: v }))}
+                              prompt={discoveryPrompts.exploreDescription}
+                            />
+                          </div>
                           <textarea
                             value={discoveryPages.exploreDescription || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreDescription: e.target.value }))}
@@ -5546,7 +5398,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Meta title</label>
+                            <div className="mb-1.5 flex items-center justify-between">
+                              <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400">Meta title</label>
+                              <WandButton
+                                fieldId="discovery-explore-seo-title"
+                                value={discoveryPages.exploreSeoTitle || ''}
+                                onChange={(v) => setDiscoveryPages(prev => ({ ...prev, exploreSeoTitle: v }))}
+                                prompt={discoveryPrompts.exploreMetaTitle}
+                              />
+                            </div>
                             <input
                               value={discoveryPages.exploreSeoTitle || ''}
                               onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreSeoTitle: e.target.value }))}
@@ -5565,7 +5425,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           </div>
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Meta description</label>
+                          <div className="mb-1.5 flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400">Meta description</label>
+                            <WandButton
+                              fieldId="discovery-explore-seo-desc"
+                              value={discoveryPages.exploreSeoDescription || ''}
+                              onChange={(v) => setDiscoveryPages(prev => ({ ...prev, exploreSeoDescription: v }))}
+                              prompt={discoveryPrompts.exploreMetaDescription}
+                            />
+                          </div>
                           <textarea
                             value={discoveryPages.exploreSeoDescription || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreSeoDescription: e.target.value }))}
@@ -5617,7 +5485,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       {/* Hero Controls */}
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Title template</label>
+                          <div className="mb-1.5 flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400">Title template</label>
+                            <WandButton
+                              fieldId="discovery-tool-title"
+                              value={discoveryPages.toolTitleTemplate || ''}
+                              onChange={(v) => setDiscoveryPages(prev => ({ ...prev, toolTitleTemplate: v }))}
+                              prompt={discoveryPrompts.toolTitle}
+                            />
+                          </div>
                           <input
                             value={discoveryPages.toolTitleTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, toolTitleTemplate: e.target.value }))}
@@ -5626,7 +5502,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Description template</label>
+                          <div className="mb-1.5 flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400">Description template</label>
+                            <WandButton
+                              fieldId="discovery-tool-desc"
+                              value={discoveryPages.toolDescriptionTemplate || ''}
+                              onChange={(v) => setDiscoveryPages(prev => ({ ...prev, toolDescriptionTemplate: v }))}
+                              prompt={discoveryPrompts.toolDescription}
+                            />
+                          </div>
                           <textarea
                             value={discoveryPages.toolDescriptionTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, toolDescriptionTemplate: e.target.value }))}
@@ -5649,7 +5533,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           </div>
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Meta title template</label>
+                          <div className="mb-1.5 flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400">Meta title template</label>
+                            <WandButton
+                              fieldId="discovery-tool-seo-title"
+                              value={discoveryPages.toolSeoTitleTemplate || ''}
+                              onChange={(v) => setDiscoveryPages(prev => ({ ...prev, toolSeoTitleTemplate: v }))}
+                              prompt={discoveryPrompts.toolMetaTitle}
+                            />
+                          </div>
                           <input
                             value={discoveryPages.toolSeoTitleTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, toolSeoTitleTemplate: e.target.value }))}
@@ -5658,7 +5550,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Meta description template</label>
+                          <div className="mb-1.5 flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400">Meta description template</label>
+                            <WandButton
+                              fieldId="discovery-tool-seo-desc"
+                              value={discoveryPages.toolSeoDescriptionTemplate || ''}
+                              onChange={(v) => setDiscoveryPages(prev => ({ ...prev, toolSeoDescriptionTemplate: v }))}
+                              prompt={discoveryPrompts.toolMetaDescription}
+                            />
+                          </div>
                           <textarea
                             value={discoveryPages.toolSeoDescriptionTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, toolSeoDescriptionTemplate: e.target.value }))}
@@ -5691,7 +5591,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       {/* Hero Controls */}
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Title template</label>
+                          <div className="mb-1.5 flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400">Title template</label>
+                            <WandButton
+                              fieldId="discovery-tag-title"
+                              value={discoveryPages.tagTitleTemplate || ''}
+                              onChange={(v) => setDiscoveryPages(prev => ({ ...prev, tagTitleTemplate: v }))}
+                              prompt={discoveryPrompts.tagTitle}
+                            />
+                          </div>
                           <input
                             value={discoveryPages.tagTitleTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, tagTitleTemplate: e.target.value }))}
@@ -5700,7 +5608,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Description template</label>
+                          <div className="mb-1.5 flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400">Description template</label>
+                            <WandButton
+                              fieldId="discovery-tag-desc"
+                              value={discoveryPages.tagDescriptionTemplate || ''}
+                              onChange={(v) => setDiscoveryPages(prev => ({ ...prev, tagDescriptionTemplate: v }))}
+                              prompt={discoveryPrompts.tagDescription}
+                            />
+                          </div>
                           <textarea
                             value={discoveryPages.tagDescriptionTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, tagDescriptionTemplate: e.target.value }))}
@@ -5723,7 +5639,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           </div>
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Meta title template</label>
+                          <div className="mb-1.5 flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400">Meta title template</label>
+                            <WandButton
+                              fieldId="discovery-tag-seo-title"
+                              value={discoveryPages.tagSeoTitleTemplate || ''}
+                              onChange={(v) => setDiscoveryPages(prev => ({ ...prev, tagSeoTitleTemplate: v }))}
+                              prompt={discoveryPrompts.tagMetaTitle}
+                            />
+                          </div>
                           <input
                             value={discoveryPages.tagSeoTitleTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, tagSeoTitleTemplate: e.target.value }))}
@@ -5732,7 +5656,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Meta description template</label>
+                          <div className="mb-1.5 flex items-center justify-between">
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400">Meta description template</label>
+                            <WandButton
+                              fieldId="discovery-tag-seo-desc"
+                              value={discoveryPages.tagSeoDescriptionTemplate || ''}
+                              onChange={(v) => setDiscoveryPages(prev => ({ ...prev, tagSeoDescriptionTemplate: v }))}
+                              prompt={discoveryPrompts.tagMetaDescription}
+                            />
+                          </div>
                           <textarea
                             value={discoveryPages.tagSeoDescriptionTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, tagSeoDescriptionTemplate: e.target.value }))}
@@ -6147,11 +6079,27 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                         <input value={promptOfDayContent.ctaLabel || ''} onChange={e => updateHomepageContent('promptOfDay', 'ctaLabel', e.target.value)} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="e.g. View This Prompt" />
                       </div>
                       <div className="space-y-1 sm:col-span-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Main Heading Override</span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Main Heading Override</span>
+                          <WandButton
+                            fieldId="homepage-promptOfDay-title"
+                            value={promptOfDayContent.title || ''}
+                            onChange={(v) => updateHomepageContent('promptOfDay', 'title', v)}
+                            prompt={() => homepagePrompts.blockHeading('promptOfDay')}
+                          />
+                        </div>
                         <input value={promptOfDayContent.title || ''} onChange={e => updateHomepageContent('promptOfDay', 'title', e.target.value)} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="e.g. Today's Featured Prompt" />
                       </div>
                       <div className="space-y-1 sm:col-span-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Short Sub-heading Override</span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Short Sub-heading Override</span>
+                          <WandButton
+                            fieldId="homepage-promptOfDay-desc"
+                            value={promptOfDayContent.description || ''}
+                            onChange={(v) => updateHomepageContent('promptOfDay', 'description', v)}
+                            prompt={() => homepagePrompts.blockDescription('promptOfDay')}
+                          />
+                        </div>
                         <textarea value={promptOfDayContent.description || ''} onChange={e => updateHomepageContent('promptOfDay', 'description', e.target.value)} rows={2} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="e.g. Handpicked from our community artwork" />
                       </div>
                     </div>
@@ -6315,10 +6263,54 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                               <input value={editSectionFilterTags} onChange={e => setEditSectionFilterTags(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Filter rail tags: anime, realistic" />
                               <input value={editSectionHeroTitle} onChange={e => setEditSectionHeroTitle(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Hero title (blank = section name)" />
                               <input value={editSectionHeroBadge} onChange={e => setEditSectionHeroBadge(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Hero badge (blank = Section)" />
-                              <input value={editSectionHeroDescription} onChange={e => setEditSectionHeroDescription(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Hero description" />
-                              <input value={editSectionSeoTitle} onChange={e => setEditSectionSeoTitle(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="SEO title (blank = hero title)" />
-                              <textarea value={editSectionSeoDescription} onChange={e => setEditSectionSeoDescription(e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="SEO description" />
-                              <textarea value={editSectionIntroContent} onChange={e => setEditSectionIntroContent(e.target.value)} rows={3} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Intro content" />
+                              <div className="sm:col-span-2">
+                                <div className="mb-1 flex items-center justify-end">
+                                  <WandButton
+                                    fieldId="section-hero-desc"
+                                    value={editSectionHeroDescription}
+                                    onChange={setEditSectionHeroDescription}
+                                    prompt={() => homepagePrompts.sectionHeroDescription(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
+                                    label="Auto-write hero description"
+                                  />
+                                </div>
+                                <input value={editSectionHeroDescription} onChange={e => setEditSectionHeroDescription(e.target.value)} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Hero description" />
+                              </div>
+                              <div className="sm:col-span-2">
+                                <div className="mb-1 flex items-center justify-end">
+                                  <WandButton
+                                    fieldId="section-seo-title"
+                                    value={editSectionSeoTitle}
+                                    onChange={setEditSectionSeoTitle}
+                                    prompt={() => homepagePrompts.sectionSeoTitle(editSectionHeroTitle || editSectionName)}
+                                    label="Auto-write SEO title"
+                                  />
+                                </div>
+                                <input value={editSectionSeoTitle} onChange={e => setEditSectionSeoTitle(e.target.value)} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="SEO title (blank = hero title)" />
+                              </div>
+                              <div className="sm:col-span-2">
+                                <div className="mb-1 flex items-center justify-end">
+                                  <WandButton
+                                    fieldId="section-seo-desc"
+                                    value={editSectionSeoDescription}
+                                    onChange={setEditSectionSeoDescription}
+                                    prompt={() => homepagePrompts.sectionSeoDescription(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
+                                    label="Auto-write SEO description"
+                                  />
+                                </div>
+                                <textarea value={editSectionSeoDescription} onChange={e => setEditSectionSeoDescription(e.target.value)} rows={2} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="SEO description" />
+                              </div>
+                              <div className="sm:col-span-2">
+                                <div className="mb-1 flex items-center justify-end">
+                                  <WandButton
+                                    fieldId="section-intro-content"
+                                    value={editSectionIntroContent}
+                                    onChange={setEditSectionIntroContent}
+                                    prompt={() => homepagePrompts.sectionIntroContent(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
+                                    label="Auto-write intro"
+                                  />
+                                </div>
+                                <textarea value={editSectionIntroContent} onChange={e => setEditSectionIntroContent(e.target.value)} rows={3} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Intro content" />
+                              </div>
                             </div>
                             {section.type === 'custom' && (
                               <div className="mt-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
@@ -6562,11 +6554,69 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                     )}
                                   </div>
                                 )}
-                                <input value={blockContent.title || ''} onChange={e => updateHomepageContent(blockKey, 'title', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Heading" />
-                                <textarea value={blockContent.description || ''} onChange={e => updateHomepageContent(blockKey, 'description', e.target.value)} rows={2} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Description" />
+                                <div className="sm:col-span-2">
+                                  <div className="mb-1 flex items-center justify-end">
+                                    <WandButton
+                                      fieldId={`homepage-${blockKey}-title`}
+                                      value={blockContent.title || ''}
+                                      onChange={(v) => updateHomepageContent(blockKey, 'title', v)}
+                                      prompt={() => homepagePrompts.blockHeading(blockKey)}
+                                      label="Auto-write heading"
+                                    />
+                                  </div>
+                                  <input value={blockContent.title || ''} onChange={e => updateHomepageContent(blockKey, 'title', e.target.value)} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Heading" />
+                                </div>
+                                <div className="sm:col-span-2">
+                                  <div className="mb-1 flex items-center justify-end">
+                                    <WandButton
+                                      fieldId={`homepage-${blockKey}-desc`}
+                                      value={blockContent.description || ''}
+                                      onChange={(v) => updateHomepageContent(blockKey, 'description', v)}
+                                      prompt={() => homepagePrompts.blockDescription(blockKey)}
+                                      label="Auto-write description"
+                                    />
+                                  </div>
+                                  <textarea value={blockContent.description || ''} onChange={e => updateHomepageContent(blockKey, 'description', e.target.value)} rows={2} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Description" />
+                                </div>
                                 {['howTo', 'reviewProcess', 'supportedTools', 'creatorFeedback'].includes(blockKey) && (
                                   <div className="space-y-3 sm:col-span-2">
-                                  <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">Inner cards</p>
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">Inner cards</p>
+                                    <div className="flex items-center gap-2">
+                                      {aiUndoStack[`homepage-cards-${blockKey}`] !== undefined && (
+                                        <button
+                                          type="button"
+                                          onClick={() => wandUndo(`homepage-cards-${blockKey}`)}
+                                          className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
+                                        >
+                                          <RotateCcw className="h-3 w-3" /> Undo
+                                        </button>
+                                      )}
+                                      <button
+                                        type="button"
+                                        disabled={activeAiLoaders[`homepage-cards-${blockKey}`]}
+                                        onClick={() => {
+                                          const count = blockContent.items?.length || (blockKey === 'supportedTools' ? 4 : 3);
+                                          const cardShape = blockKey === 'howTo'
+                                            ? '{"title": string, "text": string, "checks": string[] (2-3 short checklist lines)}'
+                                            : blockKey === 'supportedTools'
+                                              ? '{"title": string (AI tool name), "text": string (comma-separated short note lines)}'
+                                              : '{"title": string, "text": string}';
+                                          runJsonWand(
+                                            `homepage-cards-${blockKey}`,
+                                            JSON.stringify(blockContent.items || []),
+                                            (items) => { if (Array.isArray(items)) updateHomepageContent(blockKey, 'items', items); },
+                                            (json) => updateHomepageContent(blockKey, 'items', JSON.parse(json)),
+                                            homepagePrompts.blockCards(blockKey, cardShape, count),
+                                          );
+                                        }}
+                                        className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 disabled:opacity-60 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
+                                      >
+                                        {activeAiLoaders[`homepage-cards-${blockKey}`] ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
+                                        Auto-fill cards
+                                      </button>
+                                    </div>
+                                  </div>
                                   {(blockContent.items || []).map((item, itemIndex) => (
                                     <div key={`${blockKey}-${itemIndex}`} className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
                                       <div className="grid gap-2 sm:grid-cols-2">
@@ -6824,7 +6874,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           <div className="space-y-3">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <label className="space-y-1">
-                                <span className="text-xs font-medium text-surface-500">Title</span>
+                                <span className="flex items-center justify-between text-xs font-medium text-surface-500">
+                                  Title
+                                  <WandButton
+                                    fieldId={`quickcard-title-${index}`}
+                                    value={block.title}
+                                    onChange={(v) => updateHomeLinkBlock(index, 'title', v)}
+                                    prompt={() => homepagePrompts.quickCardTitle(block.title)}
+                                  />
+                                </span>
                                 <input
                                   value={block.title}
                                   onChange={e => updateHomeLinkBlock(index, 'title', e.target.value)}
@@ -6843,7 +6901,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                               </label>
                             </div>
                             <label className="space-y-1 block">
-                              <span className="text-xs font-medium text-surface-500">Description</span>
+                              <span className="flex items-center justify-between text-xs font-medium text-surface-500">
+                                Description
+                                <WandButton
+                                  fieldId={`quickcard-desc-${index}`}
+                                  value={block.description || ''}
+                                  onChange={(v) => updateHomeLinkBlock(index, 'description', v)}
+                                  prompt={() => homepagePrompts.quickCardDescription(block.title)}
+                                />
+                              </span>
                               <textarea
                                 value={block.description || ''}
                                 onChange={e => updateHomeLinkBlock(index, 'description', e.target.value)}
@@ -7444,31 +7510,12 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                             <div>
                               <div className="flex items-center justify-between mb-1">
                                 <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300">Description</label>
-                                <div className="flex items-center gap-2">
-                                  {aiUndoStack[`aitool-desc-${tool}`] !== undefined && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleAiUndo(`aitool-desc-${tool}`, setEditAiToolDescription)}
-                                      className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-700"
-                                    >
-                                      <RotateCcw className="h-3 w-3" /> Undo
-                                    </button>
-                                  )}
-                                  <button
-                                    type="button"
-                                    disabled={activeAiLoaders[`aitool-desc-${tool}`] || !tool}
-                                    onClick={() => handleMagicWand(
-                                      `aitool-desc-${tool}`, 
-                                      editAiToolDescription, 
-                                      setEditAiToolDescription, 
-                                      `You are writing for 'AI PromptMatrix', an AI Prompt database. Write a concise 2-sentence description for the AI generation tool named "${tool}". Focus on its main capabilities and visual generation strengths. Return ONLY the description text, no quotes.`
-                                    )}
-                                    className="inline-flex items-center gap-1 rounded bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20"
-                                  >
-                                    {activeAiLoaders[`aitool-desc-${tool}`] ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /> : <Wand2 className="h-3 w-3" />}
-                                    Auto-write
-                                  </button>
-                                </div>
+                                <WandButton
+                                  fieldId={`aitool-desc-${tool}`}
+                                  value={editAiToolDescription}
+                                  onChange={setEditAiToolDescription}
+                                  prompt={() => aiToolPrompts.description(tool)}
+                                />
                               </div>
                               <textarea
                                 value={editAiToolDescription}
@@ -7549,7 +7596,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                             <h5 className="text-xs font-extrabold uppercase tracking-wider text-surface-500 border-l-2 border-primary-500 pl-2">2. Homepage Card Customizations (Supported Tools Grid)</h5>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mb-1">Top Card Badge</label>
+                                <div className="mb-1 flex items-center justify-between">
+                                  <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300">Top Card Badge</label>
+                                  <WandButton
+                                    fieldId={`aitool-badge-${tool}`}
+                                    value={editAiToolBadge}
+                                    onChange={setEditAiToolBadge}
+                                    prompt={() => aiToolPrompts.badge(tool)}
+                                  />
+                                </div>
                                 <input
                                   value={editAiToolBadge}
                                   onChange={e => setEditAiToolBadge(e.target.value)}
@@ -7558,7 +7613,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                 />
                               </div>
                               <div>
-                                <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mb-1">Stats Highlights (One label: value per line)</label>
+                                <div className="mb-1 flex items-center justify-between">
+                                  <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300">Stats Highlights (One label: value per line)</label>
+                                  <WandButton
+                                    fieldId={`aitool-stats-${tool}`}
+                                    value={editAiToolStats}
+                                    onChange={setEditAiToolStats}
+                                    prompt={() => aiToolPrompts.statsHighlights(tool)}
+                                  />
+                                </div>
                                 <textarea
                                   value={editAiToolStats}
                                   onChange={e => setEditAiToolStats(e.target.value)}
@@ -7569,7 +7632,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                               </div>
                             </div>
                             <div>
-                              <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mb-1">Capability Checkmarks (One feature note per line)</label>
+                              <div className="mb-1 flex items-center justify-between">
+                                <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300">Capability Checkmarks (One feature note per line)</label>
+                                <WandButton
+                                  fieldId={`aitool-checks-${tool}`}
+                                  value={editAiToolChecks}
+                                  onChange={setEditAiToolChecks}
+                                  prompt={() => aiToolPrompts.capabilities(tool)}
+                                />
+                              </div>
                               <textarea
                                 value={editAiToolChecks}
                                 onChange={e => setEditAiToolChecks(e.target.value)}
@@ -7811,7 +7882,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 <div className="space-y-3">
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="space-y-1">
-                      <span className="text-xs font-medium text-surface-500">Title</span>
+                      <span className="flex items-center justify-between text-xs font-medium text-surface-500">
+                        Title
+                        <WandButton
+                          fieldId="features-keep-exploring-title"
+                          value={keepExploring.title || ''}
+                          onChange={(v) => setKeepExploring(prev => ({ ...prev, title: v }))}
+                          prompt={featurePrompts.keepExploringTitle}
+                        />
+                      </span>
                       <input
                         value={keepExploring.title || ''}
                         onChange={e => setKeepExploring(prev => ({ ...prev, title: e.target.value }))}
@@ -7829,7 +7908,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       />
                     </label>
                     <label className="space-y-1 sm:col-span-2">
-                      <span className="text-xs font-medium text-surface-500">Description</span>
+                      <span className="flex items-center justify-between text-xs font-medium text-surface-500">
+                        Description
+                        <WandButton
+                          fieldId="features-keep-exploring-desc"
+                          value={keepExploring.description || ''}
+                          onChange={(v) => setKeepExploring(prev => ({ ...prev, description: v }))}
+                          prompt={featurePrompts.keepExploringDescription}
+                        />
+                      </span>
                       <textarea
                         value={keepExploring.description || ''}
                         onChange={e => setKeepExploring(prev => ({ ...prev, description: e.target.value }))}

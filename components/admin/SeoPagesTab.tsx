@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit3, X, Save } from 'lucide-react';
 import { createClient } from '@/lib/supabase-client';
 import type { SeoSettings, SiteSettings } from '@/lib/types';
+import { WandButton } from '@/components/admin/MagicWand';
+import { seoPrompts } from '@/lib/admin/wandPrompts';
 
 type SeoPagesTabMode = 'global' | 'pages' | 'all';
 
@@ -162,15 +164,39 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
         </div>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1.5">Page Heading</label>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className="block text-sm font-medium">Page Heading</label>
+              <WandButton
+                fieldId="seo-page-heading"
+                value={title}
+                onChange={setTitle}
+                prompt={() => seoPrompts.pageHeading(slug, tagsStr)}
+              />
+            </div>
             <input value={title} onChange={e => setTitle(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm" placeholder="e.g. Best Upscale Images generated with Gemini" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5">SEO Title (optional)</label>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className="block text-sm font-medium">SEO Title (optional)</label>
+              <WandButton
+                fieldId="seo-page-seo-title"
+                value={seoTitle}
+                onChange={setSeoTitle}
+                prompt={() => seoPrompts.pageSeoTitle(slug || title, tagsStr)}
+              />
+            </div>
             <input value={seoTitle} onChange={e => setSeoTitle(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm" placeholder="Defaults to page heading" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5">Meta Description (optional)</label>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className="block text-sm font-medium">Meta Description (optional)</label>
+              <WandButton
+                fieldId="seo-page-meta-desc"
+                value={seoDescription}
+                onChange={setSeoDescription}
+                prompt={() => seoPrompts.pageMetaDescription(slug || title, tagsStr)}
+              />
+            </div>
             <textarea value={seoDescription} onChange={e => setSeoDescription(e.target.value)} rows={2} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm resize-y" placeholder="Short search-result description for this page..." />
           </div>
           <div>
@@ -178,7 +204,15 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
              <input value={slug} onChange={e => setSlug(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm" placeholder="e.g. upscale-images-gemini" />
           </div>
           <div>
-             <label className="block text-sm font-medium mb-1.5">Intro Content (optional)</label>
+             <div className="mb-1.5 flex items-center justify-between">
+               <label className="block text-sm font-medium">Intro Content (optional)</label>
+               <WandButton
+                 fieldId="seo-page-intro"
+                 value={introContent}
+                 onChange={setIntroContent}
+                 prompt={() => seoPrompts.pageIntroContent(slug || title, tagsStr)}
+               />
+             </div>
              <textarea value={introContent} onChange={e => setIntroContent(e.target.value)} rows={4} className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 outline-none text-sm resize-y" placeholder="Short intro shown above the matching prompt grid. Markdown is supported." />
           </div>
           <div>
@@ -227,7 +261,15 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-surface-500 mb-1">Default meta title template</label>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-xs font-medium text-surface-500">Default meta title template</label>
+                <WandButton
+                  fieldId="seo-global-title-template"
+                  value={seoSettings.metaTitleTemplate || ''}
+                  onChange={(v) => updateSeoSettings({ metaTitleTemplate: v })}
+                  prompt={seoPrompts.globalTitleTemplate}
+                />
+              </div>
               <input
                 value={seoSettings.metaTitleTemplate || ''}
                 onChange={e => updateSeoSettings({ metaTitleTemplate: e.target.value })}
@@ -245,7 +287,15 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-xs font-medium text-surface-500 mb-1">Default meta description</label>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-xs font-medium text-surface-500">Default meta description</label>
+                <WandButton
+                  fieldId="seo-global-meta-desc"
+                  value={seoSettings.defaultMetaDescription || ''}
+                  onChange={(v) => updateSeoSettings({ defaultMetaDescription: v })}
+                  prompt={seoPrompts.globalMetaDescription}
+                />
+              </div>
               <textarea
                 value={seoSettings.defaultMetaDescription || ''}
                 onChange={e => updateSeoSettings({ defaultMetaDescription: e.target.value })}

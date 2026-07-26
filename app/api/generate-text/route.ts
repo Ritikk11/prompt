@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const auth = await requireAdmin(req);
     if (auth.error) return auth.error;
 
-    const { prompt, systemContext, imageUrl } = await req.json();
+    const { prompt, systemContext, imageUrl, json } = await req.json();
 
     if (!prompt) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: contents,
+      ...(json ? { config: { responseMimeType: "application/json" } } : {}),
     });
 
     const text = response.text || "";

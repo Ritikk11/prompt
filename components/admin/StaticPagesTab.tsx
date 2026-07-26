@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import type { SiteSettings, StaticPageSettings } from '@/lib/types';
 import { Info, Save } from 'lucide-react';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { WandButton } from '@/components/admin/MagicWand';
+import { staticPagePrompts } from '@/lib/admin/wandPrompts';
 
 const MARKDOWN_HELP_EXAMPLE = `## Main section
 ### Question style heading
@@ -273,7 +275,15 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
             />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-xs font-medium text-surface-500 mb-1">Hero subtitle / intro text</label>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-xs font-medium text-surface-500">Hero subtitle / intro text</label>
+              <WandButton
+                fieldId={`page-subtitle-${activeTab}`}
+                value={currentPage.subtitle || ''}
+                onChange={(v) => updateCurrentPage({ subtitle: v })}
+                prompt={() => staticPagePrompts.heroSubtitle(activeTab, textareas[activeTab].label)}
+              />
+            </div>
             <textarea
               value={currentPage.subtitle || ''}
               onChange={e => updateCurrentPage({ subtitle: e.target.value })}
@@ -282,7 +292,15 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-surface-500 mb-1">Meta title</label>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-xs font-medium text-surface-500">Meta title</label>
+              <WandButton
+                fieldId={`page-meta-title-${activeTab}`}
+                value={currentPage.metaTitle || ''}
+                onChange={(v) => updateCurrentPage({ metaTitle: v.slice(0, 80) })}
+                prompt={() => staticPagePrompts.metaTitle(activeTab, textareas[activeTab].label)}
+              />
+            </div>
             <input
               value={currentPage.metaTitle || ''}
               onChange={e => updateCurrentPage({ metaTitle: e.target.value.slice(0, 80) })}
@@ -291,7 +309,15 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
             <p className="mt-1 text-[11px] text-surface-500">{(currentPage.metaTitle || '').length}/80</p>
           </div>
           <div>
-            <label className="block text-xs font-medium text-surface-500 mb-1">Meta description</label>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-xs font-medium text-surface-500">Meta description</label>
+              <WandButton
+                fieldId={`page-meta-desc-${activeTab}`}
+                value={currentPage.metaDescription || ''}
+                onChange={(v) => updateCurrentPage({ metaDescription: v.slice(0, 170) })}
+                prompt={() => staticPagePrompts.metaDescription(activeTab, textareas[activeTab].label)}
+              />
+            </div>
             <textarea
               value={currentPage.metaDescription || ''}
               onChange={e => updateCurrentPage({ metaDescription: e.target.value.slice(0, 170) })}
@@ -322,7 +348,14 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
 
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <label className="text-sm font-medium">{textareas[activeTab].label} (Markdown Format)</label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <WandButton
+              fieldId={`page-body-${activeTab}`}
+              value={textareas[activeTab].value}
+              onChange={(v) => textareas[activeTab].set(v)}
+              prompt={() => staticPagePrompts.body(activeTab, textareas[activeTab].label)}
+              size="sm"
+            />
             <div className="grid grid-cols-2 rounded-xl bg-white p-1 text-xs font-semibold dark:bg-surface-800">
               <button
                 type="button"
