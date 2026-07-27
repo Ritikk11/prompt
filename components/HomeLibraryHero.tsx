@@ -15,7 +15,7 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
   const title = settings.heroTitle || 'Better Image Prompts Start Here';
   const subtitle = settings.heroSubtitle || 'Discover tested prompts for ChatGPT, Gemini, Grok, Qwen, and other image tools. Copy, customize, and build stronger artwork from one organized library.';
 
-  const statItems = [
+  const statItems = settings.heroHideStats ? [] : [
     { label: 'Prompts', value: `${postCount}+`, icon: Sparkles },
     { label: 'Featured', value: `${featuredPosts.length}`, icon: Flame },
     { label: 'Likes', value: `${totalLikes}`, icon: Heart },

@@ -94,9 +94,11 @@ export default function HomeCreativeDirections({ posts, settings }: { posts: Pos
                 <p className="mt-1 line-clamp-2 text-xs text-surface-500 dark:text-surface-400 sm:mt-2 sm:text-sm">
                   {content.itemDescription || 'Curated prompt direction'}
                 </p>
-                <p className="mt-auto pt-3 text-xs font-bold text-primary-600 dark:text-primary-300 sm:text-sm">
-                  {count} {count === 1 ? 'prompt' : 'prompts'}
-                </p>
+                {!content.hidePromptCounts && (
+                  <p className="mt-auto pt-3 text-xs font-bold text-primary-600 dark:text-primary-300 sm:text-sm">
+                    {count} {count === 1 ? 'prompt' : 'prompts'}
+                  </p>
+                )}
               </Link>
             );
           })}

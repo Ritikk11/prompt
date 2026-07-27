@@ -257,6 +257,7 @@ export interface HomepageBlockContent {
   ctaLabel?: string;
   ctaHref?: string;
   showCta?: boolean;
+  hidePromptCounts?: boolean;
 }
 
 export interface KeepExploringSettings {
@@ -308,6 +309,7 @@ export interface SiteSettings {
   heroTitle?: string;
   heroSubtitle?: string;
   heroEnabled: boolean;
+  heroHideStats?: boolean;
   heroAutoPlay: boolean;
   heroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'custom';
   postHeroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';

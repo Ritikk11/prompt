@@ -72,9 +72,11 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
               <Link key={tool} href={`/tool/${encodeURIComponent(tool)}`} className="group flex h-full flex-col rounded-3xl border border-surface-200 bg-white/70 p-6 shadow-sm backdrop-blur-md transition hover:-translate-y-1.5 hover:shadow-2xl dark:border-surface-800 dark:bg-surface-900/50">
                 <div className={`h-1 rounded-full ${['bg-emerald-500', 'bg-blue-500', 'bg-orange-500', 'bg-fuchsia-500'][index % 4]}`} />
                 <div className="mt-5 flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-[11px] font-bold text-surface-600 dark:bg-surface-800 dark:text-surface-300">
-                    <BookmarkCheck className="h-3.5 w-3.5 text-primary-500" /> {toolCounts.get(tool.toLowerCase()) || 0} prompts
-                  </span>
+                  {!content.hidePromptCounts ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 text-[11px] font-bold text-surface-600 dark:bg-surface-800 dark:text-surface-300">
+                      <BookmarkCheck className="h-3.5 w-3.5 text-primary-500" /> {toolCounts.get(tool.toLowerCase()) || 0} prompts
+                    </span>
+                  ) : <div />}
                   <span className="truncate text-right text-[9px] font-black uppercase tracking-wider text-surface-600 dark:text-surface-400">{details?.badge || 'AI prompts library'}</span>
                 </div>
                 <div className="mx-auto mt-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-50 shadow-sm dark:bg-surface-800">

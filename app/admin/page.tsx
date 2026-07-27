@@ -1119,6 +1119,7 @@ function AdminInner() {
   const [siteLogo, setSiteLogo] = useState(settings.siteLogo || '');
   const [siteDescription, setSiteDescription] = useState(cleanAdminPublicCopy(settings.siteDescription) || settings.siteDescription);
   const [heroEnabled, setHeroEnabled] = useState(settings.heroEnabled);
+  const [heroHideStats, setHeroHideStats] = useState(settings.heroHideStats || false);
   const [heroAutoPlay, setHeroAutoPlay] = useState(settings.heroAutoPlay);
   const [heroStyle, setHeroStyle] = useState(settings.heroStyle || 'v1');
   const [postHeroStyle, setPostHeroStyle] = useState(settings.postHeroStyle || 'v1');
@@ -1326,6 +1327,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
     if (settings.siteLogo !== undefined) setSiteLogo(settings.siteLogo);
     if (settings.siteDescription !== undefined) setSiteDescription(cleanAdminPublicCopy(settings.siteDescription) || settings.siteDescription);
     if (settings.heroEnabled !== undefined) setHeroEnabled(settings.heroEnabled);
+    if (settings.heroHideStats !== undefined) setHeroHideStats(settings.heroHideStats);
     if (settings.heroAutoPlay !== undefined) setHeroAutoPlay(settings.heroAutoPlay);
     if (settings.heroStyle !== undefined) setHeroStyle(settings.heroStyle);
     if (settings.postHeroStyle !== undefined) setPostHeroStyle(settings.postHeroStyle);
@@ -2349,6 +2351,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
       siteLogo,
       siteDescription,
       heroEnabled,
+      heroHideStats,
       heroAutoPlay,
       heroStyle,
       postHeroStyle,
@@ -5905,6 +5908,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   {[
                     { label: 'Library Hero Intro', checked: features.showHomepageLibraryHero ?? true, onChange: (val: boolean) => setFeatures(prev => ({ ...prev, showHomepageLibraryHero: val })), desc: 'Intro block above content' },
                     { label: 'Hero Slideshow', checked: heroEnabled, onChange: (val: boolean) => setHeroEnabled(val), desc: 'Interactive featured slides' },
+                    { label: 'Show Stat Cards', checked: !heroHideStats, onChange: (val: boolean) => setHeroHideStats(!val), desc: 'Show 4+ prompts etc' },
                     { label: 'Slideshow Auto-Play', checked: heroAutoPlay, onChange: (val: boolean) => setHeroAutoPlay(val), desc: 'Automatically cycle slides' },
                   ].map((item) => (
                     <button
@@ -6379,6 +6383,17 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                       type="checkbox"
                                       checked={blockContent.showCta !== false}
                                       onChange={e => updateHomepageContent(blockKey, 'showCta', e.target.checked)}
+                                      className="h-4 w-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+                                    />
+                                  </label>
+                                )}
+                                {(blockKey === 'supportedTools' || blockKey === 'creativeDirections') && (
+                                  <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm font-bold text-surface-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 sm:col-span-2">
+                                    <span>Hide prompt counts on cards</span>
+                                    <input
+                                      type="checkbox"
+                                      checked={blockContent.hidePromptCounts || false}
+                                      onChange={e => updateHomepageContent(blockKey, 'hidePromptCounts', e.target.checked)}
                                       className="h-4 w-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
                                     />
                                   </label>
