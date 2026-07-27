@@ -24,10 +24,10 @@ export default function HeroV3({ featuredPosts: featured, settings }: HeroProps)
         <div className="absolute inset-0 bg-surface-50/80 dark:bg-surface-950/80 backdrop-blur-md" />
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center gap-6 md:flex-row md:gap-16">
+      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center gap-2 md:flex-row md:gap-16">
         {/* Text Content */}
         <div className="order-2 flex w-full flex-col text-center md:order-1 md:w-1/2 md:text-left">
-          <div className="relative min-h-[230px] md:min-h-[290px]">
+          <div className="relative min-h-[200px] md:min-h-[290px]">
             {featured.map((p, i) => {
               const slideTools = getAllTools(p);
               return (
