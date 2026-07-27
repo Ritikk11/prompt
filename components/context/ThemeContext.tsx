@@ -24,11 +24,25 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleTheme = () => {
+    // Kill every CSS transition on the page so the browser does one clean
+    // repaint instead of animating hundreds of color/bg/border properties.
+    const css = document.createElement('style');
+    css.appendChild(document.createTextNode('*,*::before,*::after{transition:none!important}'));
+    document.head.appendChild(css);
+
     setTheme(prev => {
       const next = prev === 'dark' ? 'light' : 'dark';
       document.documentElement.classList.toggle('dark', next === 'dark');
       localStorage.setItem('pv-theme', next);
       return next;
+    });
+
+    // Force a single synchronous repaint, then remove the override so
+    // normal hover/press transitions resume.
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    window.getComputedStyle(document.documentElement).opacity;
+    requestAnimationFrame(() => {
+      document.head.removeChild(css);
     });
   };
 
