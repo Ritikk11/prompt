@@ -60,9 +60,17 @@ export default function Header() {
   const routeTimerRef = useRef<number | null>(null);
   const routeIntervalRef = useRef<number | null>(null);
   const routeFallbackRef = useRef<number | null>(null);
-  const headerTapRef = useRef(0);
   const [isVisible, setIsVisible] = useState(true);
   const [routeProgress, setRouteProgress] = useState(0);
+  // On mobile, a tap on the theme toggle can land while a scroll gesture is
+  // still settling (rubber-band/momentum). That produces a stray `scroll`
+  // event right after the tap, which the visibility logic below reads as
+  // "user scrolled down" and hides the header immediately after it was
+  // shown — a hide-then-reappear flicker that has nothing to do with the
+  // theme repaint itself. Suppress scroll-driven hiding for a short window
+  // around a deliberate theme-toggle tap, same as menuOpen/searchOpen do.
+  const suppressHideRef = useRef(false);
+  const suppressHideTimeoutRef = useRef<number | null>(null);
 
   const stopRouteTimers = useCallback(() => {
     if (routeTimerRef.current) window.clearTimeout(routeTimerRef.current);
@@ -104,21 +112,8 @@ export default function Header() {
         progressFillRef.current.style.width = `${progress}%`;
       }
 
-      // Skip hide/show logic while a View Transition is active — the crossfade
-      // triggers phantom scroll events on real mobile that cause the header to
-      // flicker hide → show.
-      if ((window as any).__themeTransitioning) {
-        lastScrollYRef.current = currentScrollY;
-        return;
-      }
-
-      // Skip hide logic for 400ms after a tap on the header. On mobile,
-      // residual momentum/rubber-band scroll fires a phantom "scroll down"
-      // event right after the tap, which would incorrectly hide the header.
-      const msSinceTap = Date.now() - headerTapRef.current;
-
       const delta = currentScrollY - lastScrollYRef.current;
-      const shouldHide = delta > 4 && currentScrollY > 64 && !menuOpen && !searchOpen && !showLiveResults && msSinceTap > 400;
+      const shouldHide = delta > 4 && currentScrollY > 64 && !menuOpen && !searchOpen && !showLiveResults && !suppressHideRef.current;
       const shouldShow = delta < -4 || currentScrollY <= 16 || menuOpen || searchOpen || showLiveResults;
       if (shouldHide) {
         setIsVisible(false);
@@ -146,6 +141,23 @@ export default function Header() {
       }
     };
   }, [menuOpen, searchOpen, showLiveResults]);
+
+  useEffect(() => {
+    return () => {
+      if (suppressHideTimeoutRef.current) window.clearTimeout(suppressHideTimeoutRef.current);
+    };
+  }, []);
+
+  const handleThemeToggle = useCallback(() => {
+    setIsVisible(true);
+    suppressHideRef.current = true;
+    if (suppressHideTimeoutRef.current) window.clearTimeout(suppressHideTimeoutRef.current);
+    suppressHideTimeoutRef.current = window.setTimeout(() => {
+      suppressHideRef.current = false;
+      suppressHideTimeoutRef.current = null;
+    }, 500);
+    toggleTheme();
+  }, [toggleTheme]);
 
   const finishRouteProgress = useCallback(() => {
     stopRouteTimers();
@@ -334,7 +346,6 @@ export default function Header() {
       />
     </div>
     <header
-      onPointerDown={() => { headerTapRef.current = Date.now(); }}
       className={`sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-surface-950/80 border-b border-surface-200 dark:border-surface-800 transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}
     >
       <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between gap-4">
@@ -421,7 +432,7 @@ export default function Header() {
 
           <div className="w-px h-6 bg-surface-200 dark:bg-surface-700 mx-1" />
           <button
-            onClick={toggleTheme}
+            onClick={handleThemeToggle}
             className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 press-anim"
             aria-label="Toggle theme"
           >
@@ -446,7 +457,7 @@ export default function Header() {
             </span>
           </button>
           <button
-            onClick={toggleTheme}
+            onClick={handleThemeToggle}
             className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 press-anim"
             aria-label="Toggle theme"
           >
