@@ -63,35 +63,32 @@ export default function HomeCreativeDirections({ posts, settings }: { posts: Pos
           {directions.map(([item, count], index) => {
             const iconKey = (item.icon && articleIconMap[item.icon]) ? item.icon : articleIconList[index % articleIconList.length];
             const Icon = articleIconMap[iconKey];
-            const accent = [
-              'from-pink-500 to-rose-500',
-              'from-emerald-500 to-teal-500',
-              'from-violet-500 to-purple-500',
-              'from-sky-500 to-blue-500',
-              'from-orange-500 to-amber-500',
-              'from-slate-500 to-slate-700',
-              'from-fuchsia-500 to-pink-500',
-              'from-blue-500 to-indigo-500',
-            ][index % 8];
             return (
               <Link
                 key={`${item.type}:${item.value}`}
                 href={itemHref(item)}
-                className="group relative flex flex-col items-center overflow-hidden rounded-2xl border border-surface-200 bg-white p-4 text-center transition duration-200 hover:-translate-y-1 hover:border-transparent hover:shadow-[0_18px_40px_-12px_rgba(99,102,241,0.35)] dark:border-surface-800 dark:bg-surface-900/70 dark:hover:border-transparent sm:p-5"
+                className="group relative flex flex-col items-center overflow-hidden rounded-[2rem] border border-surface-200 bg-gradient-to-b from-white to-surface-50 p-5 text-center shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-primary-200 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:border-surface-800 dark:from-surface-900/50 dark:to-surface-950/50 dark:hover:border-primary-500/30 dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] sm:p-6"
               >
+                {/* Ambient background glow on hover */}
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full bg-primary-500/30 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
+                  className="pointer-events-none absolute -top-12 left-1/2 h-32 w-32 -translate-x-1/2 rounded-full bg-primary-500/20 opacity-0 blur-[32px] transition-opacity duration-500 group-hover:opacity-100 dark:bg-primary-500/10"
                 />
-                <span className={`relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br ${accent} text-white shadow-md transition-transform duration-200 group-hover:scale-105 sm:h-16 sm:w-16`}>
+                
+                {/* Icon Wrapper */}
+                <span className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06)] ring-1 ring-inset ring-surface-200 transition-all duration-500 group-hover:scale-110 group-hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] dark:bg-surface-900 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_4px_20px_-4px_rgba(0,0,0,0.4)] dark:ring-surface-700/50 dark:group-hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_8px_30px_-4px_rgba(0,0,0,0.6)] sm:h-20 sm:w-20">
+                  {/* Subtle inner primary glow on hover */}
+                  <span className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 dark:from-primary-500/10" />
+                  
                   {item.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.imageUrl} alt="" className="h-8 w-8 object-contain sm:h-9 sm:w-9" referrerPolicy="no-referrer" />
+                    <img src={item.imageUrl} alt="" className="relative z-10 h-8 w-8 object-contain transition-transform duration-500 group-hover:scale-110 sm:h-10 sm:w-10" referrerPolicy="no-referrer" />
                   ) : (
-                    <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
+                    <Icon className="relative z-10 h-8 w-8 text-primary-500 drop-shadow-sm transition-colors duration-500 group-hover:text-primary-400 dark:text-primary-400 dark:group-hover:text-primary-300 sm:h-10 sm:w-10" strokeWidth={2.5} />
                   )}
                 </span>
-                <h3 className="mt-4 line-clamp-2 text-sm font-extrabold leading-snug text-surface-950 dark:text-white sm:text-base">
+                
+                <h3 className="mt-5 line-clamp-2 text-sm font-extrabold leading-snug text-surface-950 transition-colors duration-300 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400 sm:text-base">
                   {item.label}
                 </h3>
                 <p className="mt-1 line-clamp-2 text-xs text-surface-500 dark:text-surface-400 sm:mt-2 sm:text-sm">

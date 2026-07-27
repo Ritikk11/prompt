@@ -2,10 +2,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { SiteSettings, StaticPageSettings } from '@/lib/types';
-import { Info, Save } from 'lucide-react';
+import { FileText, Info, Save } from 'lucide-react';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { WandButton } from '@/components/admin/MagicWand';
 import { staticPagePrompts } from '@/lib/admin/wandPrompts';
+import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, adminInput } from '@/components/admin/AdminUI';
 
 const MARKDOWN_HELP_EXAMPLE = `## Main section
 ### Question style heading
@@ -231,187 +232,210 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
   };
 
   return (
-    <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl p-6 fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-bold">Static Pages Content</h2>
-          <p className="text-sm text-surface-500 mt-1">Manage content using Markdown formatting.</p>
-        </div>
-        <button onClick={handleSave} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors shadow-lg shadow-primary-500/25">
-          <Save className="w-4 h-4" /> Save Content
-        </button>
-      </div>
+    <div className="space-y-6 fade-in">
+      <TabBanner
+        icon={<FileText />}
+        title="Static pages"
+        text="Edit the hero, search appearance, and markdown body of each public page, then save to publish."
+        action={
+          <button onClick={handleSave} className="flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white hover:bg-primary-600 transition-colors">
+            <Save className="w-4 h-4" /> Save content
+          </button>
+        }
+      />
 
-      <div className="flex gap-2 overflow-x-auto pb-4 mb-4">
+      <div className="flex gap-2 overflow-x-auto pb-1">
         {(Object.keys(textareas) as Array<keyof typeof textareas>).map(key => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${activeTab === key ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400' : 'bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-300'}`}
+            className={`px-4 py-2 rounded-xl border text-xs font-bold whitespace-nowrap transition-all ${activeTab === key
+              ? 'border-primary-500/50 bg-primary-50/10 dark:bg-primary-950/10 text-primary-600 dark:text-primary-400 shadow-md'
+              : 'border-surface-200 dark:border-surface-800 bg-surface-50/70 dark:bg-surface-800/40 text-surface-600 dark:text-surface-300 hover:border-surface-300 dark:hover:border-surface-700'}`}
           >
             {textareas[key].label}
           </button>
         ))}
       </div>
 
-      <div className="rounded-2xl border border-surface-200 bg-surface-50/70 p-3 dark:border-surface-800 dark:bg-surface-950/40 sm:p-4">
-        <div className="mb-4 grid gap-3 rounded-xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900 md:grid-cols-2">
-          <div>
-            <label className="block text-xs font-medium text-surface-500 mb-1">Page title (H1)</label>
-            <input
-              value={currentPage.title || ''}
-              onChange={e => updateCurrentPage({ title: e.target.value })}
-              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-              placeholder={textareas[activeTab].label}
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-surface-500 mb-1">OG image</label>
-            <input
-              value={currentPage.ogImage || ''}
-              onChange={e => updateCurrentPage({ ogImage: e.target.value })}
-              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-              placeholder="https://..."
-            />
-          </div>
-          <div className="md:col-span-2">
-            <div className="mb-1 flex items-center justify-between">
-              <label className="block text-xs font-medium text-surface-500">Hero subtitle / intro text</label>
-              <WandButton
-                fieldId={`page-subtitle-${activeTab}`}
-                value={currentPage.subtitle || ''}
-                onChange={(v) => updateCurrentPage({ subtitle: v })}
-                prompt={() => staticPagePrompts.heroSubtitle(activeTab, textareas[activeTab].label)}
-              />
-            </div>
-            <textarea
-              value={currentPage.subtitle || ''}
-              onChange={e => updateCurrentPage({ subtitle: e.target.value })}
-              rows={2}
-              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-            />
-          </div>
-          <div>
-            <div className="mb-1 flex items-center justify-between">
-              <label className="block text-xs font-medium text-surface-500">Meta title</label>
-              <WandButton
-                fieldId={`page-meta-title-${activeTab}`}
-                value={currentPage.metaTitle || ''}
-                onChange={(v) => updateCurrentPage({ metaTitle: v.slice(0, 80) })}
-                prompt={() => staticPagePrompts.metaTitle(activeTab, textareas[activeTab].label)}
-              />
-            </div>
-            <input
-              value={currentPage.metaTitle || ''}
-              onChange={e => updateCurrentPage({ metaTitle: e.target.value.slice(0, 80) })}
-              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-            />
-            <p className="mt-1 text-[11px] text-surface-500">{(currentPage.metaTitle || '').length}/80</p>
-          </div>
-          <div>
-            <div className="mb-1 flex items-center justify-between">
-              <label className="block text-xs font-medium text-surface-500">Meta description</label>
-              <WandButton
-                fieldId={`page-meta-desc-${activeTab}`}
-                value={currentPage.metaDescription || ''}
-                onChange={(v) => updateCurrentPage({ metaDescription: v.slice(0, 170) })}
-                prompt={() => staticPagePrompts.metaDescription(activeTab, textareas[activeTab].label)}
-              />
-            </div>
-            <textarea
-              value={currentPage.metaDescription || ''}
-              onChange={e => updateCurrentPage({ metaDescription: e.target.value.slice(0, 170) })}
-              rows={2}
-              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
-            />
-            <p className="mt-1 text-[11px] text-surface-500">{(currentPage.metaDescription || '').length}/170</p>
-          </div>
-          <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-3">
-            <label className="inline-flex items-center gap-2 text-sm font-medium">
+      <Panel>
+        <PanelHeader
+          title={textareas[activeTab].label}
+          subtitle="Hero, search appearance, and markdown body for this page."
+          actions={
+            <>
+              <label className="inline-flex items-center gap-2 text-xs font-bold text-surface-700 dark:text-surface-300">
+                <input
+                  type="checkbox"
+                  checked={currentPage.visible !== false}
+                  onChange={e => updateCurrentPage({ visible: e.target.checked })}
+                  className="h-4 w-4 rounded text-primary-500"
+                />
+                Show this page publicly
+              </label>
+              <button
+                type="button"
+                onClick={() => window.open(`/${activeTab}`, '_blank')}
+                className="rounded-xl px-3 py-2 text-xs font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
+              >
+                Open page
+              </button>
+            </>
+          }
+        />
+
+        <div className="space-y-4">
+          <SectionEyebrow>1. Hero content</SectionEyebrow>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Page title (H1)">
               <input
-                type="checkbox"
-                checked={currentPage.visible !== false}
-                onChange={e => updateCurrentPage({ visible: e.target.checked })}
-                className="h-4 w-4 rounded text-primary-500"
+                value={currentPage.title || ''}
+                onChange={e => updateCurrentPage({ title: e.target.value })}
+                className={adminInput}
+                placeholder={textareas[activeTab].label}
               />
-              Show this page publicly
-            </label>
-            <button
-              type="button"
-              onClick={() => window.open(`/${activeTab}`, '_blank')}
-              className="rounded-lg bg-surface-100 px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-200"
+            </Field>
+            <Field
+              label="Hero subtitle / intro text"
+              className="md:col-span-2"
+              action={
+                <WandButton
+                  fieldId={`page-subtitle-${activeTab}`}
+                  value={currentPage.subtitle || ''}
+                  onChange={(v) => updateCurrentPage({ subtitle: v })}
+                  prompt={() => staticPagePrompts.heroSubtitle(activeTab, textareas[activeTab].label)}
+                />
+              }
             >
-              Preview
-            </button>
+              <textarea
+                value={currentPage.subtitle || ''}
+                onChange={e => updateCurrentPage({ subtitle: e.target.value })}
+                rows={2}
+                className={adminInput}
+              />
+            </Field>
           </div>
         </div>
 
-        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <label className="text-sm font-medium">{textareas[activeTab].label} (Markdown Format)</label>
-          <div className="flex flex-wrap items-center gap-2">
-            <WandButton
-              fieldId={`page-body-${activeTab}`}
-              value={textareas[activeTab].value}
-              onChange={(v) => textareas[activeTab].set(v)}
-              prompt={() => staticPagePrompts.body(activeTab, textareas[activeTab].label)}
-              size="sm"
-            />
-            <div className="grid grid-cols-2 rounded-xl bg-white p-1 text-xs font-semibold dark:bg-surface-800">
-              <button
-                type="button"
-                onClick={() => setMode('edit')}
-                className={`rounded-lg px-3 py-1.5 transition-colors ${mode === 'edit' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-500'}`}
-              >
-                Edit
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('preview')}
-                className={`rounded-lg px-3 py-1.5 transition-colors ${mode === 'preview' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-500'}`}
-              >
-                Preview
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowHelp(prev => !prev)}
-              className="inline-flex items-center gap-2 rounded-xl border border-surface-200 bg-white px-3 py-2 text-xs font-bold text-surface-600 transition-colors hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:bg-surface-900 dark:text-surface-300"
+        <div className="space-y-4">
+          <SectionEyebrow>2. Search appearance</SectionEyebrow>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field
+              label="Meta title"
+              action={
+                <WandButton
+                  fieldId={`page-meta-title-${activeTab}`}
+                  value={currentPage.metaTitle || ''}
+                  onChange={(v) => updateCurrentPage({ metaTitle: v.slice(0, 80) })}
+                  prompt={() => staticPagePrompts.metaTitle(activeTab, textareas[activeTab].label)}
+                />
+              }
             >
-              <Info className="h-3.5 w-3.5" />
-              Formatting
-            </button>
+              <input
+                value={currentPage.metaTitle || ''}
+                onChange={e => updateCurrentPage({ metaTitle: e.target.value.slice(0, 80) })}
+                className={adminInput}
+              />
+              <p className="mt-1 text-[11px] text-surface-500">{(currentPage.metaTitle || '').length}/80</p>
+            </Field>
+            <Field
+              label="Meta description"
+              action={
+                <WandButton
+                  fieldId={`page-meta-desc-${activeTab}`}
+                  value={currentPage.metaDescription || ''}
+                  onChange={(v) => updateCurrentPage({ metaDescription: v.slice(0, 170) })}
+                  prompt={() => staticPagePrompts.metaDescription(activeTab, textareas[activeTab].label)}
+                />
+              }
+            >
+              <textarea
+                value={currentPage.metaDescription || ''}
+                onChange={e => updateCurrentPage({ metaDescription: e.target.value.slice(0, 170) })}
+                rows={2}
+                className={adminInput}
+              />
+              <p className="mt-1 text-[11px] text-surface-500">{(currentPage.metaDescription || '').length}/170</p>
+            </Field>
+            <Field label="OG image" className="md:col-span-2">
+              <input
+                value={currentPage.ogImage || ''}
+                onChange={e => updateCurrentPage({ ogImage: e.target.value })}
+                className={adminInput}
+                placeholder="https://..."
+              />
+            </Field>
           </div>
         </div>
 
-        {showHelp && (
-          <div className="mb-3 grid gap-3 rounded-xl border border-primary-200 bg-white p-3 text-xs dark:border-primary-800/40 dark:bg-surface-900 md:grid-cols-2">
-            <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg bg-surface-950 p-3 font-mono text-[11px] leading-relaxed text-surface-50">{MARKDOWN_HELP_EXAMPLE}</pre>
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              <MarkdownRenderer>{MARKDOWN_HELP_EXAMPLE}</MarkdownRenderer>
-            </div>
-          </div>
-        )}
-
-        {mode === 'edit' ? (
-          <textarea
-            value={textareas[activeTab].value}
-            onChange={e => textareas[activeTab].set(e.target.value)}
-            rows={20}
-            className="w-full resize-y rounded-xl border border-surface-200 bg-white px-4 py-3 font-mono text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800/50"
-            placeholder={`# ${textareas[activeTab].label}\n\nEnter content here...`}
-          />
-        ) : (
-          <div className="min-h-[420px] rounded-xl border border-surface-200 bg-white p-4 dark:border-surface-700 dark:bg-surface-900 sm:p-6">
-            {textareas[activeTab].value.trim() ? (
-              <div className="prose prose-sm max-w-none dark:prose-invert sm:prose-base">
-                <MarkdownRenderer>{textareas[activeTab].value}</MarkdownRenderer>
+        <div className="space-y-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <SectionEyebrow>3. Page body</SectionEyebrow>
+            <div className="flex flex-wrap items-center gap-2">
+              <WandButton
+                fieldId={`page-body-${activeTab}`}
+                value={textareas[activeTab].value}
+                onChange={(v) => textareas[activeTab].set(v)}
+                prompt={() => staticPagePrompts.body(activeTab, textareas[activeTab].label)}
+                size="sm"
+              />
+              <div className="grid grid-cols-2 rounded-xl bg-surface-100 dark:bg-surface-800 p-1 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setMode('edit')}
+                  className={`rounded-lg px-3 py-1.5 transition-colors ${mode === 'edit' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-500'}`}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('preview')}
+                  className={`rounded-lg px-3 py-1.5 transition-colors ${mode === 'preview' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-500'}`}
+                >
+                  Preview
+                </button>
               </div>
-            ) : (
-              <p className="text-sm text-surface-400">Preview will appear here as you write.</p>
-            )}
+              <button
+                type="button"
+                onClick={() => setShowHelp(prev => !prev)}
+                className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
+              >
+                <Info className="h-3.5 w-3.5" />
+                Formatting
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+
+          {showHelp && (
+            <div className="grid gap-3 rounded-xl border border-primary-200 bg-primary-50/60 p-3 text-xs dark:border-primary-800/40 dark:bg-primary-950/20 md:grid-cols-2">
+              <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg bg-surface-950 p-3 font-mono text-[11px] leading-relaxed text-surface-50">{MARKDOWN_HELP_EXAMPLE}</pre>
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <MarkdownRenderer>{MARKDOWN_HELP_EXAMPLE}</MarkdownRenderer>
+              </div>
+            </div>
+          )}
+
+          {mode === 'edit' ? (
+            <textarea
+              value={textareas[activeTab].value}
+              onChange={e => textareas[activeTab].set(e.target.value)}
+              rows={20}
+              className="w-full resize-y rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3.5 py-3 font-mono text-xs leading-relaxed outline-none focus:border-primary-500 transition-colors"
+              placeholder={`# ${textareas[activeTab].label}\n\nEnter content here...`}
+            />
+          ) : (
+            <div className="min-h-[420px] rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50/70 dark:bg-surface-800/40 p-4 sm:p-6">
+              {textareas[activeTab].value.trim() ? (
+                <div className="prose prose-sm max-w-none dark:prose-invert sm:prose-base">
+                  <MarkdownRenderer>{textareas[activeTab].value}</MarkdownRenderer>
+                </div>
+              ) : (
+                <p className="text-sm text-surface-400">Preview will appear here as you write.</p>
+              )}
+            </div>
+          )}
+        </div>
+      </Panel>
     </div>
   );
 }

@@ -8,7 +8,7 @@ import Image from 'next/image';
 // rim, and the text-shadow keeps the label readable even when the pill body goes
 // faint over white posters. Tune the badge look here only.
 export const BADGE_BG =
-  'bg-white/15 backdrop-blur-xl backdrop-saturate-150 ring-1 ring-inset ring-white/30 [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]';
+  'bg-white/15 backdrop-blur-xl backdrop-saturate-150 ring-1 ring-inset ring-white/30';
 
 type BadgeSize = 'sm' | 'md' | 'lg';
 
@@ -30,7 +30,7 @@ export default function ToolBadge({ toolName, toolInfo, size = 'md', className =
   const s = SIZE[size];
   return (
     <span
-      className={`inline-flex items-center rounded-full font-bold uppercase tracking-wider text-white shadow-lg border border-white/10 ${BADGE_BG} ${s.pill} ${className}`}
+      className={`inline-flex items-center rounded-full font-bold uppercase tracking-wider text-white shadow-lg ${BADGE_BG} ${s.pill} ${className}`}
     >
       {toolInfo?.logo ? (
         <span className={`relative shrink-0 ${s.logo} bg-white rounded-full overflow-hidden p-[2px] shadow-sm`}>
@@ -42,7 +42,7 @@ export default function ToolBadge({ toolName, toolInfo, size = 'md', className =
           </span>
         </span>
       ) : null}
-      {toolName}
+      <span className="drop-shadow-[0_1.5px_1.5px_rgba(0,0,0,0.9)] leading-none">{toolName}</span>
     </span>
   );
 }

@@ -950,17 +950,17 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               <div className="grid grid-cols-1 items-start gap-0 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:gap-5">
                 {/* Image — no cropping, natural display */}
                 <div className="relative self-start p-3 sm:p-4">
-                  <div className="relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-2 shadow-sm transition-transform duration-500 group-hover:scale-[1.005] dark:border-surface-700/70 dark:bg-surface-800/60 group/img">
+                  <div className="relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-2 shadow-sm dark:border-surface-700/70 dark:bg-surface-800/60 group/img">
                     <div className="relative flex w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-900" onClick={() => setLightboxImage({ url: img.url || '', index, tools: img.aiTools || [img.aiTool].filter(Boolean) })}>
                       <LoadingImg
                         src={displayPromptImageUrl(img.url, 1100)}
                         alt={`Prompt ${index + 1}`}
                         showSkeleton={showSkeleton}
-                        className="block h-auto w-full rounded-xl"
+                        className="block h-auto w-full rounded-xl transition-transform duration-500 group-hover/img:scale-[1.02]"
                         referrerPolicy="no-referrer"
                       />
                     </div>
-                    <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-2">
+                    <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-2 pointer-events-none">
                       {(img.aiTools || [img.aiTool].filter(Boolean)).map((tool) => {
                         const info = getToolInfo(tool, settings?.toolDetails);
                         return (
@@ -983,7 +983,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                           e.stopPropagation();
                           if (img.url) handleDownload(img.url, `prompt_${post.id}_${index + 1}.png`);
                         }}
-                        className="p-2.5 rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/80 hover:scale-110 transition-all shadow-xl"
+                        className="p-2.5 rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/70 hover:scale-110 transition-all shadow-xl transform-gpu will-change-transform"
+                        style={{ WebkitBackfaceVisibility: 'hidden' }}
                       >
                         <Download className="w-5 h-5" />
                       </button>
@@ -993,7 +994,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                           e.stopPropagation();
                           setLightboxImage({ url: img.url || '', index, tools: img.aiTools || [img.aiTool].filter(Boolean) });
                         }}
-                        className="p-2.5 rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/80 hover:scale-110 transition-all shadow-xl"
+                        className="p-2.5 rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/70 hover:scale-110 transition-all shadow-xl transform-gpu will-change-transform"
+                        style={{ WebkitBackfaceVisibility: 'hidden' }}
                       >
                         <ZoomIn className="w-5 h-5" />
                       </button>

@@ -20,6 +20,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
 import { MagicWandProvider, WandButton, useMagicWand } from '@/components/admin/MagicWand';
+import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
 import { askAi } from '@/lib/admin/ai';
 import { postPrompts, articlePrompts, generalPrompts, discoveryPrompts, homepagePrompts, aiToolPrompts, featurePrompts } from '@/lib/admin/wandPrompts';
 import { filterPostsForSection, getSectionPath } from '@/lib/sections';
@@ -4116,17 +4117,12 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
 
       {tab === 'sections' && (
         <div className="w-full max-w-6xl space-y-6 animate-in fade-in duration-200">
-          {/* Section Header matching requested design */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-surface-100 dark:border-surface-800 pb-5">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white">
-                Sections
-              </h1>
-              <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-                Manage content sections and their dedicated pages. Homepage ordering lives here.
-              </p>
-            </div>
-            <div>
+          {/* Tab banner */}
+          <TabBanner
+            icon={<Layers />}
+            title="Sections"
+            text="Manage content sections and their dedicated pages. Homepage ordering lives here."
+            action={(
               <button
                 onClick={() => {
                   setShowNewSectionForm(prev => !prev);
@@ -4136,21 +4132,21 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                     });
                   }
                 }}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-bold text-xs transition-colors shadow-sm"
               >
-                <Plus className="w-4.5 h-4.5" /> New Section
+                <Plus className="w-4 h-4" /> New section
               </button>
-            </div>
-          </div>
+            )}
+          />
 
           {/* Sub-tab container card matching screenshot */}
           <div className="border border-surface-200 dark:border-surface-800 rounded-2xl p-4 bg-white dark:bg-surface-900 shadow-sm">
             <div className="flex flex-wrap gap-2.5">
               {[
                 { id: 'homepage', label: 'Homepage' },
-                { id: 'header', label: 'Header Menu' },
+                { id: 'header', label: 'Header menu' },
                 { id: 'footer', label: 'Footer' },
-                { id: 'all', label: 'All Sections' },
+                { id: 'all', label: 'All sections' },
               ].map(item => (
                 <button
                   key={item.id}
@@ -4169,63 +4165,57 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
 
           {/* Add new section form (Shown only when toggled) */}
           {showNewSectionForm && (
-            <div id="add-section-form" className="p-6 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm animate-in slide-in-from-top-2 duration-200">
-              <div className="flex items-center justify-between pb-4 border-b border-surface-100 dark:border-surface-800 mb-6">
-                <div>
-                  <h3 className="font-bold text-base flex items-center gap-2">
-                    <Plus className="w-5 h-5 text-primary-500" /> Create New Section
-                  </h3>
-                  <p className="mt-1 text-xs text-surface-500">Configure your custom layout block, tag rail, or category filter.</p>
-                </div>
-                <button
-                  onClick={() => setShowNewSectionForm(false)}
-                  className="p-1.5 rounded-lg text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-600 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+            <div id="add-section-form" className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-6 animate-in slide-in-from-top-2 duration-200">
+              <PanelHeader
+                title="Create new section"
+                subtitle="Configure your custom layout block, tag rail, or category filter."
+                actions={(
+                  <button
+                    onClick={() => setShowNewSectionForm(false)}
+                    className="p-1.5 rounded-lg text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              />
 
               {/* Form fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Section Name</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Field label="Section name">
                   <input
                     value={newSectionName}
                     onChange={e => {
                       setNewSectionName(e.target.value);
                       if (!newSectionSlug) setNewSectionSlug(slugify(e.target.value));
                     }}
-                    className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    className={adminInput}
                     placeholder="e.g., Hot Prompts"
                   />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">URL Slug</label>
+                </Field>
+                <Field label="URL slug">
                   <input
                     value={newSectionSlug}
                     onChange={e => setNewSectionSlug(slugify(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    className={adminInput}
                     placeholder="e.g., hot-prompts"
                   />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Location</label>
+                </Field>
+                <Field label="Location">
                   <select
                     value={newSectionLocation}
                     onChange={e => setNewSectionLocation(e.target.value as 'homepage' | 'header' | 'footer')}
-                    className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    className={adminInput}
                   >
                     <option value="homepage">Homepage</option>
                     <option value="header">Header Menu Link</option>
                     <option value="footer">Footer Section</option>
                   </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Data Source Type</label>
+                </Field>
+                <Field label="Data source type">
                   <select
                     value={newSectionType}
                     onChange={e => setNewSectionType(e.target.value as Section['type'])}
-                    className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    className={adminInput}
                   >
                     <option value="latest">Latest Prompts</option>
                     <option value="popular">Popular Posts</option>
@@ -4235,69 +4225,64 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                     <option value="category">Category (auto-filter by category)</option>
                     <option value="custom">Custom (pick posts manually)</option>
                   </select>
-                </div>
+                </Field>
               </div>
 
               {/* Conditional parameters and custom layout overrides */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {newSectionType === 'ai-tool' && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">AI Tool</label>
+                  <Field label="AI tool">
                     <select
                       value={newSectionTool}
                       onChange={e => setNewSectionTool(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className={adminInput}
                     >
                       <option value="">Select AI tool...</option>
                       {(settings.aiTools || []).map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
-                  </div>
+                  </Field>
                 )}
                 {newSectionType === 'tag' && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Tag Value</label>
+                  <Field label="Tag value">
                     <input
                       value={newSectionTag}
                       onChange={e => setNewSectionTag(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className={adminInput}
                       placeholder="e.g., character, anime"
                     />
-                  </div>
+                  </Field>
                 )}
                 {newSectionType === 'category' && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Category Value</label>
+                  <Field label="Category value">
                     <input
                       value={newSectionCategory}
                       onChange={e => setNewSectionCategory(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className={adminInput}
                       placeholder="e.g., UI, Game"
                     />
-                  </div>
+                  </Field>
                 )}
                 {/* Post limit only affects how many cards the homepage block renders;
                     header/footer sections are just nav links to /section/[slug], which shows all posts. */}
                 {newSectionLocation === 'homepage' && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Post Limit</label>
+                  <Field label="Post limit">
                     <input
                       type="number"
                       min={1}
                       max={50}
                       value={newSectionLimit}
                       onChange={e => setNewSectionLimit(parseInt(e.target.value) || 8)}
-                      className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className={adminInput}
                     />
-                    <p className="text-[11px] text-surface-400">Cards shown in the homepage block. The section page always shows all posts.</p>
-                  </div>
+                    <p className="text-[11px] text-surface-400 mt-1">Cards shown in the homepage block. The section page always shows all posts.</p>
+                  </Field>
                 )}
                 <div className="sm:col-span-2 grid gap-4 lg:grid-cols-[1fr_300px] lg:items-start">
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Card Style Override</label>
+                  <Field label="Card style override">
                     <select
                       value={newSectionCardStyle}
                       onChange={e => setNewSectionCardStyle(e.target.value as Section['cardStyle'] | '')}
-                      className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className={adminInput}
                     >
                       <option value="">Use global card style</option>
                       <option value="v1">v1 - Hover Overlay</option>
@@ -4312,32 +4297,31 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                     <p className="text-[11px] text-surface-400 mt-1">
                       {newSectionCardStyle ? 'This section will ignore the global card style.' : `Using global card style: ${cardStyleName(cardStyle)}`}
                     </p>
-                  </div>
+                  </Field>
                   <CardStylePreview style={newSectionCardStyle || cardStyle} badgeStyle={badgeStyle} label={newSectionCardStyle ? 'Section override preview' : 'Global style preview'} />
                 </div>
-                <div className="sm:col-span-2 space-y-1">
-                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Optional Filter Tags</label>
+                <Field label="Optional filter tags" className="sm:col-span-2">
                   <input
                     value={newSectionFilterTags}
                     onChange={e => setNewSectionFilterTags(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    className={adminInput}
                     placeholder="character, anime, realistic"
                   />
                   <p className="text-[11px] text-surface-400 mt-1">Adds a horizontal tag rail above this section grid. Tags must match post tags.</p>
-                </div>
+                </Field>
               </div>
 
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={handleAddSection}
                   disabled={!newSectionName || (newSectionType === 'ai-tool' && !newSectionTool) || (newSectionType === 'tag' && !newSectionTag) || (newSectionType === 'category' && !newSectionCategory)}
-                  className="px-5 py-2.5 rounded-xl bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 rounded-xl bg-primary-500 text-white text-xs font-bold hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Create Section
+                  Create section
                 </button>
                 <button
                   onClick={() => setShowNewSectionForm(false)}
-                  className="px-5 py-2.5 rounded-xl border border-surface-200 dark:border-surface-700 text-sm font-semibold hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
                 >
                   Cancel
                 </button>
@@ -4348,51 +4332,51 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
           {/* Sections Lists by Location */}
           <div className="space-y-8">
             {sectionLocationsToRender.map(loc => (
-              <div key={loc} className="mb-4">
-                <div className="mb-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="font-semibold text-sm">{loc === 'homepage' ? 'Homepage Sections' : loc === 'header' ? 'Header Menu Sections' : 'Footer Sections'}</h3>
-                    <button
-                      type="button"
-                      onClick={() => startNewSection(loc)}
-                      className="inline-flex items-center gap-1 rounded-lg bg-primary-500/10 px-2.5 py-1.5 text-[11px] font-bold text-primary-600 hover:bg-primary-500/15 dark:text-primary-300"
-                    >
-                      <Plus className="h-3 w-3" /> Add {loc === 'homepage' ? 'homepage' : loc === 'header' ? 'header' : 'footer'} section
-                    </button>
-                  </div>
-                  <p className="text-xs text-surface-500 mt-1">
-                    {loc === 'homepage'
-                      ? 'Edit homepage post sections here. Reorder them with the full homepage layout in Settings -> Homepage.'
-                      : loc === 'header'
-                        ? 'These appear in the header menu and open their full section pages.'
-                        : 'Footer sections are ready for future footer placement and organization.'}
-                  </p>
-                  {loc === 'homepage' && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTab('settings');
-                        setSettingsSubTab('homepage');
-                      }}
-                      className="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary-500/10 px-3 py-2 text-xs font-bold text-primary-600 hover:bg-primary-500/15 dark:text-primary-300"
-                    >
-                      <Layers className="h-3.5 w-3.5" /> Open homepage order
-                    </button>
+              <Panel key={loc}>
+                <PanelHeader
+                  title={loc === 'homepage' ? 'Homepage sections' : loc === 'header' ? 'Header menu sections' : 'Footer sections'}
+                  count={sections.filter(s => (s.location || 'homepage') === loc).length}
+                  subtitle={loc === 'homepage'
+                    ? 'Edit homepage post sections here. Reorder them with the full homepage layout in Settings -> Homepage.'
+                    : loc === 'header'
+                      ? 'These appear in the header menu and open their full section pages.'
+                      : 'Footer sections are ready for future footer placement and organization.'}
+                  actions={(
+                    <>
+                      {loc === 'homepage' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTab('settings');
+                            setSettingsSubTab('homepage');
+                          }}
+                          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
+                        >
+                          <Layers className="h-3.5 w-3.5" /> Open homepage order
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => startNewSection(loc)}
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white hover:bg-primary-600 transition-colors"
+                      >
+                        <Plus className="h-3.5 w-3.5" /> Add {loc === 'homepage' ? 'homepage' : loc === 'header' ? 'header' : 'footer'} section
+                      </button>
+                    </>
                   )}
-                </div>
+                />
                 <div className="space-y-3">
                   {[...sections].filter(s => (s.location || 'homepage') === loc).sort((a, b) => a.order - b.order).map((section, idx, arr) => {
                 const isAutoSection = section.type === 'latest' || section.type === 'popular';
                 const sectionPath = getSectionPath(section);
                 return (
-                  <div
+                  <EditableCard
                     key={section.id}
-                    className={`rounded-xl border bg-white dark:bg-surface-900 overflow-hidden transition-all ${
-                      !section.visible ? 'border-surface-200 dark:border-surface-800 opacity-60' : 'border-surface-200 dark:border-surface-800'
-                    }`}
+                    isEditing={editingSectionId === section.id}
+                    className={!section.visible ? 'opacity-60' : ''}
                   >
                     {/* Main row */}
-                    <div className="flex items-center gap-3 p-4">
+                    <div className="flex items-center gap-3">
                       {/* Reorder buttons */}
                       {loc === 'homepage' ? (
                         <div className="flex w-8 shrink-0 items-center justify-center" title="Use Settings -> Homepage to reorder homepage sections with the rest of the homepage blocks.">
@@ -4423,33 +4407,31 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       {/* Section info */}
                       <div className="flex-1 min-w-0">
                       {editingSectionId === section.id ? (
-                        <div className="space-y-6 p-4 bg-surface-50 dark:bg-surface-800/30 rounded-xl">
+                        <div className="space-y-6">
+                          <SectionEyebrow>1. Section basics</SectionEyebrow>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Section Name</label>
+                            <Field label="Section name">
                               <input
                                 value={editSectionName}
                                 onChange={e => setEditSectionName(e.target.value)}
-                                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                className={adminInput}
                                 placeholder="Section title, e.g. Trending Now"
                               />
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Slug</label>
+                            </Field>
+                            <Field label="Slug">
                               <input
                                 value={editSectionSlug}
                                 onChange={e => setEditSectionSlug(slugify(e.target.value))}
-                                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                className={adminInput}
                                 placeholder="slug, e.g. trending"
                               />
-                              <p className="text-[11px] text-surface-400">URL preview: /section/{editSectionSlug || 'slug'}</p>
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Type</label>
+                              <p className="text-[11px] text-surface-400 mt-1">URL preview: /section/{editSectionSlug || 'slug'}</p>
+                            </Field>
+                            <Field label="Type">
                               <select
                                 value={editSectionType}
                                 onChange={e => setEditSectionType(e.target.value as any)}
-                                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                className={adminInput}
                               >
                                 <option value="custom">Custom (Manually Picked)</option>
                                 <option value="latest">Latest Prompts</option>
@@ -4459,43 +4441,40 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                 <option value="tag">Tag Prompts</option>
                                 <option value="category">Category Prompts</option>
                               </select>
-                              <p className="text-[11px] text-surface-400">How this section selects its posts</p>
-                            </div>
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Location</label>
+                              <p className="text-[11px] text-surface-400 mt-1">How this section selects its posts</p>
+                            </Field>
+                            <Field label="Location">
                               <select
                                 value={editSectionLocation}
                                 onChange={e => setEditSectionLocation(e.target.value as any)}
-                                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                className={adminInput}
                               >
                                 <option value="homepage">Homepage Block</option>
                                 <option value="header">Header Link</option>
                                 <option value="footer">Footer Section</option>
                               </select>
-                              <p className="text-[11px] text-surface-400">Where this section appears</p>
-                            </div>
+                              <p className="text-[11px] text-surface-400 mt-1">Where this section appears</p>
+                            </Field>
                             {/* Post limit only affects the homepage block; header/footer sections
                                 are nav links to /section/[slug], which shows all posts. */}
                             {(editSectionLocation || 'homepage') === 'homepage' && (
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Post Limit</label>
+                              <Field label="Post limit">
                                 <input
                                   type="number"
                                   min={1}
                                   max={50}
                                   value={editSectionLimit}
                                   onChange={e => setEditSectionLimit(parseInt(e.target.value) || 8)}
-                                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  className={adminInput}
                                 />
-                                <p className="text-[11px] text-surface-400">Cards shown in the homepage block. The section page always shows all posts.</p>
-                              </div>
+                                <p className="text-[11px] text-surface-400 mt-1">Cards shown in the homepage block. The section page always shows all posts.</p>
+                              </Field>
                             )}
-                            <div className="space-y-1.5">
-                              <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Card Style</label>
+                            <Field label="Card style">
                               <select
                                 value={editSectionCardStyle}
                                 onChange={e => setEditSectionCardStyle(e.target.value as any)}
-                                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                className={adminInput}
                               >
                                 <option value="">Use global card style</option>
                                 <option value="v1">v1 Hover Overlay</option>
@@ -4507,153 +4486,149 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                 <option value="v7">v7 Polaroid</option>
                                 <option value="v8">v8 Glass Panel</option>
                               </select>
-                              <p className="text-[11px] text-surface-400">Override default grid styling</p>
-                            </div>
+                              <p className="text-[11px] text-surface-400 mt-1">Override default grid styling</p>
+                            </Field>
 
                             {/* Conditional configuration based on Section Type */}
                             {editSectionType === 'ai-tool' && (
-                              <div className="space-y-1.5 md:col-span-2">
-                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">AI Tool slug/identifier</label>
+                              <Field label="AI tool slug or identifier" className="md:col-span-2">
                                 <input
                                   value={editSectionAiTool}
                                   onChange={e => setEditSectionAiTool(e.target.value)}
-                                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  className={adminInput}
                                   placeholder="e.g. midjourney, chatgpt"
                                 />
-                              </div>
+                              </Field>
                             )}
                             {editSectionType === 'tag' && (
-                              <div className="space-y-1.5 md:col-span-2">
-                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Tag value</label>
+                              <Field label="Tag value" className="md:col-span-2">
                                 <input
                                   value={editSectionTag}
                                   onChange={e => setEditSectionTag(e.target.value)}
-                                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  className={adminInput}
                                   placeholder="e.g. realistic, photorealistic"
                                 />
-                              </div>
+                              </Field>
                             )}
                             {editSectionType === 'category' && (
-                              <div className="space-y-1.5 md:col-span-2">
-                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Category name</label>
+                              <Field label="Category name" className="md:col-span-2">
                                 <input
                                   value={editSectionCategory}
                                   onChange={e => setEditSectionCategory(e.target.value)}
-                                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  className={adminInput}
                                   placeholder="e.g. Photography, Art"
                                 />
-                              </div>
+                              </Field>
                             )}
                           </div>
 
                           {/* Subpanel Section Page */}
                           <div className="border border-surface-200 dark:border-surface-800 rounded-xl p-4 bg-white dark:bg-surface-900">
-                            <h4 className="font-semibold text-xs text-surface-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                              <FileText className="w-3.5 h-3.5" /> Section Page
-                            </h4>
-                            <p className="text-xs text-surface-400 mb-4">The dedicated page configuration at /section/{editSectionSlug || 'slug'}</p>
+                            <SectionEyebrow>2. Section page</SectionEyebrow>
+                            <p className="text-xs text-surface-400 mt-2 mb-4">The dedicated page configuration at /section/{editSectionSlug || 'slug'}</p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Page Hero Badge</label>
+                              <Field label="Page hero badge">
                                 <input
                                   value={editSectionHeroBadge}
                                   onChange={e => setEditSectionHeroBadge(e.target.value)}
-                                  className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  className={adminInput}
                                   placeholder="Leave blank to use 'Section'"
                                 />
-                                <p className="text-[11px] text-surface-400">Small label shown above the hero title.</p>
-                              </div>
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Page Hero Title</label>
+                                <p className="text-[11px] text-surface-400 mt-1">Small label shown above the hero title.</p>
+                              </Field>
+                              <Field label="Page hero title">
                                 <input
                                   value={editSectionHeroTitle}
                                   onChange={e => setEditSectionHeroTitle(e.target.value)}
-                                  className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  className={adminInput}
                                   placeholder="Leave blank to use section name"
                                 />
-                                <p className="text-[11px] text-surface-400">The big heading shown on the section page.</p>
-                              </div>
-                              <div className="space-y-1.5">
-                                <div className="flex items-center justify-between">
-                                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Page Hero Description</label>
+                                <p className="text-[11px] text-surface-400 mt-1">The big heading shown on the section page.</p>
+                              </Field>
+                              <Field
+                                label="Page hero description"
+                                action={(
                                   <WandButton
                                     fieldId="section-hero-desc"
                                     value={editSectionHeroDescription}
                                     onChange={setEditSectionHeroDescription}
                                     prompt={() => homepagePrompts.sectionHeroDescription(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
                                   />
-                                </div>
+                                )}
+                              >
                                 <input
                                   value={editSectionHeroDescription}
                                   onChange={e => setEditSectionHeroDescription(e.target.value)}
-                                  className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  className={adminInput}
                                   placeholder="Short introductory text under title"
                                 />
-                                <p className="text-[11px] text-surface-400">Sub-text under the hero heading.</p>
-                              </div>
-                              <div className="space-y-1.5">
-                                <div className="flex items-center justify-between">
-                                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">SEO Title</label>
+                                <p className="text-[11px] text-surface-400 mt-1">Sub-text under the hero heading.</p>
+                              </Field>
+                              <Field
+                                label="SEO title"
+                                action={(
                                   <WandButton
                                     fieldId="section-seo-title"
                                     value={editSectionSeoTitle}
                                     onChange={setEditSectionSeoTitle}
                                     prompt={() => homepagePrompts.sectionSeoTitle(editSectionHeroTitle || editSectionName)}
                                   />
-                                </div>
+                                )}
+                              >
                                 <input
                                   value={editSectionSeoTitle}
                                   onChange={e => setEditSectionSeoTitle(e.target.value)}
-                                  className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  className={adminInput}
                                   placeholder="Leave blank to use hero title"
                                 />
-                                <p className="text-[11px] text-surface-400">Browser tab &amp; search-result title (&lt;title&gt; tag).</p>
-                              </div>
-                              <div className="space-y-1.5">
-                                <div className="flex items-center justify-between">
-                                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">SEO Description</label>
+                                <p className="text-[11px] text-surface-400 mt-1">Browser tab &amp; search-result title (&lt;title&gt; tag).</p>
+                              </Field>
+                              <Field
+                                label="SEO description"
+                                action={(
                                   <WandButton
                                     fieldId="section-seo-desc"
                                     value={editSectionSeoDescription}
                                     onChange={setEditSectionSeoDescription}
                                     prompt={() => homepagePrompts.sectionSeoDescription(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
                                   />
-                                </div>
+                                )}
+                              >
                                 <input
                                   value={editSectionSeoDescription}
                                   onChange={e => setEditSectionSeoDescription(e.target.value)}
-                                  className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                                  className={adminInput}
                                   placeholder="Leave blank to use hero description"
                                 />
-                                <p className="text-[11px] text-surface-400">Meta description for search engines.</p>
-                              </div>
-                              <div className="space-y-1.5 md:col-span-2">
-                                <div className="flex items-center justify-between">
-                                  <label className="text-xs font-semibold text-surface-500 dark:text-surface-400">Intro Content (Markdown support)</label>
+                                <p className="text-[11px] text-surface-400 mt-1">Meta description for search engines.</p>
+                              </Field>
+                              <Field
+                                label="Intro content (Markdown supported)"
+                                className="md:col-span-2"
+                                action={(
                                   <WandButton
                                     fieldId="section-intro-content"
                                     value={editSectionIntroContent}
                                     onChange={setEditSectionIntroContent}
                                     prompt={() => homepagePrompts.sectionIntroContent(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
                                   />
-                                </div>
+                                )}
+                              >
                                 <textarea
                                   value={editSectionIntroContent}
                                   onChange={e => setEditSectionIntroContent(e.target.value)}
                                   rows={4}
-                                  className="w-full px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
+                                  className={`${adminInput} resize-y`}
                                   placeholder="Full intro layout with Rich Markdown details to show above the prompts..."
                                 />
-                              </div>
+                              </Field>
                             </div>
                           </div>
 
                           {/* Filter rail per-section */}
                           <div className="border border-surface-200 dark:border-surface-800 rounded-xl p-4 bg-white dark:bg-surface-900">
                             <div className="flex items-center justify-between mb-1">
-                              <h4 className="font-semibold text-xs text-surface-400 uppercase tracking-wider flex items-center gap-1">
-                                <Filter className="w-3.5 h-3.5" /> Filter rail for this section page
-                              </h4>
+                              <SectionEyebrow>3. Filter rail for this section page</SectionEyebrow>
                               <label className="relative inline-flex items-center cursor-pointer">
                                 <input
                                   type="checkbox"
@@ -4704,7 +4679,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                         onChange={e => {
                                           setEditSectionRailItems(prev => prev.map((chip, idx) => idx === index ? { ...chip, label: e.target.value } : chip));
                                         }}
-                                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs"
+                                        className={adminInput}
                                         placeholder="Visible title, e.g. Anime"
                                       />
                                       <select
@@ -4712,7 +4687,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                         onChange={e => {
                                           setEditSectionRailItems(prev => prev.map((chip, idx) => idx === index ? { ...chip, type: e.target.value as any } : chip));
                                         }}
-                                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs"
+                                        className={adminInput}
                                       >
                                         <option value="tag">Tag</option>
                                         <option value="tool">AI Tool</option>
@@ -4723,7 +4698,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                         onChange={e => {
                                           setEditSectionRailItems(prev => prev.map((chip, idx) => idx === index ? { ...chip, value: e.target.value } : chip));
                                         }}
-                                        className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs"
+                                        className={adminInput}
                                         placeholder="Match value, e.g. anime"
                                       />
                                       <button
@@ -4739,9 +4714,9 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                   <button
                                     type="button"
                                     onClick={() => setEditSectionRailItems(prev => [...prev, { label: '', type: 'tag', value: '' }])}
-                                    className="flex items-center gap-1 px-3 py-2 rounded-lg bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 text-xs font-semibold"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-bold text-surface-600 dark:text-surface-300 transition-colors"
                                   >
-                                    <Plus className="w-3.5 h-3.5" /> Add Chip
+                                    <Plus className="w-3.5 h-3.5" /> Add chip
                                   </button>
                                 </div>
                               </div>
@@ -4772,7 +4747,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                 setEditSectionUseCustomRail(section.useCustomRail || false);
                                 setEditSectionRailItems(section.railItems || []);
                               }}
-                              className="px-3 py-1.5 rounded-lg border border-surface-200 hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800 text-xs font-semibold"
+                              className="px-3 py-2 rounded-xl border border-surface-200 hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800 text-xs font-bold text-surface-600 dark:text-surface-300 transition-colors"
                             >
                               Reset
                             </button>
@@ -4780,23 +4755,23 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                               <button
                                 type="button"
                                 onClick={() => setEditingSectionId(null)}
-                                className="px-3 py-1.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 text-xs font-semibold"
+                                className="px-3 py-2 rounded-xl text-xs font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
                               >
                                 Close
                               </button>
                               <button
                                 type="button"
                                 onClick={() => saveEditSection(section)}
-                                className="flex items-center gap-1 px-4 py-1.5 rounded-lg bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold shadow"
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold shadow-sm transition-colors"
                               >
-                                <Save className="w-3.5 h-3.5" /> Save Section
+                                <Save className="w-3.5 h-3.5" /> Save section
                               </button>
                             </div>
                           </div>
                         </div>
                       ) : (
                         <>
-                          <h4 className="font-medium text-sm truncate flex items-center gap-2">
+                          <h4 className="font-bold text-sm truncate flex items-center gap-2 text-surface-900 dark:text-white">
                             {section.name}
                             {isAutoSection && (
                               <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium">
@@ -4876,7 +4851,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
 
                   {/* Auto section info */}
                   {isAutoSection && (
-                    <div className="px-4 pb-3">
+                    <div className="mt-3">
                       <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/50">
                         <Info className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
                         <p className="text-[11px] text-blue-600 dark:text-blue-400">
@@ -4891,7 +4866,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
 
                   {/* Post picker for custom sections */}
                   {pickingPostsForSection === section.id && section.type === 'custom' && (
-                    <div className="border-t border-surface-200 dark:border-surface-800 p-4 bg-surface-50 dark:bg-surface-800/50">
+                    <div className="mt-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 p-4">
                       <div className="flex items-center justify-between mb-3">
                         <h5 className="text-xs font-semibold uppercase tracking-wide text-surface-400">
                           Select posts for &quot;{section.name}&quot;
@@ -4905,7 +4880,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                         <input
                           value={postPickerSearch}
                           onChange={e => setPostPickerSearch(e.target.value)}
-                          className="w-full pl-9 pr-4 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs"
+                          className="w-full pl-9 pr-4 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs"
                           placeholder="Search posts to add..."
                         />
                       </div>
@@ -4968,18 +4943,18 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       </div>
                     </div>
                   )}
-                </div>
+                </EditableCard>
               );
             })}
 
             {sections.filter(s => (s.location || 'homepage') === loc).length === 0 && (
-              <div className="text-center py-10 text-surface-400">
+              <div className="rounded-xl border border-dashed border-surface-300 dark:border-surface-700 p-8 text-center text-xs font-semibold text-surface-500">
                 <LayoutGrid className="w-10 h-10 mx-auto mb-2 opacity-30" />
                 <p>No sections yet for {loc === 'homepage' ? 'Homepage' : 'Header'}.</p>
               </div>
             )}
             </div>
-            </div>
+            </Panel>
             ))}
           </div>
         </div>
@@ -5028,27 +5003,36 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
             {/* Active Settings Panel */}
             <div className="space-y-6">
             {settingsSubTab === 'general' && (
-              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-                <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                  <Settings className="w-4 h-4 text-primary-500" /> Site Settings
-                </h3>
-                <div className="space-y-4">
+              <>
+              <TabBanner
+                icon={<Settings />}
+                title="General settings"
+                text="Site identity, image uploads, and the global look of the public site. Changes go live after you save."
+              />
+              <Panel>
+                <PanelHeader
+                  title="Site settings"
+                  subtitle="Access, identity, uploads, and appearance."
+                />
+                <div className="space-y-6">
+                  <SectionEyebrow>1. Access & identity</SectionEyebrow>
                   <div>
-                    <label className="block text-xs font-medium text-surface-400 mb-1">Admin Emails (comma separated). Blank means only server-configured owner emails can access admin.</label>
+                    <label className={adminLabel}>Admin emails (comma separated)</label>
                     <input
                       value={adminEmailsStr}
                       onChange={e => setAdminEmailsStr(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className={adminInput}
                       placeholder="admin@example.com, owner@example.com"
                     />
+                    <p className="text-[10px] text-surface-500 mt-1">Blank means only server-configured owner emails can access admin.</p>
                   </div>
                   <div>
-                <label className="block text-xs font-medium text-surface-400 mb-1">Site Title</label>
+                <label className={adminLabel}>Site title</label>
                 <div className="flex gap-2">
                   <input
                     value={siteTitle}
                     onChange={e => setSiteTitle(e.target.value)}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    className={`${adminInput} flex-1`}
                     placeholder="AI PromptMatrix"
                   />
                   <button
@@ -5067,24 +5051,24 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                          alert('Could not generate domain names. Make sure NEXT_PUBLIC_GEMINI_API_KEY is configured.');
                       }
                     }}
-                    className="px-4 py-2.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-sm font-medium rounded-xl border border-surface-200 dark:border-surface-700 whitespace-nowrap"
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-surface-600 dark:text-surface-300 border border-surface-200 dark:border-surface-700 hover:bg-surface-100 dark:hover:bg-surface-800 whitespace-nowrap transition-colors"
                   >
-                    Suggest Domains
+                    Suggest domains
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-surface-400 mb-1">Site Logo URL (Used in header & favicon)</label>
+                <label className={adminLabel}>Site logo URL (used in header & favicon)</label>
                 <input
                   value={siteLogo}
                   onChange={e => setSiteLogo(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                  className={adminInput}
                   placeholder="https://example.com/logo.png"
                 />
               </div>
               <div>
                 <div className="mb-1 flex items-center justify-between">
-                  <label className="block text-xs font-medium text-surface-400">Site Description</label>
+                  <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300">Site description</label>
                   <WandButton
                     fieldId="general-site-desc"
                     value={siteDescription}
@@ -5096,11 +5080,12 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   value={siteDescription}
                   onChange={e => setSiteDescription(e.target.value)}
                   rows={2}
-                  className="w-full min-h-[80px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
+                  className={`${adminInput} min-h-[80px] resize-y`}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-surface-400 mb-2">Image Upload Platform</label>
+                <SectionEyebrow>2. Image uploads</SectionEyebrow>
+                <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mt-3 mb-2">Upload platform</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                   {[
                     { id: 'supabase', label: 'Supabase Storage', desc: 'Uses your public images bucket' },
@@ -5110,14 +5095,14 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       key={provider.id}
                       type="button"
                       onClick={() => setImageProvider(provider.id as UploadProvider)}
-                      className={`flex flex-col items-start p-3 rounded-xl border text-left transition-colors ${
+                      className={`flex flex-col items-start p-4 rounded-2xl border text-left transition-all ${
                         imageProvider === provider.id
-                          ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500'
-                          : 'bg-surface-50 dark:bg-surface-800 border-surface-200 dark:border-surface-700 hover:border-primary-300'
+                          ? 'border-primary-500/50 bg-primary-50/10 dark:bg-primary-950/10 shadow-md'
+                          : 'border-surface-200 dark:border-surface-800 bg-surface-50/70 dark:bg-surface-800/40 hover:border-surface-300 dark:hover:border-surface-700'
                       }`}
                     >
-                      <span className="font-medium text-sm text-surface-900 dark:text-white">{provider.label}</span>
-                      <span className="text-[10px] text-surface-500">{provider.desc}</span>
+                      <span className="text-xs font-bold text-surface-900 dark:text-white">{provider.label}</span>
+                      <span className="text-[10px] text-surface-500 mt-0.5">{provider.desc}</span>
                     </button>
                   ))}
                 </div>
@@ -5143,6 +5128,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   )}
                 </div>
               </div>
+              <SectionEyebrow>3. Homepage appearance</SectionEyebrow>
               <div className="flex flex-wrap gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -5151,7 +5137,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                     onChange={e => setHeroEnabled(e.target.checked)}
                     className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
                   />
-                  <span className="text-sm">Show hero slideshow</span>
+                  <span className="text-xs font-bold text-surface-700 dark:text-surface-300">Show hero slideshow</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -5160,15 +5146,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                     onChange={e => setHeroAutoPlay(e.target.checked)}
                     className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
                   />
-                  <span className="text-sm">Hero auto-play</span>
+                  <span className="text-xs font-bold text-surface-700 dark:text-surface-300">Hero auto-play</span>
                 </label>
               </div>
               <div className="mt-3">
-                <label className="block text-sm font-medium mb-1.5">Hero Style</label>
+                <label className={adminLabel}>Hero style</label>
                 <select
                   value={heroStyle}
                   onChange={e => setHeroStyle(e.target.value as any)}
-                  className="w-full sm:w-1/2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                  className={`${adminInput} sm:w-1/2`}
                 >
                   <option value="v1">Default: Classic Slider</option>
                   <option value="v9">Library Landing</option>
@@ -5178,11 +5164,11 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 </select>
               </div>
               <div className="mt-3">
-                <label className="block text-sm font-medium mb-1.5">Post Hero Style</label>
+                <label className={adminLabel}>Post hero style</label>
                 <select
                   value={postHeroStyle}
                   onChange={e => setPostHeroStyle(e.target.value as any)}
-                  className="w-full sm:w-1/2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                  className={`${adminInput} sm:w-1/2`}
                 >
                   <option value="v1">Default: Natural Display</option>
                   <option value="v7">Current: Full Screen Hero</option>
@@ -5193,11 +5179,11 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Card Style</label>
+                    <label className={adminLabel}>Card style</label>
                     <select
                       value={cardStyle}
                       onChange={e => setCardStyle(e.target.value as any)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className={adminInput}
                     >
                       <option value="v1">v1 - Hover Overlay</option>
                       <option value="v2">v2 - Floating Image with Border</option>
@@ -5210,11 +5196,11 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1.5">Badge Style</label>
+                    <label className={adminLabel}>Badge style</label>
                     <select
                       value={badgeStyle}
                       onChange={e => setBadgeStyle(e.target.value as any)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className={adminInput}
                     >
                       <option value="v1">Default: Subtle & Clean</option>
                       <option value="v2">Glass Blur</option>
@@ -5225,14 +5211,17 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 </div>
                 <CardStylePreview style={cardStyle} badgeStyle={badgeStyle} label="Global card preview" />
               </div>
-              <button
-                onClick={handleSaveSettings}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-8"
-              >
-                <Save className="w-4 h-4" /> Save Settings
-              </button>
+              <div className="pt-4 border-t border-surface-100 dark:border-surface-800">
+                <button
+                  onClick={handleSaveSettings}
+                  className="flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white hover:bg-primary-600 transition-colors"
+                >
+                  <Save className="w-4 h-4" /> Save settings
+                </button>
+              </div>
             </div>
-          </div>
+          </Panel>
+          </>
           )}
 
           {settingsSubTab === 'discovery' && (() => {
@@ -5788,19 +5777,23 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
             );
           })()}
 
-          {/* Ad Spaces Management */}
+          {/* Header navigation */}
           {settingsSubTab === 'navigation' && (
             <div className="space-y-6">
-              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <LayoutGrid className="w-4 h-4 text-primary-500" /> Header Navigation Order
-                </h3>
-                <p className="text-xs text-surface-500 mb-4">
-                  Reorder every header item with the arrows — built-in items (Home, Explore, Blog, Submit), header sections, and custom links, all in one list. Built-in items are the ones the site ships with: rename them by typing a new label (leave blank for the default) or hide them with the Hide button. Edit section names in the Sections tab. Custom links are fully editable below.
-                </p>
+              <TabBanner
+                icon={<LayoutGrid />}
+                title="Header navigation"
+                text="Reorder every header item with the arrows — built-in items (Home, Explore, Blog, Submit), header sections, and custom links, all in one list. Rename built-in items by typing a new label (leave blank for the default), hide them with the hide button, and edit section names in the Sections tab."
+              />
+              <Panel>
+                <PanelHeader
+                  title="Navigation order"
+                  count={headerNavItems.length}
+                  subtitle="Built-in items, header sections, and custom links in one list. Custom links are fully editable."
+                />
                 <div className="space-y-2">
                   {headerNavItems.map((item, index) => (
-                    <div key={item.navKey} className="grid grid-cols-1 sm:grid-cols-[auto_1fr_1fr_auto] gap-2 items-center rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/60 p-2">
+                    <EditableCard key={item.navKey} isEditing={false} className="grid grid-cols-1 sm:grid-cols-[auto_1fr_1fr_auto] gap-2 items-center">
                       <div className="flex sm:flex-col gap-1">
                         <button
                           onClick={() => moveHeaderNavItem(item.navKey, -1)}
@@ -5824,18 +5817,18 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           <input
                             value={item.label}
                             onChange={e => updateHeaderLink(item.linkIndex, 'label', e.target.value)}
-                            className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                            className={adminInput}
                             placeholder="Label"
                           />
                           <input
                             value={item.href}
                             onChange={e => updateHeaderLink(item.linkIndex, 'href', e.target.value)}
-                            className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                            className={adminInput}
                             placeholder="/page/custom or https://..."
                           />
                           <button
                             onClick={() => removeHeaderLink(item.linkIndex)}
-                            className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+                            className="rounded-xl px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                           >
                             Remove
                           </button>
@@ -5849,13 +5842,13 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                               <input
                                 value={headerBuiltins[bk]?.label ?? ''}
                                 onChange={e => updateHeaderBuiltinLabel(bk, e.target.value)}
-                                className={`px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm ${hidden ? 'opacity-50' : ''}`}
+                                className={`${adminInput} ${hidden ? 'opacity-50' : ''}`}
                                 placeholder={item.label}
                               />
                               <div className="px-1 text-xs text-surface-500 truncate">{item.href}</div>
                               <button
                                 onClick={() => toggleHeaderBuiltinHidden(bk)}
-                                className={`justify-self-start sm:justify-self-end px-3 py-2 rounded-lg text-sm font-medium ${hidden ? 'bg-primary-500 text-white hover:bg-primary-600' : 'text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800'}`}
+                                className={`justify-self-start sm:justify-self-end rounded-xl px-3 py-2 text-xs font-bold transition-colors ${hidden ? 'bg-primary-500 text-white hover:bg-primary-600' : 'text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-800'}`}
                                 title={hidden ? 'Show this item' : 'Hide this item'}
                               >
                                 {hidden ? 'Hidden' : 'Hide'}
@@ -5874,40 +5867,38 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           </span>
                         </>
                       )}
-                    </div>
+                    </EditableCard>
                   ))}
                 </div>
-                <div className="flex flex-wrap gap-2 mt-4">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-t border-surface-100 dark:border-surface-800 pt-4">
                   <button
                     onClick={addHeaderLink}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-medium"
+                    className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
                   >
-                    <Plus className="w-4 h-4" /> Add Header Link
+                    <Plus className="w-3.5 h-3.5" /> Add header link
                   </button>
                   <button
                     onClick={handleSaveSettings}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors"
+                    className="flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white hover:bg-primary-600 transition-colors"
                   >
-                    <Save className="w-4 h-4" /> Save Navigation
+                    <Save className="w-3.5 h-3.5" /> Save navigation
                   </button>
                 </div>
-                <p className="text-[11px] text-surface-500 mt-3">
+                <p className="text-[11px] text-surface-500">
                   Note: Profile / Sign In and the theme toggle stay pinned to the right of the header and are not part of this order.
                 </p>
-              </div>
+              </Panel>
             </div>
           )}
 
           {settingsSubTab === 'homepage' && (
             <div className="grid gap-6 xl:grid-cols-[minmax(0,780px)_minmax(360px,1fr)] xl:items-start">
               <div className="min-w-0 space-y-6">
-              <div className="p-6 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm">
-                <h3 className="font-bold text-base mb-1.5 flex items-center gap-2 text-surface-900 dark:text-white">
-                  <LayoutTemplate className="w-5 h-5 text-primary-500" /> Homepage Hero Configuration
-                </h3>
-                <p className="text-xs text-surface-500 mb-6">
-                  Customize the presentation of your primary homepage section, slider interactions, and library introductions.
-                </p>
+              <Panel>
+                <PanelHeader
+                  title="Homepage Hero Configuration"
+                  subtitle="Customize the presentation of your primary homepage section, slider interactions, and library introductions."
+                />
 
                 {/* Switch list */}
                 <div className="mb-6 grid gap-4 sm:grid-cols-3">
@@ -5974,164 +5965,181 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                     })}
                   </div>
                 </div>
-              </div>
-              <div className="p-6 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm">
-                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h3 className="font-bold text-base flex items-center gap-2 text-surface-900 dark:text-white">
-                      <Star className="w-5 h-5 text-amber-500 fill-amber-500" /> Prompt of the Day Selector
-                    </h3>
-                    <p className="text-xs text-surface-500 mt-1">
-                      Pick the exact featured post to display as today&apos;s prominent homepage block.
-                    </p>
-                  </div>
-                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold ${pinnedPromptOfDayId ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-primary-500/10 text-primary-600 dark:text-primary-300'}`}>
-                    {pinnedPromptOfDayId ? '★ Manually Pinned' : '⚙ Auto Fallback Mode'}
-                  </span>
-                </div>
+              </Panel>
+              <Panel>
+                <PanelHeader
+                  title="Prompt of the Day Selector"
+                  subtitle="Pick the exact featured post to display as today's prominent homepage block."
+                  actions={
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold ${pinnedPromptOfDayId ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400' : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300'}`}>
+                      {pinnedPromptOfDayId ? '★ Manually Pinned' : '⚙ Auto Fallback Mode'}
+                    </span>
+                  }
+                />
 
-                <div className="grid gap-6 sm:grid-cols-[1fr_1.4fr]">
-                  <div className="rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-800 dark:bg-surface-950/40">
-                    <p className="text-xs font-bold uppercase tracking-wider text-surface-400">Current live choice</p>
-                    {currentPromptOfDay && currentPromptOfDayImage && (
-                      <div className="relative mt-3 aspect-[4/3] overflow-hidden rounded-xl bg-surface-200 shadow-sm dark:bg-surface-800">
-                        <Image
-                          src={currentPromptOfDayImage}
-                          alt={currentPromptOfDay.title}
-                          fill
-                          className="object-cover"
-                          sizes="260px"
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
-                    )}
-                    <p className="mt-3 text-sm font-bold text-surface-950 dark:text-white line-clamp-1">{currentPromptOfDay?.title || 'No public post available'}</p>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-surface-500">
-                      {currentPromptOfDay ? (pinnedPromptOfDayId ? 'Selected manually from search list.' : currentPromptOfDay.featured ? 'Using first featured post.' : 'Using latest public post.') : 'Create or publish a post first.'}
-                    </p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-800 dark:bg-surface-950/40">
-                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-xs font-bold uppercase tracking-wider text-surface-500">Search and Pin Post</p>
-                        <button
-                          type="button"
-                          onClick={() => updateHomepageContent('promptOfDay', 'pinnedPostId', '')}
-                          className="rounded-lg border border-surface-200 bg-white px-2.5 py-1 text-xs font-bold text-surface-700 hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:bg-surface-700"
-                        >
-                          Clear Pin (Auto)
-                        </button>
-                      </div>
-                      <input
-                        value={promptOfDayPickerSearch}
-                        onChange={e => setPromptOfDayPickerSearch(e.target.value)}
-                        className="mb-3 w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
-                        placeholder="Filter by title, tags, or tools..."
-                      />
-                      <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
-                        {promptOfDayPickerPosts.map(post => {
-                          const imageUrl = post.thumbnailUrl || post.images?.[0]?.url || '';
-                          const selected = pinnedPromptOfDayId === post.id || pinnedPromptOfDayId === post.slug;
-                          return (
-                            <button
-                              key={post.id}
-                              type="button"
-                              onClick={() => updateHomepageContent('promptOfDay', 'pinnedPostId', post.id)}
-                              className={`flex w-full items-center gap-3 rounded-lg border p-2 text-left transition ${
-                                selected
-                                  ? 'border-primary-500 bg-primary-50 dark:border-primary-500/50 dark:bg-primary-950/10'
-                                  : 'border-surface-200 bg-white hover:border-primary-300 dark:border-surface-800 dark:bg-surface-900 dark:hover:border-primary-700'
-                              }`}
-                            >
-                              <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-surface-200 dark:bg-surface-800">
-                                {imageUrl ? (
-                                  <Image src={imageUrl} alt="" fill className="object-cover" sizes="44px" referrerPolicy="no-referrer" />
-                                ) : (
-                                  <div className="flex h-full items-center justify-center text-[9px] font-bold text-surface-400">No img</div>
-                                )}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-xs font-bold text-surface-950 dark:text-white">{post.title}</p>
-                                <p className="mt-0.5 truncate text-[10px] text-surface-500">
-                                  {post.featured ? 'Featured - ' : ''}{getAllTools(post).join(', ') || post.category || 'Published'}
-                                </p>
-                              </div>
-                              <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${selected ? 'bg-primary-500 text-white' : 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-300'}`}>
-                                {selected ? 'Pinned' : 'Pin'}
-                              </span>
-                            </button>
-                          );
-                        })}
-                        {promptOfDayPickerPosts.length === 0 && (
-                          <p className="rounded-lg bg-white px-3 py-4 text-center text-xs text-surface-500 dark:bg-surface-900">No published posts match that search.</p>
+                <div className="grid gap-8 lg:grid-cols-2">
+                  <div className="space-y-6">
+                    <div>
+                      <SectionEyebrow>Current Live Choice</SectionEyebrow>
+                      <div className="mt-4 rounded-xl border border-surface-200 bg-surface-50/50 p-4 dark:border-surface-800 dark:bg-surface-900/50">
+                        {currentPromptOfDay && currentPromptOfDayImage && (
+                          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-surface-200 shadow-sm dark:bg-surface-800 mb-4">
+                            <Image
+                              src={currentPromptOfDayImage}
+                              alt={currentPromptOfDay.title}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 100vw, 300px"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
                         )}
+                        <h4 className="text-sm font-bold text-surface-950 dark:text-white line-clamp-1">
+                          {currentPromptOfDay?.title || 'No public post available'}
+                        </h4>
+                        <p className="mt-1 text-[11px] leading-relaxed text-surface-500">
+                          {currentPromptOfDay ? (pinnedPromptOfDayId ? 'Selected manually from search list.' : currentPromptOfDay.featured ? 'Using first featured post.' : 'Using latest public post.') : 'Create or publish a post first.'}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Section Badge</span>
-                        <input value={promptOfDayContent.badge || ''} onChange={e => updateHomepageContent('promptOfDay', 'badge', e.target.value)} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="e.g. Prompt of the Day" />
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <SectionEyebrow>Section Copy & Settings</SectionEyebrow>
                       </div>
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Button Label</span>
-                        <input value={promptOfDayContent.ctaLabel || ''} onChange={e => updateHomepageContent('promptOfDay', 'ctaLabel', e.target.value)} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="e.g. View This Prompt" />
-                      </div>
-                      <div className="space-y-1 sm:col-span-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Main Heading Override</span>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <Field label="Section Badge">
+                          <input value={promptOfDayContent.badge || ''} onChange={e => updateHomepageContent('promptOfDay', 'badge', e.target.value)} className={adminInput} placeholder="e.g. Prompt of the Day" />
+                        </Field>
+                        <Field label="Button Label">
+                          <input value={promptOfDayContent.ctaLabel || ''} onChange={e => updateHomepageContent('promptOfDay', 'ctaLabel', e.target.value)} className={adminInput} placeholder="e.g. View This Prompt" />
+                        </Field>
+                        <Field label="Main Heading Override" className="sm:col-span-2" action={
                           <WandButton
                             fieldId="homepage-promptOfDay-title"
                             value={promptOfDayContent.title || ''}
                             onChange={(v) => updateHomepageContent('promptOfDay', 'title', v)}
                             prompt={() => homepagePrompts.blockHeading('promptOfDay')}
                           />
-                        </div>
-                        <input value={promptOfDayContent.title || ''} onChange={e => updateHomepageContent('promptOfDay', 'title', e.target.value)} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="e.g. Today's Featured Prompt" />
-                      </div>
-                      <div className="space-y-1 sm:col-span-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Short Sub-heading Override</span>
+                        }>
+                          <input value={promptOfDayContent.title || ''} onChange={e => updateHomepageContent('promptOfDay', 'title', e.target.value)} className={adminInput} placeholder="e.g. Today's Featured Prompt" />
+                        </Field>
+                        <Field label="Short Sub-heading Override" className="sm:col-span-2" action={
                           <WandButton
                             fieldId="homepage-promptOfDay-desc"
                             value={promptOfDayContent.description || ''}
                             onChange={(v) => updateHomepageContent('promptOfDay', 'description', v)}
                             prompt={() => homepagePrompts.blockDescription('promptOfDay')}
                           />
-                        </div>
-                        <textarea value={promptOfDayContent.description || ''} onChange={e => updateHomepageContent('promptOfDay', 'description', e.target.value)} rows={2} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="e.g. Handpicked from our community artwork" />
+                        }>
+                          <textarea value={promptOfDayContent.description || ''} onChange={e => updateHomepageContent('promptOfDay', 'description', e.target.value)} rows={2} className={adminInput} placeholder="e.g. Handpicked from our community artwork" />
+                        </Field>
                       </div>
+                      <button
+                        type="button"
+                        onClick={handleSaveSettings}
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-xs font-bold text-white hover:bg-primary-600 transition shadow-sm"
+                      >
+                        <Save className="h-4 w-4" /> Save Copy Changes
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleSaveSettings}
-                      className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-xs font-bold text-white hover:bg-primary-600 transition shadow-sm"
-                    >
-                      <Save className="h-3.5 w-3.5" /> Save Changes
-                    </button>
+                  </div>
+
+                  <div className="flex flex-col">
+                    <div className="flex items-center justify-between mb-4">
+                      <SectionEyebrow>Search & Pin Post</SectionEyebrow>
+                      <button
+                        type="button"
+                        onClick={() => updateHomepageContent('promptOfDay', 'pinnedPostId', '')}
+                        className="rounded-lg bg-surface-100 px-3 py-1.5 text-[11px] font-bold text-surface-600 hover:bg-surface-200 transition dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+                      >
+                        Clear Pin (Auto Mode)
+                      </button>
+                    </div>
+                    
+                    <div className="relative mb-4">
+                      <input
+                        value={promptOfDayPickerSearch}
+                        onChange={e => setPromptOfDayPickerSearch(e.target.value)}
+                        className={`${adminInput} pl-9`}
+                        placeholder="Filter by title, tags, or tools..."
+                      />
+                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-surface-400" />
+                    </div>
+                    
+                    <div className="flex-1 min-h-[300px] max-h-[500px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                      {promptOfDayPickerPosts.map(post => {
+                        const imageUrl = post.thumbnailUrl || post.images?.[0]?.url || '';
+                        const selected = pinnedPromptOfDayId === post.id || pinnedPromptOfDayId === post.slug;
+                        return (
+                          <button
+                            key={post.id}
+                            type="button"
+                            onClick={() => updateHomepageContent('promptOfDay', 'pinnedPostId', post.id)}
+                            className={`flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition ${
+                              selected
+                                ? 'border-primary-500 bg-primary-50/50 dark:border-primary-500/40 dark:bg-primary-900/20 shadow-sm'
+                                : 'border-surface-200 bg-white hover:border-primary-300 dark:border-surface-800 dark:bg-surface-900 hover:shadow-sm'
+                            }`}
+                          >
+                            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-100 dark:bg-surface-800">
+                              {imageUrl ? (
+                                <Image src={imageUrl} alt="" fill className="object-cover" sizes="48px" referrerPolicy="no-referrer" />
+                              ) : (
+                                <div className="flex h-full items-center justify-center text-[10px] font-bold text-surface-400">No img</div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className={`truncate text-sm font-bold ${selected ? 'text-primary-700 dark:text-primary-300' : 'text-surface-900 dark:text-white'}`}>{post.title}</p>
+                              <p className="mt-0.5 truncate text-[10px] text-surface-500 font-medium">
+                                {post.featured ? '⭐ Featured • ' : ''}{getAllTools(post).join(', ') || post.category || 'Published'}
+                              </p>
+                            </div>
+                            <div className="shrink-0 pl-2">
+                              {selected ? (
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-500 text-white shadow-sm">
+                                  <Check className="h-3.5 w-3.5" />
+                                </span>
+                              ) : (
+                                <span className="rounded-full bg-surface-100 px-3 py-1 text-[10px] font-bold text-surface-500 dark:bg-surface-800 dark:text-surface-400">
+                                  Pin
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                      {promptOfDayPickerPosts.length === 0 && (
+                        <div className="rounded-xl border border-dashed border-surface-200 bg-surface-50 py-8 text-center dark:border-surface-800 dark:bg-surface-900/50">
+                          <p className="text-sm font-medium text-surface-500">No published posts match your search.</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Panel>
 
-              <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-                <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-primary-500" /> Homepage Sections Order
-                </h3>
-                <p className="text-xs text-surface-500 mb-4">
-                  Reorder the added homepage blocks. This order is used on the live homepage after the hero and quick cards.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTab('sections');
-                    setNewSectionLocation('homepage');
-                  }}
-                  className="mb-4 inline-flex items-center gap-2 rounded-lg bg-primary-500/10 px-3 py-2 text-xs font-bold text-primary-600 hover:bg-primary-500/15 dark:text-primary-300"
-                >
-                  <Plus className="h-3.5 w-3.5" /> Add New Section
-                </button>
-                <div className="space-y-2">
+              <Panel>
+                <PanelHeader
+                  title="Homepage Sections Order"
+                  subtitle="Reorder the added homepage blocks. This order is used on the live homepage after the hero and quick cards."
+                />
+                
+                <div className="flex items-center justify-between mb-4">
+                  <SectionEyebrow>Active Blocks</SectionEyebrow>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTab('sections');
+                      setNewSectionLocation('homepage');
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary-500/10 px-3 py-2 text-[11px] font-bold text-primary-600 hover:bg-primary-500/20 transition dark:text-primary-400 dark:bg-primary-900/30 dark:hover:bg-primary-900/50"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add New Section
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
                   {orderedHomepageItems.map((token, index) => {
                     const isSection = token.startsWith('section:');
                     const section = isSection ? homepagePostSections.find(item => item.id === token.replace('section:', '')) : undefined;
@@ -6159,18 +6167,18 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       <Layers className="w-4 h-4 text-primary-500" />
                     );
                     return (
-                      <div key={token} className={`group rounded-xl border border-surface-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-surface-800 dark:bg-surface-900 ${section && !section.visible ? 'opacity-60' : ''}`}>
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div key={token} className={`group rounded-xl border border-surface-200 bg-surface-50/50 p-4 transition hover:shadow-sm dark:border-surface-800 dark:bg-surface-900/50 hover:dark:bg-surface-800/80 ${section && !section.visible ? 'opacity-60' : ''}`}>
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                           <div className="flex items-start gap-3 min-w-0">
-                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-50 text-xs font-bold text-surface-600 dark:bg-surface-800 dark:text-surface-300 border border-surface-200/60 dark:border-surface-700/60">{index + 1}</span>
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm text-[11px] font-black text-surface-400 dark:bg-surface-800 dark:text-surface-500 border border-surface-200/60 dark:border-surface-700/60">{index + 1}</span>
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
-                                <span className="p-1 rounded bg-surface-50 dark:bg-surface-800 border border-surface-200/50 dark:border-surface-700/50">{blockIcon}</span>
+                                <span className="p-1 rounded bg-white dark:bg-surface-800 border border-surface-200/50 shadow-sm dark:border-surface-700/50">{blockIcon}</span>
                                 <h4 className="text-sm font-bold text-surface-950 dark:text-white leading-none">{title}</h4>
-                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${isSection ? 'bg-blue-500/10 text-blue-600 dark:text-blue-300' : 'bg-primary-500/10 text-primary-600 dark:text-primary-300'}`}>
+                                <span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${isSection ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400' : 'bg-primary-500/10 text-primary-600 dark:text-primary-400'}`}>
                                   {isSection ? 'Section' : 'Block'}
                                 </span>
-                                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold transition ${enabled ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' : 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400'}`}>
+                                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold transition ${enabled ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400'}`}>
                                   <span className={`h-1.5 w-1.5 rounded-full ${enabled ? 'bg-emerald-500 animate-pulse' : 'bg-surface-400 dark:bg-surface-600'}`} />
                                   {enabled ? 'Active' : 'Hidden'}
                                 </span>
@@ -6667,7 +6675,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                     </div>
                   )}
                 </div>
-              </div>
+              </Panel>
 
               <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
                 <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
@@ -7043,14 +7051,17 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
           )}
 
           {settingsSubTab === 'footer' && (
-            <>
-            <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 mb-4">
-              <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                <Share2 className="w-4 h-4 text-primary-500" /> Social Links
-              </h3>
-              <p className="text-xs text-surface-500 mb-4">
-                Shown as icons under the site description in the footer. Leave a field empty to hide that icon.
-              </p>
+            <div className="space-y-6">
+            <TabBanner
+              icon={<Share2 />}
+              title="Footer"
+              text="Control the social icons and link columns shown in the site footer on every page."
+            />
+            <Panel>
+              <PanelHeader
+                title="Social links"
+                subtitle="Shown as icons under the site description in the footer. Leave a field empty to hide that icon."
+              />
               <div className="grid gap-3 sm:grid-cols-2">
                 {([
                   ['twitter', 'X (Twitter)', 'https://x.com/yourhandle'],
@@ -7060,33 +7071,34 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   ['pinterest', 'Pinterest', 'https://pinterest.com/yourprofile'],
                 ] as const).map(([key, label, placeholder]) => (
                   <div key={key}>
-                    <label className="mb-1 block text-xs font-bold text-surface-500">{label}</label>
+                    <label className={adminLabel}>{label}</label>
                     <input
                       value={socialLinks[key] || ''}
                       onChange={e => setSocialLinks(prev => ({ ...prev, [key]: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className={adminInput}
                       placeholder={placeholder}
                     />
                   </div>
                 ))}
               </div>
-              <button
-                onClick={handleSaveSettings}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-4"
-              >
-                <Save className="w-4 h-4" /> Save Social Links
-              </button>
-            </div>
-            <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-              <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                <LayoutGrid className="w-4 h-4 text-primary-500" /> Footer Links
-              </h3>
-              <p className="text-xs text-surface-500 mb-4">
-                Create footer columns, then add individual links inside each column.
-              </p>
+              <div className="flex justify-end border-t border-surface-100 dark:border-surface-800 pt-4">
+                <button
+                  onClick={handleSaveSettings}
+                  className="flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white hover:bg-primary-600 transition-colors"
+                >
+                  <Save className="w-3.5 h-3.5" /> Save social links
+                </button>
+              </div>
+            </Panel>
+            <Panel>
+              <PanelHeader
+                title="Footer links"
+                count={footerLinkGroups.length}
+                subtitle="Create footer columns, then add individual links inside each column."
+              />
               <div className="space-y-4">
                 {footerLinkGroups.map((group, groupIndex) => (
-                  <div key={groupIndex} className="p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/60 space-y-3">
+                  <EditableCard key={groupIndex} isEditing={false} className="space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-2 items-center">
                       <div className="flex sm:flex-col gap-1">
                         <button
@@ -7109,14 +7121,14 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       <input
                         value={group.title}
                         onChange={e => updateFooterGroupTitle(groupIndex, e.target.value)}
-                        className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm font-semibold"
+                        className={`${adminInput} font-bold`}
                         placeholder="Footer column title"
                       />
                       <button
                         onClick={() => setFooterLinkGroups(prev => prev.filter((_, i) => i !== groupIndex))}
-                        className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+                        className="rounded-xl px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
-                        Remove Group
+                        Remove group
                       </button>
                     </div>
                     <div className="space-y-2">
@@ -7124,7 +7136,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                         <p className="text-xs text-surface-500">No links in this group.</p>
                       )}
                       {group.links.map((link, linkIndex) => (
-                        <div key={linkIndex} className="grid grid-cols-1 sm:grid-cols-[auto_1fr_1fr_auto] gap-2 items-center">
+                        <div key={linkIndex} className="grid grid-cols-1 sm:grid-cols-[auto_1fr_1fr_auto] gap-2 items-center rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 hover:border-surface-300 dark:hover:border-surface-600 p-2.5 transition-all">
                           <div className="flex sm:flex-col gap-1">
                             <button
                               onClick={() => moveFooterLink(groupIndex, linkIndex, linkIndex - 1)}
@@ -7146,20 +7158,20 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           <input
                             value={link.label}
                             onChange={e => updateFooterLink(groupIndex, linkIndex, 'label', e.target.value)}
-                            className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                            className={adminInput}
                             placeholder="Label"
                           />
                           <input
                             value={link.href}
                             onChange={e => updateFooterLink(groupIndex, linkIndex, 'href', e.target.value)}
-                            className="px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                            className={adminInput}
                             placeholder="/privacy or https://..."
                           />
                           <button
                             onClick={() => setFooterLinkGroups(prev => prev.map((item, i) => (
                               i === groupIndex ? { ...item, links: item.links.filter((_, j) => j !== linkIndex) } : item
                             )))}
-                            className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+                            className="rounded-xl px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                           >
                             Remove
                           </button>
@@ -7170,27 +7182,29 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       onClick={() => setFooterLinkGroups(prev => prev.map((item, i) => (
                         i === groupIndex ? { ...item, links: [...item.links, { label: '', href: '' }] } : item
                       )))}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 hover:border-primary-400 text-sm font-medium"
+                      className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-surface-600 dark:text-surface-300 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 hover:border-primary-400 transition-colors"
                     >
-                      <Plus className="w-4 h-4" /> Add Link
+                      <Plus className="w-3.5 h-3.5" /> Add link
                     </button>
-                  </div>
+                  </EditableCard>
                 ))}
                 <button
                   onClick={() => setFooterLinkGroups(prev => [...prev, { title: 'New Group', links: [{ label: '', href: '' }] }])}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-medium"
+                  className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
                 >
-                  <Plus className="w-4 h-4" /> Add Footer Group
+                  <Plus className="w-3.5 h-3.5" /> Add footer group
                 </button>
               </div>
-              <button
-                onClick={handleSaveSettings}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-4"
-              >
-                <Save className="w-4 h-4" /> Save Footer Links
-              </button>
+              <div className="flex justify-end border-t border-surface-100 dark:border-surface-800 pt-4">
+                <button
+                  onClick={handleSaveSettings}
+                  className="flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white hover:bg-primary-600 transition-colors"
+                >
+                  <Save className="w-3.5 h-3.5" /> Save footer links
+                </button>
+              </div>
+            </Panel>
             </div>
-            </>
           )}
 
           {settingsSubTab === 'ads' && (
@@ -7203,7 +7217,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 {/* AdSense Account */}
                 <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                    <div className="flex items-center justify-between mb-3">
-                     <span className="text-sm font-medium">Google AdSense Account</span>
+                     <span className="font-bold text-base text-surface-900 dark:text-white">Google AdSense Account</span>
                      <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -7229,7 +7243,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 {/* Header Ad */}
                 <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                    <div className="flex items-center justify-between mb-3">
-                     <span className="text-sm font-medium">Header Ad (Top of page)</span>
+                     <span className="font-bold text-base text-surface-900 dark:text-white">Header Ad (Top of page)</span>
                      <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -7252,7 +7266,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 {/* In-Feed Ad */}
                 <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                    <div className="flex items-center justify-between mb-3">
-                     <span className="text-sm font-medium">In-Feed Ad (Post Grids)</span>
+                     <span className="font-bold text-base text-surface-900 dark:text-white">In-Feed Ad (Post Grids)</span>
                      <div className="flex items-center gap-4">
                        <div className="flex items-center gap-2">
                          <span className="text-xs text-surface-500">Show every</span>
@@ -7289,7 +7303,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 {/* Post Top Ad */}
                 <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                    <div className="flex items-center justify-between mb-3">
-                     <span className="text-sm font-medium">Post Details - Top</span>
+                     <span className="font-bold text-base text-surface-900 dark:text-white">Post Details - Top</span>
                      <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -7312,7 +7326,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 {/* Post Bottom Ad */}
                 <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                    <div className="flex items-center justify-between mb-3">
-                     <span className="text-sm font-medium">Post Details - Bottom</span>
+                     <span className="font-bold text-base text-surface-900 dark:text-white">Post Details - Bottom</span>
                      <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -7773,9 +7787,9 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
 
             <div className="space-y-4">
               {/* User Profiles */}
-              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">User Profiles & Bookmarks</span>
+                  <span className="font-bold text-base text-surface-900 dark:text-white">User Profiles & Bookmarks</span>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={features.userProfiles} onChange={(e) => setFeatures(prev => ({ ...prev, userProfiles: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
                     <span className="text-xs">Enabled</span>
@@ -7784,9 +7798,9 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* User Submissions */}
-              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">User Submissions & Approval Queue</span>
+                  <span className="font-bold text-base text-surface-900 dark:text-white">User Submissions & Approval Queue</span>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={features.userSubmissions} onChange={(e) => setFeatures(prev => ({ ...prev, userSubmissions: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
                     <span className="text-xs">Enabled</span>
@@ -7803,9 +7817,9 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Comments */}
-              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Comments & Feedback</span>
+                  <span className="font-bold text-base text-surface-900 dark:text-white">Comments & Feedback</span>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={features.comments} onChange={(e) => setFeatures(prev => ({ ...prev, comments: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
                     <span className="text-xs">Enabled</span>
@@ -7822,10 +7836,10 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Post Page Sections */}
-              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
-                    <span className="text-sm font-medium">Post Page Sections</span>
+                    <span className="font-bold text-base text-surface-900 dark:text-white">Post Page Sections</span>
                     <p className="mt-1 text-xs text-surface-500">Control the extra blocks shown below each prompt collection.</p>
                   </div>
                 </div>
@@ -7874,9 +7888,9 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 </div>
               </div>
 
-              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
                 <div className="mb-3">
-                  <span className="text-sm font-medium">Keep Exploring Block</span>
+                  <span className="font-bold text-base text-surface-900 dark:text-white">Keep Exploring Block</span>
                   <p className="mt-1 text-xs text-surface-500">Controls the card in the post sidebar and its mobile version.</p>
                 </div>
                 <div className="space-y-3">
@@ -7894,7 +7908,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       <input
                         value={keepExploring.title || ''}
                         onChange={e => setKeepExploring(prev => ({ ...prev, title: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm outline-none focus:border-primary-500"
+                        className={adminInput}
                         placeholder="Keep exploring"
                       />
                     </label>
@@ -7903,7 +7917,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       <input
                         value={keepExploring.ctaLabel || ''}
                         onChange={e => setKeepExploring(prev => ({ ...prev, ctaLabel: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm outline-none focus:border-primary-500"
+                        className={adminInput}
                         placeholder="Open prompt library"
                       />
                     </label>
@@ -7930,7 +7944,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       <input
                         value={keepExploring.ctaHref || ''}
                         onChange={e => setKeepExploring(prev => ({ ...prev, ctaHref: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm outline-none focus:border-primary-500"
+                        className={adminInput}
                         placeholder="/explore"
                       />
                     </label>
@@ -7973,9 +7987,9 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Advanced Filtering */}
-              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Advanced Search & Filtering</span>
+                  <span className="font-bold text-base text-surface-900 dark:text-white">Advanced Search & Filtering</span>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={features.advancedFiltering} onChange={(e) => setFeatures(prev => ({ ...prev, advancedFiltering: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
                     <span className="text-xs">Enabled</span>
@@ -7984,9 +7998,9 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Smart Templates */}
-              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Smart &quot;Fill-in-the-blank&quot; Templates</span>
+                  <span className="font-bold text-base text-surface-900 dark:text-white">Smart &quot;Fill-in-the-blank&quot; Templates</span>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={features.smartTemplates} onChange={(e) => setFeatures(prev => ({ ...prev, smartTemplates: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
                     <span className="text-xs">Enabled</span>
@@ -7995,9 +8009,9 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Infinite Scrolling */}
-              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Infinite Scrolling (Explore)</span>
+                  <span className="font-bold text-base text-surface-900 dark:text-white">Infinite Scrolling (Explore)</span>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={features.infiniteScroll} onChange={(e) => setFeatures(prev => ({ ...prev, infiniteScroll: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
                     <span className="text-xs">Enabled</span>
@@ -8019,9 +8033,9 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Premium Prompts */}
-              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Premium / Pro Prompts</span>
+                  <span className="font-bold text-base text-surface-900 dark:text-white">Premium / Pro Prompts</span>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={features.premiumPrompts} onChange={(e) => setFeatures(prev => ({ ...prev, premiumPrompts: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
                     <span className="text-xs">Enabled</span>
@@ -8054,9 +8068,9 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Skeleton Loaders */}
-              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Skeleton Loaders</span>
+                  <span className="font-bold text-base text-surface-900 dark:text-white">Skeleton Loaders</span>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={features.skeletonLoaders} onChange={(e) => setFeatures(prev => ({ ...prev, skeletonLoaders: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
                     <span className="text-xs">Enabled</span>
@@ -8065,9 +8079,9 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Trending Algorithm */}
-              <div className="p-3 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Trending Algorithms</span>
+                  <span className="font-bold text-base text-surface-900 dark:text-white">Trending Algorithms</span>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={features.trendingAlgorithm} onChange={(e) => setFeatures(prev => ({ ...prev, trendingAlgorithm: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
                     <span className="text-xs">Enabled</span>
