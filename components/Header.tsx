@@ -60,6 +60,7 @@ export default function Header() {
   const routeTimerRef = useRef<number | null>(null);
   const routeIntervalRef = useRef<number | null>(null);
   const routeFallbackRef = useRef<number | null>(null);
+  const headerTapRef = useRef(0);
   const [isVisible, setIsVisible] = useState(true);
   const [routeProgress, setRouteProgress] = useState(0);
 
@@ -111,8 +112,13 @@ export default function Header() {
         return;
       }
 
+      // Skip hide logic for 400ms after a tap on the header. On mobile,
+      // residual momentum/rubber-band scroll fires a phantom "scroll down"
+      // event right after the tap, which would incorrectly hide the header.
+      const msSinceTap = Date.now() - headerTapRef.current;
+
       const delta = currentScrollY - lastScrollYRef.current;
-      const shouldHide = delta > 4 && currentScrollY > 64 && !menuOpen && !searchOpen && !showLiveResults;
+      const shouldHide = delta > 4 && currentScrollY > 64 && !menuOpen && !searchOpen && !showLiveResults && msSinceTap > 400;
       const shouldShow = delta < -4 || currentScrollY <= 16 || menuOpen || searchOpen || showLiveResults;
       if (shouldHide) {
         setIsVisible(false);
@@ -328,6 +334,7 @@ export default function Header() {
       />
     </div>
     <header
+      onPointerDown={() => { headerTapRef.current = Date.now(); }}
       className={`sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-surface-950/80 border-b border-surface-200 dark:border-surface-800 transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}
     >
       <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between gap-4">
