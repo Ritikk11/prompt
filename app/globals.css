@@ -36,6 +36,15 @@ html {
   scroll-behavior: smooth;
 }
 
+/* View Transition: smooth GPU crossfade for theme toggle.
+   The browser snapshots the old page, applies the change, then
+   crossfades between the two screenshots — zero per-element cost. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.25s;
+  animation-timing-function: ease-in-out;
+}
+
 /* Scroll-reveal (ScrollReveal component). Keyframe-based with `backwards`
    fill so once the entrance finishes NO styles remain on the wrapper — no
    lingering transform (which would hijack position:fixed descendants such as

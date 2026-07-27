@@ -23,27 +23,27 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setIsMounted(true);
   }, []);
 
+  const applyTheme = (next: Theme) => {
+    document.documentElement.classList.toggle('dark', next === 'dark');
+    localStorage.setItem('pv-theme', next);
+    setTheme(next);
+  };
+
   const toggleTheme = () => {
-    // Kill every CSS transition on the page so the browser does one clean
-    // repaint instead of animating hundreds of color/bg/border properties.
-    const css = document.createElement('style');
-    css.appendChild(document.createTextNode('*,*::before,*::after{transition:none!important}'));
-    document.head.appendChild(css);
+    const next: Theme = theme === 'dark' ? 'light' : 'dark';
 
-    setTheme(prev => {
-      const next = prev === 'dark' ? 'light' : 'dark';
-      document.documentElement.classList.toggle('dark', next === 'dark');
-      localStorage.setItem('pv-theme', next);
-      return next;
-    });
-
-    // Force a single synchronous repaint, then remove the override so
-    // normal hover/press transitions resume.
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    window.getComputedStyle(document.documentElement).opacity;
-    requestAnimationFrame(() => {
-      document.head.removeChild(css);
-    });
+    // Use View Transitions API for a smooth GPU-composited crossfade.
+    // The browser snapshots the old state, applies the change, then
+    // crossfades between the two screenshots — no per-element transitions,
+    // no lag, just one smooth GPU animation.
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      (document as any).startViewTransition(() => {
+        applyTheme(next);
+      });
+    } else {
+      // Fallback for browsers without View Transitions support
+      applyTheme(next);
+    }
   };
 
   // To prevent the sun/moon icon from flashing initially if we want, we could use isMounted check in a component,
