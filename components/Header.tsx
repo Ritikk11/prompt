@@ -411,8 +411,8 @@ export default function Header() {
             aria-label="Toggle theme"
           >
             <span className="relative block w-5 h-5">
-              <Sun className={`absolute inset-0 w-5 h-5 text-yellow-400 transition-[transform,opacity] duration-300 ease-out transform-gpu will-change-transform ${theme === 'dark' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-90 scale-50'}`} />
-              <Moon className={`absolute inset-0 w-5 h-5 text-surface-600 transition-[transform,opacity] duration-300 ease-out transform-gpu will-change-transform ${theme === 'dark' ? 'opacity-0 -rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
+              <Sun className={`absolute inset-0 w-5 h-5 text-yellow-400 transition-all duration-300 ease-out transform-gpu will-change-transform ${theme === 'dark' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-90 scale-50'}`} />
+              <Moon className={`absolute inset-0 w-5 h-5 text-surface-600 transition-all duration-300 ease-out transform-gpu will-change-transform ${theme === 'dark' ? 'opacity-0 -rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
             </span>
           </button>
         </nav>
@@ -436,8 +436,8 @@ export default function Header() {
             aria-label="Toggle theme"
           >
             <span className="relative block w-5 h-5">
-              <Sun className={`absolute inset-0 w-5 h-5 text-yellow-400 transition-[transform,opacity] duration-300 ease-out transform-gpu will-change-transform ${theme === 'dark' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-90 scale-50'}`} />
-              <Moon className={`absolute inset-0 w-5 h-5 text-surface-600 transition-[transform,opacity] duration-300 ease-out transform-gpu will-change-transform ${theme === 'dark' ? 'opacity-0 -rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
+              <Sun className={`absolute inset-0 w-5 h-5 text-yellow-400 transition-all duration-300 ease-out transform-gpu will-change-transform ${theme === 'dark' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-90 scale-50'}`} />
+              <Moon className={`absolute inset-0 w-5 h-5 text-surface-600 transition-all duration-300 ease-out transform-gpu will-change-transform ${theme === 'dark' ? 'opacity-0 -rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
             </span>
           </button>
           <button

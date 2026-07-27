@@ -18,18 +18,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (stored === 'light' || stored === 'dark') {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTheme(stored);
+      document.documentElement.classList.toggle('dark', stored === 'dark');
     }
     setIsMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('pv-theme', theme);
-      document.documentElement.classList.toggle('dark', theme === 'dark');
-    }
-  }, [theme, isMounted]);
-
-  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  const toggleTheme = () => {
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      document.documentElement.classList.toggle('dark', next === 'dark');
+      localStorage.setItem('pv-theme', next);
+      return next;
+    });
+  };
 
   // To prevent the sun/moon icon from flashing initially if we want, we could use isMounted check in a component,
   // but to fix hydration mismatch, ensuring it matches the server's initial render is exactly what we need.
