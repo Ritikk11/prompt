@@ -34,17 +34,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     // Use View Transitions API for a smooth GPU-composited crossfade.
     if (typeof document !== 'undefined' && 'startViewTransition' in document) {
-      // Set a global flag so the Header's scroll handler can skip
-      // hide/show logic during the crossfade (phantom scroll events
-      // on real mobile would otherwise cause the header to flicker).
-      (window as any).__themeTransitioning = true;
-      const vt = (document as any).startViewTransition(() => {
+      (document as any).startViewTransition(() => {
         applyTheme(next);
-      });
-      vt.finished.then(() => {
-        (window as any).__themeTransitioning = false;
-      }).catch(() => {
-        (window as any).__themeTransitioning = false;
       });
     } else {
       applyTheme(next);
