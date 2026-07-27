@@ -103,6 +103,14 @@ export default function Header() {
         progressFillRef.current.style.width = `${progress}%`;
       }
 
+      // Skip hide/show logic while a View Transition is active — the crossfade
+      // triggers phantom scroll events on real mobile that cause the header to
+      // flicker hide → show.
+      if ((window as any).__themeTransitioning) {
+        lastScrollYRef.current = currentScrollY;
+        return;
+      }
+
       const delta = currentScrollY - lastScrollYRef.current;
       const shouldHide = delta > 4 && currentScrollY > 64 && !menuOpen && !searchOpen && !showLiveResults;
       const shouldShow = delta < -4 || currentScrollY <= 16 || menuOpen || searchOpen || showLiveResults;

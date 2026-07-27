@@ -33,15 +33,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const next: Theme = theme === 'dark' ? 'light' : 'dark';
 
     // Use View Transitions API for a smooth GPU-composited crossfade.
-    // The browser snapshots the old state, applies the change, then
-    // crossfades between the two screenshots — no per-element transitions,
-    // no lag, just one smooth GPU animation.
     if (typeof document !== 'undefined' && 'startViewTransition' in document) {
-      (document as any).startViewTransition(() => {
+      // Set a global flag so the Header's scroll handler can skip
+      // hide/show logic during the crossfade (phantom scroll events
+      // on real mobile would otherwise cause the header to flicker).
+      (window as any).__themeTransitioning = true;
+      const vt = (document as any).startViewTransition(() => {
         applyTheme(next);
       });
+      vt.finished.then(() => {
+        (window as any).__themeTransitioning = false;
+      }).catch(() => {
+        (window as any).__themeTransitioning = false;
+      });
     } else {
-      // Fallback for browsers without View Transitions support
       applyTheme(next);
     }
   };
