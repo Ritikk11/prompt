@@ -53,11 +53,15 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
   // Filter public posts that include the aiTool (case insensitive)
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
   let filtered = publicPosts.filter(p => getAllTools(p).some(item => item.toLowerCase() === normalizedTool));
+  const toolDetails = settings.toolDetails?.[displayTool] || {};
   const heroCopy = fillDiscoveryTemplate(
-    discovery.toolDescriptionTemplate || toolHeroCopy[normalizedTool] || `Browse %count% prompt collections organized for %tool%.`,
-    { tool: displayTool, count: filtered.length }
+    toolDetails.heroDescription || discovery.toolDescriptionTemplate || toolHeroCopy[normalizedTool] || `Browse %count% prompt collections organized for %tool%.`,
+    { tool: displayTool, count: filtered.length, site_title: settings.siteTitle || 'AI PromptMatrix' }
   );
-  const heroTitle = fillDiscoveryTemplate(discovery.toolTitleTemplate || '%tool% Prompts', { tool: displayTool, count: filtered.length });
+  const heroTitle = fillDiscoveryTemplate(
+    toolDetails.heroTitle || discovery.toolTitleTemplate || '%tool% Prompts', 
+    { tool: displayTool, count: filtered.length, site_title: settings.siteTitle || 'AI PromptMatrix' }
+  );
   
   if (sortBy === 'latest') {
     filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

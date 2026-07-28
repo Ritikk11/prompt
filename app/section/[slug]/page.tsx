@@ -31,12 +31,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const filteredPosts = filterPostsForSection(section, allPosts, settings, false);
   const discovery = settings.discoveryPages || {};
   const title = section.seoTitle || section.heroTitle || fillDiscoveryTemplate(
-    discovery.sectionSeoTitleTemplate || '%section% | AI PromptMatrix',
-    { section: section.name, count: filteredPosts.length }
+    discovery.sectionSeoTitleTemplate || '%section% - %site_title%',
+    { section: section.name, count: filteredPosts.length, site_title: settings.siteTitle || 'AI PromptMatrix' }
   );
   const description = section.seoDescription || section.heroDescription || fillDiscoveryTemplate(
     discovery.sectionSeoDescriptionTemplate || discovery.sectionDescriptionTemplate || 'Explore prompts from the %section% collection.',
-    { section: section.name, count: filteredPosts.length }
+    { section: section.name, count: filteredPosts.length, site_title: settings.siteTitle || 'AI PromptMatrix' }
   );
 
   return {

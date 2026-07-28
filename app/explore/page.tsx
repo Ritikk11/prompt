@@ -11,8 +11,11 @@ export const revalidate = 3600;
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await fetchSettings();
   const discovery = settings.discoveryPages || {};
-  const title = discovery.exploreSeoTitle || discovery.exploreTitle || 'Explore AI Image Prompts | AI PromptMatrix';
-  const description = discovery.exploreSeoDescription || discovery.exploreDescription || settings.seoSettings?.defaultMetaDescription || settings.siteDescription;
+  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+  const title = (discovery.exploreSeoTitle || discovery.exploreTitle || `Explore AI Image Prompts - %site_title%`)
+    .replace(/%site_title%/g, siteTitle);
+  const description = (discovery.exploreSeoDescription || discovery.exploreDescription || settings.seoSettings?.defaultMetaDescription || settings.siteDescription || '')
+    .replace(/%site_title%/g, siteTitle);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
 

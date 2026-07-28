@@ -199,7 +199,9 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      document.title = settings.siteTitle ? `${settings.siteTitle} - AI Prompts` : 'AI PromptMatrix - AI Prompts';
+      const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+      const homeTitleTemplate = settings.seoSettings?.homeSeoTitleTemplate || '%site_title% - AI Prompts';
+      document.title = homeTitleTemplate.replace(/%site_title%/g, siteTitle);
       
       if (settings.siteLogo) {
         let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;

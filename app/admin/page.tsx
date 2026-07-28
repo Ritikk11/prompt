@@ -2404,6 +2404,10 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
   const [editAiToolStats, setEditAiToolStats] = useState('');
   const [editAiToolChecks, setEditAiToolChecks] = useState('');
   const [editAiToolDescription, setEditAiToolDescription] = useState('');
+  const [editAiToolHeroTitle, setEditAiToolHeroTitle] = useState('');
+  const [editAiToolHeroDescription, setEditAiToolHeroDescription] = useState('');
+  const [editAiToolSeoTitle, setEditAiToolSeoTitle] = useState('');
+  const [editAiToolSeoDescription, setEditAiToolSeoDescription] = useState('');
   const [editAiToolSlug, setEditAiToolSlug] = useState('');
   const [editAiToolModels, setEditAiToolModels] = useState<string[]>([]);
   const [editAiToolDefaultModel, setEditAiToolDefaultModel] = useState('');
@@ -2444,6 +2448,10 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
     setEditAiToolStats((existing.stats || []).map(stat => `${stat.label}: ${stat.value}`).join('\n'));
     setEditAiToolChecks((existing.checks || []).join('\n'));
     setEditAiToolDescription(existing.description || '');
+    setEditAiToolHeroTitle(existing.heroTitle || '');
+    setEditAiToolHeroDescription(existing.heroDescription || '');
+    setEditAiToolSeoTitle(existing.seoTitle || '');
+    setEditAiToolSeoDescription(existing.seoDescription || '');
     setEditAiToolSlug(existing.slug || tool.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''));
     setEditAiToolModels(existing.models || []);
     setEditAiToolDefaultModel(existing.defaultModel || existing.models?.[0] || '');
@@ -2478,6 +2486,10 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
       stats,
       checks,
       description: editAiToolDescription.trim(),
+      heroTitle: editAiToolHeroTitle.trim(),
+      heroDescription: editAiToolHeroDescription.trim(),
+      seoTitle: editAiToolSeoTitle.trim(),
+      seoDescription: editAiToolSeoDescription.trim(),
       slug: editAiToolSlug.trim() || newToolName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       models: editAiToolModels.filter(Boolean),
       defaultModel: editAiToolDefaultModel,
@@ -7553,6 +7565,48 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                 className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500 resize-y"
                                 placeholder="Brief description of this AI tool..."
                               />
+                            </div>
+                            
+                            <div className="pt-2">
+                              <h4 className="text-xs font-bold text-surface-900 dark:text-white mb-2">SEO & Hero Overrides (Optional)</h4>
+                              <div className="grid gap-3 sm:grid-cols-2 mb-3">
+                                <div>
+                                  <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mb-1">Hero Title</label>
+                                  <input
+                                    value={editAiToolHeroTitle}
+                                    onChange={e => setEditAiToolHeroTitle(e.target.value)}
+                                    className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
+                                    placeholder="e.g. Best %tool% Prompts"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mb-1">Hero Description</label>
+                                  <input
+                                    value={editAiToolHeroDescription}
+                                    onChange={e => setEditAiToolHeroDescription(e.target.value)}
+                                    className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
+                                    placeholder="e.g. Explore prompts for %tool%."
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mb-1">SEO Title</label>
+                                  <input
+                                    value={editAiToolSeoTitle}
+                                    onChange={e => setEditAiToolSeoTitle(e.target.value)}
+                                    className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
+                                    placeholder="e.g. %tool% Prompts - %site_title%"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mb-1">SEO Description</label>
+                                  <input
+                                    value={editAiToolSeoDescription}
+                                    onChange={e => setEditAiToolSeoDescription(e.target.value)}
+                                    className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
+                                    placeholder="e.g. Discover amazing %tool% prompts."
+                                  />
+                                </div>
+                              </div>
                             </div>
 
                             {/* Models Registry */}

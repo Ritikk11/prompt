@@ -184,6 +184,7 @@ export interface ShareSettings {
 }
 
 export interface SeoSettings {
+  homeSeoTitleTemplate?: string;
   metaTitleTemplate?: string;
   defaultMetaDescription?: string;
   defaultOgImage?: string;
@@ -324,6 +325,10 @@ export interface SiteSettings {
     stats?: { label: string; value: string }[];
     checks?: string[];
     description?: string;
+    heroTitle?: string;
+    heroDescription?: string;
+    seoTitle?: string;
+    seoDescription?: string;
     slug?: string;
     models?: string[];
     defaultModel?: string;

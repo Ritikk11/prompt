@@ -42,12 +42,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const title = fillDiscoveryTemplate(
-    discovery.tagSeoTitleTemplate || discovery.tagTitleTemplate || '%tag% AI Prompts | AI PromptMatrix',
-    { tag: decodedTag, count }
+    discovery.tagSeoTitleTemplate || discovery.tagTitleTemplate || '%tag% AI Prompts - %site_title%',
+    { tag: decodedTag, count, site_title: settings.siteTitle || 'AI PromptMatrix' }
   );
   const description = fillDiscoveryTemplate(
     discovery.tagSeoDescriptionTemplate || discovery.tagDescriptionTemplate || 'Browse curated AI prompts for %tag%.',
-    { tag: decodedTag, count }
+    { tag: decodedTag, count, site_title: settings.siteTitle || 'AI PromptMatrix' }
   );
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
 

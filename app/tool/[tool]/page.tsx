@@ -68,13 +68,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  const toolDetails = settings.toolDetails?.[displayTool] || {};
+  
   const title = fillDiscoveryTemplate(
-    discovery.toolSeoTitleTemplate || discovery.toolTitleTemplate || 'Best %tool% AI Prompts | AI PromptMatrix',
-    { tool: displayTool, count }
+    toolDetails.seoTitle || discovery.toolSeoTitleTemplate || discovery.toolTitleTemplate || 'Best %tool% AI Prompts - %site_title%',
+    { tool: displayTool, count, site_title: settings.siteTitle || 'AI PromptMatrix' }
   );
   const description = fillDiscoveryTemplate(
-    discovery.toolSeoDescriptionTemplate || discovery.toolDescriptionTemplate || 'Explore the best AI prompts and images for %tool%.',
-    { tool: displayTool, count }
+    toolDetails.seoDescription || discovery.toolSeoDescriptionTemplate || discovery.toolDescriptionTemplate || 'Explore the best AI prompts and images for %tool%.',
+    { tool: displayTool, count, site_title: settings.siteTitle || 'AI PromptMatrix' }
   );
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
 

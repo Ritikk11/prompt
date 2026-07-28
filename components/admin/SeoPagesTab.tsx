@@ -288,6 +288,24 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
             <SectionEyebrow>1. Default metadata</SectionEyebrow>
             <div className="grid gap-4 md:grid-cols-2">
               <Field
+                label="Home SEO title template"
+                action={
+                  <WandButton
+                    fieldId="seo-global-home-template"
+                    value={seoSettings.homeSeoTitleTemplate || ''}
+                    onChange={(v) => updateSeoSettings({ homeSeoTitleTemplate: v })}
+                    prompt={seoPrompts.globalTitleTemplate}
+                  />
+                }
+              >
+                <input
+                  value={seoSettings.homeSeoTitleTemplate || ''}
+                  onChange={e => updateSeoSettings({ homeSeoTitleTemplate: e.target.value })}
+                  className={adminInput}
+                  placeholder="%site_title% - AI Prompts"
+                />
+              </Field>
+              <Field
                 label="Default meta title template"
                 action={
                   <WandButton

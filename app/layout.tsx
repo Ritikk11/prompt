@@ -26,6 +26,8 @@ function toOrigin(value?: string | null) {
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await fetchSettings();
   const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+  const homeTitleTemplate = settings.seoSettings?.homeSeoTitleTemplate || '%site_title% - AI Prompts';
+  const resolvedTitle = homeTitleTemplate.replace(/%site_title%/g, siteTitle);
   const description =
     settings.seoSettings?.defaultMetaDescription ||
     settings.siteDescription ||
@@ -35,21 +37,21 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in'),
-    title: `${siteTitle} - AI Prompts`,
+    title: resolvedTitle,
     description,
     applicationName: siteTitle,
     icons: {
       icon: [
-        { url: '/favicon.ico' },
-        { url: '/favicon-16x16.jpg', sizes: '16x16', type: 'image/jpeg' },
-        { url: '/favicon-32x32.jpg', sizes: '32x32', type: 'image/jpeg' },
-        { url: '/favicon-48x48.jpg', sizes: '48x48', type: 'image/jpeg' },
-        { url: '/icon-256x256.jpg', sizes: '256x256', type: 'image/jpeg' },
+        { url: '/favicon.ico?v=2' },
+        { url: '/favicon-16x16.jpg?v=2', sizes: '16x16', type: 'image/jpeg' },
+        { url: '/favicon-32x32.jpg?v=2', sizes: '32x32', type: 'image/jpeg' },
+        { url: '/favicon-48x48.jpg?v=2', sizes: '48x48', type: 'image/jpeg' },
+        { url: '/icon-256x256.jpg?v=2', sizes: '256x256', type: 'image/jpeg' },
       ],
       apple: [
-        { url: '/apple-touch-icon.jpg', sizes: '180x180', type: 'image/jpeg' },
+        { url: '/apple-touch-icon.jpg?v=2', sizes: '180x180', type: 'image/jpeg' },
       ],
-      shortcut: '/favicon.ico',
+      shortcut: '/favicon.ico?v=2',
     },
     manifest: '/site.webmanifest',
     openGraph: {
@@ -59,7 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${siteTitle} - AI Prompts`,
+      title: resolvedTitle,
       description,
       site: settings.seoSettings?.twitterHandle || undefined,
       ...(ogImage ? { images: [ogImage] } : {}),
@@ -114,6 +116,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-35M2DNE8VW"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-35M2DNE8VW');
+            `
+          }}
         />
       </head>
       {/* overflow-x-clip on body (not -hidden): `hidden` turns body into a
