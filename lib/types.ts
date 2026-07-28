@@ -166,7 +166,7 @@ export interface AdSettings {
 
 export interface FooterLinkGroup {
   title: string;
-  links: { label: string; href: string }[];
+  links: { label: string; href: string; id?: string }[];
 }
 
 export interface NavLink {
@@ -203,6 +203,7 @@ export interface SeoSettings {
   enableJsonLd?: boolean;
   schemaType?: 'Article' | 'CreativeWork' | 'HowTo';
   enableBreadcrumbList?: boolean;
+  enableSitelinksSearchbox?: boolean;
   redirects?: { from: string; to: string; status: 301 | 302 }[];
 }
 
@@ -306,6 +307,12 @@ export interface DiscoveryPageSettings {
 export interface SiteSettings {
   siteTitle: string;
   siteDescription: string;
+  authors?: any;
+  categories?: any;
+  imgbbApiKey?: string;
+  defaultAuthorId?: string;
+  cloudinaryCloudName?: string;
+  cloudinaryUploadPreset?: string;
   siteLogo?: string;
   heroTitle?: string;
   heroSubtitle?: string;

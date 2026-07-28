@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/admin-auth';
-import { seedPosts, seedSections } from '@/lib/data/seedData';
 import type { Post, Section, SiteSettings } from '@/lib/types';
 
 function getAllToolsFromPost(post: Partial<Post>) {
@@ -206,30 +205,11 @@ export async function POST(request: Request) {
   const { action, resource, id, data } = body || {};
 
   if (action === 'reset') {
-    for (const section of seedSections) {
-      await admin.from('sections').upsert({ id: section.id, data: section });
-    }
-    for (const post of seedPosts) {
-      await admin.from('posts').upsert({ id: post.id, data: post });
-    }
-    await admin.from('settings').upsert({ id: 'seeded', data: { completedAt: new Date().toISOString() } });
-    revalidatePath('/');
-    revalidatePath('/explore');
-    revalidatePath('/sitemap.xml');
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ error: 'Mock data disabled' }, { status: 400 });
   }
 
   if (action === 'deleteMockData') {
-    for (const post of seedPosts) {
-      await admin.from('posts').delete().eq('id', post.id);
-    }
-    for (const section of seedSections) {
-      await admin.from('sections').delete().eq('id', section.id);
-    }
-    revalidatePath('/');
-    revalidatePath('/explore');
-    revalidatePath('/sitemap.xml');
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ error: 'Mock data disabled' }, { status: 400 });
   }
 
   if (action === 'updateUserStatus') {

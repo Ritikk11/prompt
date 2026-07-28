@@ -3,12 +3,9 @@ export const revalidate = 3600;
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getSeoPageBySlug, fetchPostSummaries, isPublicPost, fetchSettings } from '@/lib/data';
-import PostCard from '@/components/PostCard';
-import FilterChipRail from '@/components/FilterChipRail';
 import type { Post } from '@/lib/types';
-import MarkdownRenderer from '@/components/MarkdownRenderer';
-import ScrollReveal from '@/components/ScrollReveal';
-import { matchesCategory, matchesTag, matchesTool } from '@/lib/sections';
+import SeoPageContent from '@/components/SeoPageContent';
+import { generateSeoPageMetadata } from '@/lib/seo-helpers';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -25,10 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  return {
-    title: seoPage.seoTitle || seoPage.title,
-    description: seoPage.seoDescription || `Discover best prompts for ${seoPage.title}`,
-  };
+  const settings = await fetchSettings();
+  return generateSeoPageMetadata(seoPage, settings);
 }
 
 export default async function SeoPublicPage({ params }: Props) {
@@ -44,57 +39,7 @@ export default async function SeoPublicPage({ params }: Props) {
     notFound();
   }
 
-  const { tags = [], categories = [], aiTools = [] } = seoPage;
-
-  // Filter ONLY show posts that match ALL of the selected tags AND ALL of the selected categories AND ALL of the selected aiTools
-  const filteredPosts = (allPosts as Post[]).filter(post => {
-    if (!isPublicPost(post)) return false;
-
-    const hasAllTags = tags.every((tag: string) => matchesTag(post, tag));
-    if (!hasAllTags) return false;
-
-    const hasAllCategories = categories.every((category: string) => matchesCategory(post, category));
-    if (categories.length > 0 && !hasAllCategories) return false;
-
-    const hasAllAiTools = aiTools.every((tool: string) => matchesTool(post, tool));
-    if (aiTools.length > 0 && !hasAllAiTools) return false;
-
-    return true;
-  });
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="text-center max-w-3xl mx-auto mb-10">
-        <h1 className="text-3xl md:text-5xl font-bold mb-4">{seoPage.title}</h1>
-        {seoPage.seoDescription && (
-          <p className="text-surface-500 dark:text-surface-400 text-base md:text-lg">{seoPage.seoDescription}</p>
-        )}
-      </div>
-      {seoPage.introContent && (
-        <div className="max-w-3xl mx-auto mb-10">
-          <MarkdownRenderer>{seoPage.introContent}</MarkdownRenderer>
-        </div>
-      )}
-      
-      {filteredPosts.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-surface-500">No posts found matching the criteria.</p>
-        </div>
-      ) : seoPage.filterTags?.length ? (
-        <ScrollReveal>
-          <FilterChipRail posts={filteredPosts} tags={seoPage.filterTags} tools={[]} showTools={false} settings={settings} cardStyleOverride={seoPage.cardStyle} renderGrid />
-        </ScrollReveal>
-      ) : (
-        <ScrollReveal>
-          <div data-reveal-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start pt-8">
-            {filteredPosts.map((post, index) => (
-              <PostCard key={post.id} post={post} index={index} cardStyleOverride={seoPage.cardStyle} />
-            ))}
-          </div>
-        </ScrollReveal>
-      )}
-    </div>
-  );
+  return <SeoPageContent seoPage={seoPage} allPosts={allPosts as Post[]} settings={settings} />;
 }
 
 // Empty array is required for ISR to actually cache this route per-slug — without it,

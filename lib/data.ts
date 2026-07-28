@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import { createPublicClient } from './supabase-public';
 import type { Post, PostComment, PostSummary, Section, SiteSettings } from './types';
-import { seedPosts, seedSections } from './data/seedData';
+
 import { getAllTools } from './constants';
 import { filterPostsForSection } from './sections';
 import { getThumbnailImageUrl } from './image-url';
@@ -32,240 +32,504 @@ const defaultArticleThumbnails: Record<string, string> = {
 };
 
 const defaultSettings: SiteSettings = {
-  siteTitle: 'AI PromptMatrix',
-  siteDescription: 'A curated prompt library for image creators. Discover tested examples, copy the workflow, and make stronger artwork.',
-  siteLogo: '/icon-190x190.jpg',
-  heroTitle: 'Better Image Prompts Start Here',
-  heroSubtitle: 'Browse a curated library of tested prompts for ChatGPT, Gemini, Grok, and more — each with example images and the exact text that created them.',
-  heroEnabled: true,
-  heroAutoPlay: true,
-  aiTools: ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
-  headerLinks: [],
-  homeLinkBlocks: [],
-  articleThumbnails: defaultArticleThumbnails,
-  articleOverrides: {},
-  customArticles: [],
-  homepageBlockOrder: [
-    'howTo',
-    'reviewProcess',
-    'promptOfDay',
-    'supportedTools',
-    'creativeDirections',
-    'guides',
-    'blog',
-    'creatorFeedback',
-  ],
-  homepageContent: {
-    howTo: {
-      badge: 'How It Works',
-      title: 'Create better images in 4 simple steps',
-      description: 'From browsing prompts to generating finished artwork, this workflow keeps the process simple and repeatable.',
-      items: [
-        {
-          title: 'Browse & Discover',
-          text: 'Explore curated prompts organized by tool, style, mood, and use case. Find the right direction before you generate.',
-          checks: ['Filter by tool', 'Check trending prompts', 'Open curated collections'],
-        },
-        {
-          title: 'Copy the Prompt',
-          text: 'Found the perfect prompt? Click the copy button to instantly copy it to your clipboard with model-specific notes.',
-          checks: ['One-click copy', 'Includes model notes', 'Collection copy when available'],
-        },
-        {
-          title: 'Paste & Generate',
-          text: 'Open your preferred image tool, paste the prompt, attach reference images when needed, and adjust settings as needed.',
-          checks: ['Works with major image tools', 'Adjust aspect ratios', 'Fine-tune prompt details'],
-        },
-        {
-          title: 'Create & Save',
-          text: 'Generate the result, save prompts you want to revisit, and keep useful ideas ready for your next artwork.',
-          checks: ['Save favorite prompts', 'Share useful collections', 'Return from your profile'],
-        },
-      ],
+  "ads": {
+    "header": {
+      "code": "",
+      "enabled": false
     },
-    reviewProcess: {
-      badge: 'Review process',
-      title: 'How prompts are reviewed before they go live',
-      description: 'Every public prompt is checked for clarity, useful examples, model context, and clean organization before it appears in the library.',
-      ctaLabel: 'Submit a prompt',
-      ctaHref: '/submit',
-      showCta: true,
-      items: [
-        { title: 'Submission check', text: 'Prompts are checked for a clear title, useful example image, model label, and complete prompt text before publishing.' },
-        { title: 'Prompt quality pass', text: 'We look for prompts that are reusable, specific enough to help creators, and organized with the right tools, categories, and tags.' },
-        { title: 'Safety and clarity', text: 'Public posts should avoid misleading claims, unsafe instructions, broken images, and confusing placeholders.' },
-        { title: 'Publish and improve', text: 'Approved prompts can be updated later with better descriptions, FAQs, model notes, and richer usage guidance.' },
-      ],
+    "inFeed": {
+      "code": "",
+      "enabled": false,
+      "frequency": 8
     },
-    promptOfDay: {
-      badge: 'Prompt of the Day',
-      title: "Today's Featured Prompt",
-      description: 'One standout prompt, hand-picked every day. Copy it, tweak it, and make it your own.',
-      ctaLabel: 'View This Prompt',
+    "postTop": {
+      "code": "",
+      "enabled": false
     },
-    supportedTools: {
-      badge: 'Supported tools',
-      title: 'Prompts for Every Major Image Tool',
-      description: 'Find prompt sets organized by the image tools people actually create with, so you can choose the right workflow before you start experimenting.',
-      items: [
-        { title: 'ChatGPT', text: 'Strong text rendering, Reference image workflows, Detailed prompt structure' },
-        { title: 'Gemini', text: 'Fast image ideation, Reference-aware prompts, Creative variations' },
-        { title: 'Grok', text: 'Photoreal direction, Cinematic scenes, Social-first ideas' },
-        { title: 'Qwen', text: 'Typography prompts, Poster layouts, Graphic design details' },
-      ],
-    },
-    creativeDirections: {
-      badge: 'Browse by style',
-      title: 'Explore Creative Directions',
-      description: 'Portraits, posters, anime, product shots — jump straight to the visual style you have in mind.',
-      itemDescription: 'Curated prompt direction',
-    },
-    creatorFeedback: {
-      badge: 'Why creators use it',
-      title: 'A Prompt Library You Can Actually Rely On',
-      description: 'No vague inspiration dumps — every prompt is tested, labeled, and written so you can copy it and get the same result.',
-      items: [
-        { title: 'Find it fast', text: 'Browse by tool, style, and intent instead of scrolling a random feed hoping something fits.' },
-        { title: 'Know before you generate', text: 'Every prompt shows the AI tool and model it was written for, so you always know where to paste it.' },
-        { title: 'Copy the whole workflow', text: 'Multi-prompt collections, one-click copy, and model notes let you reproduce the full result — not just one image.' },
-        { title: 'Curated, not scraped', text: 'Each collection is reviewed for clear prompt text and real example images before it goes live.' },
-      ],
-    },
-    guides: {
-      badge: 'Learn the craft',
-      title: 'Step-by-Step Prompt Guides',
-      description: 'Hands-on tutorials that take you from a blank prompt box to a finished image — trends, edits, and pro techniques included.',
-      ctaLabel: 'Browse all guides',
-      ctaHref: '/guides',
-    },
-    blog: {
-      badge: 'From the blog',
-      title: 'Latest From Our Blog',
-      description: 'News, prompt trends, and deep dives on getting more out of every AI image tool.',
-      ctaLabel: 'Read the blog',
-      ctaHref: '/blog',
-    },
+    "postBottom": {
+      "code": "",
+      "enabled": false
+    }
   },
-  footerLinkGroups: [
+  "aiTools": [
+    "ChatGPT",
+    "Gemini",
+    "Grok",
+    "Qwen Image"
+  ],
+  "authors": [
     {
-      title: 'Legal',
-      links: [
-        { label: 'Privacy Policy', href: '/privacy' },
-        { label: 'Terms of Service', href: '/terms' },
-        { label: 'DMCA Notice', href: '/dmca' },
-        { label: 'Disclaimer', href: '/disclaimer' },
-      ],
+      "id": "editorial-team",
+      "bio": "The AI PromptMatrix editorial team reviews and organizes prompt collections so creators can find clear examples, model notes, and reusable AI image workflows.",
+      "name": "AI PromptMatrix Editorial Team",
+      "role": "Editorial Team",
+      "slug": "editorial-team",
+      "active": true,
+      "website": "https://aipromptmatrix.in",
+      "avatarUrl": "",
+      "createdAt": "2026-06-25T15:17:07.365Z",
+      "updatedAt": "2026-07-04T19:05:14.208Z"
+    }
+  ],
+  "features": {
+    "comments": false,
+    "premiumPrice": 5,
+    "userProfiles": false,
+    "mobileColumns": 1,
+    "infiniteScroll": true,
+    "premiumPrompts": false,
+    "smartTemplates": true,
+    "skeletonLoaders": true,
+    "userSubmissions": false,
+    "advancedFiltering": true,
+    "premiumPaymentUrl": "",
+    "trendingAlgorithm": false,
+    "publicProfileLikes": false,
+    "showPublicProfiles": true,
+    "showScrollProgress": true,
+    "infiniteScrollItems": 20,
+    "trendingLikesWeight": 2,
+    "trendingViewsWeight": 1,
+    "commentsRequireApproval": true,
+    "showHomepageLibraryHero": true,
+    "showHomepagePromptOfDay": false,
+    "userSubmissionsAutoApprove": false,
+    "showHomepageCreativeDirections": false
+  },
+  "siteLogo": "",
+  "cardStyle": "v2",
+  "heroStyle": "v3",
+  "heroTitle": "Discover AI Prompt Masterpieces",
+  "siteTitle": "AI PromptMatrix",
+  "badgeStyle": "v1",
+  "categories": [
+    "Fantasy",
+    "Sci-Fi",
+    "Portraits",
+    "Abstract",
+    "Nature",
+    "Anime",
+    "Architecture",
+    "Space",
+    "Illustration",
+    "Gothic",
+    "Vintage",
+    "Food"
+  ],
+  "adminEmails": [
+    "ritikkewat11@gmail.com"
+  ],
+  "headerLinks": [
+    {
+      "id": "e61198ab-e5ff-46f7-b5c6-d295f1db257c",
+      "href": "/tool/chatgpt",
+      "label": "ChatGPT Prompts"
     },
     {
-      title: 'Platform',
-      links: [
-        { label: 'Explore', href: '/explore' },
-        { label: 'About Us', href: '/about' },
-        { label: 'Contact', href: '/contact' },
-      ],
-    },
+      "id": "d793a34d-170e-40c9-bf3c-93394812e140",
+      "href": "/tool/gemini",
+      "label": "Gemini Prompts"
+    }
   ],
-  shareSettings: {
-    targets: ['whatsapp', 'x', 'instagram', 'copy'],
-    position: 'floating-sidebar',
+  "heroEnabled": true,
+  "imgbbApiKey": "2cd70acfe4649cf535a69ec607c85ebd",
+  "seoSettings": {
+    "redirects": [],
+    "robotsText": "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\nDisallow: /api/\nDisallow: /search/\nDisallow: /submit/\nDisallow: /login/\n\nSitemap: https://aipromptmatrix.in/sitemap.xml",
+    "schemaType": "Article",
+    "enableJsonLd": true,
+    "twitterHandle": "",
+    "defaultOgImage": "",
+    "sitemapInclude": {
+      "tags": false,
+      "posts": true,
+      "tools": true,
+      "sections": true,
+      "staticPages": true
+    },
+    "bingVerification": "",
+    "metaTitleTemplate": "%post_title% | AI PromptMatrix",
+    "googleVerification": "",
+    "enableBreadcrumbList": true,
+    "pinterestVerification": "",
+    "defaultMetaDescription": "AI PromptMatrix is your ultimate collection of curated image prompts for Chatgpt, Gemini, Nano Banana Pro, Grok, and more. Discover, copy and create stunning artwork instantly.",
+    "enableSitelinksSearchbox": true
   },
-  discoveryPages: {
-    exploreBadge: 'Prompt Library',
-    exploreTitle: 'Explore curated AI image prompts',
-    exploreDescription: 'Browse %count% prompt collections by model, visual direction, and creative use case.',
-    exploreSlug: '/explore',
-    exploreSeoTitle: 'Explore AI Image Prompts | AI PromptMatrix',
-    exploreSeoDescription: 'Browse curated AI image prompts by model, style, tag, and creative direction.',
-    exploreOgImage: '',
-    toolTitleTemplate: '%tool% Prompts',
-    toolDescriptionTemplate: 'Browse %count% prompt collections organized for %tool%.',
-    tagTitleTemplate: '%tag% Prompts',
-    tagDescriptionTemplate: 'Showing %count% collections tagged with "%tag%".',
-    sectionDescriptionTemplate: 'Discover a curated collection of %count% prompts.',
-    exploreRailItems: [],
-    toolRailItems: [],
-    tagRailItems: [],
-    sectionRailItems: [],
-    useCustomRailOnExplore: false,
-    useCustomRailOnTools: false,
-    useCustomRailOnTags: false,
-    useCustomRailOnSections: false,
-    showHeroStats: true,
+  "socialLinks": {},
+  "toolDetails": {
+    "Grok": {
+      "logo": "https://i.ibb.co/XrRWC5c6/Grok-logo.webp",
+      "color": "bg-surface-500"
+    },
+    "Gemini": {
+      "logo": "https://i.ibb.co/LzfTxCfN/Gemini-Logo.webp",
+      "color": "bg-[#4285f4]"
+    },
+    "ChatGPT": {
+      "logo": "/tool-logos/chatgpt.svg",
+      "slug": "chatgpt",
+      "badge": "Optimized for GPT Image 2",
+      "color": "bg-green-500",
+      "stats": [
+        {
+          "label": "Prompt Quality",
+          "value": "Premium"
+        },
+        {
+          "label": "Image Fidelity",
+          "value": "Excellent"
+        },
+        {
+          "label": "Text & Realism",
+          "value": "Best For"
+        }
+      ],
+      "active": true,
+      "checks": [
+        "High-quality image generation",
+        "Accurate text rendering",
+        "Reference image support"
+      ],
+      "models": [
+        "GPT IMAGE 2"
+      ],
+      "featured": true,
+      "logoScale": 1,
+      "showInHero": true,
+      "description": "Explore professionally written AI image prompts for ChatGPT GPT Image 2. Find prompt collections for realistic portraits, anime, illustrations, logos, product photography, concept art, cinematic scenes, and more to create high-quality AI images.",
+      "defaultModel": "GPT IMAGE 2",
+      "showInFooter": true
+    },
+    "Qwen Image": {
+      "logo": "https://i.ibb.co/twPrFnrq/Qwen-logo-svg.webp",
+      "color": "bg-surface-500"
+    }
   },
-  keepExploring: {
-    title: 'Keep exploring',
-    description: 'Browse more prompt pages with examples, model notes, and copy-ready creative workflows.',
-    links: [
-      { label: 'Image prompt library', href: '/explore', icon: 'image' },
-      { label: 'Poster and portrait ideas', href: '/tag/poster', icon: 'layers' },
-      { label: 'Copy-ready creative workflows', href: '/search?q=workflow', icon: 'clipboard' },
+  "heroAutoPlay": true,
+  "heroSubtitle": "Explore a curated collection of breathtaking AI-generated imagery and their full prompts. Learn, inspire, and create.",
+  "heroHideStats": false,
+  "imageProvider": "cloudflare",
+  "keepExploring": {
+    "links": [
+      {
+        "href": "/explore",
+        "icon": "image",
+        "label": "Image prompt library"
+      },
+      {
+        "href": "/tool/chatgpt",
+        "icon": "image",
+        "label": "ChatGPT Prompts"
+      },
+      {
+        "href": "/tool/gemini",
+        "icon": "image",
+        "label": "Gemini | Nano Banana Pro Prompts"
+      }
     ],
-    ctaLabel: 'Open prompt library',
-    ctaHref: '/explore',
+    "title": "Keep exploring",
+    "ctaHref": "/explore",
+    "ctaLabel": "Open prompt library",
+    "description": "Browse more prompt pages with examples, model notes, and copy-ready creative workflows."
   },
-  seoSettings: {
-    metaTitleTemplate: '%post_title% | AI PromptMatrix',
-    defaultMetaDescription: 'Discover curated AI image prompts, prompt collections, and creative workflows.',
-    defaultOgImage: '/og-image.png',
-    twitterHandle: '',
-    googleVerification: '',
-    bingVerification: '',
-    pinterestVerification: '',
-    robotsText: 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\nDisallow: /api/\nDisallow: /search/\nDisallow: /submit/\nDisallow: /login/\n\nSitemap: https://aipromptmatrix.in/sitemap.xml',
-    sitemapInclude: {
-      posts: true,
-      sections: true,
-      tags: true,
-      tools: true,
-      staticPages: true,
+  "postHeroStyle": "v2",
+  "shareSettings": {
+    "targets": [
+      "whatsapp",
+      "x",
+      "instagram",
+      "facebook",
+      "pinterest",
+      "copy"
+    ],
+    "position": "floating-sidebar"
+  },
+  "customArticles": [],
+  "discoveryPages": {
+    "exploreSlug": "/explore",
+    "exploreBadge": "Prompt Library",
+    "exploreTitle": "Explore Premium Image Prompts",
+    "tagRailItems": [],
+    "showHeroStats": false,
+    "toolRailItems": [],
+    "exploreOgImage": "",
+    "exploreSeoTitle": "Premium AI Image Prompts for ChatGPT, Gemini, Nano Banana Pro & More | AI PromptMatrix",
+    "exploreRailItems": [
+      {
+        "type": "tool",
+        "label": "ChatGPT | GPT image 2",
+        "value": "ChatGPT"
+      },
+      {
+        "type": "tool",
+        "label": "Gemini | Nano Banana Pro",
+        "value": "Gemini"
+      },
+      {
+        "type": "tag",
+        "label": "Photography",
+        "value": "Photography"
+      },
+      {
+        "type": "category",
+        "label": "Portraits",
+        "value": "Portraits"
+      },
+      {
+        "type": "tag",
+        "label": "Fashion",
+        "value": "Fashion"
+      },
+      {
+        "type": "tag",
+        "label": "Realistic",
+        "value": "Realistic"
+      },
+      {
+        "type": "tag",
+        "label": "Selfie",
+        "value": "Selfie"
+      }
+    ],
+    "sectionRailItems": [],
+    "tagTitleTemplate": "%tag% Prompts",
+    "toolTitleTemplate": "%tool% Prompts",
+    "exploreDescription": "Discover high-quality AI image prompts organized by tool, image model, style, category, and creative direction.",
+    "tagSeoTitleTemplate": "%tag% Prompts",
+    "useCustomRailOnTags": false,
+    "toolSeoTitleTemplate": "%tool% Prompts",
+    "useCustomRailOnTools": false,
+    "exploreSeoDescription": "Discover curated AI image prompts for ChatGPT, Gemini, Nano Banana Pro and all Other image models. Browse collections by style, model, category, and creative use case.",
+    "tagDescriptionTemplate": "Showing %count% collections tagged with \"%tag%\".",
+    "useCustomRailOnExplore": true,
+    "sectionSeoTitleTemplate": "%section% Prompts",
+    "toolDescriptionTemplate": "Browse %count% prompt collections organized for %tool%.",
+    "useCustomRailOnSections": false,
+    "tagSeoDescriptionTemplate": "Browse prompts tagged with %tag%.",
+    "sectionDescriptionTemplate": "Discover a curated collection of %count% prompts.",
+    "toolSeoDescriptionTemplate": "Browse curated prompts for %tool%.",
+    "sectionSeoDescriptionTemplate": "Browse curated prompts in %section%."
+  },
+  "headerBuiltins": {
+    "explore": {
+      "hidden": false
+    }
+  },
+  "headerNavOrder": [
+    "home",
+    "explore",
+    "link:e61198ab-e5ff-46f7-b5c6-d295f1db257c",
+    "link:d793a34d-170e-40c9-bf3c-93394812e140",
+    "blog"
+  ],
+  "homeLinkBlocks": [],
+  "defaultAuthorId": "editorial-team",
+  "homepageContent": {
+    "howTo": {
+      "badge": "How It Works",
+      "title": "Create better images in 4 simple steps",
+      "description": "From browsing prompts to generating finished artwork, this workflow keeps the process simple and repeatable."
     },
-    enableJsonLd: true,
-    schemaType: 'HowTo',
-    enableBreadcrumbList: true,
-    redirects: [],
+    "promptOfDay": {
+      "pinnedPostId": "nm7m3g09mown2c83"
+    },
+    "reviewProcess": {
+      "badge": "Review process",
+      "title": "How prompts are reviewed before they go live",
+      "ctaHref": "/submit",
+      "ctaLabel": "Submit a prompt",
+      "description": "Every public prompt is checked for clarity, useful examples, model context, and clean organization before it appears in the library."
+    },
+    "supportedTools": {
+      "badge": "Supported tools",
+      "title": "Prompts for Every Major Image Tool",
+      "description": "Find prompt sets organized by the image tools people actually create with, so you can choose the right workflow before you start experimenting."
+    },
+    "creatorFeedback": {
+      "badge": "Creator-focused",
+      "title": "Built for Creators Who Need Usable Prompts",
+      "description": "Built for creators who want practical prompt examples, clear model notes, and repeatable workflows instead of vague inspiration screenshots."
+    },
+    "creativeDirections": {
+      "badge": "Browse by style",
+      "title": "Explore Creative Directions",
+      "description": "Browse by subject, genre, and visual direction — from portraits and posters to product shots and anime styles.",
+      "itemDescription": "Curated prompt direction"
+    }
   },
-  features: {
-    userProfiles: false,
-    userSubmissions: false,
-    userSubmissionsAutoApprove: false,
-    comments: false,
-    commentsRequireApproval: false,
-    showCopyCollection: true,
-    showHowTo: true,
-    showRecommendedPosts: true,
-    showTags: true,
-    showDetailedInsights: true,
-    showPostSidebar: true,
-    showShareButtons: true,
-    showTryButtons: true,
-    showYouMightAlsoLike: true,
-    showHomepageLibraryHero: true,
-    showHomepageHowTo: true,
-    showHomepageReviewProcess: true,
-    showHomepagePromptOfDay: true,
-    showHomepageCreativeDirections: true,
-    showHomepageSupportedTools: true,
-    showHomepageGuides: true,
-    showHomepageBlog: true,
-    showHomepageCreatorFeedback: true,
-    showScrollProgress: true,
-    showFaqSchema: true,
-    showPublicProfiles: true,
-    publicProfileLikes: false,
-    publicProfileBookmarks: false,
-    advancedFiltering: false,
-    smartTemplates: false,
-    infiniteScroll: false,
-    infiniteScrollItems: 20,
-    premiumPrompts: false,
-    premiumPrice: 5,
-    premiumPaymentUrl: '',
-    skeletonLoaders: false,
-    trendingAlgorithm: false,
-    trendingLikesWeight: 2,
-    trendingViewsWeight: 1,
-  }
-};
+  "siteDescription": "AI PromptMatrix is your ultimate collection of curated image prompts for Chatgpt, Gemini, Nano Banana Pro, Grok, and more. Discover, copy and create stunning artwork instantly.",
+  "articleOverrides": {},
+  "footerLinkGroups": [
+    {
+      "links": [
+        {
+          "id": "3d2c42b6-b18f-4cee-94a5-9f44f35a3899",
+          "href": "/privacy",
+          "label": "Privacy Policy"
+        },
+        {
+          "id": "99d124c8-03d7-4c44-8c25-d4f0c6a18fcb",
+          "href": "/terms",
+          "label": "Terms of Service"
+        },
+        {
+          "id": "2b89f8f8-44fc-4ad8-89aa-7f71ff1501a5",
+          "href": "/dmca",
+          "label": "DMCA Notice"
+        },
+        {
+          "id": "1b5e8ed4-4567-43d3-bc33-0b0603a89f8f",
+          "href": "/disclaimer",
+          "label": "Disclaimer"
+        }
+      ],
+      "title": "Legal"
+    },
+    {
+      "links": [
+        {
+          "id": "d3ca58c7-f5e1-407e-a189-70bcde813a54",
+          "href": "/explore",
+          "label": "Explore"
+        },
+        {
+          "id": "958a8044-f540-4fa2-a141-d3985dbdbb94",
+          "href": "/about",
+          "label": "About Us"
+        },
+        {
+          "id": "162fb092-0d76-48f8-b0d9-5347f39c72c5",
+          "href": "/contact",
+          "label": "Contact"
+        },
+        {
+          "id": "da8d1a2a-07e5-4201-a41c-a59a38195f6d",
+          "href": "/cookies",
+          "label": "Cookies Policy"
+        }
+      ],
+      "title": "Platform"
+    }
+  ],
+  "articleThumbnails": {
+    "ai-headshots-guide": "https://uploads.aipromptmatrix.in/thumbnails/ai-headshots-guide.webp",
+    "ai-photo-trends-2026": "https://uploads.aipromptmatrix.in/thumbnails/ai-photo-trends-2026.webp",
+    "common-ai-prompt-mistakes": "https://uploads.aipromptmatrix.in/thumbnails/common-ai-prompt-mistakes.webp",
+    "what-are-ai-image-prompts": "https://uploads.aipromptmatrix.in/thumbnails/what-are-ai-image-prompts.webp",
+    "gemini-photo-editing-guide": "https://uploads.aipromptmatrix.in/thumbnails/gemini-photo-editing-guide.webp",
+    "negative-prompts-explained": "https://uploads.aipromptmatrix.in/thumbnails/negative-prompts-explained.webp",
+    "restore-old-photos-with-ai": "https://uploads.aipromptmatrix.in/thumbnails/restore-old-photos-with-ai.webp",
+    "retro-saree-portrait-guide": "https://uploads.aipromptmatrix.in/thumbnails/retro-saree-portrait-guide.webp",
+    "ai-product-photography-guide": "https://uploads.aipromptmatrix.in/thumbnails/ai-product-photography-guide.webp",
+    "anime-portrait-prompts-guide": "https://uploads.aipromptmatrix.in/thumbnails/anime-portrait-prompts-guide.webp",
+    "how-ai-image-generators-work": "https://uploads.aipromptmatrix.in/thumbnails/how-ai-image-generators-work.webp",
+    "who-owns-ai-generated-images": "https://uploads.aipromptmatrix.in/thumbnails/who-owns-ai-generated-images.webp",
+    "3d-figurine-photo-trend-guide": "https://uploads.aipromptmatrix.in/thumbnails/3d-figurine-photo-trend-guide.webp",
+    "couple-portrait-prompts-guide": "https://uploads.aipromptmatrix.in/thumbnails/couple-portrait-prompts-guide.webp",
+    "chatgpt-image-generation-guide": "https://uploads.aipromptmatrix.in/thumbnails/chatgpt-image-generation-guide.webp",
+    "consistent-characters-ai-images": "https://uploads.aipromptmatrix.in/thumbnails/consistent-characters-ai-images.webp",
+    "ai-image-aspect-ratios-explained": "https://uploads.aipromptmatrix.in/thumbnails/ai-image-aspect-ratios-explained.webp",
+    "reference-images-vs-text-prompts": "https://uploads.aipromptmatrix.in/thumbnails/reference-images-vs-text-prompts.webp",
+    "chatgpt-vs-gemini-image-generation": "https://uploads.aipromptmatrix.in/thumbnails/chatgpt-vs-gemini-image-generation.webp",
+    "anatomy-of-a-perfect-ai-image-prompt": "https://uploads.aipromptmatrix.in/thumbnails/anatomy-of-a-perfect-ai-image-prompt.webp",
+    "how-to-use-prompts-from-promptmatrix": "https://uploads.aipromptmatrix.in/thumbnails/how-to-use-prompts-from-promptmatrix.webp",
+    "how-to-write-better-ai-image-prompts": "https://uploads.aipromptmatrix.in/thumbnails/how-to-write-better-ai-image-prompts.webp"
+  },
+  "exploreFilterTags": [],
+  "exploreFilterItems": [
+    {
+      "type": "tool",
+      "label": "ChatGPT | GPT image 2",
+      "value": "ChatGPT"
+    },
+    {
+      "type": "tool",
+      "label": "Gemini | Nano Banana Pro",
+      "value": "Gemini"
+    },
+    {
+      "type": "tag",
+      "label": "Photography",
+      "value": "Photography"
+    },
+    {
+      "type": "category",
+      "label": "Portraits",
+      "value": "Portraits"
+    },
+    {
+      "type": "tag",
+      "label": "Fashion",
+      "value": "Fashion"
+    },
+    {
+      "type": "tag",
+      "label": "Realistic",
+      "value": "Realistic"
+    },
+    {
+      "type": "tag",
+      "label": "Selfie",
+      "value": "Selfie"
+    }
+  ],
+  "homepageBlockOrder": [
+    "block:howTo",
+    "block:reviewProcess",
+    "block:promptOfDay",
+    "block:supportedTools",
+    "block:creativeDirections",
+    "block:creatorFeedback",
+    "block:guides",
+    "block:blog",
+    "section:s_popular_posts",
+    "section:s_latest_prompts"
+  ],
+  "cloudinaryCloudName": "dr25hoyly",
+  "cloudinaryUploadPreset": "prompt",
+  "creativeDirectionItems": [
+    {
+      "type": "tag",
+      "label": "Anime",
+      "value": "Anime"
+    },
+    {
+      "type": "tag",
+      "label": "Chatgpt",
+      "value": "Chatgpt"
+    },
+    {
+      "type": "tag",
+      "label": "Images",
+      "value": "Images"
+    },
+    {
+      "type": "tag",
+      "label": "Japanese",
+      "value": "Japanese"
+    },
+    {
+      "type": "tag",
+      "label": "Games",
+      "value": "Games"
+    },
+    {
+      "type": "tag",
+      "label": "GTA",
+      "value": "GTA"
+    },
+    {
+      "type": "tag",
+      "label": "Poster",
+      "value": "Poster"
+    },
+    {
+      "type": "tag",
+      "label": "Spiderman",
+      "value": "Spiderman"
+    }
+  ]
+} as any;
 
 function isNextDynamicServerError(error: unknown) {
   const err = error as { digest?: string; message?: string };

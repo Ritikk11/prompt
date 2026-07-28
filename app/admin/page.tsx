@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useData } from '@/components/context/DataContext';
-import { aiTools } from '@/lib/data/seedData';
+
 import type { Post, Section, ImagePrompt, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, CreativeDirectionItem, ShareTarget, DiscoveryPageSettings, ArticleSettingsOverride } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
