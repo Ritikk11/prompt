@@ -1,7 +1,7 @@
 import { fetchSettings } from '@/lib/data';
 import Markdown from '@/components/MarkdownRenderer';
 import { notFound } from 'next/navigation';
-import { getStaticPageContent, staticPageMetadata } from '@/lib/static-pages';
+import { getStaticPageContent, staticPageMetadata, getDefaultStaticPageBody } from '@/lib/static-pages';
 
 export async function generateMetadata() {
   const settings = await fetchSettings();
@@ -12,34 +12,7 @@ export async function generateMetadata() {
 export default async function Contact() {
   const settings = await fetchSettings();
   
-  const contactEmail = settings.contactEmail || 'contact@aipromptmatrix.in';
-  const defaultContent = `
-# Contact Us
-
-We read messages about corrections, copyright concerns, prompt submissions, partnerships, and site feedback.
-
-**Email:** [${contactEmail}](mailto:${contactEmail})  
-**Typical response time:** 2-5 business days
-
-## What To Include
-
-- The page URL if your message is about a specific prompt or image.
-- A short explanation of what needs to be fixed or reviewed.
-- For copyright or DMCA matters, include enough detail for us to identify the material.
-- For partnerships, include your website or public profile.
-
-## Prompt Corrections
-
-If a prompt has the wrong tool, model, tags, title, or image, send us the page link and the correction. We review correction requests and update pages when the change improves clarity.
-
-## Copyright Or Removal Requests
-
-For copyright notices, please use the DMCA Notice page and email the required details to **${contactEmail}**.
-
-## Submitting Prompts
-
-If submissions are enabled, you can submit prompts from the Submit page. Approved submissions may be edited for formatting, tags, clarity, and page quality before publication.
-`;
+  const defaultContent = getDefaultStaticPageBody('contact', settings);
   const page = getStaticPageContent(settings, 'contact', settings.pageContact, defaultContent);
   if (!page.visible) notFound();
 

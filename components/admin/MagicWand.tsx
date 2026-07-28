@@ -115,6 +115,7 @@ interface WandButtonProps {
 
 export function WandButton({ fieldId, value, onChange, prompt, systemContext, label = 'Auto-write', size = 'xs' }: WandButtonProps) {
   const { loaders, undoStack, error, runWand, undo } = useMagicWand();
+  const [instruction, setInstruction] = useState('');
   const loading = !!loaders[fieldId];
   const canUndo = undoStack[fieldId] !== undefined;
   const sizing = size === 'xs'
@@ -140,7 +141,12 @@ export function WandButton({ fieldId, value, onChange, prompt, systemContext, la
       <button
         type="button"
         disabled={loading}
-        onClick={() => runWand(fieldId, value, onChange, typeof prompt === 'function' ? prompt() : prompt, { systemContext })}
+        onClick={() => {
+          const p = typeof prompt === 'function' ? prompt() : prompt;
+          const pWithContext = value.trim() ? `${p}\n\nCURRENT FIELD VALUE (for context; if rewriting, use this as a starting point):\n${value.slice(0, 5000)}` : p;
+          const finalPrompt = instruction.trim() ? `${pWithContext}\n\nSpecial User Instructions:\n${instruction}` : pWithContext;
+          runWand(fieldId, value, onChange, finalPrompt, { systemContext });
+        }}
         className={`inline-flex items-center font-bold bg-primary-50 text-primary-600 hover:bg-primary-100 disabled:opacity-60 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20 ${sizing.btn}`}
       >
         {loading
@@ -148,6 +154,14 @@ export function WandButton({ fieldId, value, onChange, prompt, systemContext, la
           : <Wand2 className={sizing.icon} />}
         {label}
       </button>
+      <input
+        type="text"
+        placeholder="Instructions..."
+        value={instruction}
+        onChange={e => setInstruction(e.target.value)}
+        disabled={loading}
+        className={`bg-transparent border border-surface-200 dark:border-surface-700 rounded px-2 outline-none focus:border-primary-500 w-20 sm:w-28 focus:w-40 transition-all font-normal text-surface-900 dark:text-surface-100 disabled:opacity-50 ${sizing.btn}`}
+      />
     </span>
   );
 }

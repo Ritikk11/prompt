@@ -1,17 +1,18 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
+import { fetchSettings } from "@/lib/data";
 
 export const dynamic = 'force-dynamic';
 
 // ---------------------------------------------------------------------------
-// Site context â€” this is what grounds the AI in *this specific site's*
+// Site context — this is what grounds the AI in *this specific site's*
 // structure so it doesn't treat every field as generic blog copy.
 // ---------------------------------------------------------------------------
-const SITE_CONTEXT = `SITE CONTEXT (read this before writing anything):
-- This is aipromptmatrix.in, a gallery/library of AI image-generation prompts (for tools like ChatGPT/DALL-E, Gemini, Grok, Qwen, Midjourney, etc). Visitors come to find ready-to-use prompts and see the example images those prompts produce.
+const getSiteContext = (siteTools: string) => `SITE CONTEXT (read this before writing anything):
+- This is aipromptmatrix.in, a gallery/library of AI image-generation prompts (for tools like ${siteTools}). Visitors come to find ready-to-use prompts and see the example images those prompts produce.
 - A "post" bundles one or more images generated from a text prompt, plus editorial content around it.
-- "tags" are short, lowercase, search/filter keywords used for "related posts" â€” not generic blog hashtags. Stick to concrete nouns describing subject, style, or tool present in the images/prompts (e.g. "anime portrait", "gemini", "retro saree", "couple photography"). Reuse one of the site's EXISTING TAGS below when it genuinely fits instead of inventing a near-duplicate.
+- "tags" are short, lowercase, search/filter keywords used for "related posts" — not generic blog hashtags. Stick to concrete nouns describing subject, style, or tool present in the images/prompts (e.g. "anime portrait", "gemini", "retro saree", "couple photography"). Reuse one of the site's EXISTING TAGS below when it genuinely fits instead of inventing a near-duplicate.
 - "category" is one single broad grouping shared across many posts. Reuse one of the EXISTING CATEGORIES below if the post fits; only invent a new one if none apply.
 - "extendedDescription" is the long-form article body rendered under the post, and supports this site's custom markdown callout syntax (see below).
 - "faqs" render as an accordion under the post for SEO/rich-snippet purposes.
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest) {
     const auth = await requireAdmin(req);
     if (auth.error) return auth.error;
 
-    const { images, existingPosts, promptInstruction, existingCategories, existingTags } = await req.json();
+    const { images, existingPosts, promptInstruction, existingCategories, existingTags, currentFields } = await req.json();
 
     if (!Array.isArray(images) || images.length === 0 || images.length > 12) {
       return NextResponse.json({ error: 'Invalid image prompt count' }, { status: 400 });
@@ -161,10 +162,18 @@ export async function POST(req: NextRequest) {
       ? `\nThe user has asked you to generate ONLY the following field(s): ${fieldsToGenerate.join(', ')}. The response schema below only contains these fields â€” do not attempt to add any others.\n`
       : '';
 
+    const currentFieldsText = currentFields
+      ? `\nCURRENT FIELD VALUES (for context; if rewriting, use these as a starting point):\n${JSON.stringify(currentFields, null, 2).slice(0, 8000)}\n`
+      : '';
+
+    const settings = await fetchSettings();
+    const siteTools = settings.aiTools && settings.aiTools.length > 0 ? settings.aiTools.join(', ') : 'ChatGPT, Gemini, Grok, Qwen';
+    const SITE_CONTEXT = getSiteContext(siteTools);
+
     const systemPrompt = `You are an expert copywriter and SEO specialist working on posts for this specific site.
 
 ${SITE_CONTEXT}
-${taxonomyText}${recentPostsText}${customInstructionText}${focusNotice}
+${taxonomyText}${recentPostsText}${customInstructionText}${focusNotice}${currentFieldsText}
 Here are the text prompts the user used to create the images:
 ${formattedImages}
 

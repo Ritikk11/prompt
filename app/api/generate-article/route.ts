@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
+import { fetchSettings } from "@/lib/data";
 
 export const dynamic = 'force-dynamic';
 
@@ -8,11 +9,11 @@ export const dynamic = 'force-dynamic';
 // Site context for standalone articles (blogs/guides), as opposed to prompt
 // posts. Grounds the AI in this site's structure and markdown conventions.
 // ---------------------------------------------------------------------------
-const SITE_CONTEXT = `SITE CONTEXT (read this before writing anything):
-- This is aipromptmatrix.in, a gallery/library of AI image-generation prompts (for tools like ChatGPT/DALL-E, Gemini, Grok, Qwen, Midjourney, etc). Visitors come to find ready-to-use prompts and see the example images those prompts produce.
+const getSiteContext = (siteTools: string) => `SITE CONTEXT (read this before writing anything):
+- This is aipromptmatrix.in, a gallery/library of AI image-generation prompts (for tools like ${siteTools}). Visitors come to find ready-to-use prompts and see the example images those prompts produce.
 - An "article" is a standalone long-form page, separate from prompt posts. Category "blog" articles are editorial/news/opinion pieces; category "guide" articles are practical how-to tutorials about prompt writing and AI image tools.
 - Articles should genuinely help this audience: people trying to write better prompts and get better results out of AI image tools.
-- "tags" are short, lowercase, search/filter keywords - concrete nouns describing the topic (e.g. "prompt writing", "beginners", "midjourney", "negative prompts"). Reuse one of the site's EXISTING TAGS below when it genuinely fits instead of inventing a near-duplicate.
+- "tags" are short, lowercase, search/filter keywords - concrete nouns describing the topic. Reuse one of the site's EXISTING TAGS below when it genuinely fits instead of inventing a near-duplicate.
 - "description" is used for search previews and article cards (strict 140-160 characters).
 - "body" is the full article rendered as Markdown and supports this site's custom callout syntax (see field rules below).`;
 
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
     const auth = await requireAdmin(req);
     if (auth.error) return auth.error;
 
-    const { topic, category, promptInstruction, existingArticles, existingTags, currentBody } = await req.json();
+    const { topic, category, promptInstruction, existingArticles, existingTags, currentFields } = await req.json();
 
     const safeTopic = String(topic || '').slice(0, 300).trim();
     const safeInstruction = String(promptInstruction || '').slice(0, 2000).trim();
@@ -129,18 +130,22 @@ export async function POST(req: NextRequest) {
       ? `\nThe user has asked you to generate ONLY the following field(s): ${fieldsToGenerate.join(', ')}. The response schema below only contains these fields - do not attempt to add any others.\n`
       : '';
 
-    const currentBodyText = isPartial && currentBody
-      ? `\nCurrent article body (for context; only rewrite it if "body" is among the requested fields):\n${String(currentBody).slice(0, 8000)}\n`
+    const currentFieldsText = currentFields
+      ? `\nCURRENT FIELD VALUES (for context; if rewriting, use these as a starting point):\n${JSON.stringify(currentFields, null, 2).slice(0, 8000)}\n`
       : '';
 
     const topicText = safeTopic
       ? `The article's working title / topic is: "${safeTopic}".`
       : `No working title was given - derive the topic from the Special User Instructions above.`;
 
+    const settings = await fetchSettings();
+    const siteTools = settings.aiTools && settings.aiTools.length > 0 ? settings.aiTools.join(', ') : 'ChatGPT, Gemini, Grok, Qwen';
+    const SITE_CONTEXT = getSiteContext(siteTools);
+
     const systemPrompt = `You are an expert content writer and SEO specialist working on articles for this specific site.
 
 ${SITE_CONTEXT}
-${taxonomyText}${existingArticlesText}${customInstructionText}${focusNotice}${currentBodyText}
+${taxonomyText}${existingArticlesText}${customInstructionText}${focusNotice}${currentFieldsText}
 You are writing a "${safeCategory}" article. ${topicText}
 
 Generate the following field(s) in JSON format:

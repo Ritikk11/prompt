@@ -1,4 +1,5 @@
 'use client';
+'use client';
 import { useCallback, useEffect, useState, Suspense } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
@@ -6,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { LogOut, Heart, FileText, MessageCircle, Edit2, Camera, User as UserIcon, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { showToast } from '@/components/ui/ToastContainer';
 import SkeletonPostCard from '@/components/SkeletonPostCard';
 import { getGridClasses } from '@/lib/utils';
 import type { Post, SiteSettings } from '@/lib/types';
@@ -75,9 +77,9 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
       if (error) throw error;
       setUser(data.user);
       setIsEditing(false);
-      alert('Profile updated successfully!');
+      showToast('Profile updated successfully!');
     } catch (err: any) {
-      alert(err.message || 'Failed to update profile');
+      showToast(err.message || 'Failed to update profile', 'error');
     } finally {
       setSaving(false);
     }
@@ -95,9 +97,9 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
         'avatar'
       );
       setAvatarUrl(url);
-      alert('Avatar uploaded successfully! Click Save to apply changes.');
+      showToast('Avatar uploaded successfully! Click Save to apply changes.');
     } catch (err: any) {
-      alert(err.message || 'Image upload failed');
+      showToast(err.message || 'Image upload failed', 'error');
     } finally {
       setSaving(false);
     }

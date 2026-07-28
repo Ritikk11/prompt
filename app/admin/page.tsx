@@ -12,6 +12,7 @@ import {
   Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass, Menu, Mail,
   Ban, Shield, Flag, CheckCircle, Cpu, BookOpen, Newspaper, Share2
 } from 'lucide-react';
+import { showToast } from '@/components/ui/ToastContainer';
 
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -1689,7 +1690,18 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
           existingPosts: existingPostsContext,
           promptInstruction: aiPromptInstruction,
           existingCategories,
-          existingTags
+          existingTags,
+          currentFields: {
+            title,
+            seoTitle,
+            description,
+            seoDescription,
+            extendedDescription,
+            category,
+            tags: tagsStr,
+            schemaType,
+            faqs
+          }
         })
       });
 
@@ -1710,10 +1722,10 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
       if (data.schemaType) setSchemaType(data.schemaType);
       if (data.faqs && Array.isArray(data.faqs)) setFaqs(data.faqs);
 
-      alert("Generated details successfully!");
+      showToast("Generated details successfully!");
     } catch (err: any) {
       console.error(err);
-      alert("Failed to generate details. " + err.message);
+      showToast("Failed to generate details. " + err.message, 'error');
     } finally {
       setIsGeneratingAi(false);
     }
@@ -1752,7 +1764,12 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
           promptInstruction: articleAiInstruction,
           existingArticles: existingArticlesContext,
           existingTags: existingArticleTags,
-          currentBody: selectedArticle.body,
+          currentFields: {
+            title: selectedArticle.title,
+            description: selectedArticle.description,
+            tags: selectedArticle.tags,
+            body: selectedArticle.body
+          }
         })
       });
 
@@ -1783,10 +1800,10 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
       updateManagedArticle(selectedArticle.slug, patch);
       if (patch.slug) setSelectedArticleSlug(patch.slug);
 
-      alert('Generated article details successfully! Review the fields, then hit Save Articles.');
+      showToast('Generated article details successfully! Review the fields, then hit Save Articles.');
     } catch (err: any) {
       console.error(err);
-      alert('Failed to generate article. ' + err.message);
+      showToast('Failed to generate article. ' + err.message, 'error');
     } finally {
       setIsGeneratingArticleAi(false);
     }
@@ -2390,7 +2407,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
       imageProvider,
       features,
     });
-    alert('Settings saved!');
+    showToast('Settings saved!');
   };
 
   // AI Tools Management

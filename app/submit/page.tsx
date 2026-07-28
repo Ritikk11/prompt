@@ -5,12 +5,20 @@ import { createClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+'use client';
+import { useState, useRef, useEffect } from 'react';
+import { useData } from '@/components/context/DataContext';
+import { createClient } from '@/lib/supabase-client';
+import type { User } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Upload, Plus, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { ImagePrompt } from '@/lib/types';
 import { getImageModelForTools } from '@/lib/constants';
 import { optimizeImageFile } from '@/lib/client-image-optimizer';
 import { uploadImageFileToProvider } from '@/lib/client-upload';
+import { showToast } from '@/components/ui/ToastContainer';
 
 export default function SubmitPage() {
   const { settings, loading, addPost } = useData();
@@ -82,70 +90,9 @@ export default function SubmitPage() {
       const defaultTool = settings.aiTools[0] || 'ChatGPT';
       setImages(prev => [...prev, { id: generateId(), url, prompt: '', aiTool: defaultTool, model: getImageModelForTools([defaultTool]) }]);
     } catch (e: any) {
-      alert(e.message || "Error uploading image");
+      showToast(e.message || "Error uploading image", 'error');
     }
   };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      Array.from(e.target.files).forEach(f => handleImageUpload(f));
-    }
-  };
-
-  const updateImage = (idx: number, updates: Partial<ImagePrompt>) => {
-    const newImages = [...images];
-    newImages[idx] = { ...newImages[idx], ...updates };
-    setImages(newImages);
-  };
-
-  const removeImage = (idx: number) => {
-    setImages(images.filter((_, i) => i !== idx));
-  };
-
-  const generateId = () => Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-  const slugify = (text: string) => text.toLowerCase().trim().replace(/[^\w-]+/g, '-');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title) return alert("Title is required");
-    if (images.length === 0) return alert("Add at least one image/prompt");
-    if (images.some(i => !i.prompt)) return alert("Every image must have a prompt text");
-    
-    setIsSubmitting(true);
-    const postTags = tags.split(',').map(t => t.trim()).filter(Boolean);
-    const slug = slugify(title);
-    const id = generateId();
-
-    try {
-      const isAutoApprove = settings.features?.userSubmissionsAutoApprove;
-      await addPost({
-        id,
-        slug,
-        title,
-        description,
-        images,
-        tags: postTags,
-        createdAt: new Date().toISOString(),
-        views: 0,
-        likes: 0,
-        featured: false,
-        authorId: user.id,
-        authorName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Creator',
-        authorUsername: user.user_metadata?.username || user.email?.split('@')[0] || 'creator',
-        authorAvatar: user.user_metadata?.avatar_url || '',
-        status: isAutoApprove ? 'published' : 'pending'
-      });
-      alert(isAutoApprove ? 'Prompt collection published successfully!' : 'Prompt collection submitted successfully! It is pending admin approval.');
-      navigate.push('/profile');
-    } catch (err) {
-      console.error(err);
-      alert('Failed to submit');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const hasIncompleteProfile = !user?.user_metadata?.username || !user?.user_metadata?.full_name;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 fade-in">

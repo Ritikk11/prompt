@@ -4,6 +4,7 @@ import './globals.css';
 // Global styles
 import { ThemeProvider } from '@/components/context/ThemeContext';
 import { DataProvider } from '@/components/context/DataContext';
+import { ToastContainer } from '@/components/ui/ToastContainer';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AdSlot from '@/components/AdSlot';
@@ -134,7 +135,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       {/* overflow-x-clip on body (not -hidden): `hidden` turns body into a
           scroll container, so any transient vertical overflow (scroll-reveal
           translateY) flashes a second scrollbar and shifts the layout. */}
-      <body className="min-h-screen flex flex-col overflow-x-clip font-sans transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100 bg-white text-gray-900" suppressHydrationWarning>
+      <body className="antialiased min-h-screen flex flex-col bg-white text-surface-950 dark:bg-surface-950 dark:text-surface-50 selection:bg-primary-500/30 selection:text-primary-900 dark:selection:bg-primary-500/40 dark:selection:text-white" suppressHydrationWarning>
+        <ToastContainer />
         <ThemeProvider>
           <DataProvider
             initialSettings={initialSettings}
