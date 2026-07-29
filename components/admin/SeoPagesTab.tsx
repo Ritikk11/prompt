@@ -240,7 +240,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
               <input value={categoriesStr} onChange={e => setCategoriesStr(e.target.value)} className={adminInput} placeholder="e.g. image" />
             </Field>
             <Field label="Required AI tools (comma separated, all must match)">
-              <input value={aiToolsStr} onChange={e => setAiToolsStr(e.target.value)} className={adminInput} placeholder="e.g. gemini, dall-e" />
+              <input value={aiToolsStr} onChange={e => setAiToolsStr(e.target.value)} className={adminInput} placeholder="e.g. gemini, grok" />
             </Field>
           </div>
 

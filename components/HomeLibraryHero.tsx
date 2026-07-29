@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Bookmark, Flame, Heart, Search, Sparkles } from 'lucide-react';
+import { ArrowRight, Bookmark, Flame, Heart, Layers, Search, Workflow } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 
 type HomeLibraryHeroProps = {
@@ -16,7 +16,7 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
   const subtitle = settings.heroSubtitle || 'Discover tested prompts for ChatGPT, Gemini, Grok, Qwen, and other image tools. Copy, customize, and build stronger artwork from one organized library.';
 
   const statItems = settings.heroHideStats ? [] : [
-    { label: 'Prompts', value: `${postCount}+`, icon: Sparkles },
+    { label: 'Prompts', value: `${postCount}+`, icon: Layers },
     { label: 'Featured', value: `${featuredPosts.length}`, icon: Flame },
     { label: 'Likes', value: `${totalLikes}`, icon: Heart },
     { label: 'Saves', value: `${totalSaves}`, icon: Bookmark },
@@ -54,7 +54,7 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
             Browse Prompts
           </Link>
           <a href="#how-it-works" className="inline-flex h-14 items-center gap-2 rounded-2xl border border-surface-200 bg-white/70 px-7 text-sm font-extrabold text-surface-900 shadow-sm backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14">
-            <Sparkles className="h-5 w-5" />
+            <Workflow className="h-5 w-5" />
             How It Works
           </a>
         </div>

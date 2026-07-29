@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Copy, Heart, Search, Wand2 } from 'lucide-react';
+import { Check, Copy, Heart, ImagePlus, Search, Workflow } from 'lucide-react';
 import ScrollReveal from '@/components/ScrollReveal';
 import type { SiteSettings } from '@/lib/types';
 
@@ -26,7 +26,7 @@ const steps = [
     number: '03',
     title: 'Paste & Generate',
     text: 'Open your preferred image tool, paste the prompt, attach reference images when needed, and adjust settings as needed.',
-    icon: Wand2,
+    icon: ImagePlus,
     color: 'from-emerald-500 to-emerald-600',
     checks: ['Works with major image tools', 'Adjust aspect ratios', 'Fine-tune prompt details'],
   },
@@ -57,7 +57,7 @@ export default function HomeHowItWorks({ settings }: { settings?: SiteSettings }
       <div className="mx-auto max-w-6xl">
         <div className="mb-10 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary-50 px-4 py-2 text-xs font-bold text-primary-700">
-            <Wand2 className="h-4 w-4" />
+            <Workflow className="h-4 w-4" />
             {content.badge || 'How It Works'}
           </div>
           <h2 className="text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white sm:text-4xl">

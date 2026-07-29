@@ -2,6 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { fetchSettings } from "@/lib/data";
+import { TOOLS_MODELS_RULES } from "@/lib/admin/wandPrompts";
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +11,7 @@ export const dynamic = 'force-dynamic';
 // structure so it doesn't treat every field as generic blog copy.
 // ---------------------------------------------------------------------------
 const getSiteContext = (siteTools: string) => `SITE CONTEXT (read this before writing anything):
-- This is aipromptmatrix.in, a gallery/library of AI image-generation prompts (for tools like ${siteTools}). Visitors come to find ready-to-use prompts and see the example images those prompts produce.
+- This is aipromptmatrix.in, a gallery/library of AI image-generation prompts (for tools like ${siteTools}). Visitors come to find ready-to-use prompts and see the example images those prompts produce.\n- ${TOOLS_MODELS_RULES}
 - A "post" bundles one or more images generated from a text prompt, plus editorial content around it.
 - "tags" are short, lowercase, search/filter keywords used for "related posts" — not generic blog hashtags. Stick to concrete nouns describing subject, style, or tool present in the images/prompts (e.g. "anime portrait", "gemini", "retro saree", "couple photography"). Reuse one of the site's EXISTING TAGS below when it genuinely fits instead of inventing a near-duplicate.
 - "category" is one single broad grouping shared across many posts. Reuse one of the EXISTING CATEGORIES below if the post fits; only invent a new one if none apply.

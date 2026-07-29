@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getGridClasses } from '@/lib/utils';
-import { Sparkles } from 'lucide-react';
+import { Cpu } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 import AdSlot from '@/components/AdSlot';
 import { getAllTools, getToolInfo } from '@/lib/constants';
@@ -88,7 +88,7 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
         badge={displayTool}
         title={heroTitle}
         description={heroCopy}
-        icon={toolInfo.logo ? { logo: toolInfo.logo, label: displayTool, logoScale: toolInfo.logoScale } : <Sparkles className="h-4 w-4" />}
+        icon={toolInfo.logo ? { logo: toolInfo.logo, label: displayTool, logoScale: toolInfo.logoScale } : <Cpu className="h-4 w-4" />}
         stats={(discovery.showHeroStats ?? true) ? [{ label: 'Prompts', value: filtered.length }] : []}
       />
 

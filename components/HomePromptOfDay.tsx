@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Crown, Heart, Tag, Wand2 } from 'lucide-react';
+import { ArrowRight, Cpu, Crown, Heart, Tag } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 import { getAllTools } from '@/lib/constants';
 import { getPromptImageUrl } from '@/lib/image-url';
@@ -60,7 +60,7 @@ export default function HomePromptOfDay({ post, settings }: { post?: Post; setti
               <span className="inline-flex items-center gap-2"><Tag className="h-4 w-4" /> {category}</span>
               {tools.length > 0 && (
                 <span className="inline-flex items-start gap-2">
-                  <Wand2 className="mt-0.5 h-4 w-4 shrink-0" />
+                  <Cpu className="mt-0.5 h-4 w-4 shrink-0" />
                   <span className="leading-snug">Best for {tools.join(', ')}</span>
                 </span>
               )}

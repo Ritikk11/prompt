@@ -350,6 +350,27 @@ export interface SiteSettings {
   headerNavOrder?: string[];
   /** Hide/rename overrides for the built-in header items (home, explore, blog, submit). */
   headerBuiltins?: Partial<Record<'home' | 'explore' | 'blog' | 'submit', { hidden?: boolean; label?: string }>>;
+  /**
+   * Desktop dropdown menu for the header. When absent, the header runs in
+   * "auto" mode: enabled, label "Tools", and every header section listed in
+   * the menu. Once the admin customizes it, these explicit values win.
+   */
+  headerToolsMenu?: {
+    enabled?: boolean;
+    label?: string;
+    itemNavKeys?: string[];
+  };
+  /**
+   * Header dropdown menus (desktop). Each nav item (section, built-in, or
+   * custom link) can appear in at most one menu; items in no menu render
+   * inline. When absent, auto mode groups every header section under "Tools".
+   * Supersedes the older single headerToolsMenu setting.
+   */
+  headerMenus?: Array<{
+    id: string;
+    label: string;
+    itemNavKeys?: string[];
+  }>;
   homeLinkBlocks?: HomeLinkBlock[];
   homepageBlockOrder?: string[];
   homepageContent?: Record<string, HomepageBlockContent>;

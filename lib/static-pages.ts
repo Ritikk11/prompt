@@ -409,7 +409,7 @@ The Site contains content submitted by users, including prompts, comments, and i
 
 ## Trademark Disclaimer
 
-ChatGPT, Gemini, Grok, Midjourney, Stable Diffusion, DALL·E, and all other AI tool and model names referenced on this Site are trademarks of their respective owners. ${siteTitle} is an independent platform and is not affiliated with, endorsed by, or sponsored by any of these companies. References to these tools are made solely to identify which platform a prompt is designed for.
+ChatGPT, Gemini, Grok, Qwen, and all other AI tool and model names referenced on this Site are trademarks of their respective owners. ${siteTitle} is an independent platform and is not affiliated with, endorsed by, or sponsored by any of these companies. References to these tools are made solely to identify which platform a prompt is designed for.
 
 ## Errors and Omissions Disclaimer
 

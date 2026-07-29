@@ -280,7 +280,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                       value={fullName}
                       onChange={e => setFullName(e.target.value)}
                       placeholder="e.g. John Doe"
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/25 outline-none text-sm"
                     />
                   </div>
                   <div>
@@ -291,30 +291,37 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                       value={username}
                       onChange={e => setUsername(e.target.value)}
                       placeholder="e.g. johndoe"
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/25 outline-none text-sm"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-surface-500 uppercase tracking-wider mb-1.5">Profile Picture URL</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={avatarUrl}
-                      onChange={e => setAvatarUrl(e.target.value)}
-                      placeholder="https://example.com/avatar.jpg"
-                      className="flex-1 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none text-sm"
-                    />
-                    <label className="shrink-0 px-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 text-xs font-bold cursor-pointer hover:bg-surface-50 flex items-center gap-1.5">
-                      <Camera className="w-4 h-4" /> Upload
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={e => e.target.files?.[0] && handleAvatarUpload(e.target.files[0])}
-                      />
-                    </label>
+                  <label className="block text-xs font-bold text-surface-500 uppercase tracking-wider mb-1.5">Profile Picture</label>
+                  <div className="flex items-center gap-4">
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-surface-200 ring-2 ring-surface-200 dark:bg-surface-800 dark:ring-surface-700">
+                      {avatarUrl ? (
+                        <Image src={avatarUrl} alt="Profile picture preview" fill className="object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xl font-black text-primary-500">
+                          {(fullName || user.email || 'U').slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-surface-200 bg-white px-4 py-2 text-xs font-bold transition-colors hover:bg-surface-50 dark:border-surface-800 dark:bg-surface-900 dark:hover:bg-surface-800">
+                        <Camera className="w-4 h-4" /> {avatarUrl ? 'Change photo' : 'Upload photo'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={e => e.target.files?.[0] && handleAvatarUpload(e.target.files[0])}
+                        />
+                      </label>
+                      <p className="text-[11px] text-surface-400 dark:text-surface-500">
+                        Google sign-in users: your account photo is used automatically. Upload a photo to replace it.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -392,7 +399,11 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                   </div>
                 ) : likedPosts.length === 0 ? (
                   <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
+                    <Heart className="w-8 h-8 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
                     <p className="text-surface-500 font-medium">No liked prompts yet</p>
+                    <Link href="/explore" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
+                      Explore trending prompts
+                    </Link>
                   </div>
                 ) : (
                   <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>

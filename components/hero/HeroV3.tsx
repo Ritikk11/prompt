@@ -17,14 +17,14 @@ export default function HeroV3({ featuredPosts: featured, settings }: HeroProps)
   const currentImageUrl = promptImageUrl(post);
 
   return (
-    <div className="relative w-full rounded-3xl overflow-hidden py-6 px-4 md:py-12 md:px-10 shadow-inner flex items-center justify-center min-h-[500px]" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+    <div className="relative w-full rounded-3xl overflow-hidden border border-surface-200/70 dark:border-surface-800 py-6 px-4 md:py-12 md:px-10 shadow-inner flex items-center justify-center min-h-[500px]" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       {/* Blurred Background */}
       <div className="absolute inset-0 z-0">
-        <Image src={currentImageUrl} alt="" fill sizes="20vw" className="object-cover opacity-30 dark:opacity-20 blur-3xl scale-125"  referrerPolicy="no-referrer" />
+        <Image src={currentImageUrl} alt="" fill sizes="20vw" className="object-cover opacity-40 dark:opacity-30 blur-3xl scale-125"  referrerPolicy="no-referrer" />
         <div className="absolute inset-0 bg-surface-50/80 dark:bg-surface-950/80 backdrop-blur-md" />
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center gap-2 md:flex-row md:gap-16">
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-2 md:flex-row md:gap-16 lg:gap-20">
         {/* Text Content */}
         <div className="order-2 flex w-full flex-col text-center md:order-1 md:w-1/2 md:text-left">
           <div className="relative min-h-[200px] md:min-h-[290px]">
@@ -75,14 +75,14 @@ export default function HeroV3({ featuredPosts: featured, settings }: HeroProps)
              return (
                <div
                  key={p.id}
-                 className="absolute inset-0 overflow-hidden rounded-2xl border border-white/20 shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]"
+                 className="absolute inset-0 overflow-hidden rounded-2xl border-2 border-white/40 dark:border-white/10 shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]"
                  style={{
                    transform: `translateX(${relativeIdx * 25}px) translateZ(${relativeIdx === 0 ? 0 : -100}px) rotateY(${relativeIdx * -15}deg) scale(${relativeIdx === 0 ? 1 : 0.85})`,
-                   opacity: relativeIdx === 0 ? 1 : 0.4,
+                   opacity: relativeIdx === 0 ? 1 : 0.6,
                    zIndex: relativeIdx === 0 ? 30 : 20,
                  }}
                >
-                 <Image src={promptImageUrl(p)} alt={`bg-${p.title}`} fill sizes="20vw" className="scale-125 object-cover opacity-50 blur-xl" loading="lazy" referrerPolicy="no-referrer" />
+                 <Image src={promptImageUrl(p)} alt={`bg-${p.title}`} fill sizes="20vw" className="scale-125 object-cover opacity-70 blur-xl" loading="lazy" referrerPolicy="no-referrer" />
                  <LoadingImage
                    src={promptImageUrl(p)}
                    alt={p.title}
@@ -97,6 +97,27 @@ export default function HeroV3({ featuredPosts: featured, settings }: HeroProps)
            })}
         </div>
       </div>
+
+      {/* Dot pagination + slide counter (V1/V2 have these; V3 previously had none) */}
+      {featured.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 md:bottom-5">
+          {featured.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              aria-label={`Show featured prompt ${i + 1}`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === current
+                  ? 'w-6 bg-surface-900 dark:bg-white'
+                  : 'w-1.5 bg-surface-400/60 hover:bg-surface-500 dark:bg-surface-600 dark:hover:bg-surface-500'
+              }`}
+            />
+          ))}
+          <span className="ml-1 text-[11px] font-semibold tabular-nums text-surface-500 dark:text-surface-400">
+            {current + 1}/{featured.length}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

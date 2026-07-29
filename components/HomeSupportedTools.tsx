@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, BookmarkCheck, Check, Cpu, Gauge, Sparkles, Zap } from 'lucide-react';
+import { ArrowRight, BookmarkCheck, Check, Cpu, Gauge, Layers, Zap } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 import { getAllTools, getDefaultImageModel, getToolInfo } from '@/lib/constants';
 
@@ -67,7 +67,7 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
               { label: 'Flexibility', value: 'Stellar' },
               { label: 'Compatibility', value: 'Verified' },
             ];
-            const statIcons = [Cpu, Gauge, Sparkles];
+            const statIcons = [Cpu, Gauge, Layers];
             return (
               <Link key={tool} href={`/tool/${encodeURIComponent(tool)}`} className="group flex h-full flex-col rounded-3xl border border-surface-200 bg-white/70 p-6 shadow-sm backdrop-blur-md transition hover:-translate-y-1.5 hover:shadow-2xl dark:border-surface-800 dark:bg-surface-900/50">
                 <div className={`h-1 rounded-full ${['bg-emerald-500', 'bg-blue-500', 'bg-orange-500', 'bg-fuchsia-500'][index % 4]}`} />
@@ -92,7 +92,7 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
                 <p className="mt-1 text-center text-sm font-bold text-primary-600 dark:text-primary-300">{model}</p>
                 <div className="mt-5 grid grid-cols-3 gap-1 rounded-2xl bg-surface-100/80 p-3 dark:bg-surface-800/70">
                   {stats.slice(0, 3).map((stat, statIndex) => {
-                    const Icon = statIcons[statIndex] || Sparkles;
+                    const Icon = statIcons[statIndex] || Layers;
                     return (
                       <div key={`${stat.label}-${statIndex}`} className="min-w-0 text-center">
                         <Icon className="mx-auto h-3.5 w-3.5 text-surface-400" />

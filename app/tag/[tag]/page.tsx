@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: `${siteUrl}/tag/${encodeURIComponent(decodedTag)}` },
-    keywords: [decodedTag, 'AI prompts', 'midjourney', 'dall-e'],
+    keywords: [decodedTag, 'AI prompts', 'chatgpt prompts', 'gemini prompts', 'grok prompts', 'qwen prompts'],
   };
 }
 

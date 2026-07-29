@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Heart, Bookmark, Flame, Sparkles, Wand2 } from 'lucide-react';
+import { Heart, Bookmark, Flame, Layers, LayoutGrid, Workflow } from 'lucide-react';
 import { getAllTools } from '@/lib/constants';
 import LoadingImage from '@/components/LoadingImage';
 import { promptImageUrl, type HeroProps } from './sliderShared';
@@ -16,7 +16,7 @@ export default function HeroV9({ featuredPosts: featured, settings, stats }: Her
   const totalLikes = featured.reduce((sum, item) => sum + (item.likes || 0), 0);
   const totalSaves = featured.reduce((sum, item) => sum + (item.bookmarkedBy?.length || 0), 0);
   const statItems = [
-    { label: 'Prompt sets', value: `${stats?.postCount ?? featured.length}+`, icon: Sparkles },
+    { label: 'Prompt sets', value: `${stats?.postCount ?? featured.length}+`, icon: Layers },
     { label: 'Featured picks', value: `${featured.length}`, icon: Flame },
     { label: 'Likes', value: `${totalLikes}`, icon: Heart },
     { label: 'Saves', value: `${totalSaves}`, icon: Bookmark },
@@ -50,11 +50,11 @@ export default function HeroV9({ featuredPosts: featured, settings, stats }: Her
 
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link href="/explore" className="inline-flex h-14 items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-7 text-sm font-extrabold text-white shadow-[0_18px_40px_rgba(168,85,247,0.35)] transition hover:-translate-y-0.5">
-            <Sparkles className="h-5 w-5" />
+            <LayoutGrid className="h-5 w-5" />
             Browse Prompts
           </Link>
           <a href="#how-it-works" className="inline-flex h-14 items-center gap-2 rounded-2xl border border-white/15 bg-white/8 px-7 text-sm font-extrabold text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/14">
-            <Wand2 className="h-5 w-5" />
+            <Workflow className="h-5 w-5" />
             How It Works
           </a>
         </div>

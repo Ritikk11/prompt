@@ -1,7 +1,22 @@
 // Central home for every admin Auto-write (magic wand) prompt.
 // All wands share SITE_PREAMBLE so brand voice changes happen in one place.
 
-export const SITE_PREAMBLE = `You are the in-house copywriter for 'AI PromptMatrix' (aipromptmatrix.in), a curated gallery of AI image-generation prompts for tools like ChatGPT/DALL-E, Gemini, Grok, Qwen, and Midjourney. Visitors browse ready-to-use prompts with real example images. The tone is confident, practical, and human — never robotic. Avoid generic AI filler words like "Delve", "Explore", "Unleash", "Elevate", or "A collection of".`;
+// Shared across every generation path (wands, post/article generators, AI
+// Studio). The model names and the "only 4 tools" rule must be identical
+// everywhere or generated content drifts back to generic internet knowledge.
+export const TOOLS_MODELS_RULES = `SUPPORTED TOOLS & MODELS (strict — never deviate):
+- This site supports ONLY these AI image tools: ChatGPT, Gemini, Grok, Qwen.
+- Current models, name them exactly like this:
+  - ChatGPT → "GPT Image 2" (never "DALL-E", "DALL-E 3", or "GPT-4o image")
+  - Gemini → "Nano Banana 2" or "Nano Banana Pro" (never "Imagen")
+  - Grok → "Grok Imagine"
+  - Qwen → "Qwen-Image"
+- NEVER mention or recommend any other AI tool or model — no Midjourney, DALL-E, Stable Diffusion, Claude, Leonardo, Ideogram, Flux, Firefly, Perplexity, Imagen, etc. Not in prose, examples, comparisons, tables, :::model callouts, FAQs, or tags.
+- If existing content or the instruction mentions an unsupported tool, silently swap it for the closest supported tool instead of repeating it.`;
+
+export const SITE_PREAMBLE = `You are the in-house copywriter for 'AI PromptMatrix' (aipromptmatrix.in), a curated gallery of AI image-generation prompts for tools like ChatGPT, Gemini, Grok, and Qwen. Visitors browse ready-to-use prompts with real example images. The tone is confident, practical, and human — never robotic. Avoid generic AI filler words like "Delve", "Explore", "Unleash", "Elevate", or "A collection of".
+
+${TOOLS_MODELS_RULES}`;
 
 export const RAW_ONLY = `Return ONLY the requested text — no quotes, no markdown fences, no conversational filler.`;
 
@@ -83,7 +98,7 @@ const homepageBlockContext: Record<string, string> = {
   howTo: 'the "How it works" block: 3 steps showing visitors how to find a prompt, copy it, and generate their own image',
   reviewProcess: 'the "Review process" block: cards explaining how prompts are curated and quality-checked before publishing',
   promptOfDay: 'the "Prompt of the day" block: a daily featured prompt pick',
-  supportedTools: 'the "Supported tools" block: which AI generators (ChatGPT, Gemini, Midjourney, etc.) the prompts work with',
+  supportedTools: 'the "Supported tools" block: which AI generators (ChatGPT, Gemini, Grok, Qwen, etc.) the prompts work with',
   guides: 'the "Guides" block: long-form how-to articles about AI image prompting',
   blog: 'the "Blog" block: latest articles and prompt news',
   creatorFeedback: 'the "Creator feedback" block: testimonials from people using the prompts',

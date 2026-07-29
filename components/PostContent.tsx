@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
 import Image from 'next/image';
-import { Copy, Check, Eye, Heart, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Wand2, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle, Layers, ClipboardCheck } from 'lucide-react';
+import { Copy, Check, Eye, Heart, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Compass, Lightbulb, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle, Layers, ClipboardCheck } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
 import { getDefaultImageModel, getToolInfo, getAllTools, getToolForImageModel } from '@/lib/constants';
@@ -273,7 +273,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const primaryToolName = heroTools[0] || 'ChatGPT / Gemini';
   const toolLabel = heroTools.length === 0 ? 'your AI tool' : heroTools.length === 1 ? heroTools[0] : heroTools.join(' or ');
   const howToSteps = [
-    { title: `Open ${toolLabel}`, text: 'Use the tool or model listed with this prompt. If multiple tools are shown, choose the one you prefer.', icon: Wand2 },
+    { title: `Open ${toolLabel}`, text: 'Use the tool or model listed with this prompt. If multiple tools are shown, choose the one you prefer.', icon: ExternalLink },
     { title: 'Copy the prompt', text: 'Use the copy button on any prompt card, or copy the entire collection above.', icon: Copy },
     { title: 'Upload reference image', text: 'Attach your reference image first when the prompt is image-guided.', icon: ImageIcon },
     { title: 'Customize details', text: 'Replace placeholders, names, colors, aspect ratio, or style notes as needed.', icon: Check },
@@ -291,8 +291,6 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     if (normalized.includes('gemini') || normalized.includes('banana')) return 'https://gemini.google.com/app';
     if (normalized.includes('grok')) return `https://grok.com/?q=${encoded}`;
     if (normalized.includes('qwen')) return `https://chat.qwen.ai/?q=${encoded}`;
-    if (normalized.includes('claude')) return `https://claude.ai/new?q=${encoded}`;
-    if (normalized.includes('perplexity')) return `https://www.perplexity.ai/search?q=${encoded}`;
     return `https://www.google.com/search?q=${encodeURIComponent(`${tool} AI image generator`)}`;
   };
 
@@ -419,7 +417,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       <div className={`rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900 ${mobile ? 'mb-16 lg:hidden' : ''}`}>
         <div className="mb-4 flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-500/10 text-primary-500">
-            <Wand2 className="h-4 w-4" />
+            <Compass className="h-4 w-4" />
           </div>
           <div>
             <h3 className="text-sm font-black text-surface-900 dark:text-white">{keepExploring.title}</h3>
@@ -1326,7 +1324,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           <div className="mb-8 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-500">
-                <Wand2 className="h-5 w-5" />
+                <Lightbulb className="h-5 w-5" />
               </div>
               <div>
                 <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">Next ideas</p>

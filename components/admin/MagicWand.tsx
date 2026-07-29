@@ -143,8 +143,30 @@ export function WandButton({ fieldId, value, onChange, prompt, systemContext, la
         disabled={loading}
         onClick={() => {
           const p = typeof prompt === 'function' ? prompt() : prompt;
-          const pWithContext = value.trim() ? `${p}\n\nCURRENT FIELD VALUE (for context; if rewriting, use this as a starting point):\n${value.slice(0, 5000)}` : p;
-          const finalPrompt = instruction.trim() ? `${pWithContext}\n\nSpecial User Instructions:\n${instruction}` : pWithContext;
+          let finalPrompt: string;
+          if (instruction.trim() && value.trim()) {
+            // Edit mode: an instruction over existing content is a surgical
+            // edit request, not a regeneration request. Without these explicit
+            // rules the base prompt ("write the full X") wins and the whole
+            // field gets rewritten.
+            finalPrompt = `${p}
+
+CURRENT FIELD VALUE:
+"""
+${value.slice(0, 5000)}
+"""
+
+USER EDIT INSTRUCTION (highest priority — overrides the base writing task above):
+${instruction}
+
+STRICT EDIT RULES:
+1. Output the COMPLETE updated field content with ONLY that change applied — the output replaces the whole field, so include everything, not a diff or partial fragment.
+2. Do NOT rewrite, restructure, re-title, expand, shorten, or "improve" anything the instruction did not ask for. Keep the existing headings, structure, markdown/callout formatting, tone, and length.
+3. Only do a full rewrite if the instruction explicitly asks for one (e.g. says "rewrite", "regenerate", or "change everything").`;
+          } else {
+            const pWithContext = value.trim() ? `${p}\n\nCURRENT FIELD VALUE (for context; if rewriting, use this as a starting point):\n${value.slice(0, 5000)}` : p;
+            finalPrompt = pWithContext;
+          }
           runWand(fieldId, value, onChange, finalPrompt, { systemContext });
         }}
         className={`inline-flex items-center font-bold bg-primary-50 text-primary-600 hover:bg-primary-100 disabled:opacity-60 dark:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/20 ${sizing.btn}`}

@@ -7,7 +7,7 @@ import PostCard from '@/components/PostCard';
 import FilterChipRail from '@/components/FilterChipRail';
 import { getFilterTagsFromPosts } from '@/lib/filter-tags';
 import { getAllTools } from '@/lib/constants';
-import { Flame, Sparkles } from 'lucide-react';
+import { Clock, Flame } from 'lucide-react';
 import DiscoveryPageHero from '@/components/DiscoveryPageHero';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
 import ScrollReveal from '@/components/ScrollReveal';
@@ -80,7 +80,7 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
               onClick={() => setSortBy('latest')}
               className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition ${sortBy === 'latest' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-600 hover:bg-white dark:text-surface-300 dark:hover:bg-surface-800'}`}
             >
-              <Sparkles className="h-3.5 w-3.5" />
+              <Clock className="h-3.5 w-3.5" />
               Latest
             </button>
             <button

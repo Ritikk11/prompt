@@ -18,22 +18,6 @@ export const fallbackToolInfo: Record<string, { color: string; logo: string; log
   'Qwen Image': {
     color: 'bg-[#6366f1]',
     logo: '/tool-logos/qwen.svg'
-  },
-  'Midjourney': {
-    color: 'bg-surface-900',
-    logo: 'https://avatars.githubusercontent.com/u/101824364?s=200&v=4'
-  },
-  'DALL-E': {
-    color: 'bg-[#ef4444]',
-    logo: '/tool-logos/chatgpt.svg'
-  },
-  'Stable Diffusion': {
-    color: 'bg-[#7c3aed]',
-    logo: 'https://stability.ai/favicon.ico'
-  },
-  'Claude': {
-    color: 'bg-[#d97706]',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/Claude_AI_logo.svg'
   }
 };
 

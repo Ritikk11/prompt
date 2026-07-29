@@ -4,7 +4,8 @@ import { useState, useEffect, Suspense } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, User as UserIcon, ArrowLeft, ArrowRight, AlertCircle, CheckCircle2, Sparkles, Compass, Shield } from 'lucide-react';
+import Image from 'next/image';
+import { Mail, Lock, User as UserIcon, ArrowLeft, ArrowRight, AlertCircle, CheckCircle2, Compass, Shield } from 'lucide-react';
 import type { SiteSettings } from '@/lib/types';
 
 function LoginContent({ settings }: { settings: SiteSettings }) {
@@ -193,7 +194,9 @@ function LoginContent({ settings }: { settings: SiteSettings }) {
           {/* Logo & Header */}
           <div className="relative z-10">
             <Link href="/" className="flex items-center gap-2.5 text-white">
-              <Sparkles className="w-6 h-6 fill-white text-primary-300" />
+              <span className="relative block h-8 w-8 overflow-hidden rounded-lg">
+                <Image src={settings.siteLogo || '/icon-190x190.jpg'} alt="" fill sizes="32px" className="object-contain" referrerPolicy="no-referrer" />
+              </span>
               <span className="font-black text-xl tracking-tight uppercase">{settings.siteTitle || 'PromptMatrix'}</span>
             </Link>
           </div>
@@ -235,7 +238,9 @@ function LoginContent({ settings }: { settings: SiteSettings }) {
           {/* Mobile brand header (visible only on mobile) */}
           <div className="flex lg:hidden justify-center mb-8">
             <Link href="/" className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary-500 fill-primary-500" />
+              <span className="relative block h-7 w-7 overflow-hidden rounded-lg">
+                <Image src={settings.siteLogo || '/icon-190x190.jpg'} alt="" fill sizes="28px" className="object-contain" referrerPolicy="no-referrer" />
+              </span>
               <span className="font-black text-lg text-surface-900 dark:text-white uppercase tracking-tight">{settings.siteTitle || 'PromptMatrix'}</span>
             </Link>
           </div>
@@ -287,7 +292,7 @@ function LoginContent({ settings }: { settings: SiteSettings }) {
                       value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none text-sm text-surface-900 dark:text-white transition-colors"
+                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/25 outline-none text-sm text-surface-900 dark:text-white transition-colors"
                     />
                   </div>
                 </div>
@@ -317,7 +322,7 @@ function LoginContent({ settings }: { settings: SiteSettings }) {
                         value={fullName}
                         onChange={e => setFullName(e.target.value)}
                         placeholder="e.g. John Doe"
-                        className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none text-sm text-surface-900 dark:text-white transition-colors"
+                        className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/25 outline-none text-sm text-surface-900 dark:text-white transition-colors"
                       />
                     </div>
                   </div>
@@ -333,7 +338,7 @@ function LoginContent({ settings }: { settings: SiteSettings }) {
                         value={username}
                         onChange={e => setUsername(e.target.value)}
                         placeholder="johndoe"
-                        className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none text-sm text-surface-900 dark:text-white transition-colors"
+                        className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/25 outline-none text-sm text-surface-900 dark:text-white transition-colors"
                       />
                     </div>
                   </div>
@@ -351,7 +356,7 @@ function LoginContent({ settings }: { settings: SiteSettings }) {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none text-sm text-surface-900 dark:text-white transition-colors"
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/25 outline-none text-sm text-surface-900 dark:text-white transition-colors"
                   />
                 </div>
               </div>
@@ -379,7 +384,7 @@ function LoginContent({ settings }: { settings: SiteSettings }) {
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none text-sm text-surface-900 dark:text-white transition-colors"
+                      className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/25 outline-none text-sm text-surface-900 dark:text-white transition-colors"
                     />
                   </div>
                 </div>

@@ -3,14 +3,14 @@ import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-import { Search, Sun, Moon, Menu, X, Sparkles, Shield, User as UserIcon, LogOut, Plus, ChevronRight, Home, Compass, BookOpen, MessageSquare, Hash, Zap, LayoutGrid } from 'lucide-react';
+import { Search, Sun, Moon, Menu, X, Shield, User as UserIcon, LogOut, Plus, ChevronRight, ChevronDown, Home, Compass, BookOpen, MessageSquare, Hash, Zap, LayoutGrid } from 'lucide-react';
 import Image from 'next/image';
 import { useTheme } from '@/components/context/ThemeContext';
 import { useData } from '@/components/context/DataContext';
 import { getSupabaseClient } from '@/lib/supabase-lazy';
 import type { User } from '@supabase/supabase-js';
 import { getPostPath } from '@/lib/sections';
-import { buildHeaderNavItems } from '@/lib/header-nav';
+import { buildHeaderNavItems, type HeaderNavItem } from '@/lib/header-nav';
 import SmartLink from '@/components/SmartLink';
 
 /* useSearchParams() forces everything up to the nearest <Suspense> boundary
@@ -35,6 +35,127 @@ function RouteChangeComplete({ onRouteChange }: { onRouteChange: () => void }) {
   return null;
 }
 
+/* One desktop header dropdown: hover or click to open, animated enter/exit,
+   outside-click and Escape to close, closes on route change. The invisible
+   hover bridge below the trigger keeps it open while the pointer crosses
+   the gap to the panel (no flicker on diagonal movement). */
+function DesktopNavMenu({ label, items, pathname }: { label: string; items: HeaderNavItem[]; pathname: string }) {
+  const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const closeTimerRef = useRef<number | null>(null);
+  const hoverTimerRef = useRef<number | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const cancelCloseTimer = () => {
+    if (closeTimerRef.current) { window.clearTimeout(closeTimerRef.current); closeTimerRef.current = null; }
+  };
+  const cancelHoverTimer = () => {
+    if (hoverTimerRef.current) { window.clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; }
+  };
+  const openNow = () => { cancelCloseTimer(); cancelHoverTimer(); setClosing(false); setOpen(true); };
+  const closeAnimated = () => {
+    if (!open) return;
+    cancelHoverTimer();
+    setClosing(true);
+    cancelCloseTimer();
+    closeTimerRef.current = window.setTimeout(() => { setOpen(false); setClosing(false); }, 200);
+  };
+  const closeNow = () => { cancelCloseTimer(); cancelHoverTimer(); setOpen(false); setClosing(false); };
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) closeNow();
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeNow();
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    setOpen(false);
+    setClosing(false);
+  }, [pathname]);
+
+  useEffect(() => () => { cancelCloseTimer(); cancelHoverTimer(); }, []);
+
+  const visible = open && !closing;
+
+  return (
+    <div
+      ref={rootRef}
+      className="relative"
+      onMouseEnter={openNow}
+      onMouseLeave={() => {
+        cancelHoverTimer();
+        hoverTimerRef.current = window.setTimeout(closeAnimated, 150);
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => (open ? closeAnimated() : openNow())}
+        aria-expanded={visible}
+        aria-haspopup="true"
+        className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim ${visible ? 'bg-surface-100 dark:bg-surface-800' : ''}`}
+      >
+        {label}
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${visible ? 'rotate-180' : ''}`} />
+      </button>
+      {open && <div className="absolute left-0 top-full h-3 w-64" aria-hidden />}
+      {open && (
+        <div style={{ transformOrigin: 'top left' }} className={`absolute left-0 top-full z-50 mt-1.5 w-64 rounded-2xl border border-surface-200 bg-white py-2 shadow-2xl shadow-surface-900/10 dark:border-surface-800 dark:bg-surface-900 dark:shadow-black/50 ${closing ? 'header-dropdown-out' : 'header-dropdown-in'}`}>
+          <p className="px-4 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-surface-400 dark:text-surface-500">
+            {label}
+          </p>
+          <div className="px-2">
+            {items.map(item => {
+              const isActive = pathname === item.href;
+              const rowClass = `group flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${isActive
+                ? 'bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300'
+                : 'text-surface-600 hover:bg-primary-50 hover:text-primary-700 dark:text-surface-300 dark:hover:bg-primary-500/10 dark:hover:text-primary-200'}`;
+              const inner = (
+                <>
+                  <span className="flex items-center gap-2">
+                    {item.kind === 'builtin' && item.key === 'submit' && <Plus className="w-4 h-4 text-primary-500" />}
+                    {item.label}
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5 -translate-x-1 text-primary-400 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100" />
+                </>
+              );
+              return item.kind === 'link' ? (
+                <SmartLink key={item.navKey} href={item.href} onClick={closeNow} className={rowClass}>
+                  {inner}
+                </SmartLink>
+              ) : (
+                <Link key={item.navKey} href={item.href} prefetch={false} onClick={closeNow} className={rowClass}>
+                  {inner}
+                </Link>
+              );
+            })}
+          </div>
+          <div className="mt-1.5 border-t border-surface-100 px-2 pt-1.5 dark:border-surface-800">
+            <Link
+              href="/explore"
+              prefetch={false}
+              onClick={closeNow}
+              className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs font-bold text-primary-600 transition-colors hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-500/10"
+            >
+              Explore all prompts
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const { settings, sections, posts, ensurePostsLoaded } = useData();
@@ -47,6 +168,31 @@ export default function Header() {
   const navItems = buildHeaderNavItems(settings, headerSections);
   const navigate = useRouter();
   const pathname = usePathname();
+  // Header dropdown menus: chosen nav items collapse behind labeled triggers
+  // so the header never overflows. Auto mode (no saved setting) groups all
+  // header sections under "Tools"; admin overrides come from settings.
+  const menuDefs = (() => {
+    const saved = settings.headerMenus;
+    if (saved) {
+      return saved.map((m, i) => ({ id: m.id || `menu-${i}`, label: m.label?.trim() || 'Menu', keys: m.itemNavKeys || [] }));
+    }
+    const legacy = settings.headerToolsMenu;
+    if (legacy) {
+      return legacy.enabled === false
+        ? []
+        : [{ id: 'legacy-tools', label: legacy.label?.trim() || 'Tools', keys: legacy.itemNavKeys ?? navItems.filter(i => i.kind === 'section').map(i => i.navKey) }];
+    }
+    return [{ id: 'auto-tools', label: 'Tools', keys: navItems.filter(i => i.kind === 'section').map(i => i.navKey) }];
+  })();
+  const menuKeyUnion = new Set(menuDefs.flatMap(def => def.keys));
+  const inlineNavItems = navItems.filter(i => !menuKeyUnion.has(i.navKey));
+  const headerMenus = menuDefs
+    .map(def => {
+      const keySet = new Set(def.keys);
+      return { ...def, items: navItems.filter(i => keySet.has(i.navKey)) };
+    })
+    .filter(m => m.items.length > 0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<Record<string, boolean>>({});
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -336,7 +482,7 @@ export default function Header() {
       />
     </div>
     <div
-      className="fixed inset-x-0 z-[60] h-[6px] overflow-hidden rounded-b border-y border-surface-200 bg-surface-50 pointer-events-none transition-[top] duration-300 ease-in-out dark:border-surface-800 dark:bg-surface-900"
+      className="fixed inset-x-0 z-40 h-[6px] overflow-hidden rounded-b border-y border-surface-200 bg-surface-50 pointer-events-none transition-[top] duration-300 ease-in-out dark:border-surface-800 dark:bg-surface-900"
       style={{ top: isVisible ? '48px' : '0px' }}
     >
       <div
@@ -358,7 +504,7 @@ export default function Header() {
         </Link>
 
         {/* Desktop Search */}
-        <div ref={searchRef} className="hidden md:flex flex-1 max-w-xl relative">
+        <div ref={searchRef} className="hidden md:flex flex-1 md:max-w-56 lg:max-w-xs xl:max-w-md relative">
           <form onSubmit={handleSearch} className="w-full">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
@@ -380,7 +526,7 @@ export default function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1">
-          {navItems.map((item, index) => {
+          {inlineNavItems.map((item, index) => {
             const elements = [];
             if (index > 0) {
               elements.push(<div key={`div-${item.navKey}`} className="w-px h-4 bg-surface-200 dark:bg-surface-700 mx-1" />);
@@ -410,6 +556,13 @@ export default function Header() {
             }
             return elements;
           })}
+
+          {headerMenus.map((menu, mi) => (
+            <div key={menu.id} className="flex items-center">
+              {(inlineNavItems.length > 0 || mi > 0) && <div className="w-px h-4 bg-surface-200 dark:bg-surface-700 mx-1" />}
+              <DesktopNavMenu label={menu.label} items={menu.items} pathname={pathname} />
+            </div>
+          ))}
 
           {accountFeaturesEnabled && (
             <div className="flex items-center ml-2 border-l border-surface-200 dark:border-surface-700 pl-4 gap-2">
@@ -537,7 +690,7 @@ export default function Header() {
           
           {/* Sidebar Links */}
           <div className="flex-1 overflow-y-auto py-4">
-            {navItems.map((item, index) => {
+            {inlineNavItems.map((item, index) => {
               if (item.kind === 'builtin' && item.key === 'submit' && !submissionsEnabled) {
                 return null;
               }
@@ -564,6 +717,40 @@ export default function Header() {
                 </div>
               );
             })}
+
+            {headerMenus.map(menu => (
+              <div key={menu.id} className="flex flex-col">
+                <div className="h-[1px] bg-gradient-to-r from-transparent via-primary-500/50 to-transparent mx-6 my-1" />
+                <button
+                  onClick={() => setMobileMenuOpen(prev => ({ ...prev, [menu.id]: !prev[menu.id] }))}
+                  aria-expanded={Boolean(mobileMenuOpen[menu.id])}
+                  className="flex items-center justify-between gap-4 px-6 py-3 text-[15px] font-medium text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-900/50 hover:text-surface-900 dark:hover:text-white transition-colors"
+                >
+                  {menu.label}
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileMenuOpen[menu.id] ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileMenuOpen[menu.id] && menu.items.map(item => {
+                  const isActive = pathname === item.href;
+                  const activeClass = isActive
+                    ? "text-primary-600 dark:text-primary-400 bg-primary-50/50 dark:bg-primary-500/5"
+                    : "text-surface-500 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-900/50 hover:text-surface-900 dark:hover:text-white";
+                  return (
+                    <Link
+                      key={item.navKey}
+                      href={item.href}
+                      prefetch={false}
+                      onClick={() => setMenuOpen(false)}
+                      className={`flex items-center gap-4 py-2.5 pl-10 pr-6 text-sm font-medium transition-colors relative ${activeClass}`}
+                    >
+                      {isActive && (
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-500 rounded-r-full" />
+                      )}
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
 
             {accountFeaturesEnabled && (
               <div className="mt-6 border-t border-surface-100 dark:border-surface-800">

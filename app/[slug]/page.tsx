@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical: `${siteUrl}/${slug}`,
     },
-    keywords: [...post!.tags, 'AI prompts', 'midjourney', 'dall-e'],
+    keywords: [...post!.tags, 'AI prompts', 'chatgpt prompts', 'gemini prompts', 'grok prompts', 'qwen prompts'],
     openGraph: {
       title: metaTitle,
       description: metaDescription,

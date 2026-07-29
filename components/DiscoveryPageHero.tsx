@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Compass, Sparkles } from 'lucide-react';
+import { Compass } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 type DiscoveryLogoIcon = { logo?: string; label: string; logoScale?: number };
@@ -64,5 +64,5 @@ export default function DiscoveryPageHero({
 }
 
 export function defaultDiscoveryIcon() {
-  return <Sparkles className="h-4 w-4" />;
+  return <Compass className="h-4 w-4" />;
 }

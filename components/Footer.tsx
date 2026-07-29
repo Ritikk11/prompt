@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-import { Sparkles, ChevronUp } from 'lucide-react';
+import { ChevronUp } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import type { FooterLinkGroup } from '@/lib/types';
 import { XLogo, InstagramLogo, YouTubeLogo, FacebookLogo, PinterestLogo } from '@/components/SocialLogos';

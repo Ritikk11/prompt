@@ -23,7 +23,7 @@ import StaticPagesTab from '@/components/admin/StaticPagesTab';
 import { MagicWandProvider, WandButton, useMagicWand } from '@/components/admin/MagicWand';
 import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
 import { askAi } from '@/lib/admin/ai';
-import { postPrompts, articlePrompts, generalPrompts, discoveryPrompts, homepagePrompts, aiToolPrompts, featurePrompts } from '@/lib/admin/wandPrompts';
+import { postPrompts, articlePrompts, generalPrompts, discoveryPrompts, homepagePrompts, aiToolPrompts, featurePrompts, TOOLS_MODELS_RULES } from '@/lib/admin/wandPrompts';
 import { filterPostsForSection, getSectionPath } from '@/lib/sections';
 import { buildHeaderNavItems, headerLinkKey } from '@/lib/header-nav';
 import { getFilterTagsFromPosts } from '@/lib/filter-tags';
@@ -1129,6 +1129,18 @@ function AdminInner() {
   const [adminEmailsStr, setAdminEmailsStr] = useState((settings.adminEmails || []).join(', '));
   const [headerLinks, setHeaderLinks] = useState<NavLink[]>(() => withHeaderLinkIds(settings.headerLinks || []));
   const [headerNavOrder, setHeaderNavOrder] = useState<string[]>(settings.headerNavOrder || []);
+  // Header dropdown menus. navMenus === null means "auto" (one "Tools" menu
+  // containing all header sections). Legacy headerToolsMenu is migrated.
+  const [navMenus, setNavMenus] = useState<Array<{ id: string; label: string; itemNavKeys: string[] }> | null>(() => {
+    if (settings.headerMenus) {
+      return settings.headerMenus.map(m => ({ id: m.id, label: m.label, itemNavKeys: m.itemNavKeys ?? [] }));
+    }
+    const legacy = settings.headerToolsMenu;
+    if (legacy) {
+      return legacy.enabled === false ? [] : [{ id: 'menu-1', label: legacy.label?.trim() || 'Tools', itemNavKeys: legacy.itemNavKeys ?? [] }];
+    }
+    return null;
+  });
   const [headerBuiltins, setHeaderBuiltins] = useState<NonNullable<SiteSettings['headerBuiltins']>>(settings.headerBuiltins || {});
   const [homeLinkBlocks, setHomeLinkBlocks] = useState<HomeLinkBlock[]>(settings.homeLinkBlocks || []);
   const [homepageContent, setHomepageContent] = useState<Record<string, HomepageBlockContent>>(cleanAdminHomepageContent(settings.homepageContent || {}));
@@ -1248,7 +1260,8 @@ function AdminInner() {
       const existingPostsContext = posts.slice(0, 5).map(p => ({ title: p.title, description: p.description }));
       const existingCategories = Array.from(new Set(posts.map(p => p.category).filter(Boolean))).slice(0, 60);
       const existingTags = Array.from(new Set(posts.flatMap(p => p.tags || []))).slice(0, 150);
-      const sysCtx = `You are the AI assistant for aipromptmatrix.in, a gallery/library of AI image-generation prompts (for tools like ChatGPT/DALL-E, Gemini, Grok, Qwen, Midjourney, etc). Visitors come here to find ready-to-use prompts and see the example images those prompts produce.
+      const sysCtx = `You are the AI assistant for aipromptmatrix.in, a gallery/library of AI image-generation prompts (for tools like ChatGPT, Gemini, Grok, and Qwen). Visitors come here to find ready-to-use prompts and see the example images those prompts produce.
+${TOOLS_MODELS_RULES}
 Site structure notes:
 - A "post" bundles one or more images generated from a text prompt, plus editorial content.
 - "tags" are short, lowercase, search/filter keywords (concrete nouns for subject/style/tool) — not generic blog hashtags. Existing tags on the site: ${existingTags.length ? existingTags.join(', ') : '(none yet)'}
@@ -1337,6 +1350,9 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
     if (settings.adminEmails !== undefined) setAdminEmailsStr((settings.adminEmails || []).join(', '));
     if (settings.headerLinks !== undefined) setHeaderLinks(withHeaderLinkIds(settings.headerLinks || []));
     if (settings.headerNavOrder !== undefined) setHeaderNavOrder(settings.headerNavOrder || []);
+    if (settings.headerMenus !== undefined) {
+      setNavMenus(settings.headerMenus.map(m => ({ id: m.id, label: m.label, itemNavKeys: m.itemNavKeys ?? [] })));
+    }
     if (settings.headerBuiltins !== undefined) setHeaderBuiltins(settings.headerBuiltins || {});
     if (settings.homeLinkBlocks !== undefined) setHomeLinkBlocks(settings.homeLinkBlocks || []);
     if (settings.homepageContent !== undefined) setHomepageContent(cleanAdminHomepageContent(settings.homepageContent || {}));
@@ -2088,6 +2104,30 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
     setHeaderBuiltins(prev => ({ ...prev, [key]: { ...prev[key], label } }));
   };
 
+  const autoToolsMenuKeys = () => headerNavItems.filter(i => i.kind === 'section').map(i => i.navKey);
+  const AUTO_MENU_ID = '__auto-tools';
+  // Editing anything while in auto mode first materializes the auto menu so
+  // current behavior continues unchanged from there.
+  const materializeAutoMenus = () => [{ id: newNavId(), label: 'Tools', itemNavKeys: autoToolsMenuKeys() }];
+  const effectiveNavMenus = navMenus ?? [{ id: AUTO_MENU_ID, label: 'Tools', itemNavKeys: autoToolsMenuKeys() }];
+  // A nav item can belong to at most one dropdown menu.
+  const navMenuOwner = (navKey: string) => effectiveNavMenus.find(m => m.itemNavKeys.includes(navKey))?.id ?? null;
+  const toggleNavMenuItem = (menuId: string, navKey: string) => {
+    const base = navMenus ?? materializeAutoMenus();
+    const targetId = menuId === AUTO_MENU_ID ? base[0].id : menuId;
+    setNavMenus(base.map(m => m.id === targetId
+      ? { ...m, itemNavKeys: m.itemNavKeys.includes(navKey) ? m.itemNavKeys.filter(k => k !== navKey) : [...m.itemNavKeys, navKey] }
+      : { ...m, itemNavKeys: m.itemNavKeys.filter(k => k !== navKey) }
+    ));
+  };
+  const addNavMenu = () => setNavMenus([...(navMenus ?? []), { id: newNavId(), label: '', itemNavKeys: [] }]);
+  const removeNavMenu = (menuId: string) => setNavMenus((navMenus ?? []).filter(m => m.id !== menuId));
+  const updateNavMenuLabel = (menuId: string, label: string) => {
+    const targetId = menuId === AUTO_MENU_ID ? materializeAutoMenus()[0].id : menuId;
+    setNavMenus((navMenus ?? materializeAutoMenus()).map(m => (m.id === targetId ? { ...m, label } : m)));
+  };
+  const resetNavMenus = () => setNavMenus(null);
+
   const addHeaderLink = () => {
     const link: NavLink = { id: newNavId(), label: '', href: '' };
     setHeaderLinks(prev => [...prev, link]);
@@ -2378,6 +2418,11 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
       headerLinks: cleanNavLinks(headerLinks),
       headerNavOrder,
       headerBuiltins,
+      // Undefined keeps the public header in auto mode; legacy key dropped.
+      headerToolsMenu: undefined,
+      headerMenus: navMenus === null
+        ? undefined
+        : navMenus.map(m => ({ id: m.id, label: m.label.trim() || 'Menu', itemNavKeys: m.itemNavKeys })),
       homeLinkBlocks: cleanHomeBlocks(homeLinkBlocks),
       homepageContent: cleanAdminHomepageContent(homepageContent),
       articleOverrides,
@@ -2402,7 +2447,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
         facebook: socialLinks.facebook?.trim() || undefined,
         pinterest: socialLinks.pinterest?.trim() || undefined,
       },
-      aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Midjourney', 'DALL-E', 'Stable Diffusion', 'Claude'],
+      aiTools: settings.aiTools || ['ChatGPT', 'Gemini', 'Grok', 'Qwen'],
       ads: adsConfig,
       imageProvider,
       features,
@@ -4023,7 +4068,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   <textarea
                     value={articleAiInstruction}
                     onChange={e => setArticleAiInstruction(e.target.value)}
-                    placeholder="(Optional) E.g., 'A beginner guide to negative prompts in Midjourney', 'Keep it under 1000 words', 'Only rewrite the body', etc."
+                    placeholder="(Optional) E.g., 'A beginner guide to negative prompts in ChatGPT', 'Keep it under 1000 words', 'Only rewrite the body', etc."
                     className="w-full min-h-20 resize-y rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
                   />
                   <button
@@ -4528,7 +4573,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                   value={editSectionAiTool}
                                   onChange={e => setEditSectionAiTool(e.target.value)}
                                   className={adminInput}
-                                  placeholder="e.g. midjourney, chatgpt"
+                                  placeholder="e.g. chatgpt, gemini"
                                 />
                               </Field>
                             )}
@@ -5605,7 +5650,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                             <h3 className="font-bold text-base text-surface-900 dark:text-white">Tag Pages</h3>
                             <span className="px-2 py-0.5 text-xs font-semibold rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">/tag/[tag]</span>
                           </div>
-                          <p className="text-xs text-surface-500 mt-0.5">Controls all tag listing pages (e.g., /tag/midjourney)</p>
+                          <p className="text-xs text-surface-500 mt-0.5">Controls all tag listing pages (e.g., /tag/cyberpunk)</p>
                         </div>
                       </div>
 
@@ -5919,6 +5964,100 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 <p className="text-[11px] text-surface-500">
                   Note: Profile / Sign In and the theme toggle stay pinned to the right of the header and are not part of this order.
                 </p>
+              </Panel>
+
+              <Panel>
+                <PanelHeader
+                  title="Header dropdown menus"
+                  subtitle="Create one or more dropdown menus for the desktop header — each opens on hover or click with its own label. An item can live in only one menu; ticking it here moves it. The mobile sidebar shows each menu as a collapsible group."
+                />
+                <div className="space-y-4">
+                  {effectiveNavMenus.map(menu => {
+                    const isAuto = menu.id === AUTO_MENU_ID;
+                    return (
+                      <div key={menu.id} className="rounded-2xl border border-surface-200 p-4 space-y-3 dark:border-surface-800">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <input
+                            value={menu.label}
+                            onChange={e => updateNavMenuLabel(menu.id, e.target.value)}
+                            className={`${adminInput} w-48`}
+                            placeholder="Menu label (e.g. Tools)"
+                            disabled={isAuto}
+                          />
+                          {isAuto ? (
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-surface-400">
+                              automatic — tick any item below to customize
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => removeNavMenu(menu.id)}
+                              className="rounded-xl px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            >
+                              Delete menu
+                            </button>
+                          )}
+                        </div>
+                        <div className="space-y-1.5">
+                          {headerNavItems.map(item => {
+                            const ownerId = navMenuOwner(item.navKey);
+                            const inThis = ownerId === menu.id;
+                            const otherMenu = !inThis && ownerId ? effectiveNavMenus.find(m => m.id === ownerId) : null;
+                            return (
+                              <label
+                                key={item.navKey}
+                                className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-surface-200 px-3 py-2 text-sm hover:bg-surface-50 dark:border-surface-800 dark:hover:bg-surface-800/60"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={inThis}
+                                  onChange={() => toggleNavMenuItem(menu.id, item.navKey)}
+                                  className="h-4 w-4 shrink-0 accent-primary-500"
+                                />
+                                <span className="font-medium">{item.label}</span>
+                                <span className="truncate text-xs text-surface-400">{item.href}</span>
+                                {otherMenu && (
+                                  <span className="ml-auto shrink-0 text-[10px] font-semibold uppercase tracking-wider text-surface-400">
+                                    in &ldquo;{otherMenu.label || 'Menu'}&rdquo;
+                                  </span>
+                                )}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-surface-100 pt-4 dark:border-surface-800">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={addNavMenu}
+                        className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-surface-600 hover:bg-surface-200 dark:text-surface-300 dark:hover:bg-surface-800 transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Add dropdown menu
+                      </button>
+                      <button
+                        type="button"
+                        onClick={resetNavMenus}
+                        className="rounded-xl px-3 py-2 text-xs font-bold text-surface-500 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
+                      >
+                        Reset to automatic
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSaveSettings}
+                      className="flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white hover:bg-primary-600 transition-colors"
+                    >
+                      <Save className="w-3.5 h-3.5" /> Save menus
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-surface-500">
+                    With zero configuration, one &ldquo;Tools&rdquo; menu contains every header section and updates itself as sections are added. The first change you make here switches to a saved, explicit setup.
+                  </p>
+                </div>
               </Panel>
             </div>
           )}
@@ -7709,7 +7848,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                   value={editAiToolBadge}
                                   onChange={e => setEditAiToolBadge(e.target.value)}
                                   className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
-                                  placeholder="e.g. Precision Text & DALL-E"
+                                  placeholder="e.g. Precision Text & Gemini"
                                 />
                               </div>
                               <div>
@@ -9107,7 +9246,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
                 <label className="block text-sm font-bold text-surface-900 dark:text-white mb-2">What do you want to generate?</label>
                 <div className="flex flex-wrap gap-2 mb-3">
-                  <button onClick={() => setAiStudioPrompt("Write a full markdown article about 'How to write Midjourney Prompts'. Include headers, practical tips, and a conclusion.")} className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-semibold rounded-lg text-surface-700 dark:text-surface-300 transition-colors">Write an Article</button>
+                  <button onClick={() => setAiStudioPrompt("Write a full markdown article about 'How to write ChatGPT Image Prompts'. Include headers, practical tips, and a conclusion.")} className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-semibold rounded-lg text-surface-700 dark:text-surface-300 transition-colors">Write an Article</button>
                   <button onClick={() => setAiStudioPrompt("Brainstorm 5 new AI Tool categories that are currently popular.")} className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-semibold rounded-lg text-surface-700 dark:text-surface-300 transition-colors">Brainstorm Tags</button>
                   <button onClick={() => setAiStudioPrompt("Write a catchy 160-character SEO meta description for my site's homepage.")} className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-semibold rounded-lg text-surface-700 dark:text-surface-300 transition-colors">Write SEO Meta</button>
                 </div>
