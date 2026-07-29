@@ -120,14 +120,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
         
         {/* Google tag (gtag.js) */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-35M2DNE8VW"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-3SM2DNE8VW"></script>
         <script
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', 'G-35M2DNE8VW');
+              gtag('config', 'G-3SM2DNE8VW');
             `
           }}
         />
