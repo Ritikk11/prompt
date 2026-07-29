@@ -212,7 +212,7 @@ We may process and store information in countries other than your own, which may
 
 ## 10. Your Rights
 
-Depending on where you live, you may have the right to access, correct, update, or delete your personal information; to object to or restrict certain processing; to data portability; and to withdraw consent. To exercise these rights, contact us at \${contactEmail}.
+Depending on where you live, you may have the right to access, correct, update, or delete your personal information; to object to or restrict certain processing; to data portability; and to withdraw consent. To exercise these rights, contact us at ${contactEmail}.
 
 **California residents (CCPA/CPRA).** You have the right to know what personal information we collect, to request deletion, to correct inaccurate information, and to opt out of the "sale" or "sharing" of personal information. We do not sell personal information. You will not be discriminated against for exercising these rights.
 
@@ -226,9 +226,7 @@ If you are located in India, the Digital Personal Data Protection Act, 2023 ("DP
 
 **Grievance Officer.** In accordance with the DPDP Act and the Information Technology Act, 2000 and rules thereunder, you may contact our Grievance Officer for any complaint regarding the processing of your personal data:
 
-- **Grievance Officer:** [Name of Grievance Officer]
-- **Email:** \${contactEmail}
-- **Address:** [Registered business address]
+- **Email:** ${contactEmail}
 
 We will acknowledge and resolve complaints within the timelines prescribed by applicable law.
 `.trim();
@@ -281,7 +279,7 @@ Prompts published on the Service are provided for creative and educational use. 
 
 ## 7. Intellectual Property
 
-The Service is owned and operated by \${siteTitle}. The visual interfaces, graphics, design, compilation, information, data, computer code (including source code or object code), products, software, services, and all other elements of the Service ("Materials") provided by \${siteTitle} are protected by intellectual property and other laws. All Materials included in the Service are the property of \${siteTitle} or its third-party licensors. You may not make use of the Materials except as expressly authorized by \${siteTitle}. If you believe that content on the Service infringes your copyright, please review our [DMCA Notice](/dmca) for instructions on submitting a takedown request.
+The Service is owned and operated by ${siteTitle}. The visual interfaces, graphics, design, compilation, information, data, computer code (including source code or object code), products, software, services, and all other elements of the Service ("Materials") provided by ${siteTitle} are protected by intellectual property and other laws. All Materials included in the Service are the property of ${siteTitle} or its third-party licensors. You may not make use of the Materials except as expressly authorized by ${siteTitle}. If you believe that content on the Service infringes your copyright, please review our [DMCA Notice](/dmca) for instructions on submitting a takedown request.
 
 ## 8. Modification of Terms
 
@@ -291,7 +289,7 @@ We reserve the right to change these Terms on a going-forward basis at any time.
 
 THE SERVICE AND ALL MATERIALS AND CONTENT AVAILABLE THROUGH THE SERVICE ARE PROVIDED "AS IS" AND ON AN "AS AVAILABLE" BASIS. WE DISCLAIM ALL WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED, RELATING TO THE SERVICE AND ALL MATERIALS AND CONTENT AVAILABLE THROUGH THE SERVICE, INCLUDING: (A) ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, QUIET ENJOYMENT, OR NON-INFRINGEMENT; AND (B) ANY WARRANTY ARISING OUT OF COURSE OF DEALING, USAGE, OR TRADE.
 
-IN NO EVENT WILL \${siteTitle} BE LIABLE TO YOU FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES (INCLUDING DAMAGES FOR LOSS OF PROFITS, GOODWILL, OR ANY OTHER INTANGIBLE LOSS) ARISING OUT OF OR RELATING TO YOUR ACCESS TO OR USE OF, OR YOUR INABILITY TO ACCESS OR USE, THE SERVICE OR ANY MATERIALS OR CONTENT ON THE SERVICE.
+IN NO EVENT WILL ${siteTitle} BE LIABLE TO YOU FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES (INCLUDING DAMAGES FOR LOSS OF PROFITS, GOODWILL, OR ANY OTHER INTANGIBLE LOSS) ARISING OUT OF OR RELATING TO YOUR ACCESS TO OR USE OF, OR YOUR INABILITY TO ACCESS OR USE, THE SERVICE OR ANY MATERIALS OR CONTENT ON THE SERVICE.
 
 ## 10. Termination
 
@@ -299,19 +297,19 @@ We may suspend or terminate your access to the Service at any time, with or with
 
 ## 11. Indemnification
 
-You agree to defend, indemnify, and hold harmless \${siteTitle} and its officers, directors, employees, and agents from and against any claims, liabilities, damages, losses, and expenses, including reasonable legal fees, arising out of or in any way connected with: (a) your access to or use of the Service; (b) your User Content; or (c) your violation of these Terms or of any applicable law or third-party right.
+You agree to defend, indemnify, and hold harmless ${siteTitle} and its officers, directors, employees, and agents from and against any claims, liabilities, damages, losses, and expenses, including reasonable legal fees, arising out of or in any way connected with: (a) your access to or use of the Service; (b) your User Content; or (c) your violation of these Terms or of any applicable law or third-party right.
 
 ## 12. Governing Law and Dispute Resolution
 
-These Terms are governed by and construed in accordance with the laws of India, without regard to its conflict-of-laws principles. Subject to any applicable mandatory law, the courts located in [City, State], India shall have exclusive jurisdiction over any dispute arising out of or relating to these Terms or the Service. Before starting any formal proceeding, you agree to first contact us at \${contactEmail} and attempt to resolve the dispute informally.
+These Terms are governed by and construed in accordance with the laws of India, without regard to its conflict-of-laws principles. Subject to any applicable mandatory law, the courts of competent jurisdiction located in India shall have exclusive jurisdiction over any dispute arising out of or relating to these Terms or the Service. Before starting any formal proceeding, you agree to first contact us at ${contactEmail} and attempt to resolve the dispute informally.
 
 ## 13. General
 
-These Terms, together with the Privacy Policy and any other agreements expressly incorporated by reference into these Terms, are the entire and exclusive understanding and agreement between you and \${siteTitle} regarding your use of the Service, and supersede any prior agreements. Our failure to enforce any right or provision of these Terms will not be deemed a waiver of that right or provision. If any provision is held to be invalid or unenforceable, the remaining provisions will remain in full force and effect. You may not assign or transfer these Terms or your rights under these Terms, in whole or in part, by operation of law or otherwise, without our prior written consent; we may assign these Terms without restriction. We will not be liable for any failure or delay in performance resulting from causes beyond our reasonable control.
+These Terms, together with the Privacy Policy and any other agreements expressly incorporated by reference into these Terms, are the entire and exclusive understanding and agreement between you and ${siteTitle} regarding your use of the Service, and supersede any prior agreements. Our failure to enforce any right or provision of these Terms will not be deemed a waiver of that right or provision. If any provision is held to be invalid or unenforceable, the remaining provisions will remain in full force and effect. You may not assign or transfer these Terms or your rights under these Terms, in whole or in part, by operation of law or otherwise, without our prior written consent; we may assign these Terms without restriction. We will not be liable for any failure or delay in performance resulting from causes beyond our reasonable control.
 
 ## 14. Contact
 
-If you have any questions about these Terms, please contact us at \${contactEmail}.
+If you have any questions about these Terms, please contact us at ${contactEmail}.
 `.trim();
   }
 
@@ -342,9 +340,8 @@ Upon receipt of the notice as described below, we will take whatever action, in 
 Deliver this Notice, with all items completed, to our designated Copyright Agent:
 
 **Copyright Agent**
-\${siteTitle} Legal Department
-Address: [Registered business address]
-Email: \${contactEmail}
+${siteTitle}
+Email: ${contactEmail}
 
 ## Counter-Notice
 
@@ -412,7 +409,7 @@ The Site contains content submitted by users, including prompts, comments, and i
 
 ## Trademark Disclaimer
 
-ChatGPT, Gemini, Grok, Midjourney, Stable Diffusion, DALL·E, and all other AI tool and model names referenced on this Site are trademarks of their respective owners. \${siteTitle} is an independent platform and is not affiliated with, endorsed by, or sponsored by any of these companies. References to these tools are made solely to identify which platform a prompt is designed for.
+ChatGPT, Gemini, Grok, Midjourney, Stable Diffusion, DALL·E, and all other AI tool and model names referenced on this Site are trademarks of their respective owners. ${siteTitle} is an independent platform and is not affiliated with, endorsed by, or sponsored by any of these companies. References to these tools are made solely to identify which platform a prompt is designed for.
 
 ## Errors and Omissions Disclaimer
 
@@ -424,7 +421,7 @@ The Site may include copyrighted material the use of which has not always been s
 
 ## Views Expressed Disclaimer
 
-Any views or opinions expressed on the Site — including in blog posts, guides, and comments — are personal to their authors and do not represent the views of \${siteTitle}, its staff, or its affiliates, unless explicitly stated. We are not responsible or liable for any content posted by users or third parties.
+Any views or opinions expressed on the Site — including in blog posts, guides, and comments — are personal to their authors and do not represent the views of ${siteTitle}, its staff, or its affiliates, unless explicitly stated. We are not responsible or liable for any content posted by users or third parties.
 
 ## Affiliates Disclaimer
 
@@ -432,11 +429,11 @@ The Site may contain links to affiliate websites, and we receive an affiliate co
 
 ## No Professional Relationship
 
-Your use of the Site does not create any professional, advisory, fiduciary, or client relationship between you and \${siteTitle}. The Site is a content-discovery platform, not a professional services provider.
+Your use of the Site does not create any professional, advisory, fiduciary, or client relationship between you and ${siteTitle}. The Site is a content-discovery platform, not a professional services provider.
 
 ## Contact Us
 
-If you have any questions about this Disclaimer, please contact us at \${contactEmail}.
+If you have any questions about this Disclaimer, please contact us at ${contactEmail}.
 `.trim();
   }
 
@@ -500,7 +497,7 @@ We may update this Cookie Policy from time to time in order to reflect changes t
 
 ## Contact us
 
-If you have any questions about our use of cookies or other technologies, please email us at \${contactEmail}.
+If you have any questions about our use of cookies or other technologies, please email us at ${contactEmail}.
 `.trim();
   }
 
