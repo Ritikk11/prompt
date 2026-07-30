@@ -33,21 +33,33 @@ export async function POST(req: NextRequest) {
 
     if (imageUrl) {
       try {
-        const imgRes = await fetch(imageUrl);
-        if (imgRes.ok) {
-          const arrayBuffer = await imgRes.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          const base64Data = buffer.toString('base64');
-          const mimeType = imgRes.headers.get('content-type') || 'image/jpeg';
-          contents.push({
-            inlineData: {
-              data: base64Data,
-              mimeType
-            }
-          });
+        if (imageUrl.startsWith('data:')) {
+          const match = imageUrl.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+          if (match) {
+            contents.push({
+              inlineData: {
+                mimeType: match[1],
+                data: match[2],
+              },
+            });
+          }
+        } else {
+          const imgRes = await fetch(imageUrl);
+          if (imgRes.ok) {
+            const arrayBuffer = await imgRes.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const base64Data = buffer.toString('base64');
+            const mimeType = imgRes.headers.get('content-type') || 'image/jpeg';
+            contents.push({
+              inlineData: {
+                data: base64Data,
+                mimeType,
+              },
+            });
+          }
         }
       } catch (err) {
-        console.error('Failed to fetch image for AI Studio:', err);
+        console.error('Failed to process image for AI Studio:', err);
       }
     }
 

@@ -161,19 +161,20 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
     setAttachedImageUrl('');
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    try {
-      setIsUploadingImage(true);
-      const url = await uploadImageFileToProvider(file, 'supabase', 'aistudio');
-      setAttachedImageUrl(url);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to upload image');
-    } finally {
+    setIsUploadingImage(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAttachedImageUrl(reader.result as string);
       setIsUploadingImage(false);
-    }
+    };
+    reader.onerror = () => {
+      alert('Failed to process image file');
+      setIsUploadingImage(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   const presets = [
