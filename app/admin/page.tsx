@@ -7750,7 +7750,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                     value={editAiToolSeoTitle}
                                     onChange={e => setEditAiToolSeoTitle(e.target.value)}
                                     className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
-                                    placeholder="e.g. %tool% Prompts - %site_title%"
+                                    placeholder="e.g. %tool% Prompts"
                                   />
                                 </div>
                                 <div>

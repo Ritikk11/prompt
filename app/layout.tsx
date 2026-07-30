@@ -38,7 +38,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in'),
-    title: resolvedTitle,
+    title: {
+      default: resolvedTitle,
+      template: `%s | ${siteTitle}`,
+    },
     description,
     applicationName: siteTitle,
     icons: {

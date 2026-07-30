@@ -38,7 +38,7 @@ async function adminRequest(payload?: any) {
 }
 
 const defaultSeoSettings: SeoSettings = {
-  metaTitleTemplate: '%post_title% | AI PromptMatrix',
+  metaTitleTemplate: '%post_title%',
   defaultMetaDescription: '',
   defaultOgImage: '',
   twitterHandle: '',
@@ -320,7 +320,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                   value={seoSettings.metaTitleTemplate || ''}
                   onChange={e => updateSeoSettings({ metaTitleTemplate: e.target.value })}
                   className={adminInput}
-                  placeholder="%post_title% | AI PromptMatrix"
+                  placeholder="%post_title%"
                 />
               </Field>
               <Field label="Twitter handle">

@@ -674,6 +674,13 @@ function sanitizeSettings(settings: SiteSettings): SiteSettings {
       ...(settings.articleThumbnails || {}),
     },
     homepageContent,
+    seoSettings: {
+      ...(defaultSettings.seoSettings || {}),
+      ...(settings.seoSettings || {}),
+      metaTitleTemplate: (settings.seoSettings?.metaTitleTemplate || defaultSettings.seoSettings?.metaTitleTemplate || '%post_title%')
+        .replace(/\s*(?:\||-|–|—)\s*(?:%site_title%|AI PromptMatrix)$/i, '')
+        .trim(),
+    },
     discoveryPages: {
       ...(defaultSettings.discoveryPages || {}),
       ...(settings.discoveryPages || {}),

@@ -15,14 +15,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const seoPage = await getSeoPageBySlug(slug);
 
+  const settings = await fetchSettings();
+  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+
   if (!seoPage) {
     return {
-      title: 'Page Not Found | AI PromptMatrix',
+      title: formatTitleWithBrand('Page Not Found', siteTitle),
       description: 'The requested page could not be found.',
     };
   }
 
-  const settings = await fetchSettings();
   return generateSeoPageMetadata(seoPage, settings);
 }
 

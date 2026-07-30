@@ -8,19 +8,21 @@ import type { Metadata } from 'next';
 // DB without revalidatePath. 300s caused a cold ~2.5s SSR miss every 5 minutes.
 export const revalidate = 3600;
 
+import { formatTitleWithBrand } from '@/lib/seo-helpers';
+
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await fetchSettings();
   const discovery = settings.discoveryPages || {};
   const siteTitle = settings.siteTitle || 'AI PromptMatrix';
-  const title = (discovery.exploreSeoTitle || discovery.exploreTitle || `Explore AI Image Prompts - %site_title%`)
-    .replace(/%site_title%/g, siteTitle);
+  const rawTitle = (discovery.exploreSeoTitle || discovery.exploreTitle || `Explore AI Image Prompts`);
+  const title = formatTitleWithBrand(rawTitle, siteTitle);
   const description = (discovery.exploreSeoDescription || discovery.exploreDescription || settings.seoSettings?.defaultMetaDescription || settings.siteDescription || '')
     .replace(/%site_title%/g, siteTitle);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical: `${siteUrl}/explore` },
     openGraph: discovery.exploreOgImage ? {

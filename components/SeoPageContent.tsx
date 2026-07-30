@@ -47,7 +47,7 @@ export default function SeoPageContent({ seoPage, allPosts, settings }: SeoPageC
         </div>
       ) : seoPage.filterTags?.length ? (
         <ScrollReveal>
-          <FilterChipRail posts={filteredPosts} tags={seoPage.filterTags} tools={[]} showTools={false} settings={settings} cardStyleOverride={seoPage.cardStyle} renderGrid />
+          <FilterChipRail posts={filteredPosts} tags={seoPage.filterTags} tools={[]} showTools={false} settings={settings} cardStyleOverride={seoPage.cardStyle} renderGrid sticky />
         </ScrollReveal>
       ) : (
         <ScrollReveal>

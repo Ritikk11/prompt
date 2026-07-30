@@ -49,6 +49,12 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
   const useCustomRail = Boolean(discovery.useCustomRailOnTools);
   const railItems = discovery.toolRailItems || [];
   const showCustomRail = useCustomRail && railItems.length > 0;
+  // The rail owns sort when it is shown (the standalone toolbar is hidden then).
+  const sortOptions = [
+    { label: 'Latest', value: 'latest' },
+    { label: 'Popular', value: 'popular' },
+    ...(showTrending ? [{ label: 'Trending', value: 'trending' }] : []),
+  ];
 
   // Filter public posts that include the aiTool (case insensitive)
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
@@ -93,31 +99,27 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
       />
 
       {/* Filters */}
-      {!showCustomRail && <div className="mb-8 flex flex-wrap gap-3">
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-2xl overflow-hidden border border-surface-200 bg-surface-50 p-1 dark:border-surface-800 dark:bg-surface-900">
-            <button
-              onClick={() => setSortBy('latest')}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition-colors ${sortBy === 'latest' ? 'bg-primary-500 text-white' : 'text-surface-600 hover:bg-white dark:text-surface-300 dark:hover:bg-surface-800'}`}
-            >
-              Latest
-            </button>
-            <button
-              onClick={() => setSortBy('popular')}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition-colors ${sortBy === 'popular' ? 'bg-primary-500 text-white' : 'text-surface-600 hover:bg-white dark:text-surface-300 dark:hover:bg-surface-800'}`}
-            >
-              Popular
-            </button>
-            {showTrending && (
-              <button
-                onClick={() => setSortBy('trending')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-colors ${sortBy === 'trending' ? 'bg-primary-500 text-white' : 'text-surface-600 hover:bg-white dark:text-surface-300 dark:hover:bg-surface-800'}`}
-              >
-                Trending
-              </button>
-            )}
-          </div>
-        </div>
+      {!showCustomRail && <div className="mb-8 flex items-center gap-1.5">
+        <button
+          onClick={() => setSortBy('latest')}
+          className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'latest' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+        >
+          Latest
+        </button>
+        <button
+          onClick={() => setSortBy('popular')}
+          className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'popular' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+        >
+          Popular
+        </button>
+        {showTrending && (
+          <button
+            onClick={() => setSortBy('trending')}
+            className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'trending' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+          >
+            Trending
+          </button>
+        )}
       </div>}
 
       {/* Grid */}
@@ -129,7 +131,11 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
             tools={[]}
             tags={[]}
             settings={settings}
+            sortValue={sortBy}
+            sortOptions={sortOptions}
+            onSortChange={value => setSortBy(value as typeof sortBy)}
             renderGrid
+            sticky
           />
         </ScrollReveal>
       ) : <ScrollReveal>

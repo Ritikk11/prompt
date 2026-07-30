@@ -6,20 +6,24 @@ import { getArticleForSettings, getArticles } from '@/lib/content';
 import { fetchSettings } from '@/lib/data';
 import ArticlePage from '@/components/ArticlePage';
 
+import { formatTitleWithBrand } from '@/lib/seo-helpers';
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const settings = await fetchSettings();
+  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
   const article = getArticleForSettings(settings, 'blog', slug);
-  if (!article) return { title: 'Article Not Found | AI PromptMatrix' };
+  if (!article) return { title: formatTitleWithBrand('Article Not Found', siteTitle) };
+  const title = formatTitleWithBrand(article.seoTitle || article.title, siteTitle);
   return {
-    title: `${article.title} | AI PromptMatrix`,
+    title: { absolute: title },
     description: article.description,
     keywords: article.tags,
     alternates: { canonical: `/blog/${article.slug}` },
     openGraph: {
-      title: article.title,
+      title,
       description: article.description,
       type: 'article',
       publishedTime: article.datePublished,

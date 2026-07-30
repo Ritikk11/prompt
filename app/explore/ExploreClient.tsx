@@ -27,6 +27,14 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
   const useCustomRail = Boolean(discovery.useCustomRailOnExplore);
   const filterItems = discovery.exploreRailItems?.length ? discovery.exploreRailItems : (settings.exploreFilterItems || []);
   const showCustomRail = useCustomRail && filterItems.length > 0;
+  // When the rail is active it owns the sort control (as a dropdown at its head)
+  // so the pinned rail carries every filter affordance; otherwise the standalone
+  // segmented toolbar below is used.
+  const sortOptions = [
+    { label: 'Latest', value: 'latest' },
+    { label: 'Popular', value: 'popular' },
+    ...(showTrending ? [{ label: 'Trending', value: 'trending' }] : []),
+  ];
 
   let filtered = [...publicPosts];
   if (sortBy === 'latest') {
@@ -73,19 +81,19 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
 
       {/* Filters */}
       <div className="mb-7 space-y-4">
-        {/* Sort */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          <div className="flex shrink-0 rounded-2xl border border-surface-200 bg-surface-50 p-1 dark:border-surface-800 dark:bg-surface-900">
+        {/* Sort — standalone only when the rail isn't rendering its own control */}
+        {!showCustomRail && (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
             <button
               onClick={() => setSortBy('latest')}
-              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition ${sortBy === 'latest' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-600 hover:bg-white dark:text-surface-300 dark:hover:bg-surface-800'}`}
+              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'latest' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
             >
               <Clock className="h-3.5 w-3.5" />
               Latest
             </button>
             <button
               onClick={() => setSortBy('popular')}
-              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition ${sortBy === 'popular' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-600 hover:bg-white dark:text-surface-300 dark:hover:bg-surface-800'}`}
+              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'popular' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
             >
               <Flame className="h-3.5 w-3.5" />
               Popular
@@ -93,18 +101,29 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
             {showTrending && (
               <button
                 onClick={() => setSortBy('trending')}
-                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-black transition ${sortBy === 'trending' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-600 hover:bg-white dark:text-surface-300 dark:hover:bg-surface-800'}`}
+                className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'trending' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
               >
                 <Flame className="h-3.5 w-3.5" />
                 Trending
               </button>
             )}
-          </div>
         </div>
+        )}
 
         {showCustomRail && (
           <ScrollReveal>
-            <FilterChipRail posts={filtered} tools={tools} tags={filterTags} items={filterItems} settings={settings} renderGrid />
+            <FilterChipRail
+              posts={filtered}
+              tools={tools}
+              tags={filterTags}
+              items={filterItems}
+              settings={settings}
+              sortValue={sortBy}
+              sortOptions={sortOptions}
+              onSortChange={value => setSortBy(value as typeof sortBy)}
+              renderGrid
+              sticky
+            />
           </ScrollReveal>
         )}
       </div>

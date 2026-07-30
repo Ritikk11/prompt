@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import TagContent from './TagContent';
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
+import { formatTitleWithBrand } from '@/lib/seo-helpers';
 
 interface Props {
   params: Promise<{ tag: string }>;
@@ -33,26 +34,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [posts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
   const discovery = settings.discoveryPages || {};
   const count = getPublicTagPosts(posts, decodedTag).length;
+  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
 
   if (count === 0) {
     return {
-      title: 'Tag not found',
+      title: formatTitleWithBrand('Tag not found', siteTitle),
       robots: { index: false, follow: false },
     };
   }
 
-  const title = fillDiscoveryTemplate(
-    discovery.tagSeoTitleTemplate || discovery.tagTitleTemplate || '%tag% AI Prompts - %site_title%',
-    { tag: decodedTag, count, site_title: settings.siteTitle || 'AI PromptMatrix' }
+  const rawTitle = fillDiscoveryTemplate(
+    discovery.tagSeoTitleTemplate || discovery.tagTitleTemplate || '%tag% AI Prompts',
+    { tag: decodedTag, count, site_title: siteTitle }
   );
+  const title = formatTitleWithBrand(rawTitle, siteTitle);
   const description = fillDiscoveryTemplate(
     discovery.tagSeoDescriptionTemplate || discovery.tagDescriptionTemplate || 'Browse curated AI prompts for %tag%.',
-    { tag: decodedTag, count, site_title: settings.siteTitle || 'AI PromptMatrix' }
+    { tag: decodedTag, count, site_title: siteTitle }
   );
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical: `${siteUrl}/tag/${encodeURIComponent(decodedTag)}` },
     keywords: [decodedTag, 'AI prompts', 'chatgpt prompts', 'gemini prompts', 'grok prompts', 'qwen prompts'],

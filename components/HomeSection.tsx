@@ -1,7 +1,7 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import type { Section, Post, SiteSettings } from '@/lib/types';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { getGridClasses } from '@/lib/utils';
 import AdSlot from '@/components/AdSlot';
@@ -21,12 +21,10 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
   // For other sections: use passed posts
   const sectionPosts = !isLatest ? initialPosts : [];
 
-  // Load more state for latest
-  const [showCount, setShowCount] = useState(section.limit || 12);
-  const BATCH = section.limit || 12;
-
-  const visibleLatest = allLatestPosts.slice(0, showCount);
-  const hasMore = allLatestPosts.length > showCount;
+  // Latest is a fixed-size teaser: one batch of cards, then a CTA to /explore
+  // (it used to keep expanding in place via a Load More button).
+  const displayLimit = section.limit || 12;
+  const visibleLatest = allLatestPosts.slice(0, displayLimit);
   const sectionFilterTags = section.filterTags || [];
 
   // Don't render empty sections
@@ -71,36 +69,20 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
           showTools={false}
           settings={settings}
           cardStyleOverride={section.cardStyle}
+          gridLimit={isLatest ? displayLimit : undefined}
           renderGrid
         />
       ) : isLatest ? (
-        /* Latest — Masonry grid with Load More */
-        <div>
-            <>
-              <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-                {visibleLatest.map((post, i) => (
-                  <React.Fragment key={post.id}>
-                    <div className="mb-1 inline-block w-full break-inside-avoid">
-                      <PostCard post={post} index={i} cardStyleOverride={section.cardStyle} />
-                    </div>
-                    <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
-                  </React.Fragment>
-                ))}
+        /* Latest — one batch of the masonry grid */
+        <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+          {visibleLatest.map((post, i) => (
+            <React.Fragment key={post.id}>
+              <div className="mb-1 inline-block w-full break-inside-avoid">
+                <PostCard post={post} index={i} cardStyleOverride={section.cardStyle} />
               </div>
-
-              {/* Load More Button */}
-              {hasMore && (
-                <div className="flex justify-center mt-8">
-                  <button
-                    onClick={() => setShowCount(prev => prev + BATCH)}
-                    className="flex items-center gap-2 px-8 py-3 rounded-xl bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 text-sm font-semibold transition-all border border-surface-200 dark:border-surface-700 hover:shadow-md"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                    Load More ({allLatestPosts.length - showCount} remaining)
-                  </button>
-                </div>
-              )}
-            </>
+              <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
+            </React.Fragment>
+          ))}
         </div>
       ) : (
         /* Other sections — Horizontal scroll */
@@ -141,6 +123,19 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
           </button>
+        </div>
+      )}
+
+      {/* Latest teaser CTA — the full, infinitely-scrollable feed lives on /explore */}
+      {isLatest && (
+        <div className="flex justify-center mt-8">
+          <Link
+            href="/explore"
+            className="group inline-flex items-center gap-2 px-8 py-3 rounded-full bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white text-sm font-bold transition-all shadow-sm hover:shadow-md"
+          >
+            Explore All Prompts
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
         </div>
       )}
     </section>

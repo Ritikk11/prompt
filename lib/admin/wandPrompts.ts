@@ -181,7 +181,7 @@ export const staticPagePrompts = {
 
 export const seoPrompts = {
   globalTitleTemplate: () =>
-    `${SITE_PREAMBLE}\nWrite a sitewide meta-title template for prompt post pages. ${TOKEN_RULES(['%post_title%'])} Shape: "%post_title% | short brand tail". Total should fit ~60 chars with a typical title. ${RAW_ONLY}`,
+    `${SITE_PREAMBLE}\nWrite a sitewide meta-title template for prompt post pages. ${TOKEN_RULES(['%post_title%'])} Shape: "%post_title%". Total should fit ~60 chars with a typical title. ${RAW_ONLY}`,
   globalMetaDescription: () =>
     `${SITE_PREAMBLE}\n${META_DESC_RULES}\nWrite the sitewide fallback meta description used when a page has no custom one. ${RAW_ONLY}`,
   pageHeading: (slug: string, tags: string) =>

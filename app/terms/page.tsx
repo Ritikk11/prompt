@@ -6,7 +6,7 @@ import { getStaticPageContent, staticPageMetadata, getDefaultStaticPageBody } fr
 export async function generateMetadata() {
   const settings = await fetchSettings();
   const page = getStaticPageContent(settings, 'terms', settings.pageTerms, '');
-  return staticPageMetadata(page);
+  return staticPageMetadata(page, settings);
 }
 
 export default async function TermsOfService() {

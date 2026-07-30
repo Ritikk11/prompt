@@ -25,6 +25,12 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
   const useCustomRail = Boolean(discovery.useCustomRailOnTags);
   const railItems = discovery.tagRailItems || [];
   const showCustomRail = useCustomRail && railItems.length > 0;
+  // The rail owns sort when it is shown (the standalone toolbar is hidden then).
+  const sortOptions = [
+    { label: 'Latest', value: 'latest' },
+    { label: 'Popular', value: 'popular' },
+    ...(showTrending ? [{ label: 'Trending', value: 'trending' }] : []),
+  ];
 
   // Filter public posts that include the tag (case insensitive)
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
@@ -69,43 +75,43 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
       />
 
       {/* Filters */}
-      {!showCustomRail && <div className="flex flex-wrap gap-3 mb-8 p-4 rounded-xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-surface-400 uppercase tracking-wide">Sort:</span>
-          <div className="flex rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700">
+      {!showCustomRail && <div className="mb-8 flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-1.5">
+          <span className="mr-1 text-xs font-medium uppercase tracking-wide text-surface-400">Sort:</span>
+          <button
+            onClick={() => setSortBy('latest')}
+            className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'latest' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+          >
+            Latest
+          </button>
+          <button
+            onClick={() => setSortBy('popular')}
+            className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'popular' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+          >
+            Popular
+          </button>
+          {showTrending && (
             <button
-              onClick={() => setSortBy('latest')}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === 'latest' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700'}`}
+              onClick={() => setSortBy('trending')}
+              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'trending' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
             >
-              Latest
+              Trending
             </button>
-            <button
-              onClick={() => setSortBy('popular')}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === 'popular' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700'}`}
-            >
-              Popular
-            </button>
-            {showTrending && (
-              <button
-                onClick={() => setSortBy('trending')}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === 'trending' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700'}`}
-              >
-                Trending
-              </button>
-            )}
-          </div>
+          )}
         </div>
 
         {showAdvancedFilters && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-surface-400 uppercase tracking-wide">Tool:</span>
-            <select
-              value={filterTool}
-              onChange={e => setFilterTool(e.target.value)}
-              className="px-3 py-1.5 rounded-lg text-xs bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none"
-            >
-              {tools.map(t => <option key={t} value={t}>{t === 'all' ? 'All Tools' : t}</option>)}
-            </select>
+          <div className="flex items-center gap-1.5">
+            <span className="mr-1 text-xs font-medium uppercase tracking-wide text-surface-400">Tool:</span>
+            {tools.map(t => (
+              <button
+                key={t}
+                onClick={() => setFilterTool(t)}
+                className={`inline-flex h-8 shrink-0 items-center whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${filterTool === t ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+              >
+                {t === 'all' ? 'All Tools' : t}
+              </button>
+            ))}
           </div>
         )}
       </div>}
@@ -119,7 +125,11 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
             tools={[]}
             tags={[]}
             settings={settings}
+            sortValue={sortBy}
+            sortOptions={sortOptions}
+            onSortChange={value => setSortBy(value as typeof sortBy)}
             renderGrid
+            sticky
           />
         </ScrollReveal>
       ) : <ScrollReveal>

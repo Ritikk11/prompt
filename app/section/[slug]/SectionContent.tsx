@@ -34,6 +34,17 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
   // toolbar stays hidden for it — matching the "rail off = sort UI" contract.
   const showTagRail = !showCustomRail && Boolean(section.filterTags?.length);
   const showRail = showCustomRail || showTagRail;
+  // The rail owns sort when it is shown (the standalone toolbar is hidden then).
+  const sortOptions = [
+    { label: 'Latest', value: 'latest' },
+    { label: 'Popular', value: 'popular' },
+    ...(showTrending ? [{ label: 'Trending', value: 'trending' }] : []),
+  ];
+  const railSortProps = {
+    sortValue: sortBy,
+    sortOptions,
+    onSortChange: (value: string) => setSortBy(value as typeof sortBy),
+  };
 
   let filtered = [...posts];
   const tools = ['all', ...Array.from(new Set(filtered.flatMap(p => p.images.map(i => i.aiTool))))];
@@ -74,43 +85,43 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
 
       {/* Sort/filter toolbar — only when no rail is active. */}
       {!showRail && filtered.length > 0 && (
-        <div className="flex flex-wrap gap-3 mb-8 p-4 rounded-xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-surface-400 uppercase tracking-wide">Sort:</span>
-            <div className="flex rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700">
+        <div className="mb-8 flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <span className="mr-1 text-xs font-medium uppercase tracking-wide text-surface-400">Sort:</span>
+            <button
+              onClick={() => setSortBy('latest')}
+              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'latest' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+            >
+              Latest
+            </button>
+            <button
+              onClick={() => setSortBy('popular')}
+              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'popular' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+            >
+              Popular
+            </button>
+            {showTrending && (
               <button
-                onClick={() => setSortBy('latest')}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === 'latest' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700'}`}
+                onClick={() => setSortBy('trending')}
+                className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'trending' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
               >
-                Latest
+                Trending
               </button>
-              <button
-                onClick={() => setSortBy('popular')}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === 'popular' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700'}`}
-              >
-                Popular
-              </button>
-              {showTrending && (
-                <button
-                  onClick={() => setSortBy('trending')}
-                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${sortBy === 'trending' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700'}`}
-                >
-                  Trending
-                </button>
-              )}
-            </div>
+            )}
           </div>
 
           {showAdvancedFilters && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-surface-400 uppercase tracking-wide">Tool:</span>
-              <select
-                value={filterTool}
-                onChange={e => setFilterTool(e.target.value)}
-                className="px-3 py-1.5 rounded-lg text-xs bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none"
-              >
-                {tools.map(t => <option key={t} value={t}>{t === 'all' ? 'All Tools' : t}</option>)}
-              </select>
+            <div className="flex items-center gap-1.5">
+              <span className="mr-1 text-xs font-medium uppercase tracking-wide text-surface-400">Tool:</span>
+              {tools.map(t => (
+                <button
+                  key={t}
+                  onClick={() => setFilterTool(t)}
+                  className={`inline-flex h-8 shrink-0 items-center whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${filterTool === t ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+                >
+                  {t === 'all' ? 'All Tools' : t}
+                </button>
+              ))}
             </div>
           )}
         </div>
@@ -132,7 +143,9 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
             tags={[]}
             settings={settings}
             cardStyleOverride={section.cardStyle}
+            {...railSortProps}
             renderGrid
+            sticky
           />
         </ScrollReveal>
       ) : showTagRail ? (
@@ -144,7 +157,9 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
             showTools={false}
             settings={settings}
             cardStyleOverride={section.cardStyle}
+            {...railSortProps}
             renderGrid
+            sticky
           />
         </ScrollReveal>
       ) : (

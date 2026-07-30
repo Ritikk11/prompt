@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import ToolContent from './ToolContent';
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
+import { formatTitleWithBrand } from '@/lib/seo-helpers';
 import { getAllTools } from '@/lib/constants';
 
 interface Props {
@@ -70,10 +71,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const toolDetails = settings.toolDetails?.[displayTool] || {};
   
-  const title = fillDiscoveryTemplate(
-    toolDetails.seoTitle || discovery.toolSeoTitleTemplate || discovery.toolTitleTemplate || 'Best %tool% AI Prompts - %site_title%',
-    { tool: displayTool, count, site_title: settings.siteTitle || 'AI PromptMatrix' }
+  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+  const rawTitle = fillDiscoveryTemplate(
+    toolDetails.seoTitle || discovery.toolSeoTitleTemplate || discovery.toolTitleTemplate || 'Best %tool% AI Prompts',
+    { tool: displayTool, count, site_title: siteTitle }
   );
+  const title = formatTitleWithBrand(rawTitle, siteTitle);
   const description = fillDiscoveryTemplate(
     toolDetails.seoDescription || discovery.toolSeoDescriptionTemplate || discovery.toolDescriptionTemplate || 'Explore the best AI prompts and images for %tool%.',
     { tool: displayTool, count, site_title: settings.siteTitle || 'AI PromptMatrix' }
@@ -81,7 +84,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical: `${siteUrl}/tool/${encodeURIComponent(decodedTool)}` },
     openGraph: {

@@ -9,6 +9,7 @@ import type { Post, Section } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import { filterPostsForSection } from '@/lib/sections';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
+import { formatTitleWithBrand } from '@/lib/seo-helpers';
 import SectionContent from './SectionContent';
 
 interface Props {
@@ -23,24 +24,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     fetchSettings(),
   ]);
 
+  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+
   if (!section) {
     return {
-      title: 'Section Not Found',
+      title: formatTitleWithBrand('Section Not Found', siteTitle),
     };
   }
   const filteredPosts = filterPostsForSection(section, allPosts, settings, false);
   const discovery = settings.discoveryPages || {};
-  const title = section.seoTitle || section.heroTitle || fillDiscoveryTemplate(
-    discovery.sectionSeoTitleTemplate || '%section% - %site_title%',
-    { section: section.name, count: filteredPosts.length, site_title: settings.siteTitle || 'AI PromptMatrix' }
+  const rawTitle = section.seoTitle || section.heroTitle || fillDiscoveryTemplate(
+    discovery.sectionSeoTitleTemplate || '%section% Prompts',
+    { section: section.name, count: filteredPosts.length, site_title: siteTitle }
   );
+  const title = formatTitleWithBrand(rawTitle, siteTitle);
   const description = section.seoDescription || section.heroDescription || fillDiscoveryTemplate(
     discovery.sectionSeoDescriptionTemplate || discovery.sectionDescriptionTemplate || 'Explore prompts from the %section% collection.',
-    { section: section.name, count: filteredPosts.length, site_title: settings.siteTitle || 'AI PromptMatrix' }
+    { section: section.name, count: filteredPosts.length, site_title: siteTitle }
   );
 
   return {
-    title,
+    title: { absolute: title },
     description,
   };
 }

@@ -67,12 +67,16 @@ export function getStaticPageContent(
   };
 }
 
-export function staticPageMetadata(page: ReturnType<typeof getStaticPageContent>): Metadata {
+import { formatTitleWithBrand } from './seo-helpers';
+
+export function staticPageMetadata(page: ReturnType<typeof getStaticPageContent>, settings?: SiteSettings): Metadata {
+  const siteTitle = settings?.siteTitle || 'AI PromptMatrix';
+  const title = formatTitleWithBrand(page.metaTitle, siteTitle);
   return {
-    title: page.metaTitle,
+    title: { absolute: title },
     description: page.metaDescription,
     openGraph: page.ogImage ? {
-      title: page.metaTitle,
+      title,
       description: page.metaDescription,
       images: [{ url: page.ogImage }],
     } : undefined,

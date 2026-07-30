@@ -41,16 +41,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const firstImageUrl = post!.images[0]?.url || '';
   const isBase64 = firstImageUrl.startsWith('data:');
 
-  const templateTitle = (seoSettings?.metaTitleTemplate || '%post_title% | AI PromptMatrix')
+  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+  const rawTitle = post!.seoTitle || (seoSettings?.metaTitleTemplate || '%post_title%')
     .replace(/%post_title%/g, post!.title)
-    .replace(/%site_title%/g, settings.siteTitle || 'AI PromptMatrix');
-  const metaTitle = post!.seoTitle || templateTitle;
+    .replace(/%site_title%/g, siteTitle);
+  const metaTitle = formatTitleWithBrand(rawTitle, siteTitle);
   const metaDescription = post!.seoDescription || post!.description || seoSettings?.defaultMetaDescription || settings.siteDescription;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
   const ogImage = isBase64 ? `${siteUrl}/og-image.png` : firstImageUrl || seoSettings?.defaultOgImage || `${siteUrl}/og-image.png`;
 
   return {
-    title: metaTitle,
+    title: { absolute: metaTitle },
     description: metaDescription,
     alternates: {
       canonical: `${siteUrl}/${slug}`,
