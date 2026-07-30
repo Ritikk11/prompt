@@ -288,6 +288,14 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
                 prompt={() => staticPagePrompts.body(activeTab, textareas[activeTab].label)}
                 size="sm"
               />
+              <button
+                type="button"
+                onClick={() => textareas[activeTab].set(getDefaultStaticPageBody(activeTab, settings))}
+                title="Replace this body with the built-in default, regenerated with your current site name and email. Save to apply."
+                className="rounded-xl px-3 py-2 text-xs font-bold text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-500/10 transition-colors"
+              >
+                Reset to default
+              </button>
               <div className="grid grid-cols-2 rounded-xl bg-surface-100 dark:bg-surface-800 p-1 text-xs font-bold">
                 <button
                   type="button"
