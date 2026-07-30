@@ -34,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
     settings.siteDescription ||
     'Your curated collection of AI image prompts. Discover, copy, and create stunning AI-generated artwork.';
   const publisherId = settings.ads?.publisherId || process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
-  const ogImage = settings.seoSettings?.defaultOgImage || '/og-image.jpg';
+  const ogImage = settings.seoSettings?.defaultOgImage || '/og-image.jpg?v=3';
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in'),
@@ -43,16 +43,16 @@ export async function generateMetadata(): Promise<Metadata> {
     applicationName: siteTitle,
     icons: {
       icon: [
-        { url: '/favicon.ico?v=2' },
-        { url: '/favicon-16x16.jpg?v=2', sizes: '16x16', type: 'image/jpeg' },
-        { url: '/favicon-32x32.jpg?v=2', sizes: '32x32', type: 'image/jpeg' },
-        { url: '/favicon-48x48.jpg?v=2', sizes: '48x48', type: 'image/jpeg' },
-        { url: '/icon-256x256.jpg?v=2', sizes: '256x256', type: 'image/jpeg' },
+        { url: '/favicon.ico?v=3' },
+        { url: '/favicon-16x16.jpg?v=3', sizes: '16x16', type: 'image/jpeg' },
+        { url: '/favicon-32x32.jpg?v=3', sizes: '32x32', type: 'image/jpeg' },
+        { url: '/favicon-48x48.jpg?v=3', sizes: '48x48', type: 'image/jpeg' },
+        { url: '/icon-256x256.jpg?v=3', sizes: '256x256', type: 'image/jpeg' },
       ],
       apple: [
-        { url: '/apple-touch-icon.jpg?v=2', sizes: '180x180', type: 'image/jpeg' },
+        { url: '/apple-touch-icon.jpg?v=3', sizes: '180x180', type: 'image/jpeg' },
       ],
-      shortcut: '/favicon.ico?v=2',
+      shortcut: '/favicon.ico?v=3',
     },
     manifest: '/site.webmanifest',
     openGraph: {
