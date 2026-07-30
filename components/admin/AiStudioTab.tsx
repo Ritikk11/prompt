@@ -20,26 +20,35 @@ import {
   ArrowDown,
   Bot,
   User,
-  RefreshCw,
+  Download,
+  ExternalLink,
+  Cpu,
+  Brain,
+  Palette,
+  ChevronDown,
 } from 'lucide-react';
-import { askAi } from '@/lib/admin/ai';
-import { uploadImageFileToProvider } from '@/lib/client-upload';
+import { askAiFull } from '@/lib/admin/ai';
 import Markdown from '@/components/MarkdownRenderer';
 import type { Post } from '@/lib/types';
 import { TOOLS_MODELS_RULES } from '@/lib/admin/wandPrompts';
+
+export type GeminiModelId = 'gemini-2.0-flash' | 'gemini-1.5-pro' | 'imagen-3.0-generate-002';
 
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   imageUrl?: string;
+  generatedImageUrl?: string;
+  isImage?: boolean;
+  modelUsed?: string;
   timestamp: Date;
 }
 
 interface AiStudioTabProps {
   posts: Post[];
   onCreateArticleFromAi?: (content: string) => void;
-  onCreatePostFromAi?: (promptText: string) => void;
+  onCreatePostFromAi?: (promptText: string, imageUrl?: string) => void;
 }
 
 export default function AiStudioTab({
@@ -50,14 +59,15 @@ export default function AiStudioTab({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputPrompt, setInputPrompt] = useState('');
   const [attachedImageUrl, setAttachedImageUrl] = useState<string>('');
+  const [selectedModel, setSelectedModel] = useState<GeminiModelId>('gemini-2.0-flash');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  
+
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll to bottom of chat container only (does not scroll window)
+  // Auto-scroll to bottom of chat container only
   const scrollToBottom = () => {
     if (chatScrollRef.current) {
       chatScrollRef.current.scrollTo({
@@ -79,21 +89,24 @@ export default function AiStudioTab({
     const existingCategories = Array.from(new Set(posts.map(p => p.category).filter(Boolean))).slice(0, 60);
     const existingTags = Array.from(new Set(posts.flatMap(p => p.tags || []))).slice(0, 150);
 
-    return `You are the in-house AI assistant for aipromptmatrix.in, a curated library of AI image-generation prompts (ChatGPT, Gemini, Grok, Qwen, Midjourney).
+    return `You are the expert AI assistant & lead engineer for aipromptmatrix.in, a gallery/library of AI image prompts (ChatGPT, Gemini, Grok, Qwen, Midjourney).
 ${TOOLS_MODELS_RULES}
 Site structure notes:
 - A "post" bundles example images generated from a text prompt, plus editorial notes.
-- "tags" are short, lowercase, search/filter keywords (subject/style/tool). Existing tags: ${existingTags.length ? existingTags.join(', ') : '(none yet)'}
-- "category" is one broad grouping. Existing categories: ${existingCategories.length ? existingCategories.join(', ') : '(none yet)'}
-- Article bodies support custom markdown callouts: :::tip, :::creative, :::model, :::prompt, :::warning, and inline highlights like {mark:...}, {primary:...}. Use them appropriately.
-- Do not use H1 (#) headings in article bodies.
+- "tags" are short, lowercase keywords (subject/style/tool). Existing tags: ${existingTags.length ? existingTags.join(', ') : '(none yet)'}
+- "category" is a broad grouping. Existing categories: ${existingCategories.length ? existingCategories.join(', ') : '(none yet)'}
+- Long-form article bodies support custom callouts: :::tip, :::creative, :::model, :::prompt, :::warning, and inline highlights like {mark:...}, {primary:...}.
+- Write clean markdown with code block syntax highlighting (\`\`\`typescript ... \`\`\`) for technical instructions.
 
 Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
   };
 
-  const handleSend = async (customPrompt?: string) => {
+  const handleSend = async (customPrompt?: string, overrideModel?: GeminiModelId) => {
     const promptToSend = (customPrompt || inputPrompt).trim();
     if (!promptToSend || isLoading) return;
+
+    const activeModel = overrideModel || selectedModel;
+    const isImageGen = activeModel === 'imagen-3.0-generate-002';
 
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -119,15 +132,20 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
         ? `Conversation History:\n${conversationHistory}\n\nUser: ${promptToSend}`
         : promptToSend;
 
-      const responseText = await askAi(fullPrompt, {
+      const response = await askAiFull(fullPrompt, {
         systemContext: getSystemContext(),
         imageUrl: currentImage,
+        model: activeModel,
+        generateImage: isImageGen,
       });
 
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: responseText,
+        content: response.text,
+        generatedImageUrl: response.generatedImageUrl,
+        isImage: response.isImage || !!response.generatedImageUrl,
+        modelUsed: activeModel,
         timestamp: new Date(),
       };
 
@@ -184,56 +202,92 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
     reader.readAsDataURL(file);
   };
 
+  const models: { id: GeminiModelId; label: string; icon: any; desc: string; badge: string }[] = [
+    {
+      id: 'gemini-2.0-flash',
+      label: 'Gemini 2.0 Flash',
+      icon: Zap,
+      desc: 'Fast, multimodal, text & code generation',
+      badge: 'Fastest',
+    },
+    {
+      id: 'gemini-1.5-pro',
+      label: 'Gemini 1.5 Pro',
+      icon: Brain,
+      desc: 'Deep reasoning, complex coding & long context',
+      badge: 'Smartest',
+    },
+    {
+      id: 'imagen-3.0-generate-002',
+      label: 'Imagen 3 (Image Gen)',
+      icon: Palette,
+      desc: 'Generate photorealistic 1024x1024 AI images',
+      badge: 'Image Gen',
+    },
+  ];
+
   const presets = [
     {
       title: 'Write an Article',
       icon: FileText,
       prompt: "Write a detailed markdown article about 'How to write ChatGPT Image Prompts'. Include practical tips, structural steps, and example prompts.",
+      model: 'gemini-2.0-flash' as GeminiModelId,
+    },
+    {
+      title: 'Generate AI Image',
+      icon: Palette,
+      prompt: 'A futuristic cyberpunk cat wearing neon goggles sitting on a rain-slicked Tokyo street at night, 8k resolution, photorealistic',
+      model: 'imagen-3.0-generate-002' as GeminiModelId,
     },
     {
       title: 'Brainstorm Tags',
       icon: Tag,
       prompt: 'Suggest 10 trending AI image prompt tags and categories for a prompt gallery site.',
+      model: 'gemini-2.0-flash' as GeminiModelId,
     },
     {
-      title: 'SEO Meta Description',
-      icon: Search,
-      prompt: 'Write a catchy 160-character SEO meta description for an AI prompt collection featuring ChatGPT and Gemini.',
-    },
-    {
-      title: 'Refine a Prompt',
-      icon: Lightbulb,
-      prompt: 'Improve this prompt to look photorealistic with professional studio lighting: "A portrait of a vintage saree fashion model in golden hour light".',
+      title: 'Deep Coding & Logic',
+      icon: Brain,
+      prompt: 'Write a TypeScript utility function to parse and validate AI prompt tags from markdown frontmatter with unit test examples.',
+      model: 'gemini-1.5-pro' as GeminiModelId,
     },
   ];
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col h-[600px] max-h-[75vh] min-h-[500px] rounded-3xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-xl overflow-hidden animate-in fade-in duration-200">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-surface-100 dark:border-surface-800/80 bg-surface-50/50 dark:bg-surface-950/40 backdrop-blur-md shrink-0">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-surface-100 dark:border-surface-800/80 bg-surface-50/50 dark:bg-surface-950/40 backdrop-blur-md shrink-0 gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-primary-500/20">
-            <Wand2 className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-primary-500/20 shrink-0">
+            <Wand2 className="w-4 h-4" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-extrabold text-surface-900 dark:text-white tracking-tight">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-sm sm:text-base font-extrabold text-surface-900 dark:text-white tracking-tight">
                 AI Studio
               </h1>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 text-[10px] font-bold border border-primary-200 dark:border-primary-800">
-                <Sparkles className="w-3 h-3" /> Gemini Powered
-              </span>
+              {/* Model Picker Pill */}
+              <div className="relative inline-block">
+                <select
+                  value={selectedModel}
+                  onChange={e => setSelectedModel(e.target.value as GeminiModelId)}
+                  className="appearance-none pl-7 pr-7 py-1 rounded-full bg-primary-100 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 text-[11px] font-bold border border-primary-200 dark:border-primary-800 cursor-pointer outline-none hover:border-primary-400 transition-colors"
+                >
+                  <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash</option>
+                  <option value="gemini-1.5-pro">🧠 Gemini 1.5 Pro</option>
+                  <option value="imagen-3.0-generate-002">🎨 Imagen 3 (Image Gen)</option>
+                </select>
+                <Sparkles className="w-3 h-3 text-primary-500 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="w-3 h-3 text-primary-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
-            <p className="text-xs text-surface-500 dark:text-surface-400">
-              Conversational assistant trained on your site's structure & prompts
-            </p>
           </div>
         </div>
 
         {messages.length > 0 && (
           <button
             onClick={handleResetChat}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-bold text-surface-600 dark:text-surface-300 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-bold text-surface-600 dark:text-surface-300 transition-colors shrink-0"
             title="Start new conversation"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -246,15 +300,15 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
       <div ref={chatScrollRef} className="flex-1 overflow-y-auto px-4 py-6 md:px-8 space-y-6">
         {messages.length === 0 ? (
           /* Empty State / Welcome Screen */
-          <div className="h-full flex flex-col items-center justify-center text-center px-4 max-w-xl mx-auto py-8">
-            <div className="w-14 h-14 rounded-3xl bg-primary-500/10 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-4">
-              <Sparkles className="w-7 h-7" />
+          <div className="h-full flex flex-col items-center justify-center text-center px-4 max-w-xl mx-auto py-6">
+            <div className="w-12 h-12 rounded-3xl bg-primary-500/10 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-3">
+              <Sparkles className="w-6 h-6" />
             </div>
-            <h2 className="text-xl font-bold text-surface-900 dark:text-white mb-2">
-              What would you like to create?
+            <h2 className="text-lg font-bold text-surface-900 dark:text-white mb-1.5">
+              What can I help you create today?
             </h2>
-            <p className="text-xs text-surface-500 dark:text-surface-400 mb-8 leading-relaxed">
-              Ask AI Studio to write long-form articles, generate SEO titles, suggest prompt tags, or refine image prompt text.
+            <p className="text-xs text-surface-500 dark:text-surface-400 mb-6 leading-relaxed">
+              Write articles, code custom site features, generate AI images, or refine prompts with Gemini & Imagen models.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
@@ -263,11 +317,14 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
                 return (
                   <button
                     key={p.title}
-                    onClick={() => handleSend(p.prompt)}
-                    className="flex flex-col items-start p-4 rounded-2xl border border-surface-200 dark:border-surface-800 bg-surface-50/50 dark:bg-surface-800/40 hover:border-primary-500/50 hover:bg-primary-50/30 dark:hover:bg-primary-950/20 text-left transition-all duration-200 group"
+                    onClick={() => {
+                      setSelectedModel(p.model);
+                      handleSend(p.prompt, p.model);
+                    }}
+                    className="flex flex-col items-start p-3.5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-surface-50/50 dark:bg-surface-800/40 hover:border-primary-500/50 hover:bg-primary-50/30 dark:hover:bg-primary-950/20 text-left transition-all duration-200 group"
                   >
                     <div className="flex items-center gap-2 text-xs font-bold text-surface-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400">
-                      <IconComponent className="w-4 h-4 text-primary-500" />
+                      <IconComponent className="w-3.5 h-3.5 text-primary-500" />
                       {p.title}
                     </div>
                     <p className="text-[11px] text-surface-500 dark:text-surface-400 line-clamp-2">
@@ -294,11 +351,11 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
               )}
 
               <div
-                className={`flex flex-col max-w-[85%] sm:max-w-[78%] ${
+                className={`flex flex-col max-w-[88%] sm:max-w-[82%] ${
                   msg.role === 'user' ? 'items-end' : 'items-start'
                 }`}
               >
-                {/* Image attachment in bubble */}
+                {/* User Attached Image */}
                 {msg.imageUrl && (
                   <div className="relative w-48 h-32 rounded-2xl overflow-hidden mb-2 border border-surface-200 dark:border-surface-700 shadow-sm">
                     <Image
@@ -308,6 +365,44 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
                       className="object-cover"
                       unoptimized
                     />
+                  </div>
+                )}
+
+                {/* AI Generated Image Output */}
+                {msg.generatedImageUrl && (
+                  <div className="relative w-full max-w-sm rounded-2xl overflow-hidden mb-3 border border-surface-200 dark:border-surface-700 shadow-md group bg-black">
+                    <div className="relative aspect-square w-full">
+                      <Image
+                        src={msg.generatedImageUrl}
+                        alt="Generated AI artwork"
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                    <div className="p-3 bg-surface-900/90 text-white flex items-center justify-between gap-2 backdrop-blur-md">
+                      <span className="text-xs font-semibold truncate">Generated Artwork</span>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={msg.generatedImageUrl}
+                          download="ai-generated-image.jpg"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors"
+                          title="Download Image"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </a>
+                        {onCreatePostFromAi && (
+                          <button
+                            onClick={() => onCreatePostFromAi(msg.content.replace(/^Generated image for prompt: "/, '').replace(/"$/, ''), msg.generatedImageUrl)}
+                            className="px-2.5 py-1 bg-primary-600 hover:bg-primary-500 rounded-lg text-[11px] font-bold text-white transition-colors flex items-center gap-1"
+                          >
+                            <Wand2 className="w-3 h-3" /> Create Post
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -330,7 +425,7 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
 
                 {/* AI Assistant Action Buttons */}
                 {msg.role === 'assistant' && (
-                  <div className="flex items-center gap-2 mt-1.5 px-1">
+                  <div className="flex items-center gap-2.5 mt-1.5 px-1 flex-wrap">
                     <button
                       onClick={() => handleCopy(msg.content, msg.id)}
                       className="inline-flex items-center gap-1 text-[11px] font-semibold text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 transition-colors"
@@ -349,22 +444,22 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
                       )}
                     </button>
 
-                    {onCreateArticleFromAi && (
+                    {onCreateArticleFromAi && !msg.isImage && (
                       <button
                         onClick={() => onCreateArticleFromAi(msg.content)}
                         className="inline-flex items-center gap-1 text-[11px] font-semibold text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-                        title="Create article draft from this response"
+                        title="Copy text & open Articles tab"
                       >
                         <FilePlus className="w-3.5 h-3.5" />
                         Use as Article
                       </button>
                     )}
 
-                    {onCreatePostFromAi && (
+                    {onCreatePostFromAi && !msg.isImage && (
                       <button
                         onClick={() => onCreatePostFromAi(msg.content)}
                         className="inline-flex items-center gap-1 text-[11px] font-semibold text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-                        title="Create new post from this prompt"
+                        title="Use as prompt for new post"
                       >
                         <Wand2 className="w-3.5 h-3.5" />
                         Use as Post
@@ -391,7 +486,9 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
             </div>
             <div className="rounded-2xl rounded-bl-none px-4 py-3 bg-surface-100 dark:bg-surface-800 border border-surface-200/60 dark:border-surface-700/60 text-surface-500 dark:text-surface-400 text-xs flex items-center gap-2">
               <div className="w-3.5 h-3.5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-              AI Studio is generating thoughts...
+              {selectedModel === 'imagen-3.0-generate-002'
+                ? 'Generating AI image artwork...'
+                : 'Gemini is generating response...'}
             </div>
           </div>
         )}
@@ -444,7 +541,11 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
               e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Ask AI Studio anything... (Shift + Enter for new line)"
+            placeholder={
+              selectedModel === 'imagen-3.0-generate-002'
+                ? 'Describe the image you want to generate...'
+                : 'Ask AI Studio anything... (Shift + Enter for new line)'
+            }
             rows={1}
             disabled={isLoading}
             className="flex-1 bg-transparent border-0 outline-none text-xs md:text-sm text-surface-900 dark:text-white placeholder:text-surface-400 resize-none py-1.5 max-h-40"

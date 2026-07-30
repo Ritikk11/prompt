@@ -9237,11 +9237,11 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
             pushAdminRoute('articles');
             showToast('AI response copied to clipboard! Switched to Articles tab.', 'success');
           }}
-          onCreatePostFromAi={(promptText) => {
-            setImages([{ id: generateId(), url: '', prompt: promptText, aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
+          onCreatePostFromAi={(promptText, imageUrl) => {
+            setImages([{ id: generateId(), url: imageUrl || '', prompt: promptText, aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
             setTitle(promptText.slice(0, 60));
             pushAdminRoute('posts');
-            showToast('New post prompt pre-filled from AI Studio!', 'success');
+            showToast('New post pre-filled from AI Studio!', 'success');
           }}
         />
       )}
