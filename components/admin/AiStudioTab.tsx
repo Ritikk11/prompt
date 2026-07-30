@@ -54,17 +54,24 @@ export default function AiStudioTab({
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom of chat container only (does not scroll window)
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTo({
+        top: chatScrollRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages.length, isLoading]);
 
   // Build system context from current site data
   const getSystemContext = () => {
@@ -201,7 +208,7 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
   ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col h-[calc(100vh-140px)] min-h-[600px] rounded-3xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-xl overflow-hidden animate-in fade-in duration-200">
+    <div className="w-full max-w-4xl mx-auto flex flex-col h-[600px] max-h-[75vh] min-h-[500px] rounded-3xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-xl overflow-hidden animate-in fade-in duration-200">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-surface-100 dark:border-surface-800/80 bg-surface-50/50 dark:bg-surface-950/40 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-3">
@@ -236,7 +243,7 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 space-y-6">
+      <div ref={chatScrollRef} className="flex-1 overflow-y-auto px-4 py-6 md:px-8 space-y-6">
         {messages.length === 0 ? (
           /* Empty State / Welcome Screen */
           <div className="h-full flex flex-col items-center justify-center text-center px-4 max-w-xl mx-auto py-8">
@@ -388,7 +395,6 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Multimodal Input Bar Footer */}
