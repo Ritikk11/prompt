@@ -17,7 +17,7 @@ export default function HeroV3({ featuredPosts: featured, settings }: HeroProps)
   const currentImageUrl = promptImageUrl(post);
 
   return (
-    <div className="relative w-full rounded-3xl overflow-hidden border border-surface-200/70 dark:border-surface-800 py-6 px-4 md:py-12 md:px-10 shadow-inner flex items-center justify-center min-h-[500px]" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+    <div className="relative w-full rounded-3xl overflow-hidden border border-surface-200/70 dark:border-surface-800 pt-6 pb-12 px-4 md:py-12 md:px-10 shadow-inner flex items-center justify-center min-h-[500px]" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       {/* Blurred Background */}
       <div className="absolute inset-0 z-0">
         <Image src={currentImageUrl} alt="" fill sizes="20vw" className="object-cover opacity-40 dark:opacity-30 blur-3xl scale-125"  referrerPolicy="no-referrer" />
@@ -100,7 +100,7 @@ export default function HeroV3({ featuredPosts: featured, settings }: HeroProps)
 
       {/* Dot pagination + slide counter (V1/V2 have these; V3 previously had none) */}
       {featured.length > 1 && (
-        <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 md:bottom-5">
+        <div className="absolute bottom-2.5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 md:bottom-4">
           {featured.map((_, i) => (
             <button
               key={i}
