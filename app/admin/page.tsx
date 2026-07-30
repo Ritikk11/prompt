@@ -9233,15 +9233,15 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
         <AiStudioTab
           posts={posts}
           onCreateArticleFromAi={(content) => {
-            setArticleBody(content);
-            setArticleType('guide');
+            navigator.clipboard.writeText(content);
             pushAdminRoute('articles');
-            showToast('Article draft pre-filled from AI Studio!', 'success');
+            showToast('AI response copied to clipboard! Switched to Articles tab.', 'success');
           }}
           onCreatePostFromAi={(promptText) => {
-            setImages([{ prompt: promptText, aiTool: 'ChatGPT' }]);
+            setImages([{ id: generateId(), url: '', prompt: promptText, aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
+            setTitle(promptText.slice(0, 60));
             pushAdminRoute('posts');
-            showToast('New post pre-filled from AI Studio!', 'success');
+            showToast('New post prompt pre-filled from AI Studio!', 'success');
           }}
         />
       )}
