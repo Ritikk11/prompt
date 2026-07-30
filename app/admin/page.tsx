@@ -20,6 +20,7 @@ import { imageModelOptions, getAllTools, getDefaultImageModel, getImageModelForT
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
+import AiStudioTab from '@/components/admin/AiStudioTab';
 import { MagicWandProvider, WandButton, useMagicWand } from '@/components/admin/MagicWand';
 import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
 import { askAi } from '@/lib/admin/ai';
@@ -9229,113 +9230,20 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
         </div>
       )}
       {tab === 'ai-studio' && (
-        <div className="w-full max-w-4xl mx-auto space-y-6 animate-in fade-in duration-200">
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-4 border-b border-surface-100 dark:border-surface-800 pb-5">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-surface-900 dark:text-white">
-                <Wand2 className="w-6 h-6 text-primary-500" /> AI Studio
-              </h1>
-              <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-                Your dedicated AI assistant tailored for this site.
-              </p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
-                <label className="block text-sm font-bold text-surface-900 dark:text-white mb-2">What do you want to generate?</label>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <button onClick={() => setAiStudioPrompt("Write a full markdown article about 'How to write ChatGPT Image Prompts'. Include headers, practical tips, and a conclusion.")} className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-semibold rounded-lg text-surface-700 dark:text-surface-300 transition-colors">Write an Article</button>
-                  <button onClick={() => setAiStudioPrompt("Brainstorm 5 new AI Tool categories that are currently popular.")} className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-semibold rounded-lg text-surface-700 dark:text-surface-300 transition-colors">Brainstorm Tags</button>
-                  <button onClick={() => setAiStudioPrompt("Write a catchy 160-character SEO meta description for my site's homepage.")} className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-semibold rounded-lg text-surface-700 dark:text-surface-300 transition-colors">Write SEO Meta</button>
-                </div>
-                <textarea 
-                  value={aiStudioPrompt}
-                  onChange={e => setAiStudioPrompt(e.target.value)}
-                  placeholder="Ask the AI to write articles, descriptions, or brainstorm ideas..."
-                  className="w-full min-h-[120px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-3 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 resize-y mb-4"
-                />
-
-                <div className="mb-4">
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0 text-xs font-semibold text-surface-700 dark:text-surface-300">
-                      <Upload className="w-3.5 h-3.5" />
-                      {aiStudioImageUrl && !aiStudioImageUrl.startsWith('Uploading') ? 'Change Image' : 'Attach Image (Optional)'}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async e => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                             try {
-                               setAiStudioImageUrl('Uploading...');
-                               const url = await uploadImageFile(file, 'aistudio');
-                               setAiStudioImageUrl(url);
-                             } catch (err) {
-                               console.error(err);
-                               alert('Failed to upload image');
-                               setAiStudioImageUrl('');
-                             }
-                          }
-                        }}
-                      />
-                    </label>
-                    {aiStudioImageUrl === 'Uploading...' && <span className="text-xs text-primary-500 font-medium">Uploading...</span>}
-                    {aiStudioImageUrl && !aiStudioImageUrl.startsWith('Uploading') && (
-                      <div className="flex items-center gap-2">
-                        <div className="relative w-8 h-8 rounded overflow-hidden border border-surface-200 dark:border-surface-700">
-                          <Image src={aiStudioImageUrl} alt="Attached" fill className="object-cover" unoptimized />
-                        </div>
-                        <button onClick={() => setAiStudioImageUrl('')} className="text-xs text-red-500 font-medium hover:underline">Remove</button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={handleAiStudioSubmit}
-                  disabled={isAiStudioLoading || !aiStudioPrompt.trim()}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold text-sm transition-colors disabled:opacity-50"
-                >
-                  {isAiStudioLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Wand2 className="w-4 h-4" />}
-                  {isAiStudioLoading ? 'Generating...' : 'Generate Text'}
-                </button>
-              </div>
-
-              {aiStudioResponse && (
-                <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-surface-900 dark:text-white">AI Response</h3>
-                    <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText(aiStudioResponse);
-                        alert('Copied to clipboard!');
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-xs font-bold rounded-lg text-surface-700 dark:text-surface-300 transition-colors"
-                    >
-                      <Copy className="w-3.5 h-3.5" /> Copy
-                    </button>
-                  </div>
-                  <div className="prose prose-sm prose-surface dark:prose-invert max-w-none">
-                    <MarkdownRenderer>{aiStudioResponse}</MarkdownRenderer>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-primary-200 bg-primary-50 p-5 dark:border-primary-900/30 dark:bg-primary-500/10">
-                <h4 className="font-bold text-primary-700 dark:text-primary-400 mb-2 flex items-center gap-2">
-                  <Info className="w-4 h-4" /> Context Aware
-                </h4>
-                <p className="text-xs text-primary-600/80 dark:text-primary-300/80 leading-relaxed">
-                  The AI Studio is fully aware of your existing content. It will adapt to your site's tone and style when writing articles or SEO tags.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <AiStudioTab
+          posts={posts}
+          onCreateArticleFromAi={(content) => {
+            setArticleBody(content);
+            setArticleType('guide');
+            pushAdminRoute('articles');
+            showToast('Article draft pre-filled from AI Studio!', 'success');
+          }}
+          onCreatePostFromAi={(promptText) => {
+            setImages([{ prompt: promptText, aiTool: 'ChatGPT' }]);
+            pushAdminRoute('posts');
+            showToast('New post pre-filled from AI Studio!', 'success');
+          }}
+        />
       )}
           </div>
         </main>
