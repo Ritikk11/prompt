@@ -13,7 +13,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import ScrollReveal from '@/components/ScrollReveal';
 import type { Post } from '@/lib/types';
 import SeoPageContent from '@/components/SeoPageContent';
-import { generateSeoPageMetadata } from '@/lib/seo-helpers';
+import { generateSeoPageMetadata, formatTitleWithBrand } from '@/lib/seo-helpers';
 
 interface Props {
   params: Promise<{ slug: string }>;
