@@ -83,7 +83,7 @@ export default function HomeLinkBlocks({ blocks }: { blocks?: HomeLinkBlock[] })
               <SmartLink
                 key={`${block.href}-${block.title}`}
                 href={block.href}
-                className={`group flex min-h-[96px] items-center gap-3 rounded-lg border border-surface-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-surface-800 dark:bg-surface-900 ${accent.border}`}
+                className={`group flex min-h-[96px] items-center gap-3 rounded-lg border border-surface-200 bg-white p-4 transition-all duration-200 hover:shadow-md dark:border-surface-800 dark:bg-surface-900 ${accent.border}`}
               >
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ring-1 ${accent.soft}`}>
                   <Icon className="h-5 w-5" />
@@ -108,7 +108,7 @@ export default function HomeLinkBlocks({ blocks }: { blocks?: HomeLinkBlock[] })
               <SmartLink
                 key={`${block.href}-${block.title}`}
                 href={block.href}
-                className={`group relative min-h-[132px] overflow-hidden rounded-lg border border-surface-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-surface-800 dark:bg-surface-900 ${accent.border}`}
+                className={`group relative min-h-[132px] overflow-hidden rounded-lg border border-surface-200 bg-white p-4 transition-all duration-200 hover:shadow-md dark:border-surface-800 dark:bg-surface-900 ${accent.border}`}
               >
                 <span className={`absolute inset-x-0 top-0 h-1 ${accent.line}`} />
                 <div className="flex h-full flex-col justify-between gap-5">
@@ -137,7 +137,7 @@ export default function HomeLinkBlocks({ blocks }: { blocks?: HomeLinkBlock[] })
             <SmartLink
               key={`${block.href}-${block.title}`}
               href={block.href}
-              className={`group relative min-h-[150px] overflow-hidden rounded-lg border border-surface-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:border-surface-800 dark:bg-surface-900 ${accent.border}`}
+              className={`group relative min-h-[150px] overflow-hidden rounded-lg border border-surface-200 bg-white p-4 transition-all duration-200 hover:shadow-lg dark:border-surface-800 dark:bg-surface-900 ${accent.border}`}
             >
               <div className="absolute inset-x-0 top-0 flex h-12 items-start gap-1.5 px-4 pt-3 opacity-80">
                 <span className={`h-2 w-10 rounded-full ${accent.line}`} />

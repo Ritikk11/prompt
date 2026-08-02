@@ -117,7 +117,7 @@ export default function Footer() {
                     rel="noreferrer"
                     aria-label={item.label}
                     title={item.label}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-100 text-surface-500 hover:bg-primary-500 hover:text-white dark:bg-surface-800 dark:text-surface-300 press-anim"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-100 text-surface-500 hover:bg-primary-500 hover:text-white dark:bg-surface-800 dark:text-surface-300"
                   >
                     {item.icon}
                   </a>
@@ -129,7 +129,7 @@ export default function Footer() {
                 <Link
                   key={tool}
                   href={`/tool/${encodeURIComponent(tool)}`}
-                  className="px-3 py-1 rounded-full text-xs font-medium bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 press-anim"
+                  className="px-3 py-1 rounded-full text-xs font-medium bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20"
                 >
                   {tool}
                 </Link>
@@ -169,13 +169,13 @@ export default function Footer() {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full p-1 shadow-xl transition-all hover:-translate-y-0.5 fade-in"
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full p-1 shadow-xl transition-all fade-in"
           style={{
             background: `conic-gradient(#6366f1 ${scrollProgress * 3.6}deg, rgba(148,163,184,0.25) 0deg)`,
           }}
           aria-label="Scroll to top"
         >
-          <span className="flex h-full w-full items-center justify-center rounded-full bg-white text-surface-700 shadow-sm transition-colors hover:text-primary-600 dark:bg-surface-900 dark:text-white dark:hover:text-primary-300">
+          <span className="flex h-full w-full items-center justify-center rounded-full bg-white text-surface-700 transition-colors hover:text-primary-600 dark:bg-surface-900 dark:text-white dark:hover:text-primary-300">
             <ChevronUp className="w-5 h-5" />
           </span>
         </button>

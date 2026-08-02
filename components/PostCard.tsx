@@ -39,7 +39,7 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
     <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider ${getBadgeStyle()} ${className}`}>
       {toolInfo.logo ? (
         <div 
-          className={`relative shrink-0 ${isIconOnly ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-3.5 h-3.5 sm:w-4 sm:h-4'} bg-white rounded-full overflow-hidden p-[2px] shadow-sm`}
+          className={`relative shrink-0 ${isIconOnly ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-3.5 h-3.5 sm:w-4 sm:h-4'} bg-white rounded-full overflow-hidden p-[2px]`}
         >
           <div className="relative w-full h-full rounded-full overflow-hidden" style={toolInfo.logoScale ? { transform: `scale(${toolInfo.logoScale})` } : undefined}>
             <LoadingImage src={toolInfo.logo} alt={`${toolName} logo`} fill className="object-contain" referrerPolicy="no-referrer" skeleton={false} />
@@ -249,7 +249,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
     return (
       <Link
         href={`/${post.slug || post.id}`}
-        className={`group block relative rounded-[15px] overflow-hidden bg-surface-50 p-2 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 transition-all duration-300 hover:border-primary-500 break-inside-avoid shadow-sm hover:shadow-lg ${aspect ? `${aspect} h-full` : ''}`}
+        className={`group block relative rounded-[15px] overflow-hidden bg-surface-50 p-2 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 transition-all duration-300 hover:border-primary-500 break-inside-avoid hover:shadow-lg ${aspect ? `${aspect} h-full` : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
         <div className={`relative overflow-hidden rounded-[15px] bg-white dark:bg-surface-950 ${aspect ? 'h-full' : ''}`}>
@@ -304,7 +304,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
     return (
       <Link
         href={`/${post.slug || post.id}`}
-        className={`group flex items-center gap-3 p-2 rounded-xl overflow-hidden bg-white/50 dark:bg-surface-900/50 hover:bg-white dark:hover:bg-surface-800 border border-surface-200/50 dark:border-surface-700/50 transition-all duration-300 break-inside-avoid shadow-sm hover:shadow-md ${aspect ? aspect : ''}`}
+        className={`group flex items-center gap-3 p-2 rounded-xl overflow-hidden bg-white/50 dark:bg-surface-900/50 hover:bg-white dark:hover:bg-surface-800 border border-surface-200/50 dark:border-surface-700/50 transition-all duration-300 break-inside-avoid hover:shadow-md ${aspect ? aspect : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-lg overflow-hidden flex-none">
@@ -338,7 +338,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
   return (
     <Link
       href={`/${post.slug || post.id}`}
-      className={`group block relative rounded-2xl overflow-hidden bg-surface-100 dark:bg-surface-800 shadow-sm transition-all duration-300 hover:shadow-xl break-inside-avoid ${aspect ? aspect : ''}`}
+      className={`group block relative rounded-2xl overflow-hidden bg-surface-100 dark:bg-surface-800 transition-all duration-300 hover:shadow-xl break-inside-avoid ${aspect ? aspect : ''}`}
       style={{ animationDelay: `${(index || 0) * 80}ms` }}
     >
       <LoadingImage
@@ -361,7 +361,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
 
       {/* Bottom Left Prompt Count - Hidden on Hover */}
       <div className="absolute bottom-2.5 left-2.5 z-10 pointer-events-none transition-opacity duration-300 group-hover:opacity-0">
-        <span className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[9px] font-bold bg-black/40 text-white backdrop-blur-md italic border border-white/10 shadow-sm">
+        <span className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[9px] font-bold bg-black/40 text-white backdrop-blur-md italic border border-white/10">
           {post.images.length} {post.images.length === 1 ? 'PROMPT' : 'PROMPTS'}
         </span>
       </div>

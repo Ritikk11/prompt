@@ -231,7 +231,7 @@ export default function FilterChipRail({
               onClick={() => setSortOpen(open => !open)}
               aria-haspopup="listbox"
               aria-expanded={sortOpen}
-              className="inline-flex h-8 items-center gap-1 rounded-xl border border-surface-200 bg-white px-3 text-[13px] font-medium text-surface-700 transition-all hover:border-surface-300 hover:shadow-sm dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:border-surface-600"
+              className="inline-flex h-8 items-center gap-1 rounded-xl border border-surface-200 bg-white px-3 text-[13px] font-medium text-surface-700 transition-all hover:border-surface-300 hover: dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:border-surface-600"
             >
               {activeSortLabel}
               <ChevronDown className={`h-3.5 w-3.5 opacity-50 transition-transform duration-200 ${sortOpen ? 'rotate-180' : ''}`} />
@@ -303,7 +303,7 @@ export default function FilterChipRail({
                 }`}
               >
                 {showToolLogo ? (
-                  <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white p-[1px] shadow-sm">
+                  <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white p-[1px]">
                     <Image src={toolInfo.logo} alt="" width={16} height={16} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
                   </span>
                 ) : null}

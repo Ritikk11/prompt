@@ -13,7 +13,7 @@ function ToggleSwitch({ checked, onChange, label }: { checked: boolean; onChange
   return (
     <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className="inline-flex items-center gap-2 text-xs font-bold">
       <span className={`relative inline-flex h-6 w-11 rounded-full transition-colors ${checked ? 'bg-primary-500' : 'bg-surface-300 dark:bg-surface-700'}`}>
-        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`} />
+        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`} />
       </span>
       {label && <span className={checked ? 'text-primary-600 dark:text-primary-300' : 'text-surface-500'}>{label}</span>}
     </button>

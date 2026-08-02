@@ -40,8 +40,8 @@ export default function HeroV6({ featuredPosts: featured, settings }: HeroProps)
                   View Prompt
                 </Link>
                 <div className="flex gap-2">
-                  <button onClick={() => goTo(current - 1)} aria-label="Previous featured prompt" className="p-4 rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 shadow-sm hover:translate-y-[-2px] transition-all"><ChevronLeft className="w-5 h-5"/></button>
-                  <button onClick={() => goTo(current + 1)} aria-label="Next featured prompt" className="p-4 rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 shadow-sm hover:translate-y-[-2px] transition-all"><ChevronRight className="w-5 h-5"/></button>
+                  <button onClick={() => goTo(current - 1)} aria-label="Previous featured prompt" className="p-4 rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 hover:translate-y-[-2px] transition-all"><ChevronLeft className="w-5 h-5"/></button>
+                  <button onClick={() => goTo(current + 1)} aria-label="Next featured prompt" className="p-4 rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 hover:translate-y-[-2px] transition-all"><ChevronRight className="w-5 h-5"/></button>
                 </div>
              </div>
           </div>

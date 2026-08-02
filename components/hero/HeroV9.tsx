@@ -28,7 +28,7 @@ export default function HeroV9({ featuredPosts: featured, settings, stats }: Her
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/18 to-transparent" />
 
       <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center text-center">
-        <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-bold text-amber-200 shadow-sm backdrop-blur-md">
+        <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-bold text-amber-200 backdrop-blur-md">
           <Flame className="h-4 w-4 text-amber-300" />
           Curated prompts for ChatGPT, Gemini, Grok & Qwen
         </div>
@@ -49,11 +49,11 @@ export default function HeroV9({ featuredPosts: featured, settings, stats }: Her
         </p>
 
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link href="/explore" className="inline-flex h-14 items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-7 text-sm font-extrabold text-white shadow-[0_18px_40px_rgba(168,85,247,0.35)] transition hover:-translate-y-0.5">
+          <Link href="/explore" className="inline-flex h-14 items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-7 text-sm font-extrabold text-white shadow-[0_18px_40px_rgba(168,85,247,0.35)] transition">
             <LayoutGrid className="h-5 w-5" />
             Browse Prompts
           </Link>
-          <a href="#how-it-works" className="inline-flex h-14 items-center gap-2 rounded-2xl border border-white/15 bg-white/8 px-7 text-sm font-extrabold text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/14">
+          <a href="#how-it-works" className="inline-flex h-14 items-center gap-2 rounded-2xl border border-white/15 bg-white/8 px-7 text-sm font-extrabold text-white backdrop-blur-md transition hover:bg-white/14">
             <Workflow className="h-5 w-5" />
             How It Works
           </a>

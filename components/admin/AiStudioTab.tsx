@@ -345,7 +345,7 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
               }`}
             >
               {msg.role === 'assistant' && (
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white shrink-0 mt-1 shadow-sm">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white shrink-0 mt-1">
                   <Bot className="w-4 h-4" />
                 </div>
               )}
@@ -357,7 +357,7 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
               >
                 {/* User Attached Image */}
                 {msg.imageUrl && (
-                  <div className="relative w-48 h-32 rounded-2xl overflow-hidden mb-2 border border-surface-200 dark:border-surface-700 shadow-sm">
+                  <div className="relative w-48 h-32 rounded-2xl overflow-hidden mb-2 border border-surface-200 dark:border-surface-700">
                     <Image
                       src={msg.imageUrl}
                       alt="Attached asset"
@@ -410,7 +410,7 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
                 <div
                   className={`rounded-2xl px-4 py-3 text-sm ${
                     msg.role === 'user'
-                      ? 'bg-primary-600 text-white dark:bg-primary-500 shadow-sm rounded-br-none'
+                      ? 'bg-primary-600 text-white dark:bg-primary-500 rounded-br-none'
                       : 'bg-surface-100 dark:bg-surface-800/80 text-surface-900 dark:text-surface-100 border border-surface-200/60 dark:border-surface-700/60 rounded-bl-none'
                   }`}
                 >
@@ -481,7 +481,7 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
         {/* Loading Indicator Bubble */}
         {isLoading && (
           <div className="flex gap-3 md:gap-4 justify-start">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white shrink-0 mt-1 shadow-sm">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white shrink-0 mt-1">
               <Bot className="w-4 h-4" />
             </div>
             <div className="rounded-2xl rounded-bl-none px-4 py-3 bg-surface-100 dark:bg-surface-800 border border-surface-200/60 dark:border-surface-700/60 text-surface-500 dark:text-surface-400 text-xs flex items-center gap-2">
@@ -514,7 +514,7 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
           </div>
         )}
 
-        <div className="flex items-end gap-2 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700/80 rounded-2xl p-2 focus-within:border-primary-500 transition-colors shadow-sm">
+        <div className="flex items-end gap-2 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700/80 rounded-2xl p-2 focus-within:border-primary-500 transition-colors">
           {/* Image Upload Input Button */}
           <label className="p-2 rounded-xl text-surface-400 hover:text-surface-700 hover:bg-surface-100 dark:hover:bg-surface-800 dark:hover:text-surface-200 cursor-pointer transition-colors shrink-0">
             <input

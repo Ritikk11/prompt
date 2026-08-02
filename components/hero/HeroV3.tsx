@@ -58,8 +58,8 @@ export default function HeroV3({ featuredPosts: featured, settings }: HeroProps)
               Get Prompt <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
             </Link>
             <div className="flex shrink-0 gap-1.5 md:gap-2">
-              <button onClick={() => goTo(current - 1)} aria-label="Previous featured prompt" className="rounded-xl bg-white/50 p-2.5 text-surface-900 shadow-sm backdrop-blur transition-all hover:bg-white active:scale-90 dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronLeft className="h-4 w-4 md:h-5 md:w-5"/></button>
-              <button onClick={() => goTo(current + 1)} aria-label="Next featured prompt" className="rounded-xl bg-white/50 p-2.5 text-surface-900 shadow-sm backdrop-blur transition-all hover:bg-white active:scale-90 dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronRight className="h-4 w-4 md:h-5 md:w-5"/></button>
+              <button onClick={() => goTo(current - 1)} aria-label="Previous featured prompt" className="rounded-xl bg-white/50 p-2.5 text-surface-900 backdrop-blur transition-all hover:bg-white active:scale-90 dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronLeft className="h-4 w-4 md:h-5 md:w-5"/></button>
+              <button onClick={() => goTo(current + 1)} aria-label="Next featured prompt" className="rounded-xl bg-white/50 p-2.5 text-surface-900 backdrop-blur transition-all hover:bg-white active:scale-90 dark:bg-black/50 dark:text-white dark:hover:bg-surface-800 md:p-4"><ChevronRight className="h-4 w-4 md:h-5 md:w-5"/></button>
             </div>
           </div>
         </div>

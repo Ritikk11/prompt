@@ -326,7 +326,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   };
 
   const renderShareCard = (className = '') => (
-    <div className={`rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900 ${className}`}>
+    <div className={`rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900 ${className}`}>
       <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-surface-900 dark:text-white">
         <Share2 className="h-4 w-4 text-primary-500" /> Share
       </h3>
@@ -335,7 +335,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           <button
             key={target}
             onClick={() => handleShare(target)}
-            className={`flex items-center justify-center rounded-xl bg-surface-100 p-2 press-anim dark:bg-surface-800 ${shareButtonMeta[target].className}`}
+            className={`flex items-center justify-center rounded-xl bg-surface-100 p-2 dark:bg-surface-800 ${shareButtonMeta[target].className}`}
             title={shareButtonMeta[target].title}
             aria-label={shareButtonMeta[target].title}
           >
@@ -414,7 +414,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     };
 
     return (
-      <div className={`rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900 ${mobile ? 'mb-16 lg:hidden' : ''}`}>
+      <div className={`rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900 ${mobile ? 'mb-16 lg:hidden' : ''}`}>
         <div className="mb-4 flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-500/10 text-primary-500">
             <Compass className="h-4 w-4" />
@@ -433,7 +433,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               <Link
                 key={`${item.label}:${item.href}`}
                 href={item.href}
-                className="group flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-xs font-bold text-surface-700 press-anim hover:border-primary-300 hover:bg-white hover:text-primary-600 dark:border-surface-800 dark:bg-surface-950/60 dark:text-surface-300 dark:hover:border-primary-500/50 dark:hover:bg-surface-900 dark:hover:text-white"
+                className="group flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-xs font-bold text-surface-700 hover:border-primary-300 hover:bg-white hover:text-primary-600 dark:border-surface-800 dark:bg-surface-950/60 dark:text-surface-300 dark:hover:border-primary-500/50 dark:hover:bg-surface-900 dark:hover:text-white"
               >
                 <span className="flex items-center gap-2">
                   <Icon className="h-3.5 w-3.5 text-primary-500" />
@@ -446,7 +446,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         </div>
         <Link
           href={keepExploring.ctaHref || '/explore'}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-xs font-black text-white press-anim hover:bg-primary-700"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-xs font-black text-white hover:bg-primary-700"
         >
           {keepExploring.ctaLabel} <ArrowRight className="h-3.5 w-3.5" />
         </Link>
@@ -474,10 +474,10 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           <button
             key={tool}
             onClick={() => handleTryTool(tool, prompt)}
-            className="inline-flex items-center gap-2 rounded-xl border border-surface-200 bg-white px-3 py-2 text-xs font-bold text-surface-700 press-anim hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:text-white"
+            className="inline-flex items-center gap-2 rounded-xl border border-surface-200 bg-white px-3 py-2 text-xs font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:text-white"
           >
             {info.logo && (
-              <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white p-[1px] shadow-sm">
+              <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white p-[1px]">
                 <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
               </span>
             )}
@@ -896,7 +896,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           
           <div className="flex flex-wrap gap-4">
              {post.referenceImages.map((url, idx) => (
-               <div key={idx} className="relative group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 flex flex-col w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.67rem)] lg:w-[calc(25%-0.75rem)]">
+               <div key={idx} className="relative group rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 flex flex-col w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.67rem)] lg:w-[calc(25%-0.75rem)]">
                  <div className="relative w-full h-auto flex items-center justify-center p-3 sm:p-4 bg-surface-50 dark:bg-surface-800">
                     <div className="w-full relative rounded-xl overflow-hidden cursor-zoom-in" onClick={() => setLightboxImage({ url, index: idx, tools: [] })}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -941,14 +941,14 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           {(post.images || []).map((img, index) => (
             <div
               key={img.id}
-              className="group rounded-2xl overflow-hidden border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm hover:shadow-xl transition-all duration-300"
+              className="group rounded-2xl overflow-hidden border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 hover:shadow-xl transition-all duration-300"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Image + Prompt layout */}
               <div className="grid grid-cols-1 items-start gap-0 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:gap-5">
                 {/* Image — no cropping, natural display */}
                 <div className="relative self-start p-3 sm:p-4">
-                  <div className="relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-2 shadow-sm dark:border-surface-700/70 dark:bg-surface-800/60 group/img">
+                  <div className="relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-2 dark:border-surface-700/70 dark:bg-surface-800/60 group/img">
                     <div className="relative flex w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-900" onClick={() => setLightboxImage({ url: img.url || '', index, tools: img.aiTools || [img.aiTool].filter(Boolean) })}>
                       <LoadingImg
                         src={displayPromptImageUrl(img.url, 1100)}
@@ -1037,15 +1037,21 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                           </div>
                           <CopyButton text={img.prompt} />
                         </div>
-                        <div className={`no-scrollbar mb-4 overflow-hidden rounded-2xl border border-surface-200/50 bg-surface-50 p-5 transition-colors group-hover:bg-primary-50/20 dark:border-surface-700/50 dark:bg-surface-800/50 dark:group-hover:bg-primary-900/10 sm:p-6 md:max-h-[460px] md:overflow-y-auto ${expandedPrompts[img.id] ? 'max-h-none md:max-h-[460px]' : 'max-h-[260px]'}`}>
-                          <p className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-surface-700 dark:text-surface-300 md:text-base">
-                            {img.prompt}
-                          </p>
+                        <div className="relative mb-4">
+                          <div className={`no-scrollbar overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-5 transition-colors group-hover:bg-primary-50/20 dark:border-surface-700/70 dark:bg-surface-800/50 dark:group-hover:bg-primary-900/10 sm:p-6 md:max-h-[460px] md:overflow-y-auto ${expandedPrompts[img.id] ? 'max-h-none md:max-h-[460px]' : 'max-h-[260px]'}`}>
+                            <p className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-surface-700 dark:text-surface-300 md:text-base">
+                              {img.prompt}
+                            </p>
+                          </div>
+                          {/* Cut-off affordance: fade out collapsed text instead of a hard clip */}
+                          {!expandedPrompts[img.id] && (
+                            <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-20 rounded-b-2xl bg-gradient-to-t from-surface-50 to-transparent dark:from-surface-800 md:hidden" />
+                          )}
                         </div>
                         <button
                           type="button"
                           onClick={() => setExpandedPrompts(prev => ({ ...prev, [img.id]: !prev[img.id] }))}
-                          className="mb-6 inline-flex w-full items-center justify-center rounded-xl border border-surface-200 px-4 py-2 text-xs font-bold text-surface-600 transition-colors hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:text-surface-300 md:hidden"
+                          className="btn-glow mb-6 inline-flex w-full items-center justify-center rounded-full border border-surface-300 px-4 py-2 text-xs font-semibold text-surface-700 transition-colors dark:border-white/15 dark:text-surface-200 md:hidden"
                         >
                           {expandedPrompts[img.id] ? 'Show less prompt' : 'Show full prompt'}
                         </button>
@@ -1092,7 +1098,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
       {/* How to use */}
       {showHowTo && (
-      <div className="mb-16 rounded-3xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 sm:p-8">
+      <div className="mb-16 rounded-3xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 sm:p-8">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="mb-2 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">Quick workflow</p>
@@ -1136,7 +1142,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               {renderExploreAllPromptsBlock()}
 
               {showYouMightAlsoLike && recommendedPosts.length > 0 && (
-                <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
                   <h3 className="mb-3 text-sm font-black text-surface-900 dark:text-white">You might also like</h3>
                   <div className="space-y-2">
                     {recommendedPosts.slice(0, 3).map(item => <SidebarCard key={item.id} item={item} />)}
@@ -1157,7 +1163,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <Link
               key={tag}
               href={`/tag/${encodeURIComponent(tag)}`}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:bg-primary-500 hover:text-white dark:hover:bg-primary-500 dark:hover:text-white transition-all transform hover:-translate-y-1 shadow-sm uppercase tracking-wider"
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:bg-primary-500 hover:text-white dark:hover:bg-primary-500 dark:hover:text-white transition-all transform uppercase tracking-wider"
             >
               #{tag}
             </Link>
@@ -1285,7 +1291,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               <div className="h-px flex-1 bg-surface-200 dark:bg-surface-800 sm:max-w-48" />
             </div>
             
-            <div className="relative overflow-hidden rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 sm:rounded-3xl sm:p-8 md:p-12">
+            <div className="relative overflow-hidden rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 sm:rounded-3xl sm:p-8 md:p-12">
               <div className="prose prose-sm max-w-none dark:prose-invert sm:prose-base lg:prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary-500 hover:prose-a:text-primary-600 prose-img:rounded-xl prose-img:shadow-md prose-p:text-surface-600 dark:prose-p:text-surface-300 prose-li:text-surface-600 dark:prose-li:text-surface-300">
                 <MarkdownRenderer>{post.extendedDescription}</MarkdownRenderer>
               </div>
@@ -1306,7 +1312,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             </div>
             <div className="space-y-3">
               {post.faqs.map((faq, index) => (
-                <details key={`${faq.question}-${index}`} className="group rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                <details key={`${faq.question}-${index}`} className="group rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
                   <summary className="cursor-pointer list-none text-base font-bold text-surface-900 dark:text-white">
                     {faq.question}
                   </summary>

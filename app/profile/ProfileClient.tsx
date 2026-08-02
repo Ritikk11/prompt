@@ -209,7 +209,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
         {/* Sidebar */}
         <div className="w-full md:w-64 shrink-0 bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl p-6 relative">
           <div className="flex flex-col items-center text-center">
-            <div className="w-20 h-20 bg-surface-200 dark:bg-surface-700 rounded-full mb-4 overflow-hidden shadow-sm relative group">
+            <div className="w-20 h-20 bg-surface-200 dark:bg-surface-700 rounded-full mb-4 overflow-hidden relative group">
               {avatarUrl ? (
                 <Image src={avatarUrl} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
               ) : (
@@ -244,7 +244,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
         {/* Content */}
         <div className="flex-1 min-w-0">
           {isEditing ? (
-            <div className="mb-10 rounded-2xl border border-surface-200 bg-white p-6 shadow-sm dark:border-surface-800 dark:bg-surface-900 fade-in">
+            <div className="mb-10 rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900 fade-in">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-surface-900 dark:text-white flex items-center gap-2">

@@ -300,14 +300,14 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
                 <button
                   type="button"
                   onClick={() => setMode('edit')}
-                  className={`rounded-lg px-3 py-1.5 transition-colors ${mode === 'edit' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-500'}`}
+                  className={`rounded-lg px-3 py-1.5 transition-colors ${mode === 'edit' ? 'bg-primary-500 text-white' : 'text-surface-500'}`}
                 >
                   Edit
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode('preview')}
-                  className={`rounded-lg px-3 py-1.5 transition-colors ${mode === 'preview' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-500'}`}
+                  className={`rounded-lg px-3 py-1.5 transition-colors ${mode === 'preview' ? 'bg-primary-500 text-white' : 'text-surface-500'}`}
                 >
                   Preview
                 </button>

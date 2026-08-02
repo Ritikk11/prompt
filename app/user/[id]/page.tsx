@@ -101,7 +101,7 @@ export default async function PublicProfilePage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
-      <div className="mb-10 rounded-3xl border border-surface-200 bg-white p-6 shadow-sm dark:border-surface-800 dark:bg-surface-900 sm:p-8">
+      <div className="mb-10 rounded-3xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900 sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-primary-500/10 border border-surface-200 dark:border-surface-800 shadow-inner">
             {avatarUrl ? (

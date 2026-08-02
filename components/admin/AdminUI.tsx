@@ -34,7 +34,7 @@ export function TabBanner({ icon, title, text, action }: {
 /** White panel card wrapping a group of related controls. */
 export function Panel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-6 ${className}`}>
+    <div className={`p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-6 ${className}`}>
       {children}
     </div>
   );

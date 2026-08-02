@@ -21,7 +21,7 @@ export default function HomeBlog({ settings }: { settings?: SiteSettings }) {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_22%,rgba(56,189,248,0.14),transparent_32%),radial-gradient(circle_at_18%_18%,rgba(139,92,246,0.12),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(248,250,252,0.98)_100%)] dark:bg-[radial-gradient(circle_at_80%_22%,rgba(56,189,248,0.12),transparent_32%),radial-gradient(circle_at_18%_18%,rgba(139,92,246,0.2),transparent_34%),linear-gradient(180deg,#0f172a_0%,#020617_100%)]" />
       <div className="relative mx-auto max-w-6xl">
         <div className="mx-auto mb-10 max-w-2xl text-center">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-100/80 px-4 py-2 text-xs font-bold text-sky-700 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-sky-100">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-100/80 px-4 py-2 text-xs font-bold text-sky-700 backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-sky-100">
             <Newspaper className="h-4 w-4" />
             {content.badge || 'From the blog'}
           </div>
@@ -36,7 +36,7 @@ export default function HomeBlog({ settings }: { settings?: SiteSettings }) {
               <Link
                 key={article.slug}
                 href={`/blog/${article.slug}`}
-                className="group overflow-hidden rounded-3xl border border-surface-200 bg-white/85 p-3 shadow-sm backdrop-blur-md transition hover:-translate-y-1 hover:border-primary-300 hover:shadow-lg dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-500/50"
+                className="group overflow-hidden rounded-3xl border border-surface-200 bg-white/85 p-3 backdrop-blur-md transition hover:border-primary-300 hover:shadow-lg dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-500/50"
               >
                 <ArticleThumbnail article={article} compact />
                 <div className="p-2 pt-4">
@@ -55,7 +55,7 @@ export default function HomeBlog({ settings }: { settings?: SiteSettings }) {
         <div className="mt-8 text-center">
           <Link
             href={content.ctaHref || '/blog'}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-violet-600 px-6 text-sm font-bold text-white shadow-[0_16px_36px_rgba(56,189,248,0.28)] transition hover:-translate-y-0.5"
+            className="btn-glow inline-flex items-center justify-center gap-2 rounded-full border border-surface-300 px-6 py-2.5 text-sm font-semibold text-surface-800 transition-colors dark:border-white/15 dark:text-surface-200"
           >
             {content.ctaLabel || 'Read the blog'}
             <ArrowRight className="h-4 w-4" />

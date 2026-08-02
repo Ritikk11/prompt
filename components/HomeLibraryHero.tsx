@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Bookmark, Flame, Heart, Layers, Search, Workflow } from 'lucide-react';
+import { Bookmark, Flame, Heart, Layers, Search } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 
 type HomeLibraryHeroProps = {
@@ -23,13 +23,13 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
   ];
 
   return (
-    <section className="relative isolate w-full overflow-hidden bg-surface-50 px-5 py-16 text-surface-950 dark:bg-surface-950 dark:text-white sm:px-8 md:min-h-[calc(100vh-64px)] md:py-20 lg:px-12">
+    <section className="relative isolate flex w-full flex-col items-center justify-center overflow-hidden bg-surface-50 px-5 py-16 text-surface-950 dark:bg-surface-950 dark:text-white sm:px-8 md:min-h-[calc(100vh-64px)] md:py-20 lg:px-12">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_18%_15%,rgba(139,92,246,0.16),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(250,204,21,0.22),transparent_30%),radial-gradient(circle_at_50%_78%,rgba(236,72,153,0.13),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(248,250,252,0.96)_100%)] dark:bg-[radial-gradient(circle_at_18%_15%,rgba(139,92,246,0.25),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(250,204,21,0.1),transparent_30%),radial-gradient(circle_at_50%_78%,rgba(236,72,153,0.2),transparent_36%),linear-gradient(180deg,#020617_0%,#0f172a_100%)]" />
       <div className="absolute inset-0 -z-10 opacity-[0.22] [background-image:radial-gradient(#7c3aed_0.7px,transparent_0.7px)] [background-size:18px_18px] dark:opacity-[0.12]" />
 
 
-      <div className="mx-auto flex min-h-full max-w-6xl flex-col items-center justify-center text-center">
-        <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-100/80 px-4 py-2 text-xs font-bold text-primary-700 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-violet-100">
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-center text-center">
+        <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-100/80 px-4 py-2 text-xs font-bold text-primary-700 backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-primary-200">
           <Flame className="h-4 w-4 text-amber-300" />
           Curated prompts for ChatGPT, Gemini, Grok & Qwen
         </div>
@@ -49,12 +49,11 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
         <p className="mt-6 max-w-3xl text-base leading-8 text-surface-600 dark:text-surface-300 sm:text-lg">{subtitle}</p>
 
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link href="/explore" className="inline-flex h-14 items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-7 text-sm font-extrabold text-white shadow-[0_18px_40px_rgba(168,85,247,0.35)] transition hover:-translate-y-0.5">
+          <Link href="/explore" className="btn-glow inline-flex h-14 items-center gap-2 rounded-full bg-primary-600 px-8 text-base font-semibold text-white transition-colors hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600">
             <Search className="h-5 w-5" />
             Browse Prompts
           </Link>
-          <a href="#how-it-works" className="inline-flex h-14 items-center gap-2 rounded-2xl border border-surface-200 bg-white/70 px-7 text-sm font-extrabold text-surface-900 shadow-sm backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white dark:border-white/15 dark:bg-white/8 dark:text-white dark:hover:bg-white/14">
-            <Workflow className="h-5 w-5" />
+          <a href="#how-it-works" className="btn-glow inline-flex h-14 items-center gap-2 rounded-full border border-surface-300 px-8 text-base font-semibold text-surface-800 transition-colors dark:border-white/15 dark:text-surface-200">
             How It Works
           </a>
         </div>
@@ -63,9 +62,9 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
           {statItems.map(item => {
             const Icon = item.icon;
             return (
-              <div key={item.label} className="rounded-2xl border border-surface-200 bg-white/70 px-4 py-4 text-left shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/10">
+              <div key={item.label} className="rounded-2xl border border-surface-200 bg-white/70 px-4 py-4 text-left backdrop-blur-md dark:border-white/10 dark:bg-white/10">
                 <div className="flex items-center gap-3">
-                  <Icon className="h-5 w-5 text-primary-500 dark:text-violet-200" />
+                  <Icon className="h-5 w-5 text-primary-500 dark:text-primary-300" />
                   <div>
                     <div className="text-xl font-black">{item.value}</div>
                     <div className="text-xs text-surface-500 dark:text-white/60">{item.label}</div>

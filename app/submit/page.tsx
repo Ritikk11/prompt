@@ -45,7 +45,7 @@ export default function SubmitPage() {
   if (!settings.features?.userProfiles || !settings.features?.userSubmissions) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-        <div className="rounded-3xl border border-surface-200 bg-white p-8 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+        <div className="rounded-3xl border border-surface-200 bg-white p-8 dark:border-surface-800 dark:bg-surface-900">
           <h1 className="text-2xl font-black text-surface-950 dark:text-white">Prompt submissions are currently closed</h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-surface-600 dark:text-surface-300">
             The submission form is disabled by the site admin right now. You can still contact the team if you want to suggest a prompt or request access.
@@ -96,7 +96,7 @@ export default function SubmitPage() {
       </p>
 
       {hasIncompleteProfile && (
-        <div className="mb-8 p-5 rounded-2xl border border-amber-200 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-sm shadow-sm">
+        <div className="mb-8 p-5 rounded-2xl border border-amber-200 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-sm">
           <p className="font-extrabold mb-1">Please Complete Your Profile</p>
           <p className="mb-3 text-surface-600 dark:text-surface-300">Set your name, public @username, and profile picture before submitting to ensure your prompts are properly credited.</p>
           <Link href="/profile?setup=true" className="inline-flex font-bold underline text-primary-500 hover:text-primary-600">

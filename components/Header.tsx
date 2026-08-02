@@ -102,7 +102,7 @@ function DesktopNavMenu({ label, items, pathname }: { label: string; items: Head
         onClick={() => (open ? closeAnimated() : openNow())}
         aria-expanded={visible}
         aria-haspopup="true"
-        className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim ${visible ? 'bg-surface-100 dark:bg-surface-800' : ''}`}
+        className={`px-3 py-2 rounded-full text-sm font-medium flex items-center gap-1 transition-colors hover:bg-surface-100 hover:text-primary-600 dark:hover:bg-surface-800 dark:hover:text-primary-400 ${visible ? 'bg-surface-100 dark:bg-surface-800' : ''}`}
       >
         {label}
         <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${visible ? 'rotate-180' : ''}`} />
@@ -477,7 +477,7 @@ export default function Header() {
     </Suspense>
     <div className="fixed inset-x-0 top-0 z-[9999] h-[3px] bg-transparent pointer-events-none">
       <div
-        className="h-full origin-left bg-gradient-to-r from-primary-500 via-fuchsia-500 to-purple-500 shadow-[0_0_14px_rgba(168,85,247,0.55)] transition-[transform,opacity] duration-200 ease-out"
+        className="h-full origin-left bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-purple-500 shadow-[0_0_14px_rgba(168,85,247,0.55)] transition-[transform,opacity] duration-200 ease-out"
         style={{ transform: `scaleX(${routeProgress / 100})`, opacity: routeProgress > 0 ? 1 : 0 }}
       />
     </div>
@@ -487,7 +487,7 @@ export default function Header() {
     >
       <div
         ref={progressFillRef}
-        className="relative h-1 rounded-full bg-gradient-to-r from-primary-500 via-fuchsia-500 to-purple-500 transition-[width] duration-150 ease-linear after:absolute after:inset-0 after:bg-[linear-gradient(-45deg,rgba(255,255,255,.22)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.22)_50%,rgba(255,255,255,.22)_75%,transparent_75%,transparent)] after:bg-[length:50px_50px] after:content-[''] after:animate-[movePgrs_2s_linear_infinite]"
+        className="relative h-1 rounded-full bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-purple-500 transition-[width] duration-150 ease-linear after:absolute after:inset-0 after:bg-[linear-gradient(-45deg,rgba(255,255,255,.22)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.22)_50%,rgba(255,255,255,.22)_75%,transparent_75%,transparent)] after:bg-[length:50px_50px] after:content-[''] after:animate-[movePgrs_2s_linear_infinite]"
         style={{ width: '0%' }}
       />
     </div>
@@ -517,7 +517,7 @@ export default function Header() {
                 }}
                 onFocus={activateSearch}
                 placeholder="Search prompts, categories, AI tools..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-100 dark:bg-surface-800 border border-transparent focus:border-primary-500 focus:bg-white dark:focus:bg-surface-900 focus:ring-4 focus:ring-primary-500/10 outline-none text-sm transition-all shadow-inner focus:shadow-sm"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-100 dark:bg-surface-800 border border-transparent focus:border-primary-500 focus:bg-white dark:focus:bg-surface-900 focus:ring-4 focus:ring-primary-500/10 outline-none text-sm transition-all shadow-inner focus:"
               />
             </div>
           </form>
@@ -535,7 +535,7 @@ export default function Header() {
             if (item.kind === 'builtin' && item.key === 'submit') {
               if (submissionsEnabled) {
                 elements.push(
-                  <Link key={item.navKey} href={item.href} prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
+                  <Link key={item.navKey} href={item.href} prefetch={false} className="px-3 py-2 rounded-full text-sm font-medium flex items-center gap-1.5 transition-colors hover:bg-surface-100 hover:text-primary-600 dark:hover:bg-surface-800 dark:hover:text-primary-400">
                     <Plus className="w-4 h-4 text-primary-500" />
                     {item.label}
                   </Link>
@@ -543,13 +543,13 @@ export default function Header() {
               }
             } else if (item.kind === 'link') {
               elements.push(
-                <SmartLink key={item.navKey} href={item.href} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
+                <SmartLink key={item.navKey} href={item.href} className="px-3 py-2 rounded-full text-sm font-medium transition-colors hover:bg-surface-100 hover:text-primary-600 dark:hover:bg-surface-800 dark:hover:text-primary-400">
                   {item.label}
                 </SmartLink>
               );
             } else {
               elements.push(
-                <Link key={item.navKey} href={item.href} prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
+                <Link key={item.navKey} href={item.href} prefetch={false} className="px-3 py-2 rounded-full text-sm font-medium transition-colors hover:bg-surface-100 hover:text-primary-600 dark:hover:bg-surface-800 dark:hover:text-primary-400">
                   {item.label}
                 </Link>
               );
@@ -568,15 +568,15 @@ export default function Header() {
             <div className="flex items-center ml-2 border-l border-surface-200 dark:border-surface-700 pl-4 gap-2">
               {user ? (
                 <>
-                  <Link href="/profile" prefetch={false} className="px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim">
+                  <Link href="/profile" prefetch={false} className="px-3 py-2 rounded-full text-sm font-medium flex items-center gap-1.5 transition-colors hover:bg-surface-100 hover:text-primary-600 dark:hover:bg-surface-800 dark:hover:text-primary-400">
                     <UserIcon className="w-4 h-4" /> Profile
                   </Link>
-                  <button onClick={handleLogout} className="p-2 rounded-lg text-surface-400 hover:text-red-500 hover:bg-surface-100 dark:hover:bg-surface-800 press-anim" title="Logout">
+                  <button onClick={handleLogout} className="p-2 rounded-full text-surface-400 hover:text-red-500 hover:bg-surface-100 dark:hover:bg-surface-800" title="Logout">
                     <LogOut className="w-4 h-4" />
                   </button>
                 </>
               ) : (
-                <button onClick={handleLogin} className="px-4 py-2 rounded-xl text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 press-anim">
+                <button onClick={handleLogin} className="px-4 py-2 rounded-full text-sm font-medium bg-primary-500 text-white hover:bg-primary-600">
                   Sign In
                 </button>
               )}
@@ -586,7 +586,7 @@ export default function Header() {
           <div className="w-px h-6 bg-surface-200 dark:bg-surface-700 mx-1" />
           <button
             onClick={handleThemeToggle}
-            className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 press-anim"
+            className="p-2.5 rounded-full hover:bg-surface-100 dark:hover:bg-surface-800"
             aria-label="Toggle theme"
           >
             <span className="relative block w-5 h-5">
@@ -600,7 +600,7 @@ export default function Header() {
         <div className="flex md:hidden items-center gap-1">
           <button
             onClick={() => setSearchOpen(!searchOpen)}
-            className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 press-anim"
+            className="p-2.5 rounded-full hover:bg-surface-100 dark:hover:bg-surface-800"
             aria-label={searchOpen ? 'Close search' : 'Open search'}
             aria-expanded={searchOpen}
           >
@@ -611,7 +611,7 @@ export default function Header() {
           </button>
           <button
             onClick={handleThemeToggle}
-            className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 press-anim"
+            className="p-2.5 rounded-full hover:bg-surface-100 dark:hover:bg-surface-800"
             aria-label="Toggle theme"
           >
             <span className="relative block w-5 h-5">
@@ -621,7 +621,7 @@ export default function Header() {
           </button>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="p-2.5 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 press-anim"
+            className="p-2.5 rounded-full hover:bg-surface-100 dark:hover:bg-surface-800"
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
           >

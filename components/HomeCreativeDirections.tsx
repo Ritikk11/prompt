@@ -67,7 +67,7 @@ export default function HomeCreativeDirections({ posts, settings }: { posts: Pos
               <Link
                 key={`${item.type}:${item.value}`}
                 href={itemHref(item)}
-                className="group relative flex flex-col items-center overflow-hidden rounded-[2rem] border border-surface-200 bg-gradient-to-b from-white to-surface-50 p-5 text-center shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-primary-200 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:border-surface-800 dark:from-surface-900/50 dark:to-surface-950/50 dark:hover:border-primary-500/30 dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] sm:p-6"
+                className="group relative flex flex-col items-center overflow-hidden rounded-[2rem] border border-surface-200 bg-gradient-to-b from-white to-surface-50 p-5 text-center transition-all duration-300 hover:border-primary-200 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:border-surface-800 dark:from-surface-900/50 dark:to-surface-950/50 dark:hover:border-primary-500/30 dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] sm:p-6"
               >
                 {/* Ambient background glow on hover */}
                 <span
@@ -84,7 +84,7 @@ export default function HomeCreativeDirections({ posts, settings }: { posts: Pos
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={item.imageUrl} alt="" className="relative z-10 h-8 w-8 object-contain transition-transform duration-500 group-hover:scale-110 sm:h-10 sm:w-10" referrerPolicy="no-referrer" />
                   ) : (
-                    <Icon className="relative z-10 h-8 w-8 text-primary-500 drop-shadow-sm transition-colors duration-500 group-hover:text-primary-400 dark:text-primary-400 dark:group-hover:text-primary-300 sm:h-10 sm:w-10" strokeWidth={2.5} />
+                    <Icon className="relative z-10 h-8 w-8 text-primary-500 drop- transition-colors duration-500 group-hover:text-primary-400 dark:text-primary-400 dark:group-hover:text-primary-300 sm:h-10 sm:w-10" strokeWidth={2.5} />
                   )}
                 </span>
                 

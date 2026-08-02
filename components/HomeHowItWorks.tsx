@@ -11,7 +11,7 @@ const steps = [
     title: 'Browse & Discover',
     text: 'Explore curated prompts organized by tool, style, mood, and use case. Find the right direction before you generate.',
     icon: Search,
-    color: 'from-violet-500 to-violet-600',
+    color: 'bg-gradient-to-br from-violet-500 to-violet-600 text-white',
     checks: ['Filter by tool', 'Check trending prompts', 'Open curated collections'],
   },
   {
@@ -19,7 +19,7 @@ const steps = [
     title: 'Copy the Prompt',
     text: 'Found the perfect prompt? Click the copy button to instantly copy it to your clipboard with model-specific notes.',
     icon: Copy,
-    color: 'from-blue-500 to-blue-600',
+    color: 'bg-gradient-to-br from-blue-500 to-blue-600 text-white',
     checks: ['One-click copy', 'Includes model notes', 'Collection copy when available'],
   },
   {
@@ -27,7 +27,7 @@ const steps = [
     title: 'Paste & Generate',
     text: 'Open your preferred image tool, paste the prompt, attach reference images when needed, and adjust settings as needed.',
     icon: ImagePlus,
-    color: 'from-emerald-500 to-emerald-600',
+    color: 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white',
     checks: ['Works with major image tools', 'Adjust aspect ratios', 'Fine-tune prompt details'],
   },
   {
@@ -35,7 +35,7 @@ const steps = [
     title: 'Create & Save',
     text: 'Generate the result, save prompts you want to revisit, and keep useful ideas ready for your next artwork.',
     icon: Heart,
-    color: 'from-orange-500 to-orange-600',
+    color: 'bg-gradient-to-br from-orange-500 to-orange-600 text-white',
     checks: ['Save favorite prompts', 'Share useful collections', 'Return from your profile'],
   },
 ];
@@ -77,7 +77,7 @@ export default function HomeHowItWorks({ settings }: { settings?: SiteSettings }
               <ScrollReveal key={step.number} delay={(index % 2) * 100}>
                 <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900/70">
                   <div className="flex items-start gap-4">
-                    <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${step.color} text-sm font-black text-white shadow-lg`}>
+                    <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${step.color} text-sm font-black text-white shadow-lg`}>
                       {step.number}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -120,7 +120,7 @@ export default function HomeHowItWorks({ settings }: { settings?: SiteSettings }
                       : 'border-surface-200 bg-white hover:border-primary-300 hover:bg-primary-50/40 dark:border-surface-800 dark:bg-surface-900/70 dark:hover:border-primary-500/60 dark:hover:bg-primary-500/10'
                     }`}
                 >
-                  <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${step.color} text-sm font-black text-white shadow-lg`}>
+                  <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${step.color} text-sm font-black text-white shadow-lg`}>
                     {step.number}
                   </span>
                   <span>
@@ -136,7 +136,7 @@ export default function HomeHowItWorks({ settings }: { settings?: SiteSettings }
           <div className="relative min-h-[420px]">
             <div className="absolute inset-0 rounded-full bg-primary-300/25 blur-3xl dark:bg-primary-500/20" />
             <div className="relative mx-auto max-w-md rounded-[28px] border border-transparent bg-white p-8 shadow-[0_34px_90px_rgba(83,54,118,0.22)] dark:border-surface-800 dark:bg-surface-900 dark:shadow-[0_34px_90px_rgba(0,0,0,0.35)]">
-              <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${active.color} text-white shadow-lg`}>
+              <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${active.color} shadow-lg`}>
                 <ActiveIcon className="h-7 w-7" />
               </div>
               <div className="mt-5 text-sm font-medium text-surface-500 dark:text-surface-400">Step {active.number}</div>

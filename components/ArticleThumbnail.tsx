@@ -54,7 +54,7 @@ export default function ArticleThumbnail({
 
   return (
     <div
-      className={`relative isolate aspect-[16/9] overflow-hidden rounded-[14px] ${thumbnailBackground} text-white shadow-sm`}
+      className={`relative isolate aspect-[16/9] overflow-hidden rounded-[14px] ${thumbnailBackground} text-white`}
       style={{ clipPath: 'inset(0 round 14px)' }}
     >
       {canRenderImage && (

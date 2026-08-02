@@ -95,7 +95,7 @@ const inlineStyles: Record<string, string> = {
   pink: 'rounded-md bg-pink-100 px-1.5 py-0.5 font-semibold text-pink-700 dark:bg-pink-500/15 dark:text-pink-300',
   gray: 'rounded-md bg-surface-100 px-1.5 py-0.5 font-medium text-surface-700 dark:bg-surface-800 dark:text-surface-200',
   outline: 'rounded-md border border-current px-1.5 py-0.5 font-semibold',
-  kbd: 'rounded-md border border-surface-300 bg-white px-1.5 py-0.5 font-mono text-[0.85em] font-semibold text-surface-700 shadow-sm dark:border-surface-600 dark:bg-surface-900 dark:text-surface-200'
+  kbd: 'rounded-md border border-surface-300 bg-white px-1.5 py-0.5 font-mono text-[0.85em] font-semibold text-surface-700 dark:border-surface-600 dark:bg-surface-900 dark:text-surface-200'
 };
 
 function parseMarkdownBlocks(content: string): MarkdownBlock[] {

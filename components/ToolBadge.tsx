@@ -33,7 +33,7 @@ export default function ToolBadge({ toolName, toolInfo, size = 'md', className =
       className={`inline-flex items-center rounded-full font-bold uppercase tracking-wider text-white shadow-lg ${BADGE_BG} ${s.pill} ${className}`}
     >
       {toolInfo?.logo ? (
-        <span className={`relative shrink-0 ${s.logo} bg-white rounded-full overflow-hidden p-[2px] shadow-sm`}>
+        <span className={`relative shrink-0 ${s.logo} bg-white rounded-full overflow-hidden p-[2px]`}>
           <span
             className="relative block w-full h-full rounded-full overflow-hidden"
             style={toolInfo.logoScale ? { transform: `scale(${toolInfo.logoScale})` } : undefined}

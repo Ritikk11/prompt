@@ -20,7 +20,7 @@ export default function HomePromptOfDay({ post, settings }: { post?: Post; setti
       <div className="absolute inset-0 -z-10 opacity-[0.22] [background-image:radial-gradient(#7c3aed_0.7px,transparent_0.7px)] [background-size:18px_18px] dark:opacity-[0.12]" />
 
       <div className="relative mx-auto max-w-6xl text-center">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-100/80 px-4 py-2 text-xs font-bold text-amber-800 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-amber-200">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-100/80 px-4 py-2 text-xs font-bold text-amber-800 backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-amber-200">
           <Crown className="h-4 w-4 text-amber-500 dark:text-amber-400" />
           {content.badge || 'Prompt of the Day'}
         </div>
@@ -66,7 +66,7 @@ export default function HomePromptOfDay({ post, settings }: { post?: Post; setti
               )}
               <span className="inline-flex items-center gap-2"><Heart className="h-4 w-4" /> {post.likes || 0} likes</span>
             </div>
-            <Link href={`/${post.slug || post.id}`} className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-600 px-5 py-4 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5">
+            <Link href={`/${post.slug || post.id}`} className="btn-glow mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full border border-surface-300 py-3 text-sm font-semibold text-surface-800 transition-colors dark:border-white/15 dark:text-surface-200">
               {content.ctaLabel || 'View This Prompt'}
               <ArrowRight className="h-4 w-4" />
             </Link>

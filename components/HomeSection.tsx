@@ -53,7 +53,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
           {!isLatest && (
             <Link 
               href={getSectionPath(section)} 
-              className="group flex items-center gap-1 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors bg-primary-50 dark:bg-primary-900/20 px-3 py-1.5 rounded-full"
+              className="btn-glow group flex items-center gap-1 text-sm font-semibold text-surface-700 dark:text-surface-200 transition-colors border border-surface-300 dark:border-white/15 px-3 py-1.5 rounded-full"
             >
               View All <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
@@ -131,7 +131,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
         <div className="flex justify-center mt-8">
           <Link
             href="/explore"
-            className="group inline-flex items-center gap-2 px-8 py-3 rounded-full bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white text-sm font-bold transition-all shadow-sm hover:shadow-md"
+            className="btn-glow group inline-flex items-center gap-2 rounded-full border border-surface-300 px-6 py-2.5 text-sm font-semibold text-surface-800 transition-colors dark:border-white/15 dark:text-surface-200"
           >
             Explore All Prompts
             <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />

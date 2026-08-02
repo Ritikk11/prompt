@@ -522,7 +522,7 @@ function HomepageBlockPreview({
         <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">Actual block preview</p>
         <span className="rounded-full bg-primary-500/10 px-2 py-1 text-[10px] font-black text-primary-600 dark:text-primary-300">{title}</span>
       </div>
-      <div className="h-[560px] overflow-hidden rounded-xl border border-surface-200 bg-white shadow-sm dark:border-surface-700 dark:bg-surface-950">
+      <div className="h-[560px] overflow-hidden rounded-xl border border-surface-200 bg-white dark:border-surface-700 dark:bg-surface-950">
         <div className="pointer-events-none origin-top-left scale-[0.32] [width:1200px]">
           {actualPreview}
         </div>
@@ -2725,7 +2725,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
           </div>
           <button
             type="submit"
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
           >
             {authMode === 'login' ? 'Sign in with Email' : 'Sign up with Email'}
           </button>
@@ -2752,7 +2752,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
 
         <button
           onClick={handleGoogleLogin}
-          className="w-full flex justify-center py-3 px-4 border border-surface-200 dark:border-surface-700 rounded-xl shadow-sm text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors mb-6"
+          className="w-full flex justify-center py-3 px-4 border border-surface-200 dark:border-surface-700 rounded-xl text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors mb-6"
         >
           Google
         </button>
@@ -2785,7 +2785,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
             await supabase.auth.signOut();
             setUser(null);
           }}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
         >
           Sign Out
         </button>
@@ -2815,7 +2815,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
             await supabase.auth.signOut();
             setUser(null);
           }}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
         >
           Sign Out
         </button>
@@ -2861,7 +2861,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-all ${
                     isActive
-                      ? 'bg-primary-500 text-white shadow-sm shadow-primary-500/10'
+                      ? 'bg-primary-500 text-white shadow-primary-500/10'
                       : 'text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-100 hover:bg-surface-50 dark:hover:bg-surface-800/50'
                   }`}
                 >
@@ -3627,14 +3627,14 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                         <button
                           type="button"
                           onClick={() => setMarkdownMode('edit')}
-                          className={`rounded-lg px-3 py-1.5 transition-colors ${markdownMode === 'edit' ? 'bg-white text-surface-900 shadow-sm dark:bg-surface-950 dark:text-white' : 'text-surface-500'}`}
+                          className={`rounded-lg px-3 py-1.5 transition-colors ${markdownMode === 'edit' ? 'bg-white text-surface-900 dark:bg-surface-950 dark:text-white' : 'text-surface-500'}`}
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => setMarkdownMode('preview')}
-                          className={`rounded-lg px-3 py-1.5 transition-colors ${markdownMode === 'preview' ? 'bg-white text-surface-900 shadow-sm dark:bg-surface-950 dark:text-white' : 'text-surface-500'}`}
+                          className={`rounded-lg px-3 py-1.5 transition-colors ${markdownMode === 'preview' ? 'bg-white text-surface-900 dark:bg-surface-950 dark:text-white' : 'text-surface-500'}`}
                         >
                           Preview
                         </button>
@@ -3983,7 +3983,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
       {/* ===== SECTIONS TAB ===== */}
       {tab === 'articles' && (
         <div className="space-y-6">
-          <div className="rounded-2xl border border-surface-200 bg-white p-6 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+          <div className="rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-2xl font-black tracking-tight text-surface-950 dark:text-white">Article Manager</h2>
@@ -4000,7 +4000,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
             </div>
           </div>
 
-          <div className="rounded-2xl border border-surface-200 bg-white p-4 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+          <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
             <div className="flex flex-wrap gap-2.5">
               {([
                 ['all', 'All Articles'],
@@ -4013,7 +4013,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   onClick={() => setArticleManagerFilter(filter)}
                   className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
                     articleManagerFilter === filter
-                      ? 'bg-primary-500 text-white shadow-sm'
+                      ? 'bg-primary-500 text-white'
                       : 'border border-surface-200 bg-transparent text-surface-600 hover:bg-surface-50 hover:text-surface-900 dark:border-surface-800 dark:text-surface-400 dark:hover:bg-surface-800 dark:hover:text-surface-100'
                   }`}
                 >
@@ -4024,7 +4024,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-            <div className="rounded-2xl border border-surface-200 bg-white p-3 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+            <div className="rounded-2xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900">
               <div className="max-h-[72vh] space-y-2 overflow-y-auto pr-1">
                 {filteredManagedArticles.map(article => {
                   const active = selectedArticle?.slug === article.slug;
@@ -4081,7 +4081,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                     {isGeneratingArticleAi ? 'Generating Article...' : 'Generate Article'}
                   </button>
                 </div>
-                <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
                   <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
                     <div className="grid gap-3 sm:grid-cols-2">
                       <label className="space-y-1 sm:col-span-2">
@@ -4167,7 +4167,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900">
+                <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
                   <label className="space-y-2 block">
                     <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Article body markdown</span>
                     <textarea value={selectedArticle.body} onChange={e => updateManagedArticle(selectedArticle.slug, { body: e.target.value })} rows={22} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 font-mono text-xs leading-6 outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
@@ -4176,7 +4176,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
             )}
             {!selectedArticle && (
-              <div className="flex min-h-[420px] items-center justify-center rounded-2xl border border-dashed border-surface-300 bg-white p-6 text-center shadow-sm dark:border-surface-700 dark:bg-surface-900">
+              <div className="flex min-h-[420px] items-center justify-center rounded-2xl border border-dashed border-surface-300 bg-white p-6 text-center dark:border-surface-700 dark:bg-surface-900">
                 <div className="max-w-sm">
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-500 dark:bg-primary-500/10">
                     <BookOpen className="h-6 w-6" />
@@ -4210,7 +4210,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                     });
                   }
                 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-bold text-xs transition-colors shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-bold text-xs transition-colors"
               >
                 <Plus className="w-4 h-4" /> New section
               </button>
@@ -4218,7 +4218,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
           />
 
           {/* Sub-tab container card matching screenshot */}
-          <div className="border border-surface-200 dark:border-surface-800 rounded-2xl p-4 bg-white dark:bg-surface-900 shadow-sm">
+          <div className="border border-surface-200 dark:border-surface-800 rounded-2xl p-4 bg-white dark:bg-surface-900">
             <div className="flex flex-wrap gap-2.5">
               {[
                 { id: 'homepage', label: 'Homepage' },
@@ -4231,7 +4231,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   onClick={() => setSectionLocationFilter(item.id as SectionLocationFilter)}
                   className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                     sectionLocationFilter === item.id
-                      ? 'bg-primary-500 text-white shadow-sm'
+                      ? 'bg-primary-500 text-white'
                       : 'bg-transparent text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:bg-surface-50 dark:hover:bg-surface-800 border border-surface-200 dark:border-surface-800'
                   }`}
                 >
@@ -4243,7 +4243,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
 
           {/* Add new section form (Shown only when toggled) */}
           {showNewSectionForm && (
-            <div id="add-section-form" className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-6 animate-in slide-in-from-top-2 duration-200">
+            <div id="add-section-form" className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-6 animate-in slide-in-from-top-2 duration-200">
               <PanelHeader
                 title="Create new section"
                 subtitle="Configure your custom layout block, tag rail, or category filter."
@@ -4840,7 +4840,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                               <button
                                 type="button"
                                 onClick={() => saveEditSection(section)}
-                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold shadow-sm transition-colors"
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold transition-colors"
                               >
                                 <Save className="w-3.5 h-3.5" /> Save section
                               </button>
@@ -5065,7 +5065,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                     onClick={() => setSettingsSubTab(cat.id as any)}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                       isActive
-                        ? 'bg-primary-500 text-white shadow-sm shadow-primary-500/10'
+                        ? 'bg-primary-500 text-white shadow-primary-500/10'
                         : 'text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-100 hover:bg-surface-50 dark:hover:bg-surface-800/50'
                     }`}
                   >
@@ -5372,7 +5372,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                         onClick={() => setDiscoveryTab(tab.id as any)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                           active
-                            ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/20'
+                            ? 'bg-primary-600 text-white shadow-primary-600/20'
                             : 'bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800'
                         }`}
                       >
@@ -5384,7 +5384,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 </div>
 
                 {/* Main Card Container */}
-                <div className="p-6 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-6">
+                <div className="p-6 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-6">
                   {/* Explore Page Tab View */}
                   {discoveryTab === 'explore' && (
                     <>
@@ -5845,7 +5845,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                     <button
                       type="button"
                       onClick={handleSaveSettings}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-600 text-white font-semibold text-sm hover:bg-primary-700 transition-colors shadow-sm"
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-600 text-white font-semibold text-sm hover:bg-primary-700 transition-colors"
                     >
                       <Save className="w-4 h-4" /> Save {discoveryTab === 'explore' ? 'Explore' : discoveryTab === 'tool' ? 'AI Tool' : 'Tag'} page
                     </button>
@@ -6156,7 +6156,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       <SectionEyebrow>Current Live Choice</SectionEyebrow>
                       <div className="mt-4 rounded-xl border border-surface-200 bg-surface-50/50 p-4 dark:border-surface-800 dark:bg-surface-900/50">
                         {currentPromptOfDay && currentPromptOfDayImage && (
-                          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-surface-200 shadow-sm dark:bg-surface-800 mb-4">
+                          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-surface-200 dark:bg-surface-800 mb-4">
                             <Image
                               src={currentPromptOfDayImage}
                               alt={currentPromptOfDay.title}
@@ -6211,7 +6211,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       <button
                         type="button"
                         onClick={handleSaveSettings}
-                        className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-xs font-bold text-white hover:bg-primary-600 transition shadow-sm"
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-xs font-bold text-white hover:bg-primary-600 transition"
                       >
                         <Save className="h-4 w-4" /> Save Copy Changes
                       </button>
@@ -6251,8 +6251,8 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                             onClick={() => updateHomepageContent('promptOfDay', 'pinnedPostId', post.id)}
                             className={`flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition ${
                               selected
-                                ? 'border-primary-500 bg-primary-50/50 dark:border-primary-500/40 dark:bg-primary-900/20 shadow-sm'
-                                : 'border-surface-200 bg-white hover:border-primary-300 dark:border-surface-800 dark:bg-surface-900 hover:shadow-sm'
+                                ? 'border-primary-500 bg-primary-50/50 dark:border-primary-500/40 dark:bg-primary-900/20'
+                                : 'border-surface-200 bg-white hover:border-primary-300 dark:border-surface-800 dark:bg-surface-900 hover:'
                             }`}
                           >
                             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-100 dark:bg-surface-800">
@@ -6270,7 +6270,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                             </div>
                             <div className="shrink-0 pl-2">
                               {selected ? (
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-500 text-white shadow-sm">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-500 text-white">
                                   <Check className="h-3.5 w-3.5" />
                                 </span>
                               ) : (
@@ -6340,13 +6340,13 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       <Layers className="w-4 h-4 text-primary-500" />
                     );
                     return (
-                      <div key={token} className={`group rounded-xl border border-surface-200 bg-surface-50/50 p-4 transition hover:shadow-sm dark:border-surface-800 dark:bg-surface-900/50 hover:dark:bg-surface-800/80 ${section && !section.visible ? 'opacity-60' : ''}`}>
+                      <div key={token} className={`group rounded-xl border border-surface-200 bg-surface-50/50 p-4 transition hover: dark:border-surface-800 dark:bg-surface-900/50 hover:dark:bg-surface-800/80 ${section && !section.visible ? 'opacity-60' : ''}`}>
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                           <div className="flex items-start gap-3 min-w-0">
-                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm text-[11px] font-black text-surface-400 dark:bg-surface-800 dark:text-surface-500 border border-surface-200/60 dark:border-surface-700/60">{index + 1}</span>
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[11px] font-black text-surface-400 dark:bg-surface-800 dark:text-surface-500 border border-surface-200/60 dark:border-surface-700/60">{index + 1}</span>
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
-                                <span className="p-1 rounded bg-white dark:bg-surface-800 border border-surface-200/50 shadow-sm dark:border-surface-700/50">{blockIcon}</span>
+                                <span className="p-1 rounded bg-white dark:bg-surface-800 border border-surface-200/50 dark:border-surface-700/50">{blockIcon}</span>
                                 <h4 className="text-sm font-bold text-surface-950 dark:text-white leading-none">{title}</h4>
                                 <span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${isSection ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400' : 'bg-primary-500/10 text-primary-600 dark:text-primary-400'}`}>
                                   {isSection ? 'Section' : 'Block'}
@@ -7565,7 +7565,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </button>
             </div>
 
-            <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-6">
+            <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-100 dark:border-surface-800 pb-4">
                 <div>
                   <h3 className="font-extrabold text-base text-surface-900 dark:text-white flex items-center gap-2">
@@ -7584,7 +7584,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   <button
                     onClick={addAiTool}
                     disabled={!newAiTool.trim()}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-500 text-white text-xs font-bold hover:bg-primary-600 disabled:opacity-50 transition-colors shrink-0 shadow-sm"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-500 text-white text-xs font-bold hover:bg-primary-600 disabled:opacity-50 transition-colors shrink-0"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add Tool
                   </button>
@@ -7613,7 +7613,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                         <div className="space-y-6">
                           <div className="flex items-center justify-between border-b border-surface-200 dark:border-surface-800 pb-4">
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-xl border border-white/20 flex items-center justify-center shadow-sm relative ${editAiToolColor || 'bg-surface-500'}`}>
+                              <div className={`w-10 h-10 rounded-xl border border-white/20 flex items-center justify-center relative ${editAiToolColor || 'bg-surface-500'}`}>
                                 {editAiToolLogo && (
                                   <Image src={editAiToolLogo} alt="" fill className="object-contain p-1.5" referrerPolicy="no-referrer" />
                                 )}
@@ -7632,7 +7632,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                               </button>
                               <button
                                 onClick={() => saveEditAiTool(tool)}
-                                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-primary-500 text-white text-xs font-bold hover:bg-primary-600 transition-all shadow-sm"
+                                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-primary-500 text-white text-xs font-bold hover:bg-primary-600 transition-all"
                               >
                                 <Save className="w-3.5 h-3.5" /> Save Tool
                               </button>
@@ -7675,7 +7675,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                       key={c}
                                       type="button"
                                       onClick={() => setEditAiToolColor(c)}
-                                      className={`w-6 h-6 rounded-lg ${c} ${editAiToolColor === c ? 'ring-2 ring-white ring-offset-2 ring-offset-primary-500 scale-110 shadow-sm' : 'hover:scale-105 border border-black/10 dark:border-white/10'} transition-all`}
+                                      className={`w-6 h-6 rounded-lg ${c} ${editAiToolColor === c ? 'ring-2 ring-white ring-offset-2 ring-offset-primary-500 scale-110' : 'hover:scale-105 border border-black/10 dark:border-white/10'} transition-all`}
                                     />
                                   ))}
                                 </div>
@@ -7952,7 +7952,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                       ) : (
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div className="flex items-center gap-3.5 min-w-0">
-                            <div className={`relative w-11 h-11 shrink-0 flex items-center justify-center rounded-xl border border-white/20 shadow-sm ${info.color}`}>
+                            <div className={`relative w-11 h-11 shrink-0 flex items-center justify-center rounded-xl border border-white/20 ${info.color}`}>
                               {info.logo ? (
                                 <Image src={info.logo} alt="" fill className="object-contain p-2" referrerPolicy="no-referrer" />
                               ) : (
@@ -8013,7 +8013,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
 
             <div className="space-y-4">
               {/* User Profiles */}
-              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">User Profiles & Bookmarks</span>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -8024,7 +8024,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* User Submissions */}
-              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">User Submissions & Approval Queue</span>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -8043,7 +8043,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Comments */}
-              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Comments & Feedback</span>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -8062,7 +8062,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Post Page Sections */}
-              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
                     <span className="font-bold text-base text-surface-900 dark:text-white">Post Page Sections</span>
@@ -8114,7 +8114,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                 </div>
               </div>
 
-              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="mb-3">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Keep Exploring Block</span>
                   <p className="mt-1 text-xs text-surface-500">Controls the card in the post sidebar and its mobile version.</p>
@@ -8213,7 +8213,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Advanced Filtering */}
-              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Advanced Search & Filtering</span>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -8224,7 +8224,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Smart Templates */}
-              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Smart &quot;Fill-in-the-blank&quot; Templates</span>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -8235,7 +8235,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Infinite Scrolling */}
-              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Infinite Scrolling (Explore)</span>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -8259,7 +8259,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Premium Prompts */}
-              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Premium / Pro Prompts</span>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -8294,7 +8294,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Skeleton Loaders */}
-              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Skeleton Loaders</span>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -8305,7 +8305,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </div>
 
               {/* Trending Algorithm */}
-              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm space-y-4">
+              <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Trending Algorithms</span>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -8539,7 +8539,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
 
           {/* Submissions Stats Cards */}
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localSubmissions.filter(s => s.status === 'pending').length}
@@ -8551,7 +8551,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localSubmissions.filter(s => s.status === 'published').length}
@@ -8563,7 +8563,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localSubmissions.filter(s => s.status === 'rejected').length}
@@ -8575,7 +8575,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localSubmissions.length}
@@ -8616,7 +8616,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               localSubmissions
                 .filter(s => submissionFilter === 'all' || s.status === (submissionFilter === 'approved' ? 'published' : submissionFilter))
                 .map(sub => (
-                  <div key={sub.id} className="p-5 rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900 shadow-sm space-y-4">
+                  <div key={sub.id} className="p-5 rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900 space-y-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-50 text-xs font-bold text-surface-600 dark:bg-surface-800 dark:text-surface-300 border border-surface-200/60 dark:border-surface-700/60">
@@ -8646,7 +8646,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                         <div className="flex gap-2 sm:self-start">
                           <button
                             onClick={() => handleApproveSubmission(sub.id)}
-                            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-sm"
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all"
                           >
                             <Check className="w-3.5 h-3.5" /> Approve
                           </button>
@@ -8680,7 +8680,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
 
           {/* Comments Stats Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localComments.filter(c => c.status === 'pending').length}
@@ -8692,7 +8692,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localComments.filter(c => c.status === 'approved').length}
@@ -8704,7 +8704,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localComments.filter(c => c.status === 'spam').length}
@@ -8726,7 +8726,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   onClick={() => setCommentFilter(f)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all capitalize ${
                     commentFilter === f
-                      ? 'bg-primary-500 text-white shadow-sm'
+                      ? 'bg-primary-500 text-white'
                       : 'bg-surface-50 text-surface-600 hover:bg-surface-100 dark:bg-surface-800 dark:text-surface-300'
                   }`}
                 >
@@ -8760,7 +8760,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   .filter(c => commentFilter === 'all' || c.status === commentFilter)
                   .filter(c => !commentSearch || c.userName.toLowerCase().includes(commentSearch.toLowerCase()) || c.text.toLowerCase().includes(commentSearch.toLowerCase()) || c.postTitle.toLowerCase().includes(commentSearch.toLowerCase()))
                   .map(comment => (
-                    <div key={comment.id} className="p-5 rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900 shadow-sm space-y-3">
+                    <div key={comment.id} className="p-5 rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900 space-y-3">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex gap-3">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-50 text-xs font-bold text-surface-600 dark:bg-surface-800 dark:text-surface-300 border border-surface-200/60 dark:border-surface-700/60">
@@ -8832,7 +8832,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
             </div>
             <button
               onClick={() => setShowInviteModal(true)}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-primary-500 text-white hover:bg-primary-600 transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-primary-500 text-white hover:bg-primary-600 transition-all"
             >
               <Plus className="w-4 h-4" /> Invite User
             </button>
@@ -8840,7 +8840,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
 
           {/* User Stats Cards */}
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">{localUsers.length}</span>
                 <p className="text-xs font-semibold text-surface-400 mt-1">Members</p>
@@ -8850,7 +8850,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localUsers.filter(u => u.role === 'Admin').length}
@@ -8862,7 +8862,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localUsers.filter(u => u.role === 'Editor').length}
@@ -8874,7 +8874,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 shadow-sm dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localUsers.filter(u => u.status === 'suspended').length}
@@ -8896,7 +8896,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                   onClick={() => setUserRoleFilter(r)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     userRoleFilter === r
-                      ? 'bg-primary-500 text-white shadow-sm'
+                      ? 'bg-primary-500 text-white'
                       : 'bg-surface-50 text-surface-600 hover:bg-surface-100 dark:bg-surface-800 dark:text-surface-300'
                   }`}
                 >
@@ -8917,7 +8917,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
           </div>
 
           {/* Users Grid Table */}
-          <div className="border border-surface-200 dark:border-surface-800 rounded-2xl bg-white dark:bg-surface-900 overflow-hidden shadow-sm">
+          <div className="border border-surface-200 dark:border-surface-800 rounded-2xl bg-white dark:bg-surface-900 overflow-hidden">
             <div className="min-w-full overflow-x-auto">
               <table className="min-w-full divide-y divide-surface-200 dark:divide-surface-800">
                 <thead className="bg-surface-50/50 dark:bg-surface-950/20 text-[10px] font-black uppercase tracking-wider text-surface-400">
@@ -9080,7 +9080,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 text-xs font-bold rounded-xl bg-primary-500 text-white hover:bg-primary-600 transition-all shadow-sm"
+                      className="px-4 py-2 text-xs font-bold rounded-xl bg-primary-500 text-white hover:bg-primary-600 transition-all"
                     >
                       Invite Member
                     </button>

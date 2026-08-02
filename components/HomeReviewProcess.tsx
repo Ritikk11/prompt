@@ -54,7 +54,7 @@ export default function HomeReviewProcess({ settings }: { settings?: SiteSetting
           {content.showCta !== false && (
             <Link
               href={content.ctaHref || '/submit'}
-              className="mt-7 inline-flex items-center gap-2 rounded-full bg-surface-950 px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-primary-600 dark:bg-white dark:text-surface-950 dark:hover:bg-primary-100"
+              className="mt-7 inline-flex items-center gap-2 rounded-full bg-surface-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-primary-600 dark:bg-white dark:text-surface-950 dark:hover:bg-primary-100"
             >
               {content.ctaLabel || 'Submit a prompt'}
               <ArrowRight className="h-4 w-4" />
@@ -66,7 +66,7 @@ export default function HomeReviewProcess({ settings }: { settings?: SiteSetting
           {editableSteps.map(step => {
             const Icon = step.icon;
             return (
-              <div key={step.number} className="rounded-2xl border border-surface-200 bg-surface-50 p-5 transition hover:-translate-y-0.5 hover:border-emerald-300 dark:border-surface-800 dark:bg-surface-900/70 dark:hover:border-emerald-500/50">
+              <div key={step.number} className="rounded-2xl border border-surface-200 bg-surface-50 p-5 transition hover:border-emerald-300 dark:border-surface-800 dark:bg-surface-900/70 dark:hover:border-emerald-500/50">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-xs font-black tracking-[0.2em] text-emerald-700 dark:text-emerald-400">{step.number}</span>
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
