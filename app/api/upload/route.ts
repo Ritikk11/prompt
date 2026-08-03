@@ -27,6 +27,24 @@ function randomId() {
   return `${Date.now()}-${crypto.randomUUID()}`;
 }
 
+// Sanitize a caller-supplied name into a safe slug for the object key. Never
+// trust this value for path building without stripping separators etc.
+function slugifyName(text: string) {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+}
+
+function shortId() {
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+}
+
 async function getUploadsBucket() {
   try {
     const { env } = await getCloudflareContext({ async: true });
@@ -47,6 +65,8 @@ export async function POST(request: Request) {
   const file = formData.get('file');
   const rawPreset = String(formData.get('preset') || 'prompt');
   const preset = SAFE_PRESETS.has(rawPreset) ? rawPreset : 'prompt';
+  const rawName = formData.get('name');
+  const nameSlug = typeof rawName === 'string' ? slugifyName(rawName) : '';
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: 'Missing image file' }, { status: 400 });
@@ -66,7 +86,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const key = `${preset}s/${randomId()}.${extensionFor(file)}`;
+  const leaf = nameSlug ? `${nameSlug}-${shortId()}` : randomId();
+  const key = `${preset}s/${leaf}.${extensionFor(file)}`;
   await bucket.put(key, file.stream(), {
     httpMetadata: {
       contentType: file.type || 'image/webp',

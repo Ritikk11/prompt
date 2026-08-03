@@ -11,15 +11,37 @@ function randomName() {
   return `${Date.now()}_${Math.random().toString(36).slice(2)}`;
 }
 
+// Short, collision-resistant suffix appended to named files so re-uploads
+// (or multiple reference images sharing a title) never overwrite each other.
+function shortId() {
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+}
+
+// Turn a human title into a filesystem/URL-safe slug. The server re-runs the
+// same sanitization for Cloudflare uploads; this copy covers the Supabase path.
+function slugifyName(text: string) {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+}
+
 export async function uploadImageFileToProvider(
   file: File,
   provider: UploadProvider = 'supabase',
-  preset: UploadPreset = 'prompt'
+  preset: UploadPreset = 'prompt',
+  baseName?: string
 ) {
   if (provider === 'cloudflare') {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('preset', preset);
+    if (baseName) formData.append('name', baseName);
 
     // Send the Supabase access token as a Bearer header. Session cookies do not
     // reliably reach server routes in the OpenNext/Cloudflare deployment, so the
@@ -44,7 +66,9 @@ export async function uploadImageFileToProvider(
   }
 
   const supabase = createClient();
-  const fileName = `${preset}s/${randomName()}.${extFor(file)}`;
+  const slug = baseName ? slugifyName(baseName) : '';
+  const leaf = slug ? `${slug}-${shortId()}` : randomName();
+  const fileName = `${preset}s/${leaf}.${extFor(file)}`;
   const { error } = await supabase.storage.from('images').upload(fileName, file, {
     contentType: file.type || 'image/webp',
     cacheControl: '31536000',

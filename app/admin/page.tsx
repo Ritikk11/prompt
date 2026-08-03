@@ -1628,15 +1628,19 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
     setImages(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const uploadImageFile = async (file: File, preset: ImageOptimizePreset = 'prompt'): Promise<string> => {
+  const uploadImageFile = async (
+    file: File,
+    preset: ImageOptimizePreset = 'prompt',
+    baseName?: string
+  ): Promise<string> => {
     const optimizedFile = await optimizeImageFile(file, preset);
-    return uploadImageFileToProvider(optimizedFile, imageProvider, preset);
+    return uploadImageFileToProvider(optimizedFile, imageProvider, preset, baseName);
   };
 
   const handleImageUpload = async (idx: number, file: File) => {
     try {
       updateImage(idx, 'url', 'Uploading...');
-      const url = await uploadImageFile(file, 'prompt');
+      const url = await uploadImageFile(file, 'prompt', title);
       updateImage(idx, 'url', url);
     } catch (err) {
       console.error(err);
@@ -1648,7 +1652,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
   const handleArticleThumbnailUpload = async (slug: string, file: File) => {
     try {
       updateManagedArticle(slug, { thumbnailUrl: 'Uploading...' });
-      const url = await uploadImageFile(file, 'thumbnail');
+      const url = await uploadImageFile(file, 'thumbnail', slug);
       updateManagedArticle(slug, { thumbnailUrl: url });
     } catch (err) {
       console.error(err);
@@ -1660,7 +1664,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
   const handleCreativeDirectionLogoUpload = async (index: number, file: File) => {
     try {
       updateRailItem('creative', index, 'imageUrl', 'Uploading...');
-      const url = await uploadImageFile(file, 'thumbnail');
+      const url = await uploadImageFile(file, 'thumbnail', creativeDirectionItems[index]?.label);
       updateRailItem('creative', index, 'imageUrl', url);
     } catch (err) {
       console.error(err);
@@ -2584,7 +2588,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
   const handleToolLogoUpload = async (file: File) => {
     try {
       setEditAiToolLogo('Uploading...');
-      const url = await uploadImageFile(file, 'logo');
+      const url = await uploadImageFile(file, 'logo', editAiToolSlug || editAiToolValue);
       setEditAiToolLogo(url);
     } catch (err) {
       console.error(err);
@@ -3534,7 +3538,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                           if (file) {
                              try {
                                setThumbnailUrl('Uploading...');
-                               const url = await uploadImageFile(file, 'thumbnail');
+                               const url = await uploadImageFile(file, 'thumbnail', title || slug);
                                setThumbnailUrl(url);
                              } catch (err: any) {
                                console.error(err);
@@ -3571,7 +3575,7 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                              setReferenceImages(prev => [...prev, ...uploadingLabels]);
                              try {
                                const urls = await Promise.all(
-                                 files.map(file => uploadImageFile(file, 'reference'))
+                                 files.map(file => uploadImageFile(file, 'reference', title || slug))
                                );
                                setReferenceImages(prev => [
                                  ...prev.filter(url => url !== 'Uploading...'),

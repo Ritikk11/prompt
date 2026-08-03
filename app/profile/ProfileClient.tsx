@@ -93,7 +93,8 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
       const url = await uploadImageFileToProvider(
         optimizedFile,
         settings.imageProvider === 'cloudflare' ? 'cloudflare' : 'supabase',
-        'avatar'
+        'avatar',
+        username || undefined
       );
       setAvatarUrl(url);
       showToast('Avatar uploaded successfully! Click Save to apply changes.');

@@ -77,7 +77,8 @@ export default function SubmitPage() {
       const url = await uploadImageFileToProvider(
         optimizedFile,
         settings.imageProvider === 'cloudflare' ? 'cloudflare' : 'supabase',
-        'prompt'
+        'prompt',
+        title || undefined
       );
       
       const defaultTool = settings.aiTools[0] || 'ChatGPT';
