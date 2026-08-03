@@ -3536,9 +3536,9 @@ Here are 5 recent posts to understand the site's tone and style: ${JSON.stringif
                                setThumbnailUrl('Uploading...');
                                const url = await uploadImageFile(file, 'thumbnail');
                                setThumbnailUrl(url);
-                             } catch (err) {
+                             } catch (err: any) {
                                console.error(err);
-                               alert('Failed to process thumbnail');
+                               alert(`Failed to process thumbnail: ${err?.message || err}`);
                                setThumbnailUrl('');
                              }
                           }
