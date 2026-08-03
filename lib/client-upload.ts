@@ -20,7 +20,22 @@ export async function uploadImageFileToProvider(
     const formData = new FormData();
     formData.append('file', file);
     formData.append('preset', preset);
-    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+
+    // Send the Supabase access token as a Bearer header. Session cookies do not
+    // reliably reach server routes in the OpenNext/Cloudflare deployment, so the
+    // upload route authenticates via this header first (same pattern as /api/admin).
+    const supabase = createClient();
+    let { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      const refreshed = await supabase.auth
+        .refreshSession()
+        .catch(() => ({ data: { session: null } as { session: null } }));
+      session = refreshed.data.session;
+    }
+    const headers: Record<string, string> = {};
+    if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+
+    const res = await fetch('/api/upload', { method: 'POST', headers, body: formData });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.url) {
       throw new Error(data.error || 'Cloudflare upload failed');

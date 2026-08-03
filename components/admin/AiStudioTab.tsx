@@ -26,13 +26,14 @@ import {
   Brain,
   Palette,
   ChevronDown,
+  Zap,
 } from 'lucide-react';
 import { askAiFull } from '@/lib/admin/ai';
 import Markdown from '@/components/MarkdownRenderer';
 import type { Post } from '@/lib/types';
 import { TOOLS_MODELS_RULES } from '@/lib/admin/wandPrompts';
 
-export type GeminiModelId = 'gemini-2.0-flash' | 'gemini-1.5-pro' | 'imagen-3.0-generate-002';
+export type GeminiModelId = 'gemini-2.5-flash' | 'gemini-2.5-flash-lite' | 'imagen-3.0-generate-002';
 
 export interface ChatMessage {
   id: string;
@@ -59,7 +60,7 @@ export default function AiStudioTab({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputPrompt, setInputPrompt] = useState('');
   const [attachedImageUrl, setAttachedImageUrl] = useState<string>('');
-  const [selectedModel, setSelectedModel] = useState<GeminiModelId>('gemini-2.0-flash');
+  const [selectedModel, setSelectedModel] = useState<GeminiModelId>('gemini-2.5-flash');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -204,18 +205,18 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
 
   const models: { id: GeminiModelId; label: string; icon: any; desc: string; badge: string }[] = [
     {
-      id: 'gemini-2.0-flash',
-      label: 'Gemini 2.0 Flash',
+      id: 'gemini-2.5-flash',
+      label: 'Gemini 2.5 Flash',
       icon: Zap,
       desc: 'Fast, multimodal, text & code generation',
-      badge: 'Fastest',
+      badge: 'Balanced',
     },
     {
-      id: 'gemini-1.5-pro',
-      label: 'Gemini 1.5 Pro',
-      icon: Brain,
-      desc: 'Deep reasoning, complex coding & long context',
-      badge: 'Smartest',
+      id: 'gemini-2.5-flash-lite',
+      label: 'Gemini 2.5 Flash-Lite',
+      icon: Cpu,
+      desc: 'Fastest & most cost-efficient for quick tasks',
+      badge: 'Fastest',
     },
     {
       id: 'imagen-3.0-generate-002',
@@ -231,7 +232,7 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
       title: 'Write an Article',
       icon: FileText,
       prompt: "Write a detailed markdown article about 'How to write ChatGPT Image Prompts'. Include practical tips, structural steps, and example prompts.",
-      model: 'gemini-2.0-flash' as GeminiModelId,
+      model: 'gemini-2.5-flash' as GeminiModelId,
     },
     {
       title: 'Generate AI Image',
@@ -243,13 +244,13 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
       title: 'Brainstorm Tags',
       icon: Tag,
       prompt: 'Suggest 10 trending AI image prompt tags and categories for a prompt gallery site.',
-      model: 'gemini-2.0-flash' as GeminiModelId,
+      model: 'gemini-2.5-flash' as GeminiModelId,
     },
     {
       title: 'Deep Coding & Logic',
       icon: Brain,
       prompt: 'Write a TypeScript utility function to parse and validate AI prompt tags from markdown frontmatter with unit test examples.',
-      model: 'gemini-1.5-pro' as GeminiModelId,
+      model: 'gemini-2.5-flash' as GeminiModelId,
     },
   ];
 
@@ -273,8 +274,8 @@ Recent site posts for tone reference: ${JSON.stringify(existingPostsContext)}`;
                   onChange={e => setSelectedModel(e.target.value as GeminiModelId)}
                   className="appearance-none pl-7 pr-7 py-1 rounded-full bg-primary-100 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 text-[11px] font-bold border border-primary-200 dark:border-primary-800 cursor-pointer outline-none hover:border-primary-400 transition-colors"
                 >
-                  <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash</option>
-                  <option value="gemini-1.5-pro">🧠 Gemini 1.5 Pro</option>
+                  <option value="gemini-2.5-flash">⚡ Gemini 2.5 Flash</option>
+                  <option value="gemini-2.5-flash-lite">🚀 Gemini 2.5 Flash-Lite</option>
                   <option value="imagen-3.0-generate-002">🎨 Imagen 3 (Image Gen)</option>
                 </select>
                 <Sparkles className="w-3 h-3 text-primary-500 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />

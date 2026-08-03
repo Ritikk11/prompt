@@ -59,9 +59,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Determine model (fallback to gemini-2.0-flash)
-    const validModels = ['gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'];
-    const targetModel = validModels.includes(requestedModel) ? requestedModel : 'gemini-2.0-flash';
+    // Determine model (fallback to gemini-2.5-flash)
+    const validModels = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+    const targetModel = validModels.includes(requestedModel) ? requestedModel : 'gemini-2.5-flash';
     
     let fullPrompt = prompt;
     if (systemContext) {
@@ -110,9 +110,9 @@ export async function POST(req: NextRequest) {
         ...(json ? { config: { responseMimeType: "application/json" } } : {}),
       });
     } catch (modelErr: any) {
-      console.warn(`Primary model ${targetModel} failed (${modelErr.message}), falling back to gemini-1.5-flash...`);
+      console.warn(`Primary model ${targetModel} failed (${modelErr.message}), falling back to gemini-2.5-flash-lite...`);
       response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash-lite",
         contents: contents,
         ...(json ? { config: { responseMimeType: "application/json" } } : {}),
       });

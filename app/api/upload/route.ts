@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { createClient } from '@/lib/supabase-server';
+import { getRequestUser } from '@/lib/admin-auth';
 
 type R2BucketLike = {
   put: (
@@ -38,8 +38,7 @@ async function getUploadsBucket() {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await getRequestUser(request);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
