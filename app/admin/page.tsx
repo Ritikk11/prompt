@@ -24,7 +24,7 @@ import AiStudioTab from '@/components/admin/AiStudioTab';
 import { MagicWandProvider, WandButton, useMagicWand } from '@/components/admin/MagicWand';
 import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
 import { askAi } from '@/lib/admin/ai';
-import { postPrompts, articlePrompts, generalPrompts, discoveryPrompts, homepagePrompts, aiToolPrompts, featurePrompts, TOOLS_MODELS_RULES } from '@/lib/admin/wandPrompts';
+import { postPrompts, articlePrompts, generalPrompts, discoveryPrompts, homepagePrompts, aiToolPrompts, featurePrompts, TOOLS_MODELS_RULES, aiStudioSystemContext } from '@/lib/admin/wandPrompts';
 import { filterPostsForSection, getSectionPath } from '@/lib/sections';
 import { buildHeaderNavItems, headerLinkKey } from '@/lib/header-nav';
 import { getFilterTagsFromPosts } from '@/lib/filter-tags';
@@ -1259,19 +1259,13 @@ function AdminInner() {
     setIsAiStudioLoading(true);
     try {
       const existingPostsContext = posts.slice(0, 5).map(p => ({ title: p.title, description: p.description }));
-      const existingCategories = Array.from(new Set(posts.map(p => p.category).filter(Boolean))).slice(0, 60);
+      const existingCategories = Array.from(new Set(posts.map(p => p.category).filter(Boolean))).slice(0, 60) as string[];
       const existingTags = Array.from(new Set(posts.flatMap(p => p.tags || []))).slice(0, 150);
-      const sysCtx = `You are the AI assistant for aipromptmatrix.in, a gallery/library of AI image-generation prompts (for tools like ChatGPT, Gemini, Grok, and Qwen). Visitors come here to find ready-to-use prompts and see the example images those prompts produce.
-${TOOLS_MODELS_RULES}
-Site structure notes:
-- A "post" bundles one or more images generated from a text prompt, plus editorial content.
-- "tags" are short, lowercase, search/filter keywords (concrete nouns for subject/style/tool) — not generic blog hashtags. Existing tags on the site: ${existingTags.length ? existingTags.join(', ') : '(none yet)'}
-- "category" is one broad grouping shared across many posts. Existing categories: ${existingCategories.length ? existingCategories.join(', ') : '(none yet)'}
-- Long-form article bodies support this site's custom markdown callouts: :::tip, :::creative, :::model, :::prompt, :::warning, and inline highlights like {mark:...}, {primary:...}, {green:...}, {red:...}. Use them where relevant, don't overuse.
-- Callout titles: the word after ::: only picks the block's color and is never shown as a label. Add a short, specific title on the same line (e.g. ":::tip Lock the pose with a reference") or leave it untitled (just ":::tip"); never use the bare words "Tip"/"Warning" as a title. Close each block with ::: on its own line.
-- Do not use H1 (#) headings in article bodies; the post title is already displayed separately.
-
-Here are 5 recent posts to understand the site's tone and style: ${JSON.stringify(existingPostsContext)}`;
+      const sysCtx = aiStudioSystemContext({
+        existingTags,
+        existingCategories,
+        recentPosts: existingPostsContext,
+      });
       const response = await askAi(aiStudioPrompt, { systemContext: sysCtx, imageUrl: aiStudioImageUrl });
       setAiStudioResponse(response);
     } catch (err: any) {

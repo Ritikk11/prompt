@@ -25,6 +25,34 @@ export const CALLOUT_RULES = `Article bodies support custom markdown callouts: :
 const META_TITLE_RULES = `Strict SEO title, max 60 characters, front-load the main keyword.`;
 const META_DESC_RULES = `Strict SEO meta description, 140-160 characters, natural sentence with a reason to click.`;
 
+// ---------- AI Studio (free-form admin chat) ----------
+
+// AI Studio is the one free-form surface, so it must be pinned to the same
+// SITE_PREAMBLE (brand voice + tools rules) and CALLOUT_RULES as every wand —
+// otherwise, per the note at the top of this file, it drifts into generic
+// internet voice ("Delve into...", unsupported tools, wrong model names).
+export const aiStudioSystemContext = (opts: {
+  existingTags?: string[];
+  existingCategories?: string[];
+  recentPosts?: { title: string; description: string }[];
+}) => {
+  const tags = opts.existingTags?.length ? opts.existingTags.join(', ') : '(none yet)';
+  const categories = opts.existingCategories?.length ? opts.existingCategories.join(', ') : '(none yet)';
+  const recent = opts.recentPosts?.length ? JSON.stringify(opts.recentPosts) : '(none yet)';
+  return `${SITE_PREAMBLE}
+
+You are the in-house AI assistant inside this site's admin console. Help the admin draft, rewrite, and brainstorm content for the site. Match the site's existing voice and taxonomy; when the request is ambiguous, prefer the concrete, on-brand option over generic filler.
+
+${CALLOUT_RULES}
+
+SITE STRUCTURE:
+- A "post" bundles one or more images generated from a text prompt, plus editorial content.
+- "tags" are short, lowercase, search/filter keywords (concrete nouns for subject/style/tool) — not generic blog hashtags. Reuse an existing tag when it fits. Existing tags: ${tags}
+- "category" is one broad grouping shared across many posts. Reuse an existing category when it fits. Existing categories: ${categories}
+
+RECENT POSTS (for tone/style reference): ${recent}`;
+};
+
 // ---------- Posts tab (existing wands, migrated) ----------
 
 export const postPrompts = {

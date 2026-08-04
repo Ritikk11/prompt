@@ -52,3 +52,59 @@ export async function askAiJson<T>(prompt: string, options: Omit<AskAiOptions, '
   const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
   return JSON.parse(cleaned) as T;
 }
+
+export interface StreamMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  imageUrl?: string;
+}
+
+export interface AskAiStreamOptions {
+  systemContext?: string;
+  model?: string;
+}
+
+export interface AskAiStreamHandlers {
+  onToken: (chunk: string) => void;
+  signal?: AbortSignal;
+}
+
+// Stream a multi-turn chat completion token-by-token. Reads the plain-text
+// ReadableStream from /api/generate-text/stream via the Fetch reader API and
+// calls onToken for each decoded chunk. Aborting `signal` stops the stream
+// (surfaced to the caller as a DOMException with name 'AbortError').
+export async function askAiStream(
+  messages: StreamMessage[],
+  options: AskAiStreamOptions,
+  handlers: AskAiStreamHandlers
+): Promise<void> {
+  const supabase = createSupabaseClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const res = await fetch('/api/generate-text/stream', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+    },
+    body: JSON.stringify({
+      messages,
+      systemContext: options.systemContext,
+      model: options.model,
+    }),
+    signal: handlers.signal,
+  });
+
+  if (!res.ok || !res.body) {
+    throw new Error((await res.text().catch(() => '')) || 'AI stream failed');
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) handlers.onToken(decoder.decode(value, { stream: true }));
+  }
+  handlers.onToken(decoder.decode());
+}

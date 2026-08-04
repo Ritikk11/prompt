@@ -1,8 +1,10 @@
 'use client';
-import { Children, type ReactNode, useState } from 'react';
+import { Children, type ReactNode, useState, useEffect } from 'react';
 import { Check, Copy } from 'lucide-react';
 import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import 'highlight.js/styles/github-dark.css';
 
 type CalloutType = 'tip' | 'warning' | 'info' | 'note' | 'success' | 'danger' | 'highlight' | 'quote' | 'prompt' | 'example' | 'creative' | 'model' | 'important';
 type MarkdownBlock =
@@ -173,9 +175,119 @@ function renderInline(children: ReactNode) {
   ));
 }
 
+// Flatten a react-markdown node tree back to its raw text (used to recover the
+// source of a fenced code block before we re-render it ourselves).
+function nodeToText(node: ReactNode): string {
+  if (node == null || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(nodeToText).join('');
+  if (typeof node === 'object' && 'props' in (node as any)) {
+    return nodeToText((node as any).props?.children);
+  }
+  return '';
+}
+
+// A few common aliases → highlight.js language ids.
+const LANG_ALIASES: Record<string, string> = {
+  js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
+  ts: 'typescript', tsx: 'typescript',
+  py: 'python', sh: 'bash', shell: 'bash', zsh: 'bash',
+  yml: 'yaml', md: 'markdown', html: 'xml', htm: 'xml',
+};
+
+// Highlighted, copyable code block. highlight.js is dynamically imported inside
+// an effect so it only ships in the browser bundle — never the SSR worker
+// bundle (which must stay under Cloudflare's 3 MiB limit). JSON is pretty-printed
+// before highlighting.
+function CodeBlock({ raw, lang }: { raw: string; lang: string }) {
+  const [copied, setCopied] = useState(false);
+  const [html, setHtml] = useState<string | null>(null);
+
+  const language = LANG_ALIASES[lang] || lang;
+
+  // Pretty-print JSON payloads (explicit ```json or unlabeled-but-parses).
+  let code = raw.replace(/\n$/, '');
+  let effectiveLang = language;
+  if (language === 'json' || (!language && /^[\s]*[{[]/.test(code))) {
+    try {
+      code = JSON.stringify(JSON.parse(code), null, 2);
+      effectiveLang = 'json';
+    } catch {
+      /* leave as-is if not valid JSON */
+    }
+  }
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const hljs = (await import('highlight.js/lib/core')).default;
+        const langs: Record<string, () => Promise<any>> = {
+          javascript: () => import('highlight.js/lib/languages/javascript'),
+          typescript: () => import('highlight.js/lib/languages/typescript'),
+          python: () => import('highlight.js/lib/languages/python'),
+          json: () => import('highlight.js/lib/languages/json'),
+          bash: () => import('highlight.js/lib/languages/bash'),
+          xml: () => import('highlight.js/lib/languages/xml'),
+          css: () => import('highlight.js/lib/languages/css'),
+          markdown: () => import('highlight.js/lib/languages/markdown'),
+          sql: () => import('highlight.js/lib/languages/sql'),
+        };
+        // Register the curated set once (registerLanguage is idempotent).
+        await Promise.all(
+          Object.entries(langs).map(async ([name, load]) => {
+            if (!hljs.getLanguage(name)) hljs.registerLanguage(name, (await load()).default);
+          })
+        );
+        const result = effectiveLang && hljs.getLanguage(effectiveLang)
+          ? hljs.highlight(code, { language: effectiveLang })
+          : hljs.highlightAuto(code);
+        if (active) setHtml(result.value);
+      } catch {
+        if (active) setHtml(null);
+      }
+    })();
+    return () => { active = false; };
+  }, [code, effectiveLang]);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <div className="group my-6 overflow-hidden rounded-2xl border border-surface-800 bg-surface-900 shadow-inner">
+      <div className="flex items-center justify-between border-b border-surface-800/80 bg-surface-950/60 px-4 py-2">
+        <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-surface-400">
+          {effectiveLang || 'code'}
+        </span>
+        <button
+          type="button"
+          onClick={copy}
+          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-bold text-surface-400 transition-colors hover:bg-white/10 hover:text-surface-100"
+        >
+          {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      <pre className="overflow-x-auto p-4 text-[13px] leading-relaxed text-surface-100">
+        {html !== null
+          ? <code className={`hljs ${effectiveLang ? `language-${effectiveLang}` : ''}`} dangerouslySetInnerHTML={{ __html: html }} />
+          : <code className="hljs">{code}</code>}
+      </pre>
+    </div>
+  );
+}
+
 function renderMarkdown(content: string) {
   return (
     <Markdown
+      remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeRaw]}
       components={{
         h2: (props) => (
@@ -220,7 +332,32 @@ function renderMarkdown(content: string) {
           </blockquote>
         ),
         code: (props) => <code className="rounded-md border border-surface-200 bg-surface-100 px-2 py-1 font-mono text-[0.9em] text-primary-600 dark:border-surface-700 dark:bg-surface-800/80 dark:text-primary-400" {...props} />,
-        pre: (props) => <pre className="my-6 overflow-x-auto rounded-2xl border border-surface-800 bg-surface-900 p-6 text-surface-100 shadow-inner" {...props} />
+        pre: (props) => {
+          // The single child is react-markdown's <code>; recover its raw text
+          // and language, then render our highlighted, copyable CodeBlock.
+          const codeEl: any = Children.toArray(props.children)[0];
+          const className: string = codeEl?.props?.className || '';
+          const lang = (className.match(/language-([\w-]+)/)?.[1] || '').toLowerCase();
+          const raw = nodeToText(codeEl?.props?.children ?? props.children);
+          return <CodeBlock raw={raw} lang={lang} />;
+        },
+        table: (props) => (
+          <div className="my-6 overflow-x-auto rounded-xl border border-surface-200 dark:border-surface-700">
+            <table className="w-full border-collapse text-sm" {...props} />
+          </div>
+        ),
+        thead: (props) => <thead className="bg-surface-100 dark:bg-surface-800/70" {...props} />,
+        th: (props) => (
+          <th className="border-b border-surface-200 px-4 py-2.5 text-left font-bold text-surface-900 dark:border-surface-700 dark:text-white">
+            {renderInline(props.children)}
+          </th>
+        ),
+        td: (props) => (
+          <td className="border-b border-surface-100 px-4 py-2.5 align-top text-surface-700 dark:border-surface-800 dark:text-surface-200">
+            {renderInline(props.children)}
+          </td>
+        ),
+        tr: (props) => <tr className="even:bg-surface-50/50 dark:even:bg-surface-800/30" {...props} />
       }}
     >
       {content}
