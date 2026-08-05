@@ -79,6 +79,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid post' }, { status: 400 });
     }
 
+    // Post ids are client-chosen and user-visible. If this id exists, only its
+    // original author may overwrite it — otherwise any logged-in user could
+    // clobber someone else's post via upsert.
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(post.id)) {
+      return NextResponse.json({ error: 'Invalid post id' }, { status: 400 });
+    }
+    const { data: existingRow, error: existingError } = await admin
+      .from('posts')
+      .select('data')
+      .eq('id', post.id)
+      .maybeSingle();
+    if (existingError) return NextResponse.json({ error: existingError.message }, { status: 500 });
+    if (existingRow?.data) {
+      const existing = existingRow.data as Post;
+      if (existing.authorId && existing.authorId !== user.id) {
+        return NextResponse.json({ error: 'A post with this id already exists' }, { status: 409 });
+      }
+    }
+
     const cleanPost: Post = {
       ...post,
       authorId: user.id,

@@ -7,11 +7,24 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+// Only inert raster formats. SVG (and anything else executable/active) served
+// from this site's own origin would be a stored-XSS vector — the original
+// content type comes from client-submitted post data.
+const ALLOWED_IMAGE_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+]);
+
 function dataUrlToResponse(dataUrl: string) {
   const match = dataUrl.match(/^data:([^;]+);base64,(.*)$/);
   if (!match) return null;
 
   const [, contentType, base64] = match;
+  if (!ALLOWED_IMAGE_TYPES.has(contentType.toLowerCase())) return null;
+
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
 
@@ -22,6 +35,7 @@ function dataUrlToResponse(dataUrl: string) {
   return new NextResponse(bytes, {
     headers: {
       'Content-Type': contentType,
+      'X-Content-Type-Options': 'nosniff',
       'Cache-Control': 'public, max-age=31536000, immutable',
     },
   });

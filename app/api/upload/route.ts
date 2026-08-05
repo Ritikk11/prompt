@@ -12,14 +12,38 @@ type R2BucketLike = {
 
 const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
 const SAFE_PRESETS = new Set(['prompt', 'thumbnail', 'reference', 'avatar', 'logo', 'aistudio']);
+// Only raster formats. file.type is caller-controlled; without this allowlist,
+// image/svg+xml passes the 'image/' prefix check and the uploaded file would be
+// served back as active SVG (script execution on the uploads origin).
+const ALLOWED_IMAGE_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+  'image/avif': 'avif',
+};
+
+// Magic-byte sniffing so a renamed text/html / SVG file can't ride through on
+// a spoofed Content-Type. Falls back to the (allowlisted) declared type when
+// the format can't be sniffed (e.g. AVIF variants).
+function sniffImageType(bytes: Uint8Array): string | null {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg';
+  if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return 'image/png';
+  if (bytes.length >= 6 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) return 'image/gif';
+  if (bytes.length >= 12) {
+    if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46
+      && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) return 'image/webp';
+    // ISOBMFF container (AVIF/HEIC): 'ftyp' box at offset 4
+    if (bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70) return 'image/avif';
+  }
+  return null;
+}
 
 function extensionFor(file: File) {
   const fromName = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (fromName) return fromName.slice(0, 8);
-  if (file.type === 'image/png') return 'png';
-  if (file.type === 'image/jpeg') return 'jpg';
-  if (file.type === 'image/gif') return 'gif';
-  if (file.type === 'image/avif') return 'avif';
+  const allowed = ALLOWED_IMAGE_TYPES[file.type];
+  if (allowed) return allowed;
+  if (fromName && Object.values(ALLOWED_IMAGE_TYPES).includes(fromName)) return fromName;
   return 'webp';
 }
 
@@ -71,11 +95,19 @@ export async function POST(request: Request) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: 'Missing image file' }, { status: 400 });
   }
-  if (!file.type.startsWith('image/')) {
-    return NextResponse.json({ error: 'Only image uploads are allowed' }, { status: 400 });
+  if (!ALLOWED_IMAGE_TYPES[file.type]) {
+    return NextResponse.json({ error: 'Only JPEG/PNG/WebP/GIF/AVIF images are allowed' }, { status: 400 });
   }
   if (file.size > MAX_UPLOAD_BYTES) {
     return NextResponse.json({ error: 'Image is too large' }, { status: 413 });
+  }
+  // Sniff magic bytes; a spoofed type (e.g. HTML renamed .png) is rejected.
+  {
+    const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+    const sniffed = sniffImageType(head);
+    if (!sniffed) {
+      return NextResponse.json({ error: 'File content is not a valid image' }, { status: 400 });
+    }
   }
 
   const bucket = await getUploadsBucket();
