@@ -578,18 +578,24 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       case 'v2': // Immersive Blur Background
         return (
           <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-surface-900 shadow-2xl group min-h-[500px] flex items-end">
-            <Image src={backgroundPromptImageUrl} alt="bg" fill className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
+            {/* Decorative, but it covers the viewport so Lighthouse counts it
+                as the mobile LCP element — priority makes it paint immediately
+                (same file as the preloaded hero thumbnail, so no extra fetch). */}
+            <Image src={backgroundPromptImageUrl} alt="bg" fill priority className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
             <div className="relative z-20 w-full max-w-6xl mx-auto flex flex-col items-center gap-8 p-8 pb-12 text-center lg:flex-row lg:items-center lg:gap-12 lg:p-12 lg:text-left">
+              {/* Fixed wrapper height = the img max-h clamps, so reserved space
+                  never changes when the real (non-square) image replaces the
+                  1280×1280 attr aspect ratio — otherwise the hero text block
+                  shifts when the image loads (CLS 0.35 on mobile). */}
               <LoadingImg
                   src={mainPromptImageUrl}
                   alt={post.title}
                   showSkeleton={showSkeleton}
-                  wrapperClassName="inline-flex max-w-full shrink-0 justify-center rounded-2xl shadow-2xl"
-                  className="h-auto max-h-[360px] w-auto max-w-full rounded-2xl object-contain lg:max-h-[460px]"
+                  priority
+                  wrapperClassName="flex h-[300px] w-auto max-w-full shrink-0 items-center justify-center rounded-2xl shadow-2xl sm:h-[360px] lg:h-[460px]"
+                  className="h-full w-auto max-w-full rounded-2xl object-contain"
                   referrerPolicy="no-referrer"
-                  loading="eager"
-                  fetchPriority="high"
                   width={1280}
                   height={1280}
                 />

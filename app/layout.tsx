@@ -163,13 +163,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         
-        {/* Google tag (gtag.js) — afterInteractive keeps it off the critical
-            render path (no bundle impact; loads after hydration). */}
+        {/* Google tag (gtag.js) — lazyOnload defers it to browser idle time.
+            afterInteractive ran gtag's 165 KiB eval inside the LCP window
+            (Lighthouse: 122ms main-thread block, 70KiB unused JS on prompt
+            pages); idle loading keeps analytics while freeing the critical path. */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-3SM2DNE8VW"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
-        <Script id="gtag-init" strategy="afterInteractive">
+        <Script id="gtag-init" strategy="lazyOnload">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}

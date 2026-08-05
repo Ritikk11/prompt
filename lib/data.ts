@@ -909,7 +909,9 @@ export const fetchSettings = cache(async () => {
   return sanitizePublicSettings(defaultSettings);
 });
 
-export async function getPostBySlugOrId(idOrSlug: string) {
+// React `cache` dedupes the metadata + page calls within a request — prompt
+// pages previously ran this (RPC + comments query) twice per render.
+export const getPostBySlugOrId = cache(async (idOrSlug: string) => {
   if (!idOrSlug) return null;
   try {
     const supabase = createPublicClient();
@@ -965,7 +967,7 @@ export async function getPostBySlugOrId(idOrSlug: string) {
     console.error('Supabase post lookup error:', error);
     return null;
   }
-}
+});
 
 export async function getSectionBySlug(slug: string) {
   const sections = await fetchSections();
@@ -977,7 +979,7 @@ export async function getPostsForSection(section: Section, settings: SiteSetting
   return filterPostsForSection(section, posts, settings, true);
 }
 
-export async function fetchSeoPages() {
+export const fetchSeoPages = cache(async () => {
   try {
     const supabase = createPublicClient();
     const { data, error } = await supabase.from('seoPages').select('data');
@@ -991,7 +993,7 @@ export async function fetchSeoPages() {
     console.error('Supabase seo pages fetch error:', error);
     return [];
   }
-}
+});
 
 export async function getSeoPageBySlug(slug: string) {
   const pages = await fetchSeoPages();
