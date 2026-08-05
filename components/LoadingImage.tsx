@@ -20,9 +20,14 @@ type LoadingImageProps = ImageProps & {
 
 function ImageFallback({ compact = false }: { compact?: boolean }) {
   return (
-    <span className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center bg-surface-100 text-center text-surface-500 dark:bg-surface-900 dark:text-surface-400">
+    <span className="pointer-events-none absolute inset-0 z-[1] flex flex-col items-center justify-center gap-2 bg-surface-100 text-center text-surface-400 dark:bg-surface-900 dark:text-surface-500">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={compact ? 'h-6 w-6' : 'h-8 w-8'} aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <path d="m21 15-5-5L5 21" />
+      </svg>
       <span className={compact ? 'px-3 text-xs font-medium' : 'px-4 text-sm font-medium'}>
-        Image is taking longer than usual
+        Image unavailable
       </span>
     </span>
   );
@@ -56,6 +61,13 @@ export default function LoadingImage({
   const timedOut = isCurrentSrc && imageState.timedOut;
 
   useEffect(() => {
+    // One-shot check for every image: failures that fired before hydration
+    // never reach onError, leaving the broken img collapsed with no fallback.
+    const initial = imageRef.current;
+    if (initial?.complete && initial.naturalWidth === 0) {
+      setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
+      return;
+    }
     if (!enabled) return;
     let completeCheck = 0;
     let interval: number | undefined;
@@ -126,7 +138,7 @@ export default function LoadingImage({
   const shimmer = enabled && !settled ? (
     <span className="pointer-events-none absolute inset-0 z-[1] image-shimmer" aria-hidden="true" />
   ) : null;
-  const fallback = enabled && failed && !loaded ? <ImageFallback /> : null;
+  const fallback = failed && !loaded ? <ImageFallback /> : null;
 
   if (props.fill) {
     return (
@@ -139,7 +151,7 @@ export default function LoadingImage({
   }
 
   return (
-    <span className={`relative block overflow-hidden ${wrapperClassName}`}>
+    <span className={`relative block overflow-hidden${failed ? ' flex min-h-[220px] sm:min-h-[320px] items-center justify-center' : ''} ${wrapperClassName}`}>
       {shimmer}
       {fallback}
       {image}
@@ -181,6 +193,12 @@ export function LoadingImg({
   const timedOut = isCurrentSrc && imageState.timedOut;
 
   useEffect(() => {
+    // One-shot: failures that fired before hydration never reach onError.
+    const initial = imageRef.current;
+    if (initial?.complete && initial.naturalWidth === 0) {
+      setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
+      return;
+    }
     if (!enabled) return;
     let completeCheck = 0;
     let interval: number | undefined;
@@ -231,13 +249,17 @@ export function LoadingImg({
   }, [srcValue, enabled]);
 
   const settled = loaded || failed || timedOut;
+  // On failure the image contributes no height (broken img has no natural
+  // dimensions), which collapses the wrapper to a sliver and squashes the
+  // fallback. Reserve real space so the placeholder stays readable.
+  const failedSizing = failed ? ' flex min-h-[220px] sm:min-h-[320px] items-center justify-center' : '';
 
   return (
-    <span className={`relative block overflow-hidden ${wrapperClassName}`}>
-      {enabled && !settled ? (
+    <span className={`relative block overflow-hidden${failedSizing} ${wrapperClassName}`}>
+      {(enabled || failed) && !settled ? (
         <span className="pointer-events-none absolute inset-0 z-[1] image-shimmer" aria-hidden="true" />
       ) : null}
-      {enabled && failed && !loaded ? <ImageFallback compact /> : null}
+      {failed && !loaded ? <ImageFallback compact /> : null}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         {...props}
@@ -254,7 +276,7 @@ export function LoadingImg({
           setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
           onError?.(event);
         }}
-        className={`${className} ${enabled ? `transition-opacity duration-300 ${settled ? 'opacity-100' : 'opacity-0'}` : ''} ${failed ? 'invisible' : ''}`}
+        className={`${className} ${enabled ? `transition-opacity duration-300 ${settled ? 'opacity-100' : 'opacity-0'}` : ''} ${failed ? 'sr-only h-0 w-0' : ''}`}
       />
     </span>
   );
