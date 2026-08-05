@@ -3,7 +3,17 @@
 // DB without revalidatePath. 300s caused a cold ~2.5s SSR miss every 5 minutes.
 export const revalidate = 3600;
 import type { ReactNode } from 'react';
+import type { Metadata } from 'next';
 import { preload } from 'react-dom';
+
+// Homepage canonical — points crawlers at the bare root, collapsing any
+// ?ref=/utm_/trailing-slash variants Google may discover into one indexed URL.
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/',
+  },
+};
+
 import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } from '@/lib/data';
 import { getPromptImageUrl } from '@/lib/image-url';
 import FeaturedSlider from '@/components/FeaturedSlider';

@@ -304,7 +304,7 @@ export default function FilterChipRail({
               >
                 {showToolLogo ? (
                   <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white p-[1px]">
-                    <Image src={toolInfo.logo} alt="" width={16} height={16} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+                    <Image src={toolInfo.logo} alt={`${chip.label} logo`} width={16} height={16} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
                   </span>
                 ) : null}
                 {chip.label}

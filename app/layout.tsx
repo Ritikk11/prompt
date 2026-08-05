@@ -75,17 +75,55 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'AI PromptMatrix',
-    url: 'https://aipromptmatrix.in',
-  };
-
   const [initialSettings, initialSections] = await Promise.all([
     fetchSettings(),
     fetchSections(),
   ]);
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+  const orgName = initialSettings.siteTitle || 'AI PromptMatrix';
+  const rawLogo = initialSettings.siteLogo || '/icon-256x256.jpg';
+  const logoUrl = rawLogo.startsWith('http') || rawLogo.startsWith('data:')
+    ? rawLogo
+    : `${siteUrl}${rawLogo.startsWith('/') ? '' : '/'}${rawLogo}`;
+  const socials = initialSettings.socialLinks || {};
+  const sameAs = [socials.twitter, socials.instagram, socials.youtube, socials.facebook, socials.pinterest]
+    .filter((u): u is string => Boolean(u && u.trim()));
+
+  // WebSite (with Sitelinks SearchBox) + Organization, linked via @graph so Google
+  // resolves the publisher for Article rich results and brand knowledge panel.
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        name: orgName,
+        url: siteUrl,
+        publisher: { '@id': `${siteUrl}/#organization` },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: `${siteUrl}/search?q={search_term_string}`,
+          },
+          'query-input': 'required name=search_term_string',
+        },
+      },
+      {
+        '@type': 'Organization',
+        '@id': `${siteUrl}/#organization`,
+        name: orgName,
+        url: siteUrl,
+        logo: {
+          '@type': 'ImageObject',
+          url: logoUrl,
+        },
+        ...(sameAs.length ? { sameAs } : {}),
+      },
+    ],
+  };
+
   const adsensePublisherId = initialSettings.ads?.publisherId || process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
   const imagePreconnectOrigins = Array.from(new Set([
     toOrigin(process.env.CLOUDFLARE_UPLOAD_PUBLIC_URL || 'https://uploads.aipromptmatrix.in'),

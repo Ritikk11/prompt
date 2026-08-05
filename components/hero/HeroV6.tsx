@@ -62,7 +62,7 @@ export default function HeroV6({ featuredPosts: featured, settings }: HeroProps)
                  }}
                >
                  <div className="w-full h-full rounded-[40px] overflow-hidden shadow-2xl border-4 border-white dark:border-surface-700">
-                    <LoadingImage src={promptImageUrl(p)} alt="" fill showSkeleton={showSkeleton} className="object-cover" referrerPolicy="no-referrer" />
+                    <LoadingImage src={promptImageUrl(p)} alt={p.title} fill showSkeleton={showSkeleton} className="object-cover" referrerPolicy="no-referrer" />
                  </div>
                </div>
              );

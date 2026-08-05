@@ -92,7 +92,7 @@ export default function HeroV9({ featuredPosts: featured, settings, stats }: Her
               <div key={p.id} className={`relative aspect-[4/5] overflow-hidden rounded-3xl border border-white/10 bg-white/10 shadow-2xl ${index % 2 ? 'translate-y-6' : ''}`}>
                 <LoadingImage
                   src={promptImageUrl(p, 'https://picsum.photos/seed/placeholder/600/750')}
-                  alt=""
+                  alt={p.title}
                   fill
                   showSkeleton={false}
                   className="object-cover"

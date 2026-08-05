@@ -384,7 +384,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     return (
     <Link href={`/${item.slug || item.id}`} className="group flex gap-3 rounded-2xl border border-surface-200 bg-white p-2.5 transition-colors hover:border-primary-400 dark:border-surface-800 dark:bg-surface-900">
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-800">
-        <LoadingImage src={itemImageUrl} alt="" fill showSkeleton={showSkeleton} className="object-cover transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
+        <LoadingImage src={itemImageUrl} alt={item.title} fill showSkeleton={showSkeleton} className="object-cover transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
       </div>
       <div className="min-w-0 flex-1 py-1">
         <h4 className="line-clamp-2 text-xs font-bold leading-snug text-surface-900 dark:text-white">{item.title}</h4>
@@ -478,7 +478,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           >
             {info.logo && (
               <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white p-[1px]">
-                <Image src={info.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
+                <Image src={info.logo} alt={`${tool} logo`} fill className="object-contain" referrerPolicy="no-referrer" />
               </span>
             )}
             Try in {tool}
@@ -952,7 +952,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                     <div className="relative flex w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-900" onClick={() => setLightboxImage({ url: img.url || '', index, tools: img.aiTools || [img.aiTool].filter(Boolean) })}>
                       <LoadingImg
                         src={displayPromptImageUrl(img.url, 1100)}
-                        alt={`Prompt ${index + 1}`}
+                        alt={`${post.title}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}`}
                         showSkeleton={showSkeleton}
                         className="block h-auto w-full rounded-xl transition-transform duration-500 group-hover/img:scale-[1.02]"
                         referrerPolicy="no-referrer"
@@ -1404,7 +1404,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               <div className="w-full h-full max-h-[90vh] overflow-hidden rounded-2xl relative">
                 <LoadingImage
                   src={lightboxImage.url}
-                  alt={`Prompt ${lightboxImage.index + 1}`}
+                  alt={`${post.title} — prompt ${lightboxImage.index + 1}`}
                   fill
                   showSkeleton={showSkeleton}
                   className="object-contain shadow-2xl"

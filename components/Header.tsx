@@ -441,7 +441,7 @@ export default function Header() {
                 className="flex items-center gap-3 p-3 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors border-b border-surface-100 dark:border-surface-800 last:border-0"
               >
                 <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-surface-100 dark:bg-surface-800 relative">
-                  <Image src={post.images?.[0]?.url || ''} alt="" fill sizes="40px" className="object-cover" referrerPolicy="no-referrer" />
+                  <Image src={post.images?.[0]?.url || ''} alt={post.title} fill sizes="40px" className="object-cover" referrerPolicy="no-referrer" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-medium truncate">{post.title}</h4>

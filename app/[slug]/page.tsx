@@ -5,7 +5,9 @@ export const revalidate = 3600;
 
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { preload, preconnect } from 'react-dom';
 import { getPostBySlugOrId, fetchPostSummaries, getSeoPageBySlug, isPublicPost, fetchSettings } from '@/lib/data';
+import { getPromptImageUrl } from '@/lib/image-url';
 import PostContent from '@/components/PostContent';
 import PostCard from '@/components/PostCard';
 import FilterChipRail from '@/components/FilterChipRail';
@@ -109,6 +111,23 @@ export default async function PostPage({ params }: Props) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
   const schemaType = post.schemaType || settings.seoSettings?.schemaType || 'Article';
   const mainImage = post.thumbnailUrl || post.images[0]?.url;
+
+  // Preload the LCP image (the main prompt image) so the browser fetches it before
+  // PostContent hydrates. Params MUST match PostContent's mainPromptImageUrl
+  // (width 1280, quality 78) or the browser makes a second, unpreloaded request.
+  if (mainImage) {
+    const lcpImageUrl = getPromptImageUrl(mainImage, { width: 1280, quality: 78 });
+    if (lcpImageUrl) {
+      preload(lcpImageUrl, { as: 'image', fetchPriority: 'high' });
+      // Warm the cross-origin uploads host early when resizing is disabled and the
+      // image is served straight from uploads.aipromptmatrix.in.
+      try {
+        preconnect(new URL(lcpImageUrl).origin);
+      } catch {
+        // Relative/data URLs have no origin to preconnect — skip.
+      }
+    }
+  }
   
   const rawLogo = settings.siteLogo || '/icon-256x256.jpg';
   const publisherLogoUrl = rawLogo.startsWith('http') || rawLogo.startsWith('data:')

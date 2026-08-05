@@ -62,7 +62,7 @@ export default function ArticleThumbnail({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
-            alt=""
+            alt={article.title}
             className="absolute inset-0 h-full w-full object-cover"
             referrerPolicy="no-referrer"
             loading={compact ? 'lazy' : 'eager'}

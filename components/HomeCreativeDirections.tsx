@@ -82,7 +82,7 @@ export default function HomeCreativeDirections({ posts, settings }: { posts: Pos
                   
                   {item.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.imageUrl} alt="" className="relative z-10 h-8 w-8 object-contain transition-transform duration-500 group-hover:scale-110 sm:h-10 sm:w-10" referrerPolicy="no-referrer" />
+                    <img src={item.imageUrl} alt={item.label} className="relative z-10 h-8 w-8 object-contain transition-transform duration-500 group-hover:scale-110 sm:h-10 sm:w-10" referrerPolicy="no-referrer" />
                   ) : (
                     <Icon className="relative z-10 h-8 w-8 text-primary-500 drop- transition-colors duration-500 group-hover:text-primary-400 dark:text-primary-400 dark:group-hover:text-primary-300 sm:h-10 sm:w-10" strokeWidth={2.5} />
                   )}

@@ -38,7 +38,7 @@ export default function ToolBadge({ toolName, toolInfo, size = 'md', className =
             className="relative block w-full h-full rounded-full overflow-hidden"
             style={toolInfo.logoScale ? { transform: `scale(${toolInfo.logoScale})` } : undefined}
           >
-            <Image src={toolInfo.logo} alt="" fill className="object-contain" referrerPolicy="no-referrer" />
+            <Image src={toolInfo.logo} alt={`${toolName} logo`} fill className="object-contain" referrerPolicy="no-referrer" />
           </span>
         </span>
       ) : null}
