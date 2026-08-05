@@ -113,22 +113,42 @@ export default async function PostPage({ params }: Props) {
   const mainImage = post.thumbnailUrl || post.images[0]?.url;
 
   // Preload the LCP candidates so the browser fetches them before PostContent
-  // hydrates. Two candidates: the hero image (thumbnail, width 1280 q78 —
-  // matches mainPromptImageUrl) and the first gallery image (width 1100 q78 —
-  // matches displayPromptImageUrl(img.url, 1100)), which Lighthouse identifies
-  // as the mobile LCP element. Params MUST match PostContent or the browser
-  // makes a second, unpreloaded request.
+  // hydrates. Two candidates: the hero image (thumbnail) and the first gallery
+  // image, which Lighthouse identifies as the mobile LCP element. The srcset
+  // widths/sizes MUST match the strings in PostContent.tsx (heroImageSrcSet /
+  // buildGallerySrcSet) or the browser fetches the LCP image twice — the
+  // preload key is the fully resolved URL, which srcset selection changes.
+  const buildSrcSet = (url: string | undefined, widths: number[]) =>
+    url
+      ? widths.map((w) => `${getPromptImageUrl(url, { width: w, quality: 78 })} ${w}w`).join(', ')
+      : undefined;
   const galleryFirstImage = post.images[0]?.url;
-  const preloadUrls = [
-    mainImage && getPromptImageUrl(mainImage, { width: 1280, quality: 78 }),
-    galleryFirstImage && getPromptImageUrl(galleryFirstImage, { width: 1100, quality: 78 }),
-  ].filter((url, i, arr): url is string => !!url && arr.indexOf(url) === i);
-  for (const lcpImageUrl of preloadUrls) {
-    preload(lcpImageUrl, { as: 'image', fetchPriority: 'high' });
+  const preloadTargets = [
+    mainImage && {
+      url: getPromptImageUrl(mainImage, { width: 1280, quality: 78 }),
+      srcSet: buildSrcSet(mainImage, [480, 768, 960, 1280]),
+      sizes: '(max-width: 1024px) 320px, 480px',
+    },
+    galleryFirstImage && {
+      url: getPromptImageUrl(galleryFirstImage, { width: 1100, quality: 78 }),
+      srcSet: buildSrcSet(galleryFirstImage, [480, 768, 1100]),
+      sizes: '(max-width: 768px) calc(100vw - 48px), 680px',
+    },
+  ].filter((t): t is { url: string; srcSet?: string; sizes: string } => !!t);
+  const seenUrls = new Set<string>();
+  for (const target of preloadTargets) {
+    if (seenUrls.has(target.url)) continue;
+    seenUrls.add(target.url);
+    preload(target.url, {
+      as: 'image',
+      fetchPriority: 'high',
+      imageSrcSet: target.srcSet,
+      imageSizes: target.sizes,
+    });
     // Warm the cross-origin uploads host early when resizing is disabled and the
     // image is served straight from uploads.aipromptmatrix.in.
     try {
-      preconnect(new URL(lcpImageUrl).origin);
+      preconnect(new URL(target.url).origin);
     } catch {
       // Relative/data URLs have no origin to preconnect — skip.
     }

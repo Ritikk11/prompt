@@ -230,6 +230,19 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const displayPromptImageUrl = (url?: string, width = 1200) => getPromptImageUrl(url || fallbackPromptImageUrl, { width, quality: 78 });
   const displayReferenceImageUrl = (url?: string) => getThumbnailImageUrl(url, { width: 760, quality: 74 });
 
+  // Responsive variants via the Cloudflare edge resizer: phones get ~480-768px,
+  // desktops 1100-1280px. Each (image x width) pair is one "unique
+  // transformation" against the 5k/mo Cloudflare quota, cached at the edge.
+  // Originals on uploads.aipromptmatrix.in stay untouched.
+  // NOTE: these strings must stay in sync with the LCP preloads in
+  // app/[slug]/page.tsx or the browser fetches the LCP image twice.
+  const HERO_SIZES = '(max-width: 1024px) 320px, 480px';
+  const buildImageSrcSet = (url: string | undefined, widths: number[], quality: number) =>
+    widths.map((w) => `${getPromptImageUrl(url || fallbackPromptImageUrl, { width: w, quality })} ${w}w`).join(', ');
+  const heroImageSrcSet = buildImageSrcSet(originalMainImageUrl, [480, 768, 960, 1280], 78);
+  const GALLERY_SIZES = '(max-width: 768px) calc(100vw - 48px), 680px';
+  const buildGallerySrcSet = (url?: string) => buildImageSrcSet(url, [480, 768, 1100], 78);
+
   useEffect(() => {
     if (post && !viewIncrementedRef.current) {
       incrementViews(post.id, initialPost);
@@ -598,6 +611,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   referrerPolicy="no-referrer"
                   width={1280}
                   height={1280}
+                  srcSet={heroImageSrcSet}
+                  sizes={HERO_SIZES}
                 />
               <div className="flex min-w-0 flex-col items-center lg:items-start">
                 <div className="flex flex-wrap justify-center gap-2 mb-6 lg:justify-start">
@@ -958,6 +973,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                     <div className="relative flex w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-900" onClick={() => setLightboxImage({ url: img.url || '', index, tools: img.aiTools || [img.aiTool].filter(Boolean) })}>
                       <LoadingImg
                         src={displayPromptImageUrl(img.url, 1100)}
+                        srcSet={buildGallerySrcSet(img.url)}
+                        sizes={GALLERY_SIZES}
                         alt={`${post.title}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}`}
                         showSkeleton={showSkeleton}
                         // First gallery image is the mobile LCP element — must
