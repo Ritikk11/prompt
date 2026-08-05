@@ -10,12 +10,16 @@ type OptimizeOptions = {
   mimeType?: 'image/webp' | 'image/jpeg';
 };
 
+// Size caps are backstops for pathological files, not the quality driver:
+// dimensions + startQuality do the real work and the quality loop should
+// rarely engage. Visitors get edge-resized variants anyway, so originals can
+// stay high-quality (Cloudflare Transformations handles per-device delivery).
 const presets: Record<ImageOptimizePreset, OptimizeOptions> = {
-  thumbnail: { maxSizeKB: 90, targetWidth: 720, maxDimension: 1100, startQuality: 0.72, minQuality: 0.32, mimeType: 'image/webp' },
-  prompt: { maxSizeKB: 360, maxDimension: 1400, startQuality: 0.78, minQuality: 0.44, mimeType: 'image/webp' },
-  reference: { maxSizeKB: 650, maxDimension: 1400, startQuality: 0.8, minQuality: 0.44, mimeType: 'image/webp' },
-  logo: { maxSizeKB: 45, maxDimension: 240, startQuality: 0.82, minQuality: 0.45, mimeType: 'image/webp' },
-  aistudio: { maxSizeKB: 500, maxDimension: 1400, startQuality: 0.78, minQuality: 0.44, mimeType: 'image/webp' },
+  thumbnail: { maxSizeKB: 250, targetWidth: 720, maxDimension: 1100, startQuality: 0.82, minQuality: 0.6, mimeType: 'image/webp' },
+  prompt: { maxSizeKB: 1200, maxDimension: 1600, startQuality: 0.85, minQuality: 0.6, mimeType: 'image/webp' },
+  reference: { maxSizeKB: 1600, maxDimension: 1600, startQuality: 0.85, minQuality: 0.6, mimeType: 'image/webp' },
+  logo: { maxSizeKB: 120, maxDimension: 240, startQuality: 0.85, minQuality: 0.6, mimeType: 'image/webp' },
+  aistudio: { maxSizeKB: 1400, maxDimension: 1600, startQuality: 0.85, minQuality: 0.6, mimeType: 'image/webp' },
 };
 
 function outputName(fileName: string, mimeType: string) {
