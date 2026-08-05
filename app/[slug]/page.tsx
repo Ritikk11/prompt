@@ -112,20 +112,25 @@ export default async function PostPage({ params }: Props) {
   const schemaType = post.schemaType || settings.seoSettings?.schemaType || 'Article';
   const mainImage = post.thumbnailUrl || post.images[0]?.url;
 
-  // Preload the LCP image (the main prompt image) so the browser fetches it before
-  // PostContent hydrates. Params MUST match PostContent's mainPromptImageUrl
-  // (width 1280, quality 78) or the browser makes a second, unpreloaded request.
-  if (mainImage) {
-    const lcpImageUrl = getPromptImageUrl(mainImage, { width: 1280, quality: 78 });
-    if (lcpImageUrl) {
-      preload(lcpImageUrl, { as: 'image', fetchPriority: 'high' });
-      // Warm the cross-origin uploads host early when resizing is disabled and the
-      // image is served straight from uploads.aipromptmatrix.in.
-      try {
-        preconnect(new URL(lcpImageUrl).origin);
-      } catch {
-        // Relative/data URLs have no origin to preconnect — skip.
-      }
+  // Preload the LCP candidates so the browser fetches them before PostContent
+  // hydrates. Two candidates: the hero image (thumbnail, width 1280 q78 —
+  // matches mainPromptImageUrl) and the first gallery image (width 1100 q78 —
+  // matches displayPromptImageUrl(img.url, 1100)), which Lighthouse identifies
+  // as the mobile LCP element. Params MUST match PostContent or the browser
+  // makes a second, unpreloaded request.
+  const galleryFirstImage = post.images[0]?.url;
+  const preloadUrls = [
+    mainImage && getPromptImageUrl(mainImage, { width: 1280, quality: 78 }),
+    galleryFirstImage && getPromptImageUrl(galleryFirstImage, { width: 1100, quality: 78 }),
+  ].filter((url, i, arr): url is string => !!url && arr.indexOf(url) === i);
+  for (const lcpImageUrl of preloadUrls) {
+    preload(lcpImageUrl, { as: 'image', fetchPriority: 'high' });
+    // Warm the cross-origin uploads host early when resizing is disabled and the
+    // image is served straight from uploads.aipromptmatrix.in.
+    try {
+      preconnect(new URL(lcpImageUrl).origin);
+    } catch {
+      // Relative/data URLs have no origin to preconnect — skip.
     }
   }
   
@@ -155,7 +160,7 @@ export default async function PostPage({ params }: Props) {
       },
     },
     datePublished: post.createdAt,
-    dateModified: post.createdAt,
+    dateModified: post.updatedAt || post.createdAt,
     url: `${siteUrl}/${post.slug || post.id}`,
   };
 

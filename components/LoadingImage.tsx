@@ -150,6 +150,10 @@ export default function LoadingImage({
 type LoadingImgProps = ImgHTMLAttributes<HTMLImageElement> & {
   showSkeleton?: boolean;
   wrapperClassName?: string;
+  // LCP candidates: loads eagerly with fetchpriority=high and skips the
+  // skeleton's opacity-0 gating (same rationale as LoadingImage's priority —
+  // hiding the image until hydration + onLoad adds seconds of LCP render delay).
+  priority?: boolean;
 };
 
 export function LoadingImg({
@@ -157,11 +161,13 @@ export function LoadingImg({
   wrapperClassName = '',
   className = '',
   alt = '',
+  priority = false,
   onLoad,
   onError,
   ...props
 }: LoadingImgProps) {
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const enabled = showSkeleton && !priority;
   const srcValue = props.src;
   const [imageState, setImageState] = useState<ImageLoadState>({
     src: srcValue,
@@ -175,7 +181,7 @@ export function LoadingImg({
   const timedOut = isCurrentSrc && imageState.timedOut;
 
   useEffect(() => {
-    if (!showSkeleton) return;
+    if (!enabled) return;
     let completeCheck = 0;
     let interval: number | undefined;
     let timer: number | undefined;
@@ -222,22 +228,23 @@ export function LoadingImg({
       stopWatching();
     }, IMAGE_WAIT_TIMEOUT_MS);
     return stopWatching;
-  }, [srcValue, showSkeleton]);
+  }, [srcValue, enabled]);
 
   const settled = loaded || failed || timedOut;
 
   return (
     <span className={`relative block overflow-hidden ${wrapperClassName}`}>
-      {showSkeleton && !settled ? (
+      {enabled && !settled ? (
         <span className="pointer-events-none absolute inset-0 z-[1] image-shimmer" aria-hidden="true" />
       ) : null}
-      {showSkeleton && failed && !loaded ? <ImageFallback compact /> : null}
+      {enabled && failed && !loaded ? <ImageFallback compact /> : null}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         {...props}
         ref={imageRef}
         alt={alt}
-        loading={props.loading ?? 'lazy'}
+        loading={props.loading ?? (priority ? 'eager' : 'lazy')}
+        fetchPriority={props.fetchPriority ?? (priority ? 'high' : undefined)}
         decoding={props.decoding ?? 'async'}
         onLoad={(event) => {
           setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
@@ -247,7 +254,7 @@ export function LoadingImg({
           setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
           onError?.(event);
         }}
-        className={`${className} ${showSkeleton ? `transition-opacity duration-300 ${settled ? 'opacity-100' : 'opacity-0'}` : ''} ${failed ? 'invisible' : ''}`}
+        className={`${className} ${enabled ? `transition-opacity duration-300 ${settled ? 'opacity-100' : 'opacity-0'}` : ''} ${failed ? 'invisible' : ''}`}
       />
     </span>
   );

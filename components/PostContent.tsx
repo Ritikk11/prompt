@@ -954,6 +954,9 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                         src={displayPromptImageUrl(img.url, 1100)}
                         alt={`${post.title}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}`}
                         showSkeleton={showSkeleton}
+                        // First gallery image is the mobile LCP element — must
+                        // load eagerly and paint before hydration.
+                        priority={index === 0}
                         className="block h-auto w-full rounded-xl transition-transform duration-500 group-hover/img:scale-[1.02]"
                         referrerPolicy="no-referrer"
                       />

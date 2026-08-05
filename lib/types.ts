@@ -50,6 +50,9 @@ export interface Post {
   status?: 'published' | 'pending' | 'draft';
   visibility?: 'public' | 'private';
   createdAt: string;
+  // Stamped on every admin/API save; feeds schema.org dateModified. Legacy
+  // posts lack it — fall back to createdAt when reading.
+  updatedAt?: string;
 }
 
 export type PostSummary = Pick<

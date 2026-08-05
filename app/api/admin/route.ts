@@ -244,6 +244,8 @@ export async function POST(request: Request) {
     if (!isValidId(rowId)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
     if (resource === 'settings' && rowId !== 'global') return NextResponse.json({ error: 'Settings can only be saved to global' }, { status: 400 });
     if (!validateResourceData(resource, data)) return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
+    // Freshness signal for schema.org dateModified on prompt pages.
+    if (resource === 'posts') data.updatedAt = new Date().toISOString();
     const { error } = await admin.from(table).upsert({ id: rowId, data });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     revalidateContent(resource, data, rowId);

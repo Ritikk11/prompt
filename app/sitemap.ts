@@ -73,7 +73,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       publishedPosts.forEach(post => {
         addEntry({
           url: `${baseUrl}/${post.slug || post.id}`,
-          lastModified: new Date(post.createdAt),
+          // updatedAt isn't exposed by public_post_summaries yet; falls back to
+          // createdAt until the view is migrated.
+          lastModified: new Date(post.updatedAt || post.createdAt),
           changeFrequency: 'daily',
           priority: 1.0,
         });

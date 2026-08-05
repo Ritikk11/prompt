@@ -91,6 +91,7 @@ export async function POST(request: Request) {
       views: post.views || 0,
       likes: post.likes || 0,
       createdAt: post.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     const submissionInsert = await admin.from('submissions').upsert({
