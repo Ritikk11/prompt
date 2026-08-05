@@ -126,10 +126,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   };
 
   const adsensePublisherId = initialSettings.ads?.publisherId || process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
-  const imagePreconnectOrigins = Array.from(new Set([
-    toOrigin(process.env.CLOUDFLARE_UPLOAD_PUBLIC_URL || 'https://uploads.aipromptmatrix.in'),
-    toOrigin(process.env.NEXT_PUBLIC_SUPABASE_URL),
-  ].filter(Boolean)));
+  // Preconnect to the uploads/Supabase hosts only when edge resizing is OFF.
+  // With resizing on, all images load from aipromptmatrix.in/cdn-cgi/... (same
+  // origin) — Lighthouse flagged both preconnects as unused connections.
+  const imagePreconnectOrigins = process.env.NEXT_PUBLIC_ENABLE_CLOUDFLARE_IMAGE_RESIZE === 'true'
+    ? []
+    : Array.from(new Set([
+      toOrigin(process.env.CLOUDFLARE_UPLOAD_PUBLIC_URL || 'https://uploads.aipromptmatrix.in'),
+      toOrigin(process.env.NEXT_PUBLIC_SUPABASE_URL),
+    ].filter(Boolean)));
 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>

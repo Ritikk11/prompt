@@ -236,10 +236,13 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   // Originals on uploads.aipromptmatrix.in stay untouched.
   // NOTE: these strings must stay in sync with the LCP preloads in
   // app/[slug]/page.tsx or the browser fetches the LCP image twice.
-  const HERO_SIZES = '(max-width: 1024px) 320px, 480px';
+  // Hero renders ~200-240px wide (h-300/360px × ~2:3 aspect), desktop ~307px.
+  // sizes must reflect that or 2.6x-DPR phones pick 960w for a 239px render
+  // (flagged by PageSpeed). Now: 768w mobile, 1280w only on dense desktops.
+  const HERO_SIZES = '(max-width: 640px) 200px, (max-width: 1024px) 240px, 320px';
   const buildImageSrcSet = (url: string | undefined, widths: number[], quality: number) =>
     widths.map((w) => `${getPromptImageUrl(url || fallbackPromptImageUrl, { width: w, quality })} ${w}w`).join(', ');
-  const heroImageSrcSet = buildImageSrcSet(originalMainImageUrl, [480, 768, 960, 1280], 78);
+  const heroImageSrcSet = buildImageSrcSet(originalMainImageUrl, [480, 768, 1280], 78);
   const GALLERY_SIZES = '(max-width: 768px) calc(100vw - 48px), 680px';
   const buildGallerySrcSet = (url?: string) => buildImageSrcSet(url, [480, 768, 1100], 78);
 

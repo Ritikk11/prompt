@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { getRequestUser } from '@/lib/admin-auth';
+import { createAdminClient } from '@/lib/supabase-admin';
 
 type R2BucketLike = {
   put: (
@@ -91,6 +92,29 @@ export async function POST(request: Request) {
   const preset = SAFE_PRESETS.has(rawPreset) ? rawPreset : 'prompt';
   const rawName = formData.get('name');
   const nameSlug = typeof rawName === 'string' ? slugifyName(rawName) : '';
+
+  // Upload flood protection without paid WAF: sliding-window counter in the
+  // user's own user_metadata (written via service role). Max 30 uploads / 10
+  // min / user. Last-write-wins races just make the limit slightly fuzzy.
+  {
+    const admin = createAdminClient();
+    const windowMs = 10 * 60 * 1000;
+    const now = Date.now();
+    const times: number[] = Array.isArray(user.user_metadata?.upload_times)
+      ? user.user_metadata.upload_times.filter((t: number) => typeof t === 'number' && now - t < windowMs)
+      : [];
+    if (times.length >= 30) {
+      return NextResponse.json({ error: 'Upload limit reached. Try again in a few minutes.' }, { status: 429 });
+    }
+    times.push(now);
+    try {
+      await admin.auth.admin.updateUserById(user.id, {
+        user_metadata: { ...user.user_metadata, upload_times: times },
+      });
+    } catch {
+      // Counter write failed — allow the upload rather than brick image upload.
+    }
+  }
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: 'Missing image file' }, { status: 400 });

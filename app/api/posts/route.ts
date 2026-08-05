@@ -74,6 +74,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User submissions are disabled' }, { status: 403 });
     }
 
+    // Submission flood protection: max 5 post submissions per user per hour,
+    // counted against the submissions table (fall open if it's missing so the
+    // posts-data legacy path keeps working).
+    const { count: submitCount } = await admin
+      .from('submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString());
+    if (submitCount !== null && submitCount >= 5) {
+      return NextResponse.json({ error: 'Submission limit reached (5 per hour). Try again later.' }, { status: 429 });
+    }
+
     const post = data as Post | undefined;
     if (!post?.id || !post.title || !post.images?.length) {
       return NextResponse.json({ error: 'Invalid post' }, { status: 400 });
@@ -166,6 +178,19 @@ export async function POST(request: Request) {
         const cleanText = String(text || '').trim().slice(0, 1000);
         if (cleanText.length < 2) {
           return NextResponse.json({ error: 'Comment is too short' }, { status: 400 });
+        }
+
+        // Comment flood protection (no rate-limit infra on this stack): max
+        // 10 comments per user per 10 minutes across the whole site, counted
+        // against the comments table. Falls open if the table is missing so
+        // the legacy JSONB comments path keeps working.
+        const { count: recentCount, error: countError } = await admin
+          .from('comments')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('created_at', new Date(Date.now() - 10 * 60 * 1000).toISOString());
+        if (!countError && recentCount !== null && recentCount >= 10) {
+          return NextResponse.json({ error: 'You are commenting too fast. Try again in a few minutes.' }, { status: 429 });
         }
 
         const comment: PostComment = {

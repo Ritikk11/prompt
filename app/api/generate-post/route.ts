@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
+import { safeFetchImage, MAX_IMAGE_BYTES } from "@/lib/safe-fetch";
 import { fetchSettings } from "@/lib/data";
 import { TOOLS_MODELS_RULES } from "@/lib/admin/wandPrompts";
 
@@ -190,9 +191,10 @@ Output JSON only, no markdown formatting (like \`\`\`json).
 
     for (const img of imagesToFetch) {
       try {
-        const imgRes = await fetch(img.url);
-        if (imgRes.ok) {
+        const imgRes = await safeFetchImage(img.url);
+        if (imgRes && imgRes.ok) {
           const arrayBuffer = await imgRes.arrayBuffer();
+          if (arrayBuffer.byteLength > MAX_IMAGE_BYTES) continue;
           const buffer = Buffer.from(arrayBuffer);
           const base64Data = buffer.toString('base64');
           const mimeType = imgRes.headers.get('content-type') || 'image/jpeg';

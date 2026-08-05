@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
+import { safeFetchImage } from "@/lib/safe-fetch";
 
 export const dynamic = 'force-dynamic';
 
@@ -83,8 +84,8 @@ export async function POST(req: NextRequest) {
             });
           }
         } else {
-          const imgRes = await fetch(imageUrl);
-          if (imgRes.ok) {
+          const imgRes = await safeFetchImage(imageUrl);
+          if (imgRes && imgRes.ok) {
             const arrayBuffer = await imgRes.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
             const base64Data = buffer.toString('base64');

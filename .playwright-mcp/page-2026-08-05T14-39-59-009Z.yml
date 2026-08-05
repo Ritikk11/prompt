@@ -1,0 +1,288 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "AI PromptMatrix AI PromptMatrix" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img "AI PromptMatrix" [ref=e6]
+        - generic [ref=e7]: AI PromptMatrix
+      - textbox "Search prompts, categories, AI tools..." [ref=e14]
+      - navigation [ref=e15]:
+        - link "Home" [ref=e16] [cursor=pointer]:
+          - /url: /
+        - link "Explore" [ref=e18] [cursor=pointer]:
+          - /url: /explore
+        - link "Blog" [ref=e20] [cursor=pointer]:
+          - /url: /blog
+        - button "Tools" [ref=e24] [cursor=pointer]
+        - button "Toggle theme" [ref=e28] [cursor=pointer]
+  - main [ref=e38]:
+    - generic [ref=e39]:
+      - navigation [ref=e40]:
+        - link "Home" [ref=e41] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e44]: One Piece Anime Poster AI Prompt
+      - generic [ref=e45]:
+        - img "bg" [ref=e46]
+        - generic [ref=e47]:
+          - img "One Piece Anime Poster AI Prompt" [ref=e49]
+          - generic [ref=e50]:
+            - generic [ref=e51]:
+              - generic [ref=e52]:
+                - img "ChatGPT logo" [ref=e55]
+                - generic [ref=e56]: ChatGPT
+              - generic [ref=e57]:
+                - img "Gemini logo" [ref=e60]
+                - generic [ref=e61]: Gemini
+            - heading "One Piece Anime Poster AI Prompt" [level=1] [ref=e62]
+            - paragraph [ref=e63]: ChatGPT prompt for creating stylish Nami anime posters with modern streetwear and Japanese graphic design aesthetics
+            - generic [ref=e64]:
+              - generic [ref=e65]:
+                - generic [ref=e66]: 287 views
+                - button [ref=e72] [cursor=pointer]
+                - button "Bookmark this post" [ref=e77] [cursor=pointer]: save
+              - generic [ref=e81]:
+                - generic [ref=e82]: AI
+                - generic [ref=e84]:
+                  - paragraph [ref=e85]: AI PromptMatrix Editorial Team
+                  - paragraph [ref=e86]: Published on May 11, 2026
+      - generic [ref=e88]:
+        - generic [ref=e89]:
+          - heading "Prompt Gallery (1)" [level=2] [ref=e95]:
+            - text: Prompt Gallery
+            - generic [ref=e96]: (1)
+          - generic [ref=e99]:
+            - generic [ref=e101]:
+              - img "One Piece Anime Poster AI Prompt — ChatGPT prompt 1" [ref=e104]
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "ChatGPT logo"
+                  - generic: ChatGPT
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Gemini logo"
+                  - generic: Gemini
+              - generic [ref=e105]: "PROMPT #1"
+              - generic [ref=e107]:
+                - button "Download Image" [ref=e108] [cursor=pointer]
+                - button "View Fullscreen" [ref=e112] [cursor=pointer]
+            - generic [ref=e116]:
+              - generic [ref=e117]:
+                - generic [ref=e118]:
+                  - heading "Smart Template" [level=3] [ref=e121]
+                  - button "Copy" [ref=e122] [cursor=pointer]
+                - paragraph [ref=e126]: Fill the placeholders you want to customize. The prompt below updates instantly, and Copy uses your filled version.
+                - generic [ref=e127]:
+                  - generic [ref=e128]:
+                    - generic [ref=e129] [cursor=pointer]: character_name
+                    - textbox "Enter character_name..." [ref=e130]
+                  - generic [ref=e131]:
+                    - generic [ref=e132] [cursor=pointer]: franchise
+                    - textbox "Enter franchise..." [ref=e133]
+                  - generic [ref=e134]:
+                    - generic [ref=e135] [cursor=pointer]: aspect_ratio
+                    - textbox "Enter aspect_ratio..." [ref=e136]
+                - paragraph [ref=e138]: "Create a stylized illustration of {character_name} from {franchise}. Character Analysis: Derive the character’s core personality archetype based on canon portrayal (e.g., heroic, calm, mysterious, aggressive). Identify the signature color from the original design and use it as the primary visual accent. Pose & Body Language: Generate an iconic pose that reflects the personality archetype: Energetic / Heroic: dynamic action, wide stance, explosive movement Calm / Confident: balanced, relaxed posture, minimal motion Dark / Mysterious: low stance, subtle movement, sharp or hidden gaze Aggressive / Intense: forward-leaning attack stance, visible tension, clenched fists. Facial Expression: Match expression precisely to the character’s personality and emotional tone. Art Style: Anime × streetwear × graphic poster hybrid Clean lineart, semi-flat shading, high contrast Modern, minimal, and visually striking Composition: Vertical format ({aspect_ratio}) Off-center subject placement Strong diagonal visual flow Layered depth for a dynamic poster feel. Outfit Design: Reimagine the original costume as modern streetwear / techwear Preserve recognizable identity elements of the character Color Palette: Dominant clean white background Use signature color as the primary accent Add one secondary accent (complementary or analogous tone) Keep palette minimal, bold, and high-contrast Background: Abstract geometric poster layout Use negative space effectively Integrate subtle accents using the character’s color theme Effects: Energy strokes, paint lines, and motion accents Effects should follow the character’s energy and color identity Lighting: Sharp directional lighting Crisp shadows Subtle glow using the signature color Rendering Quality: Ultra-clean vector-style finish Poster-quality composition 4K resolution, high detail."
+              - generic [ref=e139]:
+                - text: "Model:"
+                - generic [ref=e143]: GPT Image 2
+              - generic [ref=e144]:
+                - button [ref=e145] [cursor=pointer]:
+                  - img "ChatGPT logo" [ref=e147]
+                  - text: Try in ChatGPT
+                - button [ref=e152] [cursor=pointer]:
+                  - img "Gemini logo" [ref=e154]
+                  - text: Try in Gemini
+        - generic [ref=e159]:
+          - heading "Share" [level=3] [ref=e160]
+          - generic [ref=e167]:
+            - button "Share on WhatsApp" [ref=e168] [cursor=pointer]
+            - button "Share on X" [ref=e171] [cursor=pointer]
+            - button "Copy caption for Instagram" [ref=e174] [cursor=pointer]
+            - button "Share on Facebook" [ref=e179] [cursor=pointer]
+            - button "Share on Pinterest" [ref=e182] [cursor=pointer]
+            - button "Copy link" [ref=e185] [cursor=pointer]
+        - generic [ref=e192]:
+          - heading "Copy Entire Collection" [level=3] [ref=e193]
+          - paragraph [ref=e194]: Copy this prompt instantly to use in your favorite AI generator.
+          - button "Copy" [ref=e197] [cursor=pointer]
+        - generic [ref=e201]:
+          - generic [ref=e202]:
+            - generic [ref=e203]:
+              - paragraph [ref=e204]: Quick workflow
+              - heading "How to use these prompts" [level=3] [ref=e205]
+            - paragraph [ref=e206]: Copy, customize, and generate. Keep the original prompt structure intact, then adjust only the details you want to change.
+          - generic [ref=e207]:
+            - generic [ref=e208]:
+              - generic [ref=e209]: "01"
+              - heading "Open ChatGPT or Gemini" [level=4] [ref=e216]
+              - paragraph [ref=e217]: Use the tool or model listed with this prompt. If multiple tools are shown, choose the one you prefer.
+            - generic [ref=e218]:
+              - generic [ref=e219]: "02"
+              - heading "Copy the prompt" [level=4] [ref=e225]
+              - paragraph [ref=e226]: Use the copy button on any prompt card, or copy the entire collection above.
+            - generic [ref=e227]:
+              - generic [ref=e228]: "03"
+              - heading "Upload reference image" [level=4] [ref=e235]
+              - paragraph [ref=e236]: Attach your reference image first when the prompt is image-guided.
+            - generic [ref=e237]:
+              - generic [ref=e238]: "04"
+              - heading "Customize details" [level=4] [ref=e243]
+              - paragraph [ref=e244]: Replace placeholders, names, colors, aspect ratio, or style notes as needed.
+            - generic [ref=e245]:
+              - generic [ref=e246]: "05"
+              - heading "Paste and generate" [level=4] [ref=e253]
+              - paragraph [ref=e254]: Paste the prompt with the image, generate the artwork, then refine in small steps.
+      - generic [ref=e255]:
+        - heading "Discovery Tags" [level=3] [ref=e256]
+        - link "#Anime" [ref=e258] [cursor=pointer]:
+          - /url: /tag/Anime
+      - generic [ref=e259]:
+        - generic [ref=e260]:
+          - heading "Related Prompts" [level=2] [ref=e263]
+          - link "Explore More" [ref=e264] [cursor=pointer]:
+            - /url: /explore
+        - generic:
+          - generic:
+            - generic:
+              - link "Japanese Graffiti Portrait AI ChatGPT Prompt ChatGPT logo ChatGPT Japanese Graffiti Portrait AI ChatGPT Prompt 1 Prompt 200 3":
+                - /url: /japanese-graffiti-portrait-ai-chatgpt-prompt
+                - generic:
+                  - generic:
+                    - img "Japanese Graffiti Portrait AI ChatGPT Prompt"
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img "ChatGPT logo"
+                        - generic: ChatGPT
+                - generic:
+                  - heading "Japanese Graffiti Portrait AI ChatGPT Prompt" [level=3]
+                  - generic:
+                    - generic: 1 Prompt
+                    - generic:
+                      - generic: "200"
+                      - generic: "3"
+      - generic [ref=e267]:
+        - generic [ref=e273]:
+          - heading "Keep exploring" [level=3] [ref=e274]
+          - paragraph [ref=e275]: Browse more prompt pages with examples, model notes, and copy-ready creative workflows.
+        - generic [ref=e276]:
+          - link [ref=e277] [cursor=pointer]:
+            - /url: /explore
+          - link [ref=e285] [cursor=pointer]:
+            - /url: /tool/chatgpt
+          - link [ref=e293] [cursor=pointer]:
+            - /url: /tool/gemini
+        - link "Open prompt library" [ref=e301] [cursor=pointer]:
+          - /url: /explore
+      - generic [ref=e305]:
+        - generic [ref=e309]:
+          - paragraph [ref=e310]: Guide
+          - heading "Detailed Insights" [level=2] [ref=e311]
+        - generic [ref=e315]:
+          - heading "About This Prompt" [level=2] [ref=e316]
+          - paragraph [ref=e318]: This prompt is designed to generate high-energy anime character posters inspired by modern Japanese graphic design, streetwear aesthetics, and dynamic manga illustration styles. It focuses on creating bold compositions with strong perspective, vibrant colors, detailed clothing design, and layered typography elements that feel similar to premium anime promotional artwork.
+          - paragraph [ref=e319]: The composition uses an extreme low-angle perspective to make the character appear confident, powerful, and visually dominant. This camera angle increases depth and creates a dramatic poster-like presence while enhancing motion and energy throughout the frame.
+          - paragraph [ref=e320]: Fashion styling is a major part of this prompt. The outfit combines futuristic streetwear elements, tactical accessories, layered straps, bold typography, and sporty design details to create a modern anime-inspired look. Bright orange and white color blocking gives the artwork a strong visual identity while maintaining clean contrast.
+          - paragraph [ref=e321]: Graphic design elements such as Japanese typography, brush strokes, geometric shapes, symbols, logos, and layout panels help create an authentic anime-poster aesthetic. These details make the final image feel polished, commercial, and visually rich rather than a simple character illustration.
+          - paragraph [ref=e322]: Hair movement, expressive facial features, and energetic posing are important components of the prompt. Flowing hair strands, confident expressions, and dynamic hand positioning add motion and personality to the composition, making the artwork feel alive and engaging.
+          - paragraph [ref=e323]: The clean background combined with layered graphic textures allows the subject to remain the center of attention while still giving the overall design a premium poster-style appearance. This type of prompt works especially well for wallpapers, anime covers, social media art, collectible poster concepts, and character-focused visual designs.
+          - paragraph [ref=e324]: Overall, this prompt is perfect for generating stylish anime character posters with strong Japanese design influence, futuristic fashion styling, and high-impact promotional artwork aesthetics.
+          - separator [ref=e325]
+          - heading "Prompt Details" [level=2] [ref=e326]
+          - list [ref=e328]:
+            - listitem [ref=e329]: Extreme low-angle anime poster composition
+            - listitem [ref=e330]: Japanese graphic design and typography elements
+            - listitem [ref=e331]: Modern streetwear-inspired anime outfit styling
+            - listitem [ref=e332]: Dynamic pose with flowing hair movement
+            - listitem [ref=e333]: Bright orange and white color contrast
+            - listitem [ref=e334]: Layered poster-style layout and symbols
+            - listitem [ref=e335]: Clean commercial anime artwork aesthetic
+          - separator [ref=e336]
+          - heading "Tips" [level=2] [ref=e337]
+          - list [ref=e339]:
+            - listitem [ref=e340]: Add "ultra detailed anime shading" for richer visuals
+            - listitem [ref=e341]: Use "dynamic manga perspective" for stronger depth
+            - listitem [ref=e342]: Add "Japanese typography layout" for authentic poster style
+            - listitem [ref=e343]: Try neon accents for futuristic anime aesthetics
+            - listitem [ref=e344]: Use "high contrast cel shading" for sharper anime visuals.
+          - heading "FAQs" [level=2] [ref=e345]
+          - heading "❖ What is this prompt used for?" [level=3] [ref=e347]:
+            - generic [ref=e348]: ❖
+            - text: What is this prompt used for?
+          - paragraph [ref=e349]: This prompt is used to create stylish anime posters with modern Japanese graphic design aesthetics.
+          - heading "❖ Can I use this prompt for other anime characters?" [level=3] [ref=e350]:
+            - generic [ref=e351]: ❖
+            - text: Can I use this prompt for other anime characters?
+          - paragraph [ref=e352]: Yes, you can replace the character details to generate posters for any anime character.
+          - heading "❖ How can I improve the anime quality?" [level=3] [ref=e353]:
+            - generic [ref=e354]: ❖
+            - text: How can I improve the anime quality?
+          - paragraph [ref=e355]: You can add terms like "ultra detailed anime shading" or "high quality cel shading".
+          - heading "❖ Does this prompt work for wallpapers and posters?" [level=3] [ref=e356]:
+            - generic [ref=e357]: ❖
+            - text: Does this prompt work for wallpapers and posters?
+          - paragraph [ref=e358]: Yes, it is perfect for wallpapers, posters, profile art, and anime-themed social media visuals.
+          - heading "❖ Can I customize the outfit colors?" [level=3] [ref=e359]:
+            - generic [ref=e360]: ❖
+            - text: Can I customize the outfit colors?
+          - paragraph [ref=e361]: Yes, you can change colors, accessories, and fashion styling to create unique variations.
+          - heading "❖ What style does this prompt generate?" [level=3] [ref=e362]:
+            - generic [ref=e363]: ❖
+            - text: What style does this prompt generate?
+          - paragraph [ref=e364]: It creates a mix of anime poster art, Japanese streetwear aesthetics, manga composition, and commercial graphic design.
+  - contentinfo [ref=e365]:
+    - generic [ref=e366]:
+      - generic [ref=e367]:
+        - generic [ref=e368]:
+          - link "AI PromptMatrix AI PromptMatrix" [ref=e369] [cursor=pointer]:
+            - /url: /
+            - img "AI PromptMatrix" [ref=e371]
+            - generic [ref=e372]: AI PromptMatrix
+          - paragraph [ref=e373]: AI PromptMatrix is your ultimate collection of curated image prompts for Chatgpt, Gemini, Nano Banana Pro, Grok, and more. Discover, copy and create stunning artwork instantly.
+          - generic [ref=e374]:
+            - link "ChatGPT" [ref=e375] [cursor=pointer]:
+              - /url: /tool/ChatGPT
+            - link "Gemini" [ref=e376] [cursor=pointer]:
+              - /url: /tool/Gemini
+            - link "Grok" [ref=e377] [cursor=pointer]:
+              - /url: /tool/Grok
+            - link "Qwen Image" [ref=e378] [cursor=pointer]:
+              - /url: /tool/Qwen%20Image
+        - generic [ref=e379]:
+          - generic [ref=e380]:
+            - heading "Legal" [level=3] [ref=e381]
+            - generic [ref=e382]:
+              - link "Privacy Policy" [ref=e383] [cursor=pointer]:
+                - /url: /privacy
+              - link "Terms of Service" [ref=e384] [cursor=pointer]:
+                - /url: /terms
+              - link "DMCA Notice" [ref=e385] [cursor=pointer]:
+                - /url: /dmca
+              - link "Disclaimer" [ref=e386] [cursor=pointer]:
+                - /url: /disclaimer
+          - generic [ref=e387]:
+            - heading "Platform" [level=3] [ref=e388]
+            - generic [ref=e389]:
+              - link "Explore" [ref=e390] [cursor=pointer]:
+                - /url: /explore
+              - link "About Us" [ref=e391] [cursor=pointer]:
+                - /url: /about
+              - link "Contact" [ref=e392] [cursor=pointer]:
+                - /url: /contact
+              - link "Cookies Policy" [ref=e393] [cursor=pointer]:
+                - /url: /cookies
+          - generic [ref=e394]:
+            - heading "Content" [level=3] [ref=e395]
+            - generic [ref=e396]:
+              - link "Blog" [ref=e397] [cursor=pointer]:
+                - /url: /blog
+              - link "Guides" [ref=e398] [cursor=pointer]:
+                - /url: /guides
+      - paragraph [ref=e400]: © 2026 AI PromptMatrix. All rights reserved.
+    - button "Scroll to top" [ref=e402] [cursor=pointer]
+  - alert [ref=e401]

@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
+import { safeFetchImage } from "@/lib/safe-fetch";
 
 export const dynamic = 'force-dynamic';
 
@@ -18,8 +19,8 @@ async function imagePart(imageUrl: string) {
     return null;
   }
   try {
-    const imgRes = await fetch(imageUrl);
-    if (!imgRes.ok) return null;
+    const imgRes = await safeFetchImage(imageUrl);
+    if (!imgRes || !imgRes.ok) return null;
     const buffer = Buffer.from(await imgRes.arrayBuffer());
     return {
       inlineData: {
