@@ -151,7 +151,7 @@ export default function LoadingImage({
   }
 
   return (
-    <span className={`relative block overflow-hidden${failed ? ' flex min-h-[220px] sm:min-h-[320px] items-center justify-center' : ''} ${wrapperClassName}`}>
+    <span className={`relative block overflow-hidden${failed ? ' flex aspect-[4/5] max-h-[85vh] w-full items-center justify-center' : ''} ${wrapperClassName}`}>
       {shimmer}
       {fallback}
       {image}
@@ -252,7 +252,7 @@ export function LoadingImg({
   // On failure the image contributes no height (broken img has no natural
   // dimensions), which collapses the wrapper to a sliver and squashes the
   // fallback. Reserve real space so the placeholder stays readable.
-  const failedSizing = failed ? ' flex min-h-[220px] sm:min-h-[320px] items-center justify-center' : '';
+  const failedSizing = failed ? ' flex aspect-[4/5] max-h-[85vh] w-full items-center justify-center' : '';
 
   return (
     <span className={`relative block overflow-hidden${failedSizing} ${wrapperClassName}`}>
