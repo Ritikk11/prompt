@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 // Global styles
 import { ThemeProvider } from '@/components/context/ThemeContext';
@@ -140,7 +141,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <link key={origin} rel="preconnect" href={origin} crossOrigin="" />
         ))}
         {adsensePublisherId && initialSettings.ads?.autoAdsEnabled && (
-          <script
+          <Script
+            id="adsbygoogle-init"
+            strategy="afterInteractive"
             async
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsensePublisherId}`}
             crossOrigin="anonymous"
@@ -160,18 +163,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         
-        {/* Google tag (gtag.js) */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-3SM2DNE8VW"></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-3SM2DNE8VW');
-            `
-          }}
+        {/* Google tag (gtag.js) — afterInteractive keeps it off the critical
+            render path (no bundle impact; loads after hydration). */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-3SM2DNE8VW"
+          strategy="afterInteractive"
         />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-3SM2DNE8VW');
+          `}
+        </Script>
       </head>
       {/* overflow-x-clip on body (not -hidden): `hidden` turns body into a
           scroll container, so any transient vertical overflow (scroll-reveal

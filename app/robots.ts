@@ -9,12 +9,26 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   const disallow = Array.from(robotsText.matchAll(/^Disallow:\s*(.+)$/gim)).map(match => match[1].trim()).filter(Boolean);
   const sitemap = robotsText.match(/^Sitemap:\s*(.+)$/im)?.[1]?.trim() || `${baseUrl}/sitemap.xml`;
 
+  const resolvedDisallow = disallow.length > 0 ? disallow : ['/admin/', '/profile/', '/api/', '/search/', '/submit/', '/login/'];
+
+  // Explicit Allow for the major AI/LLM crawlers so training + answer-engine
+  // indexing consent is unambiguous (default '*' is already permissive; this
+  // makes it declarative and future-proofs against a stricter default).
+  const aiCrawlers = ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'Google-Extended', 'ClaudeBot', 'anthropic-ai', 'PerplexityBot', 'CCBot'];
+
   return {
-    rules: {
-      userAgent: '*',
-      allow,
-      disallow: disallow.length > 0 ? disallow : ['/admin/', '/profile/', '/api/', '/search/', '/submit/', '/login/'],
-    },
+    rules: [
+      {
+        userAgent: '*',
+        allow,
+        disallow: resolvedDisallow,
+      },
+      ...aiCrawlers.map(userAgent => ({
+        userAgent,
+        allow: '/',
+        disallow: resolvedDisallow,
+      })),
+    ],
     sitemap,
   };
 }

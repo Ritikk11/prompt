@@ -61,6 +61,23 @@ const nextConfig: NextConfig = {
     ],
   },
   transpilePackages: ['motion'],
+  async headers() {
+    // Security headers applied to every route. Kept minimal + safe: no CSP here
+    // (would need per-origin allowlisting for gtag/adsense/supabase and risks
+    // breaking third-party embeds). HSTS + framing/MIME/referrer hardening only.
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+    ];
+  },
   webpack: (config, {dev}) => {
     // Some hosted editors disable file watching to avoid dev-server flicker.
     if (dev && process.env.DISABLE_HMR === 'true') {
