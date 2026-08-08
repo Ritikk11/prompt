@@ -65,17 +65,41 @@ const nextConfig: NextConfig = {
     // Security headers applied to every route. Kept minimal + safe: no CSP here
     // (would need per-origin allowlisting for gtag/adsense/supabase and risks
     // breaking third-party embeds). HSTS + framing/MIME/referrer hardening only.
+    const securityHeaders = [
+      { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+    ];
+
+    // Edge CDN Caching headers for public HTML routes (s-maxage=86400 for 24h Edge cache,
+    // stale-while-revalidate=604800 for 7-day background revalidation).
+    const publicCacheHeader = {
+      key: 'Cache-Control',
+      value: 'public, max-age=0, s-maxage=86400, stale-while-revalidate=604800',
+    };
+
+    const publicRoutes = [
+      '/',
+      '/explore',
+      '/tool/:path*',
+      '/tag/:path*',
+      '/section/:path*',
+      '/guides/:path*',
+      '/blog/:path*',
+      '/:slug([a-zA-Z0-9_-]+)',
+    ];
+
     return [
       {
         source: '/:path*',
-        headers: [
-          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-        ],
+        headers: securityHeaders,
       },
+      ...publicRoutes.map((route) => ({
+        source: route,
+        headers: [publicCacheHeader],
+      })),
     ];
   },
   webpack: (config, {dev}) => {
