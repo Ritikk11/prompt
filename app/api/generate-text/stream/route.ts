@@ -1,7 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { safeFetchImage } from "@/lib/safe-fetch";
+import { safeFetchImage, MAX_IMAGE_BYTES } from "@/lib/safe-fetch";
+
+// Only inert raster types — mirrors the upload route and generate-text allowlist.
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif',
+]);
 
 export const dynamic = 'force-dynamic';
 
@@ -15,13 +20,17 @@ interface IncomingMessage {
 async function imagePart(imageUrl: string) {
   if (imageUrl.startsWith('data:')) {
     const match = imageUrl.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
-    if (match) return { inlineData: { mimeType: match[1], data: match[2] } };
+    // Guard: reject non-raster MIME types (e.g. image/svg+xml) from data URLs.
+    if (match && ALLOWED_IMAGE_MIME_TYPES.has(match[1])) return { inlineData: { mimeType: match[1], data: match[2] } };
     return null;
   }
   try {
     const imgRes = await safeFetchImage(imageUrl);
     if (!imgRes || !imgRes.ok) return null;
-    const buffer = Buffer.from(await imgRes.arrayBuffer());
+    const arrayBuffer = await imgRes.arrayBuffer();
+    // Guard: skip oversized images to avoid exhausting Worker memory.
+    if (arrayBuffer.byteLength > MAX_IMAGE_BYTES) return null;
+    const buffer = Buffer.from(arrayBuffer);
     return {
       inlineData: {
         data: buffer.toString('base64'),

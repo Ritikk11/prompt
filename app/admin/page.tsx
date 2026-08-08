@@ -5114,17 +5114,28 @@ function AdminInner() {
                   <button
                     onClick={async () => {
                       try {
-                        const { GoogleGenAI } = await import('@google/genai');
-                        const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
-                        const response = await ai.models.generateContent({
-                          model: 'gemini-2.5-flash',
-                          contents: `Suggest 5 memorable, short domain names for a website titled "${siteTitle}" with description "${siteDescription}". Just return the options separated by commas.`
+                        // Call the server-side route so the Gemini API key
+                        // never has to be a NEXT_PUBLIC_ var (client-bundle leak).
+                        const supabase = createSupabaseClient();
+                        const { data: { session } } = await supabase.auth.getSession();
+                        const res = await fetch('/api/generate-text', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                          },
+                          body: JSON.stringify({
+                            prompt: `Suggest 5 memorable, short domain names for a website titled "${siteTitle}" with description "${siteDescription}". Just return the options separated by commas.`,
+                          }),
                         });
-                        if (response.text) {
-                          alert(`Suggested domains:\n${response.text}`);
+                        const result = await res.json();
+                        if (result.text) {
+                          alert(`Suggested domains:\n${result.text}`);
+                        } else {
+                          alert('Could not generate domain names. Please try again.');
                         }
                       } catch(e) {
-                         alert('Could not generate domain names. Make sure NEXT_PUBLIC_GEMINI_API_KEY is configured.');
+                        alert('Could not generate domain names. Please try again.');
                       }
                     }}
                     className="px-4 py-2 rounded-xl text-xs font-bold text-surface-600 dark:text-surface-300 border border-surface-200 dark:border-surface-700 hover:bg-surface-100 dark:hover:bg-surface-800 whitespace-nowrap transition-colors"

@@ -1,7 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { safeFetchImage } from "@/lib/safe-fetch";
+import { safeFetchImage, MAX_IMAGE_BYTES } from "@/lib/safe-fetch";
+
+// Only inert raster types — same allowlist as the upload route. Without this
+// check a caller could pass data:image/svg+xml (or any other active MIME) and
+// have it forwarded to Gemini inside inlineData.
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif',
+]);
 
 export const dynamic = 'force-dynamic';
 
@@ -75,7 +82,8 @@ export async function POST(req: NextRequest) {
       try {
         if (imageUrl.startsWith('data:')) {
           const match = imageUrl.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
-          if (match) {
+          // Guard: reject non-raster MIME types (e.g. image/svg+xml) from data URLs.
+          if (match && ALLOWED_IMAGE_MIME_TYPES.has(match[1])) {
             contents.push({
               inlineData: {
                 mimeType: match[1],
@@ -87,15 +95,18 @@ export async function POST(req: NextRequest) {
           const imgRes = await safeFetchImage(imageUrl);
           if (imgRes && imgRes.ok) {
             const arrayBuffer = await imgRes.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            const base64Data = buffer.toString('base64');
-            const mimeType = imgRes.headers.get('content-type') || 'image/jpeg';
-            contents.push({
-              inlineData: {
-                data: base64Data,
-                mimeType,
-              },
-            });
+            // Guard: skip oversized images to avoid exhausting Worker memory.
+            if (arrayBuffer.byteLength <= MAX_IMAGE_BYTES) {
+              const buffer = Buffer.from(arrayBuffer);
+              const base64Data = buffer.toString('base64');
+              const mimeType = imgRes.headers.get('content-type') || 'image/jpeg';
+              contents.push({
+                inlineData: {
+                  data: base64Data,
+                  mimeType,
+                },
+              });
+            }
           }
         }
       } catch (err) {
