@@ -144,11 +144,15 @@ export default async function PostPage({ params }: Props) {
       fetchPriority: 'high',
       imageSrcSet: target.srcSet,
       imageSizes: target.sizes,
+      referrerPolicy: 'no-referrer',
     });
     // Warm the cross-origin uploads host early when resizing is disabled and the
     // image is served straight from uploads.aipromptmatrix.in.
     try {
-      preconnect(new URL(target.url).origin);
+      const origin = new URL(target.url).origin;
+      if (!origin.includes('aipromptmatrix.in') && !origin.includes('localhost')) {
+        preconnect(origin);
+      }
     } catch {
       // Relative/data URLs have no origin to preconnect — skip.
     }

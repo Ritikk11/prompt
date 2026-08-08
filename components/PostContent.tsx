@@ -612,6 +612,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   height={1280}
                   srcSet={heroImageSrcSet}
                   sizes={HERO_SIZES}
+                  decoding="sync"
                 />
               <div className="flex min-w-0 flex-col items-center lg:items-start">
                 <div className="flex flex-wrap justify-center gap-2 mb-6 lg:justify-start">
