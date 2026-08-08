@@ -231,7 +231,7 @@ export default function FilterChipRail({
               onClick={() => setSortOpen(open => !open)}
               aria-haspopup="listbox"
               aria-expanded={sortOpen}
-              className="inline-flex h-8 items-center gap-1 rounded-xl border border-surface-200 bg-white px-3 text-[13px] font-medium text-surface-700 transition-all hover:border-surface-300 hover: dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:border-surface-600"
+              className="inline-flex h-8 items-center gap-1 rounded-xl ring-1 ring-inset ring-surface-200 bg-white px-3 text-[13px] font-medium text-surface-700 transition-all hover:ring-surface-300 dark:ring-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:ring-surface-600 transform-gpu"
             >
               {activeSortLabel}
               <ChevronDown className={`h-3.5 w-3.5 opacity-50 transition-transform duration-200 ${sortOpen ? 'rotate-180' : ''}`} />
@@ -299,8 +299,8 @@ export default function FilterChipRail({
                 className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${
                   isActive
                     ? 'bg-primary-600 text-white dark:bg-primary-500'
-                    : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 hover:text-surface-900 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800 dark:hover:text-surface-100'
-                }`}
+                    : 'ring-1 ring-inset ring-surface-200 text-surface-600 hover:ring-surface-300 hover:bg-surface-50 hover:text-surface-900 dark:ring-surface-700 dark:text-surface-400 dark:hover:ring-surface-600 dark:hover:bg-surface-800 dark:hover:text-surface-100'
+                } transform-gpu`}
               >
                 {showToolLogo ? (
                   <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white p-[1px]">
