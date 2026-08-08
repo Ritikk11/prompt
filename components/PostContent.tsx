@@ -600,17 +600,13 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <Image src={backgroundPromptImageUrl} alt="bg" fill priority className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
             <div className="relative z-20 w-full max-w-6xl mx-auto flex flex-col items-center gap-8 p-8 pb-12 text-center lg:flex-row lg:items-center lg:gap-12 lg:p-12 lg:text-left">
-              {/* Fixed wrapper height = the img max-h clamps, so reserved space
-                  never changes when the real (non-square) image replaces the
-                  1280×1280 attr aspect ratio — otherwise the hero text block
-                  shifts when the image loads (CLS 0.35 on mobile). */}
               <LoadingImg
                   src={mainPromptImageUrl}
                   alt={post.title}
                   showSkeleton={showSkeleton}
                   priority
-                  wrapperClassName="flex h-[300px] w-auto max-w-full shrink-0 items-center justify-center rounded-2xl shadow-2xl sm:h-[360px] lg:h-[460px]"
-                  className="h-full w-auto max-w-full rounded-2xl object-contain"
+                  wrapperClassName="inline-flex max-w-full shrink-0 justify-center rounded-2xl shadow-2xl"
+                  className="h-auto max-h-[300px] w-auto max-w-full rounded-2xl object-contain sm:max-h-[360px] lg:max-h-[460px]"
                   referrerPolicy="no-referrer"
                   width={1280}
                   height={1280}
@@ -983,6 +979,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                         // First gallery image is the mobile LCP element — must
                         // load eagerly and paint before hydration.
                         priority={index === 0}
+                        wrapperClassName="w-full"
                         className="block h-auto w-full rounded-xl transition-transform duration-500 group-hover/img:scale-[1.02]"
                         referrerPolicy="no-referrer"
                       />
