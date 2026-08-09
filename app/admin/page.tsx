@@ -421,10 +421,10 @@ function CardStylePreview({ style, badgeStyle = 'v1', label = 'Live preview' }: 
     slug: 'admin-card-preview',
     title: 'Anime poster prompt',
     description: 'A real PostCard preview using the selected card and badge style.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=900&q=80',
+    thumbnailUrl: '/og-image.jpg',
     images: [{
       id: 'preview-image',
-      url: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=900&q=80',
+      url: '/og-image.jpg',
       prompt: 'Vibrant anime poster, dramatic composition, clean typography',
       aiTool: 'ChatGPT',
       model: 'GPT Image',
@@ -446,7 +446,7 @@ function CardStylePreview({ style, badgeStyle = 'v1', label = 'Live preview' }: 
         <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">{label}</p>
         <span className="rounded-full bg-primary-500/10 px-2 py-1 text-[10px] font-black text-primary-600 dark:text-primary-300">{cardStyleName(activeStyle)}</span>
       </div>
-      <div className="mx-auto max-w-[280px] overflow-hidden rounded-xl bg-white p-2 dark:bg-surface-900">
+      <div className="pointer-events-none mx-auto max-w-[280px] overflow-hidden rounded-xl bg-white p-2 dark:bg-surface-900">
         <PostCard
           post={previewPost}
           index={0}
