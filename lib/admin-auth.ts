@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient as createUserClient } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 
@@ -46,4 +46,20 @@ export async function requireAdmin(request: Request) {
   }
 
   return { admin, user };
+}
+
+export async function isCurrentUserAdmin(request: Request) {
+  const { data: { user }, error } = await getRequestUser(request);
+  if (error || !user?.email) return false;
+
+  const admin = createAdminClient();
+  const { data, error: settingsError } = await admin.from('settings').select('data').eq('id', 'global').maybeSingle();
+  if (settingsError) return false;
+
+  const settingsEmails = parseEmailList((data?.data as any)?.adminEmails || []);
+  const envEmails = parseEmailList(process.env.ADMIN_EMAILS);
+  const adminEmails = Array.from(new Set([...settingsEmails, ...envEmails]));
+
+  if (adminEmails.length === 0) return false;
+  return adminEmails.includes(user.email.toLowerCase());
 }

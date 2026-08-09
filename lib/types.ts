@@ -308,6 +308,7 @@ export interface DiscoveryPageSettings {
 }
 
 export interface SiteSettings {
+  maintenanceMode?: boolean;
   siteTitle: string;
   siteDescription: string;
   authors?: any;

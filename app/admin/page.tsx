@@ -1117,6 +1117,7 @@ function AdminInner() {
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [aiPromptInstruction, setAiPromptInstruction] = useState('');
 
+  const [maintenanceMode, setMaintenanceMode] = useState(settings.maintenanceMode || false);
   const [siteTitle, setSiteTitle] = useState(settings.siteTitle);
   const [siteLogo, setSiteLogo] = useState(settings.siteLogo || '');
   const [siteDescription, setSiteDescription] = useState(cleanAdminPublicCopy(settings.siteDescription) || settings.siteDescription);
@@ -2403,6 +2404,7 @@ function AdminInner() {
   const handleSaveSettings = () => {
     updateSettings({
       ...settings,
+      maintenanceMode,
       siteTitle,
       siteLogo,
       siteDescription,
@@ -5092,6 +5094,24 @@ function AdminInner() {
                 />
                 <div className="space-y-6">
                   <SectionEyebrow>1. Access & identity</SectionEyebrow>
+                  <div>
+                    <label className={adminLabel}>Site Status</label>
+                    <div className="flex items-center gap-3 mt-2 mb-4 p-4 rounded-xl border border-red-500/20 bg-red-500/5 dark:bg-red-500/10">
+                      <div className="flex-1">
+                        <p className="font-bold text-red-600 dark:text-red-400">Maintenance Mode</p>
+                        <p className="text-xs text-red-700/80 dark:text-red-300/80 mt-1">If enabled, the public site is blocked with a maintenance screen. Only admins can browse the site. Remember to save changes at the bottom to apply.</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={maintenanceMode}
+                          onChange={(e) => setMaintenanceMode(e.target.checked)}
+                        />
+                        <div className="w-11 h-6 bg-surface-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-surface-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-surface-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-surface-600 peer-checked:bg-red-500"></div>
+                      </label>
+                    </div>
+                  </div>
                   <div>
                     <label className={adminLabel}>Admin emails (comma separated)</label>
                     <input

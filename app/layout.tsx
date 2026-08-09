@@ -9,6 +9,7 @@ import { ToastContainer } from '@/components/ui/ToastContainer';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AdSlot from '@/components/AdSlot';
+import MaintenanceBouncer from '@/components/MaintenanceBouncer';
 import { fetchSections, fetchSettings } from '@/lib/data';
 
 const inter = Inter({
@@ -190,6 +191,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           translateY) flashes a second scrollbar and shifts the layout. */}
       <body className="antialiased min-h-screen flex flex-col bg-white text-surface-950 dark:bg-surface-950 dark:text-surface-50 selection:bg-primary-500/30 selection:text-primary-900 dark:selection:bg-primary-500/40 dark:selection:text-white" suppressHydrationWarning>
         <ToastContainer />
+        <MaintenanceBouncer isMaintenanceMode={initialSettings.maintenanceMode} />
         <ThemeProvider>
           <DataProvider
             initialSettings={initialSettings}

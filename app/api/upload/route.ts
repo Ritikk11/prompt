@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { getRequestUser } from '@/lib/admin-auth';
+import { getRequestUser, isCurrentUserAdmin } from '@/lib/admin-auth';
 import { createAdminClient } from '@/lib/supabase-admin';
 
 type R2BucketLike = {
@@ -81,6 +81,16 @@ async function getUploadsBucket() {
 }
 
 export async function POST(request: Request) {
+  const admin = createAdminClient();
+  const { data: globalSettingsRow } = await admin.from('settings').select('data').eq('id', 'global').maybeSingle();
+  const globalSettings = (globalSettingsRow?.data || {}) as any;
+  
+  if (globalSettings.maintenanceMode) {
+    if (!(await isCurrentUserAdmin(request))) {
+      return NextResponse.json({ error: 'Service unavailable during maintenance' }, { status: 503 });
+    }
+  }
+
   const { data: { user } } = await getRequestUser(request);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

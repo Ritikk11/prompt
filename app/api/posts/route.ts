@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { isCurrentUserAdmin } from '@/lib/admin-auth';
 import { fetchPostSummaries } from '@/lib/data';
 import type { Post, PostComment, SiteSettings } from '@/lib/types';
 
@@ -55,6 +56,16 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const admin = createAdminClient();
+  
+  const { data: globalSettingsRow } = await admin.from('settings').select('data').eq('id', 'global').maybeSingle();
+  const globalSettings = (globalSettingsRow?.data || {}) as SiteSettings;
+  
+  if (globalSettings.maintenanceMode) {
+    if (!(await isCurrentUserAdmin(request))) {
+      return NextResponse.json({ error: 'Service unavailable during maintenance' }, { status: 503 });
+    }
+  }
+
   const body = await request.json().catch(() => null);
   const { action, id, data, liked, text } = body || {};
 
