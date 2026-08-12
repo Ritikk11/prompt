@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Image as ImageIcon, Loader2, Folder, ArrowLeft } from 'lucide-react';
+import { X, Image as ImageIcon, Loader2, Folder, ArrowLeft, Home, ChevronRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase-client';
 
 type MediaLibraryModalProps = {
@@ -69,19 +69,33 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLi
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="w-full max-w-5xl bg-white dark:bg-surface-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[85vh] border border-surface-200 dark:border-surface-800">
-        <div className="px-6 py-5 border-b border-surface-100 dark:border-surface-800/50 flex items-center justify-between bg-surface-50/50 dark:bg-surface-900/50">
-          <div className="flex items-center gap-3">
-            {currentPrefix && (
-              <button onClick={() => setCurrentPrefix('')} className="p-2 -ml-2 text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-200 dark:hover:bg-surface-800 rounded-xl transition-colors">
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-            )}
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <ImageIcon className="w-5 h-5 text-primary-500" />
-              {currentPrefix ? `Library / ${currentPrefix.replace(/\/$/, '')}` : 'Media Library'}
-            </h2>
+        <div className="px-6 py-4 border-b border-surface-100 dark:border-surface-800/50 flex items-center justify-between bg-surface-50/50 dark:bg-surface-900/50 gap-4">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap">
+            <button 
+              onClick={() => setCurrentPrefix('')}
+              className={`flex items-center gap-2 transition-colors ${!currentPrefix ? 'text-surface-900 dark:text-white font-bold cursor-default' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white font-medium'}`}
+            >
+              <Home className="w-5 h-5 shrink-0 text-primary-500" />
+              <span className="shrink-0 text-lg">Library</span>
+            </button>
+            {currentPrefix.split('/').filter(Boolean).map((part, index, array) => {
+              const prefixToHere = array.slice(0, index + 1).join('/') + '/';
+              const isLast = index === array.length - 1;
+              return (
+                <div key={prefixToHere} className="flex items-center gap-2 shrink-0">
+                  <ChevronRight className="w-4 h-4 text-surface-400 shrink-0" />
+                  <button
+                    onClick={() => setCurrentPrefix(prefixToHere)}
+                    disabled={isLast}
+                    className={`transition-colors text-lg ${isLast ? 'text-surface-900 dark:text-white font-bold cursor-default' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white font-medium'}`}
+                  >
+                    {part}
+                  </button>
+                </div>
+              );
+            })}
           </div>
-          <button onClick={onClose} className="p-2 text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-200 dark:hover:bg-surface-800 rounded-xl transition-colors">
+          <button onClick={onClose} className="p-2 -mr-2 text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-200 dark:hover:bg-surface-800 rounded-xl transition-colors shrink-0">
             <X className="w-5 h-5" />
           </button>
         </div>
