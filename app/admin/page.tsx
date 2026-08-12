@@ -22,7 +22,7 @@ import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
 import AiStudioTab from '@/components/admin/AiStudioTab';
 import { MagicWandProvider, WandButton, useMagicWand } from '@/components/admin/MagicWand';
-import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
+import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, CharCount, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
 import { askAi } from '@/lib/admin/ai';
 import { postPrompts, articlePrompts, generalPrompts, discoveryPrompts, homepagePrompts, aiToolPrompts, featurePrompts, TOOLS_MODELS_RULES, aiStudioSystemContext } from '@/lib/admin/wandPrompts';
 import { filterPostsForSection, getSectionPath } from '@/lib/sections';
@@ -3473,15 +3473,16 @@ function AdminInner() {
                         prompt={() => postPrompts.title(tagsStr)}
                       />
                     </div>
-                    <input
+                    <textarea rows={2}
                       value={title}
                       onChange={e => {
                         setTitle(e.target.value);
                         if (!editingPost) setSlug(slugify(e.target.value));
                       }}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className="resize-y w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
                       placeholder="Enter post title..."
                     />
+                    <CharCount value={title} recommended={60} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1.5">URL Slug *</label>
@@ -3511,6 +3512,7 @@ function AdminInner() {
                     className="w-full min-h-[96px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
                     placeholder="Describe this prompt collection..."
                   />
+                  <CharCount value={description} recommended={160} />
                 </div>
 
                 <div>
@@ -3698,6 +3700,7 @@ function AdminInner() {
                       className="w-full min-h-[72px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
                       placeholder="Title for Google search..."
                     />
+                    <CharCount value={seoTitle} recommended={60} />
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
@@ -3716,6 +3719,7 @@ function AdminInner() {
                       className="w-full min-h-[96px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
                       placeholder="Short snippet for search results..."
                     />
+                    <CharCount value={seoDescription} recommended={160} />
                   </div>
                 </div>
 
@@ -3851,11 +3855,9 @@ function AdminInner() {
                           <span className="text-xs font-semibold text-surface-400 flex items-center gap-1.5">
                             <ImageIcon className="w-3 h-3" /> Image #{idx + 1}
                           </span>
-                          {images.length > 1 && (
-                            <button onClick={() => removeImage(idx)} className="text-red-400 hover:text-red-500">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
+                          <button onClick={() => removeImage(idx)} className="text-red-400 hover:text-red-500">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -4086,7 +4088,8 @@ function AdminInner() {
                     <div className="grid gap-3 sm:grid-cols-2">
                       <label className="space-y-1 sm:col-span-2">
                         <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Title</span>
-                        <input value={selectedArticle.title} onChange={e => updateManagedArticle(selectedArticle.slug, { title: e.target.value })} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
+                        <textarea rows={2} value={selectedArticle.title} onChange={e => updateManagedArticle(selectedArticle.slug, { title: e.target.value })} className="resize-y w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
+                        <CharCount value={selectedArticle.title} recommended={60} />
                       </label>
                       <label className="space-y-1">
                         <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Slug</span>
@@ -4119,6 +4122,7 @@ function AdminInner() {
                           />
                         </div>
                         <textarea value={selectedArticle.description} onChange={e => updateManagedArticle(selectedArticle.slug, { description: e.target.value })} rows={3} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
+                        <CharCount value={selectedArticle.description} recommended={160} />
                       </label>
                       <label className="space-y-1">
                         <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Tags</span>
@@ -5453,12 +5457,13 @@ function AdminInner() {
                                 prompt={discoveryPrompts.exploreHeading}
                               />
                             </div>
-                            <input
+                            <textarea rows={2}
                               value={discoveryPages.exploreTitle || ''}
                               onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreTitle: e.target.value }))}
-                              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
+                              className="resize-y w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
                               placeholder="Explore AI Prompts"
                             />
+                            <CharCount value={discoveryPages.exploreTitle || ''} recommended={60} />
                           </div>
                         </div>
                         <div>
@@ -5478,6 +5483,7 @@ function AdminInner() {
                             className="w-full min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
                             placeholder="Browse thousands of tested prompts across every major AI tool. Filter by tool, tag or use-case."
                           />
+                          <CharCount value={discoveryPages.exploreDescription || ''} recommended={160} />
                         </div>
                       </div>
 
@@ -5503,12 +5509,13 @@ function AdminInner() {
                                 prompt={discoveryPrompts.exploreMetaTitle}
                               />
                             </div>
-                            <input
+                            <textarea rows={2}
                               value={discoveryPages.exploreSeoTitle || ''}
                               onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreSeoTitle: e.target.value }))}
-                              className="w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
+                              className="resize-y w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
                               placeholder="Explore AI Prompts — AI Prompt Matrix"
                             />
+                            <CharCount value={discoveryPages.exploreSeoTitle || ''} recommended={60} />
                           </div>
                           <div>
                             <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">OG image URL</label>
@@ -5537,6 +5544,7 @@ function AdminInner() {
                             className="w-full min-h-[70px] rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
                             placeholder="Browse and filter the full library of curated AI prompts."
                           />
+                          <CharCount value={discoveryPages.exploreSeoDescription || ''} recommended={160} />
                         </div>
                       </div>
 
@@ -5590,12 +5598,13 @@ function AdminInner() {
                               prompt={discoveryPrompts.toolTitle}
                             />
                           </div>
-                          <input
+                          <textarea rows={2}
                             value={discoveryPages.toolTitleTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, toolTitleTemplate: e.target.value }))}
-                            className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
+                            className="resize-y w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
                             placeholder="Tool title template: %tool% Prompts"
                           />
+                          <CharCount value={discoveryPages.toolTitleTemplate || ''} recommended={60} />
                         </div>
                         <div>
                           <div className="mb-1.5 flex items-center justify-between">
@@ -5614,6 +5623,7 @@ function AdminInner() {
                             className="w-full min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
                             placeholder="Browse %count% prompt collections organized for %tool%."
                           />
+                          <CharCount value={discoveryPages.toolDescriptionTemplate || ''} recommended={160} />
                         </div>
                       </div>
 
@@ -5638,12 +5648,13 @@ function AdminInner() {
                               prompt={discoveryPrompts.toolMetaTitle}
                             />
                           </div>
-                          <input
+                          <textarea rows={2}
                             value={discoveryPages.toolSeoTitleTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, toolSeoTitleTemplate: e.target.value }))}
-                            className="w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
+                            className="resize-y w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
                             placeholder="%tool% Prompts"
                           />
+                          <CharCount value={discoveryPages.toolSeoTitleTemplate || ''} recommended={60} />
                         </div>
                         <div>
                           <div className="mb-1.5 flex items-center justify-between">
@@ -5662,6 +5673,7 @@ function AdminInner() {
                             className="w-full min-h-[70px] rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
                             placeholder="Browse curated prompts for %tool%."
                           />
+                          <CharCount value={discoveryPages.toolSeoDescriptionTemplate || ''} recommended={160} />
                         </div>
                       </div>
                     </>
@@ -5696,12 +5708,13 @@ function AdminInner() {
                               prompt={discoveryPrompts.tagTitle}
                             />
                           </div>
-                          <input
+                          <textarea rows={2}
                             value={discoveryPages.tagTitleTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, tagTitleTemplate: e.target.value }))}
-                            className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
+                            className="resize-y w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
                             placeholder="Tag title template: %tag% Prompts"
                           />
+                          <CharCount value={discoveryPages.tagTitleTemplate || ''} recommended={60} />
                         </div>
                         <div>
                           <div className="mb-1.5 flex items-center justify-between">
@@ -5720,6 +5733,7 @@ function AdminInner() {
                             className="w-full min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
                             placeholder="Showing %count% collections tagged with &quot;%tag%&quot;."
                           />
+                          <CharCount value={discoveryPages.tagDescriptionTemplate || ''} recommended={160} />
                         </div>
                       </div>
 
@@ -5744,12 +5758,13 @@ function AdminInner() {
                               prompt={discoveryPrompts.tagMetaTitle}
                             />
                           </div>
-                          <input
+                          <textarea rows={2}
                             value={discoveryPages.tagSeoTitleTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, tagSeoTitleTemplate: e.target.value }))}
-                            className="w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
+                            className="resize-y w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
                             placeholder="%tag% Prompts"
                           />
+                          <CharCount value={discoveryPages.tagSeoTitleTemplate || ''} recommended={60} />
                         </div>
                         <div>
                           <div className="mb-1.5 flex items-center justify-between">
@@ -5768,6 +5783,7 @@ function AdminInner() {
                             className="w-full min-h-[70px] rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
                             placeholder="Browse prompts tagged with %tag%."
                           />
+                          <CharCount value={discoveryPages.tagSeoDescriptionTemplate || ''} recommended={160} />
                         </div>
                       </div>
                     </>
@@ -6483,7 +6499,8 @@ function AdminInner() {
                                     label="Auto-write hero description"
                                   />
                                 </div>
-                                <input value={editSectionHeroDescription} onChange={e => setEditSectionHeroDescription(e.target.value)} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Hero description" />
+                                <textarea rows={2} value={editSectionHeroDescription} onChange={e => setEditSectionHeroDescription(e.target.value)} className="resize-y w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Hero description" />
+                                <CharCount value={editSectionHeroDescription} recommended={160} />
                               </div>
                               <div className="sm:col-span-2">
                                 <div className="mb-1 flex items-center justify-end">
@@ -6495,7 +6512,8 @@ function AdminInner() {
                                     label="Auto-write SEO title"
                                   />
                                 </div>
-                                <input value={editSectionSeoTitle} onChange={e => setEditSectionSeoTitle(e.target.value)} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="SEO title (blank = hero title)" />
+                                <textarea rows={2} value={editSectionSeoTitle} onChange={e => setEditSectionSeoTitle(e.target.value)} className="resize-y w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="SEO title (blank = hero title)" />
+                                <CharCount value={editSectionSeoTitle} recommended={60} />
                               </div>
                               <div className="sm:col-span-2">
                                 <div className="mb-1 flex items-center justify-end">
@@ -6508,6 +6526,7 @@ function AdminInner() {
                                   />
                                 </div>
                                 <textarea value={editSectionSeoDescription} onChange={e => setEditSectionSeoDescription(e.target.value)} rows={2} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="SEO description" />
+                                <CharCount value={editSectionSeoDescription} recommended={160} />
                               </div>
                               <div className="sm:col-span-2">
                                 <div className="mb-1 flex items-center justify-end">
@@ -7751,6 +7770,7 @@ function AdminInner() {
                                 className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500 resize-y"
                                 placeholder="Brief description of this AI tool..."
                               />
+                              <CharCount value={editAiToolDescription} recommended={160} />
                             </div>
                             
                             <div className="pt-2">
@@ -7758,39 +7778,43 @@ function AdminInner() {
                               <div className="grid gap-3 sm:grid-cols-2 mb-3">
                                 <div>
                                   <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mb-1">Hero Title</label>
-                                  <input
+                                  <textarea rows={2}
                                     value={editAiToolHeroTitle}
                                     onChange={e => setEditAiToolHeroTitle(e.target.value)}
-                                    className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
+                                    className="resize-y w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
                                     placeholder="e.g. Best %tool% Prompts"
                                   />
+                                  <CharCount value={editAiToolHeroTitle} recommended={60} />
                                 </div>
                                 <div>
                                   <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mb-1">Hero Description</label>
-                                  <input
+                                  <textarea rows={2}
                                     value={editAiToolHeroDescription}
                                     onChange={e => setEditAiToolHeroDescription(e.target.value)}
-                                    className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
+                                    className="resize-y w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
                                     placeholder="e.g. Explore prompts for %tool%."
                                   />
+                                  <CharCount value={editAiToolHeroDescription} recommended={160} />
                                 </div>
                                 <div>
                                   <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mb-1">SEO Title</label>
-                                  <input
+                                  <textarea rows={2}
                                     value={editAiToolSeoTitle}
                                     onChange={e => setEditAiToolSeoTitle(e.target.value)}
-                                    className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
+                                    className="resize-y w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
                                     placeholder="e.g. %tool% Prompts"
                                   />
+                                  <CharCount value={editAiToolSeoTitle} recommended={60} />
                                 </div>
                                 <div>
                                   <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mb-1">SEO Description</label>
-                                  <input
+                                  <textarea rows={2}
                                     value={editAiToolSeoDescription}
                                     onChange={e => setEditAiToolSeoDescription(e.target.value)}
-                                    className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
+                                    className="resize-y w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
                                     placeholder="e.g. Discover amazing %tool% prompts."
                                   />
+                                  <CharCount value={editAiToolSeoDescription} recommended={160} />
                                 </div>
                               </div>
                             </div>

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-client';
 import type { SeoSettings, SiteSettings } from '@/lib/types';
 import { WandButton } from '@/components/admin/MagicWand';
 import { seoPrompts } from '@/lib/admin/wandPrompts';
-import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, adminInput } from '@/components/admin/AdminUI';
+import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, CharCount, adminInput } from '@/components/admin/AdminUI';
 
 type SeoPagesTabMode = 'global' | 'pages' | 'all';
 
@@ -181,7 +181,8 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                 />
               }
             >
-              <input value={title} onChange={e => setTitle(e.target.value)} className={adminInput} placeholder="e.g. Best Upscale Images generated with Gemini" />
+              <textarea rows={2} value={title} onChange={e => setTitle(e.target.value)} className={adminInput} placeholder="e.g. Best Upscale Images generated with Gemini" />
+              <CharCount value={title} recommended={60} />
             </Field>
             <Field label="Slug (available as /slug and /page/slug)">
               <input value={slug} onChange={e => setSlug(e.target.value)} className={adminInput} placeholder="e.g. upscale-images-gemini" />
@@ -214,7 +215,8 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                 />
               }
             >
-              <input value={seoTitle} onChange={e => setSeoTitle(e.target.value)} className={adminInput} placeholder="Defaults to page heading" />
+              <textarea rows={2} value={seoTitle} onChange={e => setSeoTitle(e.target.value)} className={adminInput} placeholder="Defaults to page heading" />
+              <CharCount value={seoTitle} recommended={60} />
             </Field>
             <Field
               label="Meta description (optional)"
@@ -228,6 +230,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
               }
             >
               <textarea value={seoDescription} onChange={e => setSeoDescription(e.target.value)} rows={2} className={`${adminInput} resize-y`} placeholder="Short search-result description for this page..." />
+              <CharCount value={seoDescription} recommended={160} />
             </Field>
           </div>
 
@@ -298,12 +301,13 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                   />
                 }
               >
-                <input
+                <textarea rows={2}
                   value={seoSettings.homeSeoTitleTemplate || ''}
                   onChange={e => updateSeoSettings({ homeSeoTitleTemplate: e.target.value })}
                   className={adminInput}
                   placeholder="%site_title% - AI Prompts"
                 />
+                <CharCount value={seoSettings.homeSeoTitleTemplate || ''} recommended={60} />
               </Field>
               <Field
                 label="Default meta title template"
@@ -316,12 +320,13 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                   />
                 }
               >
-                <input
+                <textarea rows={2}
                   value={seoSettings.metaTitleTemplate || ''}
                   onChange={e => updateSeoSettings({ metaTitleTemplate: e.target.value })}
                   className={adminInput}
                   placeholder="%post_title%"
                 />
+                <CharCount value={seoSettings.metaTitleTemplate || ''} recommended={60} />
               </Field>
               <Field label="Twitter handle">
                 <input
@@ -349,6 +354,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                   rows={2}
                   className={`${adminInput} resize-y`}
                 />
+                <CharCount value={seoSettings.defaultMetaDescription || ''} recommended={160} />
               </Field>
               <Field label="Default OG image" className="md:col-span-2">
                 <input

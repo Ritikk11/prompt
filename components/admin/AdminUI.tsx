@@ -108,3 +108,27 @@ export function EditableCard({ isEditing, children, className = '' }: {
     </div>
   );
 }
+
+/**
+ * Inline character-count indicator.
+ * Renders as a tiny right-aligned pill showing `{current} / {recommended}`.
+ * Turns amber when over the recommended limit and red when significantly over.
+ */
+export function CharCount({ value, recommended }: { value: string; recommended: number }) {
+  const len = value.length;
+  const over = len > recommended;
+  const wayOver = len > recommended * 1.25;
+  return (
+    <span
+      className={`mt-1 block text-right text-[10px] font-semibold tabular-nums transition-colors ${
+        wayOver
+          ? 'text-red-500 dark:text-red-400'
+          : over
+            ? 'text-amber-500 dark:text-amber-400'
+            : 'text-surface-400 dark:text-surface-500'
+      }`}
+    >
+      {len} / {recommended}
+    </span>
+  );
+}

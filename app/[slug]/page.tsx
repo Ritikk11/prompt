@@ -134,7 +134,7 @@ export default async function PostPage({ params }: Props) {
       srcSet: buildSrcSet(galleryFirstImage, [480, 768, 1100]),
       sizes: '(max-width: 768px) calc(100vw - 48px), 680px',
     },
-  ].filter((t): t is { url: string; srcSet?: string; sizes: string } => !!t);
+  ].filter(Boolean) as { url: string; srcSet?: string; sizes: string }[];
   const seenUrls = new Set<string>();
   for (const target of preloadTargets) {
     if (seenUrls.has(target.url)) continue;
