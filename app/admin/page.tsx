@@ -3559,8 +3559,16 @@ function AdminInner() {
                     </label>
                   </div>
                   {thumbnailUrl && !thumbnailUrl.startsWith('Uploading') && (
-                    <div className="mt-2 w-32 h-32 relative rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700">
+                    <div className="mt-2 w-32 h-32 relative rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700 group">
                       <Image src={thumbnailUrl} alt="Thumbnail preview" fill className="object-cover" unoptimized />
+                      <button
+                        type="button"
+                        onClick={() => setThumbnailUrl('')}
+                        className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all"
+                        title="Remove Image"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -3970,8 +3978,16 @@ function AdminInner() {
                         </div>
 
                         {img.url && (
-                          <div className="relative mt-3 h-32 rounded-lg overflow-hidden bg-surface-200 dark:bg-surface-700 flex items-center justify-center p-2">
+                          <div className="relative mt-3 h-32 rounded-lg overflow-hidden bg-surface-200 dark:bg-surface-700 flex items-center justify-center p-2 group">
                             <Image src={img.url} alt="" fill className="object-contain p-2" sizes="(max-width: 768px) 100vw, 33vw" referrerPolicy="no-referrer" />
+                            <button
+                              type="button"
+                              onClick={() => updateImage(idx, 'url', '')}
+                              className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all"
+                              title="Remove Image"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
                           </div>
                         )}
                       </div>
