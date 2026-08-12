@@ -41,6 +41,7 @@ import HomeGuides from '@/components/HomeGuides';
 import HomeBlog from '@/components/HomeBlog';
 import ArticleThumbnail, { articleIconList } from '@/components/ArticleThumbnail';
 import { getArticlesForSettings } from '@/lib/content';
+import MediaLibraryModal from '@/components/admin/MediaLibraryModal';
 
 type AdminTab = 'dashboard' | 'posts' | 'sections' | 'articles' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages' | 'ai-studio';
 const DiscoveryPageIds = ['explore', 'tool', 'tag'] as const;
@@ -553,6 +554,7 @@ function AdminInner() {
   const searchParams = useSearchParams();
 
   const [user, setUser] = useState<User | null>(null);
+  const [mediaLibraryCallback, setMediaLibraryCallback] = useState<((url: string) => void) | null>(null);
   const [adminUsers, setAdminUsers] = useState<AdminUserSummary[]>([]);
   const [authLoading, setAuthLoading] = useState(true);
   const [adminChecking, setAdminChecking] = useState(false);
@@ -3524,6 +3526,14 @@ function AdminInner() {
                       className="flex-1 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
                       placeholder="https://..."
                     />
+                    <button 
+                      type="button" 
+                      onClick={() => setMediaLibraryCallback(() => setThumbnailUrl)}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0"
+                    >
+                      <ImageIcon className="w-4 h-4 text-surface-400" />
+                      <span className="text-sm">Library</span>
+                    </button>
                     <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0">
                       <Upload className="w-4 h-4 text-surface-400" />
                       <span className="text-sm">Upload</span>
@@ -3870,6 +3880,14 @@ function AdminInner() {
                                 className="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
                                 placeholder="https://..."
                               />
+                              <button 
+                                type="button" 
+                                onClick={() => setMediaLibraryCallback(() => (url: string) => updateImage(idx, 'url', url))}
+                                className="p-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 cursor-pointer hover:border-primary-500 transition-colors shrink-0"
+                                title="Choose from Library"
+                              >
+                                <ImageIcon className="w-3.5 h-3.5 text-surface-400" />
+                              </button>
                               <label className="p-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 cursor-pointer hover:border-primary-500 transition-colors">
                                 <Upload className="w-3.5 h-3.5 text-surface-400" />
                                 <input
@@ -7055,8 +7073,16 @@ function AdminInner() {
                             className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs"
                             placeholder="https://... (png/svg with transparency works best)"
                           />
-                          <label className="mt-2 inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-primary-300 bg-primary-50 px-3 text-xs font-bold text-primary-600 hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-300">
-                            <Upload className="h-3.5 w-3.5" /> Upload logo
+                          <div className="flex items-center gap-2 mt-2">
+                            <button
+                              type="button"
+                              onClick={() => setMediaLibraryCallback(() => (url: string) => updateRailItem('creative', index, 'imageUrl', url))}
+                              className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-surface-200 bg-surface-50 px-3 text-xs font-bold text-surface-600 hover:bg-surface-100 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+                            >
+                              <ImageIcon className="h-3.5 w-3.5" /> Library
+                            </button>
+                            <label className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-primary-300 bg-primary-50 px-3 text-xs font-bold text-primary-600 hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-300">
+                              <Upload className="h-3.5 w-3.5" /> Upload logo
                             <input
                               type="file"
                               accept="image/png,image/jpeg,image/webp,image/gif"
@@ -7067,7 +7093,8 @@ function AdminInner() {
                                 e.currentTarget.value = '';
                               }}
                             />
-                          </label>
+                            </label>
+                          </div>
                         </div>
                       </div>
                       </div>
@@ -7737,6 +7764,14 @@ function AdminInner() {
                                     className="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
                                     placeholder="https://... or upload icon"
                                   />
+                                  <button
+                                    type="button"
+                                    onClick={() => setMediaLibraryCallback(() => setEditAiToolLogo)}
+                                    className="p-2 rounded-xl bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 cursor-pointer transition-colors shrink-0"
+                                    title="Choose from Library"
+                                  >
+                                    <ImageIcon className="w-4 h-4 text-surface-600 dark:text-surface-300" />
+                                  </button>
                                   <label className="p-2 rounded-xl bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 cursor-pointer transition-colors shrink-0" title="Upload Logo">
                                     <Upload className="w-4 h-4 text-surface-600 dark:text-surface-300" />
                                     <input
@@ -9301,6 +9336,11 @@ function AdminInner() {
           </div>
         </main>
       </div>
+      <MediaLibraryModal 
+        isOpen={!!mediaLibraryCallback} 
+        onClose={() => setMediaLibraryCallback(null)}
+        onSelect={(url) => mediaLibraryCallback?.(url)}
+      />
     </div>
   );
 }
