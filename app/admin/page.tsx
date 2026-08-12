@@ -3519,24 +3519,25 @@ function AdminInner() {
 
                 <div>
                   <label className="block text-sm font-medium mb-1.5">Thumbnail URL *</label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       value={thumbnailUrl}
                       onChange={e => setThumbnailUrl(e.target.value)}
-                      className="flex-1 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm min-w-0"
                       placeholder="https://..."
                     />
-                    <button 
-                      type="button" 
-                      onClick={() => setMediaLibraryCallback(() => setThumbnailUrl)}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0"
-                    >
-                      <ImageIcon className="w-4 h-4 text-surface-400" />
-                      <span className="text-sm">Library</span>
-                    </button>
-                    <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0">
-                      <Upload className="w-4 h-4 text-surface-400" />
-                      <span className="text-sm">Upload</span>
+                    <div className="flex gap-2 shrink-0">
+                      <button 
+                        type="button" 
+                        onClick={() => setMediaLibraryCallback(() => setThumbnailUrl)}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0"
+                      >
+                        <ImageIcon className="w-4 h-4 text-surface-400 shrink-0" />
+                        <span className="text-sm">Library</span>
+                      </button>
+                      <label className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0">
+                        <Upload className="w-4 h-4 text-surface-400 shrink-0" />
+                        <span className="text-sm">Upload</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -3575,9 +3576,9 @@ function AdminInner() {
 
                 <div>
                   <label className="block text-sm font-medium mb-1.5">Reference Images (Optional)</label>
-                  <div className="flex gap-2">
-                    <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0">
-                      <Upload className="w-4 h-4 text-surface-400" />
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <label className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0">
+                      <Upload className="w-4 h-4 text-surface-400 shrink-0" />
                       <span className="text-sm">Upload Reference Images</span>
                       <input
                         type="file"
@@ -3636,7 +3637,7 @@ function AdminInner() {
                 <div className="rounded-2xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900 sm:p-4">
                   <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <label className="text-sm font-medium">Extended Description / Content (Optional, useful for AdSense)</label>
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                       <WandButton
                         fieldId="post-ext-desc"
                         value={extendedDescription}
@@ -3995,7 +3996,7 @@ function AdminInner() {
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-wrap gap-3 pt-4">
                   <button
                     onClick={handleSavePost}
                     className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors"
@@ -4743,9 +4744,9 @@ function AdminInner() {
 
                           {/* Filter rail per-section */}
                           <div className="border border-surface-200 dark:border-surface-800 rounded-xl p-4 bg-white dark:bg-surface-900">
-                            <div className="flex items-center justify-between mb-1">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2 sm:gap-0">
                               <SectionEyebrow>3. Filter rail for this section page</SectionEyebrow>
-                              <label className="relative inline-flex items-center cursor-pointer">
+                              <label className="relative inline-flex items-center cursor-pointer shrink-0">
                                 <input
                                   type="checkbox"
                                   checked={editSectionUseCustomRail}
@@ -4840,49 +4841,48 @@ function AdminInner() {
                           </div>
 
                           {/* Action controls footer */}
-                          <div className="flex items-center justify-between pt-4 border-t border-surface-100 dark:border-surface-800">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                // reset form
-                                setEditSectionName(section.name);
-                                setEditSectionSlug(section.slug || '');
-                                setEditSectionLimit(section.limit);
-                                setEditSectionCardStyle(section.cardStyle || '');
-                                setEditSectionHeroBadge(section.heroBadge || '');
-                                setEditSectionHeroTitle(section.heroTitle || '');
-                                setEditSectionHeroDescription(section.heroDescription || '');
-                                setEditSectionSeoTitle(section.seoTitle || '');
-                                setEditSectionSeoDescription(section.seoDescription || '');
-                                setEditSectionIntroContent(section.introContent || '');
-                                setEditSectionType(section.type);
-                                setEditSectionLocation(section.location || 'homepage');
-                                setEditSectionAiTool(section.aiTool || '');
-                                setEditSectionTag(section.tag || '');
-                                setEditSectionCategory(section.category || '');
-                                setEditSectionUseCustomRail(section.useCustomRail || false);
-                                setEditSectionRailItems(section.railItems || []);
-                              }}
-                              className="px-3 py-2 rounded-xl border border-surface-200 hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800 text-xs font-bold text-surface-600 dark:text-surface-300 transition-colors"
-                            >
-                              Reset
-                            </button>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-4 border-t border-surface-100 dark:border-surface-800">
                               <button
                                 type="button"
-                                onClick={() => setEditingSectionId(null)}
-                                className="px-3 py-2 rounded-xl text-xs font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
+                                onClick={() => {
+                                  setEditSectionName(section.name);
+                                  setEditSectionSlug(section.slug || '');
+                                  setEditSectionLimit(section.limit);
+                                  setEditSectionCardStyle(section.cardStyle || '');
+                                  setEditSectionHeroBadge(section.heroBadge || '');
+                                  setEditSectionHeroTitle(section.heroTitle || '');
+                                  setEditSectionHeroDescription(section.heroDescription || '');
+                                  setEditSectionSeoTitle(section.seoTitle || '');
+                                  setEditSectionSeoDescription(section.seoDescription || '');
+                                  setEditSectionIntroContent(section.introContent || '');
+                                  setEditSectionType(section.type);
+                                  setEditSectionLocation(section.location || 'homepage');
+                                  setEditSectionAiTool(section.aiTool || '');
+                                  setEditSectionTag(section.tag || '');
+                                  setEditSectionCategory(section.category || '');
+                                  setEditSectionUseCustomRail(section.useCustomRail || false);
+                                  setEditSectionRailItems(section.railItems || []);
+                                }}
+                                className="w-full sm:w-auto px-3 py-2 rounded-xl border border-surface-200 hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800 text-xs font-bold text-surface-600 dark:text-surface-300 transition-colors"
                               >
-                                Close
+                                Reset
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => saveEditSection(section)}
-                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold transition-colors"
-                              >
-                                <Save className="w-3.5 h-3.5" /> Save section
-                              </button>
-                            </div>
+                              <div className="flex items-center gap-2 w-full sm:w-auto">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingSectionId(null)}
+                                  className="flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
+                                >
+                                  Close
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => saveEditSection(section)}
+                                  className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold transition-colors"
+                                >
+                                  <Save className="w-3.5 h-3.5" /> Save section
+                                </button>
+                              </div>
                           </div>
                         </div>
                       ) : (
