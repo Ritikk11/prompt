@@ -30,7 +30,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLi
 
         const headers: Record<string, string> = {};
         if (session?.access_token) {
-          headers.Authorization = \Bearer \\;
+          headers.Authorization = `Bearer ${session.access_token}`;
         }
 
         const url = new URL('/api/images', window.location.origin);
@@ -78,7 +78,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLi
             )}
             <h2 className="text-xl font-bold flex items-center gap-2">
               <ImageIcon className="w-5 h-5 text-primary-500" />
-              {currentPrefix ? \Library / \\ : 'Media Library'}
+              {currentPrefix ? `Library / ${currentPrefix.replace(/\/$/, '')}` : 'Media Library'}
             </h2>
           </div>
           <button onClick={onClose} className="p-2 text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-200 dark:hover:bg-surface-800 rounded-xl transition-colors">
@@ -101,7 +101,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLi
                 >
                   <Folder className="w-12 h-12 text-primary-400" />
                   <span className="text-sm font-medium text-surface-700 dark:text-surface-200 truncate px-4 w-full text-center">
-                    {folder.replace(currentPrefix, '').replace(/\\/$/, '')}
+                    {folder.replace(currentPrefix, '').replace(/\/$/, '')}
                   </span>
                 </div>
               ))}
