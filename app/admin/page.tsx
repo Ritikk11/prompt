@@ -3564,7 +3564,7 @@ function AdminInner() {
                       <button
                         type="button"
                         onClick={() => setThumbnailUrl('')}
-                        className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all"
+                        className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 md:opacity-0 md:group-hover:opacity-100 transition-all"
                         title="Remove Image"
                       >
                         <X className="w-4 h-4" />
@@ -3621,7 +3621,7 @@ function AdminInner() {
                                   e.preventDefault();
                                   setReferenceImages(prev => prev.filter((_, i) => i !== idx));
                                 }}
-                                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                               >
                                 <X className="w-4 h-4" />
                               </button>
@@ -3983,7 +3983,7 @@ function AdminInner() {
                             <button
                               type="button"
                               onClick={() => updateImage(idx, 'url', '')}
-                              className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all"
+                              className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 md:opacity-0 md:group-hover:opacity-100 transition-all"
                               title="Remove Image"
                             >
                               <X className="w-4 h-4" />
