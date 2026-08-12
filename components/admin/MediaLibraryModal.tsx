@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Image as ImageIcon, Loader2, Folder, ArrowLeft } from 'lucide-react';
+import { createClient } from '@/lib/supabase-client';
 
 type MediaLibraryModalProps = {
   isOpen: boolean;
@@ -15,19 +16,52 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLi
 
   useEffect(() => {
     if (!isOpen) return;
-    setLoading(true);
-    const url = new URL('/api/images', window.location.origin);
-    if (currentPrefix) url.searchParams.set('prefix', currentPrefix);
-    
-    fetch(url, { credentials: 'include' })
-      .then(r => r.json())
-      .then(data => {
-        if (data.error) { alert('API Error: ' + data.error); return; }
+    let mounted = true;
+
+    async function loadImages() {
+      setLoading(true);
+      try {
+        const supabase = createClient();
+        let { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          const refreshed = await supabase.auth.refreshSession().catch(() => ({ data: { session: null } }));
+          session = refreshed.data.session;
+        }
+
+        const headers: Record<string, string> = {};
+        if (session?.access_token) {
+          headers.Authorization = \Bearer \\;
+        }
+
+        const url = new URL('/api/images', window.location.origin);
+        if (currentPrefix) url.searchParams.set('prefix', currentPrefix);
+        
+        const r = await fetch(url.toString(), { headers });
+        const data = await r.json();
+        
+        if (!mounted) return;
+
+        if (data.error) {
+          alert('API Error: ' + data.error);
+          return;
+        }
         if (data.images) setImages(data.images);
         if (data.folders) setFolders(data.folders);
-      })
-      .catch(err => { console.error(err); alert(String(err)); })
-      .finally(() => setLoading(false));
+      } catch (err: any) {
+        if (mounted) {
+          console.error(err);
+          alert(String(err));
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    loadImages();
+
+    return () => {
+      mounted = false;
+    };
   }, [isOpen, currentPrefix]);
 
   if (!isOpen) return null;
@@ -44,7 +78,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLi
             )}
             <h2 className="text-xl font-bold flex items-center gap-2">
               <ImageIcon className="w-5 h-5 text-primary-500" />
-              {currentPrefix ? `Library / ${currentPrefix.replace(/\/$/, '')}` : 'Media Library'}
+              {currentPrefix ? \Library / \\ : 'Media Library'}
             </h2>
           </div>
           <button onClick={onClose} className="p-2 text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-200 dark:hover:bg-surface-800 rounded-xl transition-colors">
@@ -67,7 +101,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLi
                 >
                   <Folder className="w-12 h-12 text-primary-400" />
                   <span className="text-sm font-medium text-surface-700 dark:text-surface-200 truncate px-4 w-full text-center">
-                    {folder.replace(currentPrefix, '').replace(/\/$/, '')}
+                    {folder.replace(currentPrefix, '').replace(/\\/$/, '')}
                   </span>
                 </div>
               ))}
@@ -96,5 +130,3 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLi
     </div>
   );
 }
-
-
