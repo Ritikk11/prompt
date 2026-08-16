@@ -7,7 +7,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { WandButton } from '@/components/admin/MagicWand';
 import { showToast } from '@/components/ui/ToastContainer';
 import { staticPagePrompts } from '@/lib/admin/wandPrompts';
-import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, adminInput } from '@/components/admin/AdminUI';
+import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, CharCount, adminInput } from '@/components/admin/AdminUI';
 
 const MARKDOWN_HELP_EXAMPLE = `## Main section
 ### Question style heading
@@ -245,7 +245,7 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
                 onChange={e => updateCurrentPage({ metaTitle: e.target.value.slice(0, 80) })}
                 className={adminInput}
               />
-              <p className="mt-1 text-[11px] text-surface-500">{(currentPage.metaTitle || '').length}/80</p>
+              <CharCount value={currentPage.metaTitle || ''} recommended={60} />
             </Field>
             <Field
               label="Meta description"
@@ -264,7 +264,7 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
                 rows={2}
                 className={adminInput}
               />
-              <p className="mt-1 text-[11px] text-surface-500">{(currentPage.metaDescription || '').length}/170</p>
+              <CharCount value={currentPage.metaDescription || ''} recommended={160} />
             </Field>
             <Field label="OG image" className="md:col-span-2">
               <input
@@ -337,7 +337,7 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
               value={textareas[activeTab].value}
               onChange={e => textareas[activeTab].set(e.target.value)}
               rows={20}
-              className="w-full resize-y rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3.5 py-3 font-mono text-xs leading-relaxed outline-none focus:border-primary-500 transition-colors"
+              className={`${adminInput} resize-y font-mono leading-relaxed`}
               placeholder={`# ${textareas[activeTab].label}\n\nEnter content here...`}
             />
           ) : (

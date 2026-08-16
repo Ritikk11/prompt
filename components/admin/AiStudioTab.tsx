@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import {
   Wand2, Send, Sparkles, FileText, Tag, Image as ImageIcon, X, Bot,
@@ -57,7 +57,7 @@ export default function AiStudioTab({ posts, onCreateArticleFromAi, onCreatePost
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const messages = chat.active?.messages ?? [];
+  const messages = useMemo(() => chat.active?.messages ?? [], [chat.active?.messages]);
 
   const scrollToBottom = useCallback(() => {
     const el = chatScrollRef.current;
@@ -224,7 +224,7 @@ export default function AiStudioTab({ posts, onCreateArticleFromAi, onCreatePost
   const activeModel = models.find(m => m.id === selectedModel)!;
 
   return (
-    <div className="relative mx-auto flex h-[640px] max-h-[80vh] min-h-[480px] w-full max-w-6xl overflow-hidden rounded-3xl border border-surface-200 bg-white shadow-xl animate-in fade-in duration-200 dark:border-surface-800 dark:bg-surface-900">
+    <div className="relative mx-auto flex h-[640px] max-h-[80vh] min-h-0 w-full max-w-6xl overflow-hidden rounded-3xl border border-surface-200 bg-white shadow-xl animate-in fade-in duration-200 dark:border-surface-800 dark:bg-surface-900 sm:min-h-[480px]">
       {/* Backdrop for the mobile drawer */}
       {sidebarOpen && (
         <button

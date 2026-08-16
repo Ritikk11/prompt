@@ -22,7 +22,7 @@ import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
 import AiStudioTab from '@/components/admin/AiStudioTab';
 import { MagicWandProvider, WandButton, useMagicWand } from '@/components/admin/MagicWand';
-import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, CharCount, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
+import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, FieldTextarea, EditableCard, CharCount, Toggle, ActionButton, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
 import { askAi } from '@/lib/admin/ai';
 import { postPrompts, articlePrompts, generalPrompts, discoveryPrompts, homepagePrompts, aiToolPrompts, featurePrompts, TOOLS_MODELS_RULES, aiStudioSystemContext } from '@/lib/admin/wandPrompts';
 import { filterPostsForSection, getSectionPath } from '@/lib/sections';
@@ -3133,8 +3133,8 @@ function AdminInner() {
                 ) : (
                   <div className="divide-y divide-surface-200 dark:divide-surface-800">
                     {recentPosts.map(post => (
-                      <div key={post.id} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 px-4 py-3 text-xs">
-                        <div className="min-w-0">
+                      <div key={post.id} className="flex flex-wrap items-center gap-2 px-3 py-3 text-xs sm:flex-nowrap sm:gap-3 sm:px-4">
+                        <div className="min-w-0 basis-full sm:flex-1">
                           <p className="truncate text-sm font-semibold">{post.title}</p>
                           <p className="truncate text-surface-500">{getAllTools(post).join(', ') || 'No tool'}</p>
                         </div>
@@ -3164,44 +3164,41 @@ function AdminInner() {
           {!showPostForm ? (
             <>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
-                <button
-                  onClick={openNewPost}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors shadow-lg shadow-primary-500/25"
-                >
-                  <Plus className="w-4 h-4" /> Create New Post
-                </button>
+                <ActionButton onClick={openNewPost} className="w-full py-2.5 shadow-lg shadow-primary-500/25 sm:w-auto">
+                  <Plus className="w-4 h-4" /> Create new post
+                </ActionButton>
                 <div className="relative flex-1 max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
                   <input
                     value={postSearch}
                     onChange={e => setPostSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                    className={`${adminInputOnCard} py-2.5 pl-10 pr-4`}
                     placeholder="Search posts..."
                   />
                 </div>
               </div>
               <div className="mb-4 grid gap-2 md:grid-cols-5">
-                <select value={postToolFilter} onChange={e => setPostToolFilter(e.target.value)} className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                <select value={postToolFilter} onChange={e => setPostToolFilter(e.target.value)} className={adminInputOnCard}>
                   <option value="">All tools</option>
                   {postToolOptions.map(tool => <option key={tool} value={tool}>{tool}</option>)}
                 </select>
-                <select value={postTagFilter} onChange={e => setPostTagFilter(e.target.value)} className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                <select value={postTagFilter} onChange={e => setPostTagFilter(e.target.value)} className={adminInputOnCard}>
                   <option value="">All tags</option>
                   {postTagOptions.map(tag => <option key={tag} value={tag}>{tag}</option>)}
                 </select>
-                <select value={postStatusFilter} onChange={e => setPostStatusFilter(e.target.value)} className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                <select value={postStatusFilter} onChange={e => setPostStatusFilter(e.target.value)} className={adminInputOnCard}>
                   <option value="">All status</option>
                   <option value="published">Published</option>
                   <option value="draft">Draft</option>
                   <option value="pending">Pending</option>
                 </select>
-                <select value={postFeaturedFilter} onChange={e => setPostFeaturedFilter(e.target.value)} className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                <select value={postFeaturedFilter} onChange={e => setPostFeaturedFilter(e.target.value)} className={adminInputOnCard}>
                   <option value="">All visibility</option>
                   <option value="featured">Featured</option>
                   <option value="not-featured">Not featured</option>
                   <option value="private">Private</option>
                 </select>
-                <select value={postSort} onChange={e => setPostSort(e.target.value as typeof postSort)} className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                <select value={postSort} onChange={e => setPostSort(e.target.value as typeof postSort)} className={adminInputOnCard}>
                   <option value="newest">Newest first</option>
                   <option value="oldest">Oldest first</option>
                   <option value="views">Most views</option>
@@ -3220,17 +3217,17 @@ function AdminInner() {
                   Select visible
                 </label>
                 <span className="text-surface-400">{selectedPostIds.length} selected</span>
-                <button disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('feature')} className="rounded-lg bg-surface-100 px-3 py-1.5 font-bold text-surface-600 disabled:opacity-40 dark:bg-surface-800 dark:text-surface-200">Feature</button>
-                <button disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('unfeature')} className="rounded-lg bg-surface-100 px-3 py-1.5 font-bold text-surface-600 disabled:opacity-40 dark:bg-surface-800 dark:text-surface-200">Unfeature</button>
-                <button disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('publish')} className="rounded-lg bg-green-50 px-3 py-1.5 font-bold text-green-700 disabled:opacity-40 dark:bg-green-500/10 dark:text-green-300">Publish</button>
-                <button disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('unpublish')} className="rounded-lg bg-surface-100 px-3 py-1.5 font-bold text-surface-600 disabled:opacity-40 dark:bg-surface-800 dark:text-surface-200">Unpublish</button>
-                <button disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('delete')} className="rounded-lg bg-red-50 px-3 py-1.5 font-bold text-red-600 disabled:opacity-40 dark:bg-red-500/10 dark:text-red-300">Delete</button>
+                <ActionButton variant="ghost" disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('feature')} className="px-3 py-1.5">Feature</ActionButton>
+                <ActionButton variant="ghost" disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('unfeature')} className="px-3 py-1.5">Unfeature</ActionButton>
+                <ActionButton variant="success" disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('publish')} className="px-3 py-1.5">Publish</ActionButton>
+                <ActionButton variant="ghost" disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('unpublish')} className="px-3 py-1.5">Unpublish</ActionButton>
+                <ActionButton variant="danger" disabled={selectedPostIds.length === 0} onClick={() => applyBulkPostAction('delete')} className="px-3 py-1.5">Delete</ActionButton>
               </div>
 
               {/* Posts list */}
               <div className="grid gap-3">
                 {filteredPosts.map(post => (
-                  <div key={post.id} className="flex items-center gap-4 p-4 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 hover:shadow-md transition-shadow">
+                  <div key={post.id} className="flex flex-wrap items-start gap-3 rounded-xl border border-surface-200 bg-white p-3 transition-shadow hover:shadow-md dark:border-surface-800 dark:bg-surface-900 sm:flex-nowrap sm:items-center sm:gap-4 sm:p-4">
                     <input
                       type="checkbox"
                       checked={selectedPostIds.includes(post.id)}
@@ -3244,7 +3241,7 @@ function AdminInner() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-sm truncate">{post.title}</h3>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-surface-400">
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-surface-400">
                         <span>{post.images.length} images</span>
                         <span>{post.views.toLocaleString()} views</span>
                         {post.featured && <span className="inline-flex items-center gap-1 text-yellow-500 font-semibold"><Star className="h-3.5 w-3.5 fill-yellow-500" /> Featured</span>}
@@ -3257,7 +3254,7 @@ function AdminInner() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="ml-7 flex basis-full flex-wrap items-center justify-end gap-1 border-t border-surface-100 pt-2 dark:border-surface-800 sm:ml-0 sm:basis-auto sm:flex-nowrap sm:border-t-0 sm:pt-0">
                       <button
                         onClick={(e) => {
                           e.preventDefault(); e.stopPropagation();
@@ -3335,14 +3332,10 @@ function AdminInner() {
                   placeholder="(Optional) E.g., 'Make the title sound very poetic', 'Keep descriptions under 100 words', etc."
                   className="w-full min-h-20 px-4 py-2.5 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
                 />
-                <button
-                  onClick={handleGenerateAiDetails}
-                  disabled={isGeneratingAi}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
-                >
+                <ActionButton onClick={handleGenerateAiDetails} disabled={isGeneratingAi}>
                   {isGeneratingAi ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Zap className="w-4 h-4" />}
-                  {isGeneratingAi ? 'Generating Details...' : 'Generate Details'}
-                </button>
+                  {isGeneratingAi ? 'Generating details...' : 'Generate details'}
+                </ActionButton>
               </div>
 
               <div className="space-y-5">
@@ -3352,7 +3345,7 @@ function AdminInner() {
                     <select
                       value={status}
                       onChange={e => setStatus(e.target.value as any)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className={adminInputOnCard}
                     >
                       <option value="published">Published</option>
                       <option value="draft">Draft</option>
@@ -3364,7 +3357,7 @@ function AdminInner() {
                     <select
                       value={visibility}
                       onChange={e => setVisibility(e.target.value as any)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className={adminInputOnCard}
                     >
                       <option value="public">Public</option>
                       <option value="private">Private</option>
@@ -3378,7 +3371,7 @@ function AdminInner() {
                     <select
                       value={schemaType || 'HowTo'}
                       onChange={e => setSchemaType(e.target.value as any)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className={adminInputOnCard}
                     >
                       <option value="Article">Article</option>
                       <option value="CreativeWork">CreativeWork</option>
@@ -3446,7 +3439,7 @@ function AdminInner() {
                             <input
                               value={faq.question}
                               onChange={e => setFaqs(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, question: e.target.value } : item))}
-                              className="mb-2 w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                              className={`${adminInput} mb-2`}
                               placeholder="Question"
                             />
                             {duplicate && <p className="mb-2 text-xs font-bold text-amber-600">Duplicate question warning.</p>}
@@ -3454,7 +3447,7 @@ function AdminInner() {
                               value={faq.answer}
                               onChange={e => setFaqs(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, answer: e.target.value } : item))}
                               rows={3}
-                              className="w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                              className={`${adminInput} resize-y`}
                               placeholder="Answer"
                             />
                           </div>
@@ -3466,7 +3459,7 @@ function AdminInner() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="mb-1.5 flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <label className="block text-sm font-medium">Title *</label>
                       <WandButton
                         fieldId="post-title"
@@ -3498,7 +3491,7 @@ function AdminInner() {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
+                  <div className="mb-1.5 flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <label className="block text-sm font-medium">Description *</label>
                     <WandButton
                       fieldId="post-desc"
@@ -3704,7 +3697,7 @@ function AdminInner() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="mb-1.5 flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <label className="block text-sm font-medium">Custom Search Title (SEO)</label>
                       <WandButton
                         fieldId="post-seo-title"
@@ -3723,7 +3716,7 @@ function AdminInner() {
                     <CharCount value={seoTitle} recommended={60} />
                   </div>
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="mb-1.5 flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <label className="block text-sm font-medium">Custom Search Description (SEO)</label>
                       <WandButton
                         fieldId="post-seo-desc"
@@ -3745,7 +3738,7 @@ function AdminInner() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="mb-1.5 flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <label className="block text-sm font-medium">Tags (comma separated)</label>
                       <WandButton
                         fieldId="post-tags"
@@ -3763,7 +3756,7 @@ function AdminInner() {
                     />
                   </div>
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="mb-1.5 flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <label className="block text-sm font-medium">Categories (comma separated)</label>
                       <WandButton
                         fieldId="post-categories"
@@ -3998,19 +3991,12 @@ function AdminInner() {
                 </div>
 
                 <div className="flex flex-wrap gap-3 pt-4">
-                  <button
-                    onClick={handleSavePost}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors"
-                  >
-                    <Save className="w-4 h-4" /> {editingPost ? 'Update Post' : 'Create Post'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={closePostForm}
-                    className="px-6 py-2.5 rounded-xl border border-surface-200 dark:border-surface-700 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
-                  >
+                  <ActionButton onClick={handleSavePost} className="flex-1 py-2.5 sm:flex-none">
+                    <Save className="w-4 h-4" /> {editingPost ? 'Update post' : 'Create post'}
+                  </ActionButton>
+                  <ActionButton variant="outline" onClick={closePostForm} className="flex-1 py-2.5 sm:flex-none">
                     Cancel
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
             </div>
@@ -4021,22 +4007,21 @@ function AdminInner() {
       {/* ===== SECTIONS TAB ===== */}
       {tab === 'articles' && (
         <div className="space-y-6">
-          <div className="rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-2xl font-black tracking-tight text-surface-950 dark:text-white">Article Manager</h2>
-                <p className="mt-1 text-sm text-surface-500">Manage blog posts and guides, including thumbnails, SEO copy, tags, and full markdown body.</p>
-              </div>
+          <TabBanner
+            icon={<BookOpen />}
+            title="Article manager"
+            text="Manage blog posts and guides, including thumbnails, SEO copy, tags, and full markdown body."
+            action={(
               <div className="flex flex-wrap gap-2">
-                <button onClick={addManagedArticle} className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-primary-600">
-                  <Plus className="h-4 w-4" /> Add Article
-                </button>
-                <button onClick={handleSaveSettings} className="inline-flex items-center gap-2 rounded-xl bg-surface-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-surface-800 dark:bg-white dark:text-surface-950">
-                  <Save className="h-4 w-4" /> Save Articles
-                </button>
+                <ActionButton onClick={addManagedArticle}>
+                  <Plus className="h-4 w-4" /> Add article
+                </ActionButton>
+                <ActionButton variant="outline" onClick={handleSaveSettings}>
+                  <Save className="h-4 w-4" /> Save articles
+                </ActionButton>
               </div>
-            </div>
-          </div>
+            )}
+          />
 
           <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
             <div className="flex flex-wrap gap-2.5">
@@ -4110,14 +4095,10 @@ function AdminInner() {
                     placeholder="(Optional) E.g., 'A beginner guide to negative prompts in ChatGPT', 'Keep it under 1000 words', 'Only rewrite the body', etc."
                     className="w-full min-h-20 resize-y rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
                   />
-                  <button
-                    onClick={handleGenerateArticleDetails}
-                    disabled={isGeneratingArticleAi}
-                    className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
-                  >
+                  <ActionButton onClick={handleGenerateArticleDetails} disabled={isGeneratingArticleAi}>
                     {isGeneratingArticleAi ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Zap className="h-4 w-4" />}
-                    {isGeneratingArticleAi ? 'Generating Article...' : 'Generate Article'}
-                  </button>
+                    {isGeneratingArticleAi ? 'Generating article...' : 'Generate article'}
+                  </ActionButton>
                 </div>
                 <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
                   <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -4137,12 +4118,12 @@ function AdminInner() {
                             updateManagedArticle(selectedArticle.slug, { slug: nextSlug });
                             setSelectedArticleSlug(nextSlug);
                           }}
-                          className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 disabled:opacity-60 dark:border-surface-700 dark:bg-surface-800"
+                          className={`${adminInputOnCard} disabled:opacity-60`}
                         />
                       </label>
                       <label className="space-y-1">
                         <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Category</span>
-                        <select value={selectedArticle.category} onChange={e => updateManagedArticle(selectedArticle.slug, { category: e.target.value as 'blog' | 'guide' })} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                        <select value={selectedArticle.category} onChange={e => updateManagedArticle(selectedArticle.slug, { category: e.target.value as 'blog' | 'guide' })} className={adminInputOnCard}>
                           <option value="blog">Blog</option>
                           <option value="guide">Guide</option>
                         </select>
@@ -4157,16 +4138,16 @@ function AdminInner() {
                             prompt={() => articlePrompts.metaDescription(selectedArticle.title)}
                           />
                         </div>
-                        <textarea value={selectedArticle.description} onChange={e => updateManagedArticle(selectedArticle.slug, { description: e.target.value })} rows={3} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
+                        <textarea value={selectedArticle.description} onChange={e => updateManagedArticle(selectedArticle.slug, { description: e.target.value })} rows={3} className={`${adminInputOnCard} resize-y`} />
                         <CharCount value={selectedArticle.description} recommended={160} />
                       </label>
                       <label className="space-y-1">
                         <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Tags</span>
-                        <input value={selectedArticle.tags.join(', ')} onChange={e => updateManagedArticle(selectedArticle.slug, { tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean) })} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="prompt writing, beginners" />
+                        <input value={selectedArticle.tags.join(', ')} onChange={e => updateManagedArticle(selectedArticle.slug, { tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean) })} className={adminInputOnCard} placeholder="prompt writing, beginners" />
                       </label>
                       <label className="space-y-1">
                         <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Thumbnail URL</span>
-                        <input value={selectedArticle.thumbnailUrl || ''} onChange={e => updateManagedArticle(selectedArticle.slug, { thumbnailUrl: e.target.value })} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="https://..." />
+                        <input value={selectedArticle.thumbnailUrl || ''} onChange={e => updateManagedArticle(selectedArticle.slug, { thumbnailUrl: e.target.value })} className={adminInputOnCard} placeholder="https://..." />
                         <label className="mt-2 inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-primary-300 bg-primary-50 px-3 text-xs font-bold text-primary-600 hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-300">
                           <Upload className="h-3.5 w-3.5" /> Upload thumbnail
                           <input
@@ -4183,11 +4164,11 @@ function AdminInner() {
                       </label>
                       <label className="space-y-1">
                         <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Read minutes</span>
-                        <input type="number" min={1} value={selectedArticle.readMinutes} onChange={e => updateManagedArticle(selectedArticle.slug, { readMinutes: parseInt(e.target.value) || 1 })} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
+                        <input type="number" min={1} value={selectedArticle.readMinutes} onChange={e => updateManagedArticle(selectedArticle.slug, { readMinutes: parseInt(e.target.value) || 1 })} className={adminInputOnCard} />
                       </label>
                       <label className="space-y-1">
                         <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Publish date</span>
-                        <input type="date" value={selectedArticle.datePublished} onChange={e => updateManagedArticle(selectedArticle.slug, { datePublished: e.target.value })} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
+                        <input type="date" value={selectedArticle.datePublished} onChange={e => updateManagedArticle(selectedArticle.slug, { datePublished: e.target.value })} className={adminInputOnCard} />
                       </label>
                       <label className="flex items-center gap-2 rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm font-bold dark:border-surface-700 dark:bg-surface-800">
                         <input type="checkbox" checked={Boolean(selectedArticle.featured)} onChange={e => updateManagedArticle(selectedArticle.slug, { featured: e.target.checked })} className="h-4 w-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500" />
@@ -4210,7 +4191,7 @@ function AdminInner() {
                 <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
                   <label className="space-y-2 block">
                     <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Article body markdown</span>
-                    <textarea value={selectedArticle.body} onChange={e => updateManagedArticle(selectedArticle.slug, { body: e.target.value })} rows={22} className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 font-mono text-xs leading-6 outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
+                    <textarea value={selectedArticle.body} onChange={e => updateManagedArticle(selectedArticle.slug, { body: e.target.value })} rows={22} className={`${adminInputOnCard} resize-y font-mono leading-6`} />
                   </label>
                 </div>
               </div>
@@ -4495,8 +4476,8 @@ function AdminInner() {
                   >
                     {/* Main row */}
                     <div className="flex items-center gap-3">
-                      {/* Reorder buttons */}
-                      {loc === 'homepage' ? (
+                      {/* Reorder buttons — hidden while editing so the form spans the full card width */}
+                      {editingSectionId !== section.id && (loc === 'homepage' ? (
                         <div className="flex w-8 shrink-0 items-center justify-center" title="Use Settings -> Homepage to reorder homepage sections with the rest of the homepage blocks.">
                           <GripVertical className="w-3.5 h-3.5 text-surface-300" />
                         </div>
@@ -4520,7 +4501,7 @@ function AdminInner() {
                             <ChevronDown className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                      )}
+                      ))}
 
                       {/* Section info */}
                       <div className="flex-1 min-w-0">
@@ -4641,7 +4622,7 @@ function AdminInner() {
                           </div>
 
                           {/* Subpanel Section Page */}
-                          <div className="border border-surface-200 dark:border-surface-800 rounded-xl p-4 bg-white dark:bg-surface-900">
+                          <div className="pt-2">
                             <SectionEyebrow>2. Section page</SectionEyebrow>
                             <p className="text-xs text-surface-400 mt-2 mb-4">The dedicated page configuration at /section/{editSectionSlug || 'slug'}</p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4663,8 +4644,14 @@ function AdminInner() {
                                 />
                                 <p className="text-[11px] text-surface-400 mt-1">The big heading shown on the section page.</p>
                               </Field>
-                              <Field
+                              <FieldTextarea
                                 label="Page hero description"
+                                value={editSectionHeroDescription}
+                                onChange={setEditSectionHeroDescription}
+                                rows={2}
+                                placeholder="Short introductory text under title"
+                                recommended={160}
+                                hint="Sub-text under the hero heading."
                                 action={(
                                   <WandButton
                                     fieldId="section-hero-desc"
@@ -4673,17 +4660,15 @@ function AdminInner() {
                                     prompt={() => homepagePrompts.sectionHeroDescription(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
                                   />
                                 )}
-                              >
-                                <input
-                                  value={editSectionHeroDescription}
-                                  onChange={e => setEditSectionHeroDescription(e.target.value)}
-                                  className={adminInput}
-                                  placeholder="Short introductory text under title"
-                                />
-                                <p className="text-[11px] text-surface-400 mt-1">Sub-text under the hero heading.</p>
-                              </Field>
-                              <Field
+                              />
+                              <FieldTextarea
                                 label="SEO title"
+                                value={editSectionSeoTitle}
+                                onChange={setEditSectionSeoTitle}
+                                rows={2}
+                                placeholder="Leave blank to use hero title"
+                                recommended={60}
+                                hint={<>Browser tab &amp; search-result title (&lt;title&gt; tag).</>}
                                 action={(
                                   <WandButton
                                     fieldId="section-seo-title"
@@ -4692,17 +4677,15 @@ function AdminInner() {
                                     prompt={() => homepagePrompts.sectionSeoTitle(editSectionHeroTitle || editSectionName)}
                                   />
                                 )}
-                              >
-                                <input
-                                  value={editSectionSeoTitle}
-                                  onChange={e => setEditSectionSeoTitle(e.target.value)}
-                                  className={adminInput}
-                                  placeholder="Leave blank to use hero title"
-                                />
-                                <p className="text-[11px] text-surface-400 mt-1">Browser tab &amp; search-result title (&lt;title&gt; tag).</p>
-                              </Field>
-                              <Field
+                              />
+                              <FieldTextarea
                                 label="SEO description"
+                                value={editSectionSeoDescription}
+                                onChange={setEditSectionSeoDescription}
+                                rows={2}
+                                placeholder="Leave blank to use hero description"
+                                recommended={160}
+                                hint="Meta description for search engines."
                                 action={(
                                   <WandButton
                                     fieldId="section-seo-desc"
@@ -4711,15 +4694,7 @@ function AdminInner() {
                                     prompt={() => homepagePrompts.sectionSeoDescription(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
                                   />
                                 )}
-                              >
-                                <input
-                                  value={editSectionSeoDescription}
-                                  onChange={e => setEditSectionSeoDescription(e.target.value)}
-                                  className={adminInput}
-                                  placeholder="Leave blank to use hero description"
-                                />
-                                <p className="text-[11px] text-surface-400 mt-1">Meta description for search engines.</p>
-                              </Field>
+                              />
                               <Field
                                 label="Intro content (Markdown supported)"
                                 className="md:col-span-2"
@@ -4744,19 +4719,14 @@ function AdminInner() {
                           </div>
 
                           {/* Filter rail per-section */}
-                          <div className="border border-surface-200 dark:border-surface-800 rounded-xl p-4 bg-white dark:bg-surface-900">
+                          <div className="pt-2">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2 sm:gap-0">
                               <SectionEyebrow>3. Filter rail for this section page</SectionEyebrow>
-                              <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                                <input
-                                  type="checkbox"
-                                  checked={editSectionUseCustomRail}
-                                  onChange={e => setEditSectionUseCustomRail(e.target.checked)}
-                                  className="sr-only peer"
-                                />
-                                <div className="w-9 h-5 bg-surface-200 dark:bg-surface-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-500"></div>
-                                <span className="ml-2 text-xs font-semibold text-surface-500">Custom filter rail</span>
-                              </label>
+                              <Toggle
+                                checked={editSectionUseCustomRail}
+                                onChange={setEditSectionUseCustomRail}
+                                label="Custom filter rail"
+                              />
                             </div>
                             <p className="text-xs text-surface-400 mb-4">
                               Affects /section/{editSectionSlug || 'slug'}. When off, visitors see the normal sorting & filter UI. When on, only your custom chips show.
@@ -4843,8 +4813,9 @@ function AdminInner() {
 
                           {/* Action controls footer */}
                             <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-4 border-t border-surface-100 dark:border-surface-800">
-                              <button
-                                type="button"
+                              <ActionButton
+                                variant="outline"
+                                className="w-full sm:w-auto"
                                 onClick={() => {
                                   setEditSectionName(section.name);
                                   setEditSectionSlug(section.slug || '');
@@ -4864,25 +4835,24 @@ function AdminInner() {
                                   setEditSectionUseCustomRail(section.useCustomRail || false);
                                   setEditSectionRailItems(section.railItems || []);
                                 }}
-                                className="w-full sm:w-auto px-3 py-2 rounded-xl border border-surface-200 hover:bg-surface-100 dark:border-surface-700 dark:hover:bg-surface-800 text-xs font-bold text-surface-600 dark:text-surface-300 transition-colors"
                               >
                                 Reset
-                              </button>
+                              </ActionButton>
                               <div className="flex items-center gap-2 w-full sm:w-auto">
-                                <button
-                                  type="button"
+                                <ActionButton
+                                  variant="ghost"
+                                  className="flex-1 sm:flex-none"
                                   onClick={() => setEditingSectionId(null)}
-                                  className="flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
                                 >
                                   Close
-                                </button>
-                                <button
-                                  type="button"
+                                </ActionButton>
+                                <ActionButton
+                                  variant="primary"
+                                  className="flex-1 sm:flex-none"
                                   onClick={() => saveEditSection(section)}
-                                  className="flex-1 sm:flex-none flex justify-center items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold transition-colors"
                                 >
                                   <Save className="w-3.5 h-3.5" /> Save section
-                                </button>
+                                </ActionButton>
                               </div>
                           </div>
                         </div>
@@ -5082,39 +5052,41 @@ function AdminInner() {
         <div className="max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-start">
 
-            {/* Settings Sidebar Navigation */}
-            <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl p-4 lg:sticky lg:top-6 space-y-1">
-              <h3 className="text-xs font-mono tracking-widest text-surface-400 dark:text-surface-500 uppercase px-3 mb-3">Settings Categories</h3>
-              {[
-                { id: 'general', label: 'General', icon: <Settings className="w-4 h-4" /> },
-                { id: 'homepage', label: 'Homepage Blocks', icon: <Layers className="w-4 h-4" /> },
-                { id: 'discovery', label: 'Discovery Pages', icon: <Compass className="w-4 h-4" /> },
-                { id: 'navigation', label: 'Navigation Menu', icon: <Menu className="w-4 h-4" /> },
-                { id: 'footer', label: 'Footer Links', icon: <LayoutTemplate className="w-4 h-4" /> },
-                { id: 'features', label: 'Feature Flags', icon: <Sparkles className="w-4 h-4" /> },
-                { id: 'ads', label: 'Ads & Scripts', icon: <BarChart2 className="w-4 h-4" /> },
-                { id: 'ai-tools', label: 'AI Tools', icon: <Wand2 className="w-4 h-4" /> },
-                { id: 'comments', label: 'Comments', icon: <MessageCircle className="w-4 h-4" /> },
-                { id: 'share', label: 'Share Targets', icon: <ArrowRight className="w-4 h-4" /> },
-              ].map(cat => {
-                const isActive = settingsSubTab === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSettingsSubTab(cat.id as any)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                      isActive
-                        ? 'bg-primary-500 text-white shadow-primary-500/10'
-                        : 'text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-100 hover:bg-surface-50 dark:hover:bg-surface-800/50'
-                    }`}
-                  >
-                    <span className={isActive ? 'text-white' : 'text-surface-400 dark:text-surface-500'}>
-                      {cat.icon}
-                    </span>
-                    <span>{cat.label}</span>
-                  </button>
-                );
-              })}
+            {/* Settings navigation: horizontal chips on mobile, sticky sidebar on desktop. */}
+            <div className="min-w-0 rounded-2xl border border-surface-200 bg-white p-2 dark:border-surface-800 dark:bg-surface-900 lg:sticky lg:top-6 lg:p-4">
+              <h3 className="mb-3 hidden px-3 text-xs font-mono uppercase tracking-widest text-surface-400 dark:text-surface-500 lg:block">Settings Categories</h3>
+              <div className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
+                {[
+                  { id: 'general', label: 'General', icon: <Settings className="w-4 h-4" /> },
+                  { id: 'homepage', label: 'Homepage Blocks', icon: <Layers className="w-4 h-4" /> },
+                  { id: 'discovery', label: 'Discovery Pages', icon: <Compass className="w-4 h-4" /> },
+                  { id: 'navigation', label: 'Navigation Menu', icon: <Menu className="w-4 h-4" /> },
+                  { id: 'footer', label: 'Footer Links', icon: <LayoutTemplate className="w-4 h-4" /> },
+                  { id: 'features', label: 'Feature Flags', icon: <Sparkles className="w-4 h-4" /> },
+                  { id: 'ads', label: 'Ads & Scripts', icon: <BarChart2 className="w-4 h-4" /> },
+                  { id: 'ai-tools', label: 'AI Tools', icon: <Wand2 className="w-4 h-4" /> },
+                  { id: 'comments', label: 'Comments', icon: <MessageCircle className="w-4 h-4" /> },
+                  { id: 'share', label: 'Share Targets', icon: <ArrowRight className="w-4 h-4" /> },
+                ].map(cat => {
+                  const isActive = settingsSubTab === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSettingsSubTab(cat.id as any)}
+                      className={`flex w-auto shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all lg:w-full lg:gap-3 lg:text-sm ${
+                        isActive
+                          ? 'bg-primary-500 text-white shadow-primary-500/10'
+                          : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900 dark:text-surface-400 dark:hover:bg-surface-800/50 dark:hover:text-surface-100'
+                      }`}
+                    >
+                      <span className={isActive ? 'text-white' : 'text-surface-400 dark:text-surface-500'}>
+                        {cat.icon}
+                      </span>
+                      <span>{cat.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Active Settings Panel */}
@@ -5452,7 +5424,7 @@ function AdminInner() {
                 </div>
 
                 {/* Main Card Container */}
-                <div className="p-6 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-6">
+                <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900 sm:p-6 space-y-6">
                   {/* Explore Page Tab View */}
                   {discoveryTab === 'explore' && (
                     <>
@@ -5515,7 +5487,7 @@ function AdminInner() {
                             value={discoveryPages.exploreDescription || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreDescription: e.target.value }))}
                             rows={2}
-                            className="w-full min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
+                            className={`${adminInputOnCard} min-h-[80px] resize-y`}
                             placeholder="Browse thousands of tested prompts across every major AI tool. Filter by tool, tag or use-case."
                           />
                           <CharCount value={discoveryPages.exploreDescription || ''} recommended={160} />
@@ -5576,7 +5548,7 @@ function AdminInner() {
                             value={discoveryPages.exploreSeoDescription || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, exploreSeoDescription: e.target.value }))}
                             rows={2}
-                            className="w-full min-h-[70px] rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
+                            className={`${adminInput} min-h-[70px] resize-y`}
                             placeholder="Browse and filter the full library of curated AI prompts."
                           />
                           <CharCount value={discoveryPages.exploreSeoDescription || ''} recommended={160} />
@@ -5589,17 +5561,10 @@ function AdminInner() {
                           <h4 className="font-bold text-sm text-surface-900 dark:text-white">Show stat boxes</h4>
                           <p className="text-xs text-surface-500">Display total posts / tools / tags in the hero</p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setDiscoveryPages(prev => ({ ...prev, showHeroStats: !(prev.showHeroStats ?? true) }))}
-                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                            (discoveryPages.showHeroStats ?? true) ? 'bg-primary-600' : 'bg-surface-200 dark:bg-surface-700'
-                          }`}
-                        >
-                          <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                            (discoveryPages.showHeroStats ?? true) ? 'translate-x-5' : 'translate-x-0'
-                          }`} />
-                        </button>
+                        <Toggle
+                          checked={discoveryPages.showHeroStats ?? true}
+                          onChange={(checked) => setDiscoveryPages(prev => ({ ...prev, showHeroStats: checked }))}
+                        />
                       </div>
                     </>
                   )}
@@ -5655,7 +5620,7 @@ function AdminInner() {
                             value={discoveryPages.toolDescriptionTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, toolDescriptionTemplate: e.target.value }))}
                             rows={2}
-                            className="w-full min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
+                            className={`${adminInputOnCard} min-h-[80px] resize-y`}
                             placeholder="Browse %count% prompt collections organized for %tool%."
                           />
                           <CharCount value={discoveryPages.toolDescriptionTemplate || ''} recommended={160} />
@@ -5705,7 +5670,7 @@ function AdminInner() {
                             value={discoveryPages.toolSeoDescriptionTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, toolSeoDescriptionTemplate: e.target.value }))}
                             rows={2}
-                            className="w-full min-h-[70px] rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
+                            className={`${adminInput} min-h-[70px] resize-y`}
                             placeholder="Browse curated prompts for %tool%."
                           />
                           <CharCount value={discoveryPages.toolSeoDescriptionTemplate || ''} recommended={160} />
@@ -5765,7 +5730,7 @@ function AdminInner() {
                             value={discoveryPages.tagDescriptionTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, tagDescriptionTemplate: e.target.value }))}
                             rows={2}
-                            className="w-full min-h-[80px] rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
+                            className={`${adminInputOnCard} min-h-[80px] resize-y`}
                             placeholder="Showing %count% collections tagged with &quot;%tag%&quot;."
                           />
                           <CharCount value={discoveryPages.tagDescriptionTemplate || ''} recommended={160} />
@@ -5815,7 +5780,7 @@ function AdminInner() {
                             value={discoveryPages.tagSeoDescriptionTemplate || ''}
                             onChange={e => setDiscoveryPages(prev => ({ ...prev, tagSeoDescriptionTemplate: e.target.value }))}
                             rows={2}
-                            className="w-full min-h-[70px] rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
+                            className={`${adminInput} min-h-[70px] resize-y`}
                             placeholder="Browse prompts tagged with %tag%."
                           />
                           <CharCount value={discoveryPages.tagSeoDescriptionTemplate || ''} recommended={160} />
@@ -5843,17 +5808,10 @@ function AdminInner() {
                           <h5 className="font-bold text-sm text-surface-900 dark:text-white">{activeRailConfig.toggleLabel}</h5>
                           <p className="text-xs text-surface-500 mt-0.5">{activeRailConfig.toggleDesc}</p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setDiscoveryPages(prev => ({ ...prev, [activeRailConfig.toggleKey]: !activeRailConfig.enabled }))}
-                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                            activeRailConfig.enabled ? 'bg-primary-600' : 'bg-surface-200 dark:bg-surface-700'
-                          }`}
-                        >
-                          <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                            activeRailConfig.enabled ? 'translate-x-5' : 'translate-x-0'
-                          }`} />
-                        </button>
+                        <Toggle
+                          checked={activeRailConfig.enabled}
+                          onChange={(checked) => setDiscoveryPages(prev => ({ ...prev, [activeRailConfig.toggleKey]: checked }))}
+                        />
                       </div>
 
                       {/* Rail Content or Disabled Banner */}
@@ -5900,19 +5858,19 @@ function AdminInner() {
                                   <button type="button" onClick={() => moveRailItem(activeRailConfig.key, index, -1)} disabled={index === 0} className="p-1 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed" title="Move up"><ChevronUp className="w-3.5 h-3.5" /></button>
                                   <button type="button" onClick={() => moveRailItem(activeRailConfig.key, index, 1)} disabled={index === activeRailConfig.items.length - 1} className="p-1 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed" title="Move down"><ChevronDown className="w-3.5 h-3.5" /></button>
                                 </div>
-                                <input value={item.label} onChange={e => updateRailItem(activeRailConfig.key, index, 'label', e.target.value)} className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm text-surface-900 dark:text-white" placeholder="Visible title, e.g. Anime" />
-                                <select value={item.type} onChange={e => updateRailItem(activeRailConfig.key, index, 'type', e.target.value)} className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm text-surface-900 dark:text-white">
+                                <input value={item.label} onChange={e => updateRailItem(activeRailConfig.key, index, 'label', e.target.value)} className={adminInputOnCard} placeholder="Visible title, e.g. Anime" />
+                                <select value={item.type} onChange={e => updateRailItem(activeRailConfig.key, index, 'type', e.target.value)} className={adminInputOnCard}>
                                   <option value="tag">Tag</option>
                                   <option value="tool">AI Tool</option>
                                   <option value="category">Category</option>
                                 </select>
-                                <input value={item.value} onChange={e => updateRailItem(activeRailConfig.key, index, 'value', e.target.value)} className="px-3 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm text-surface-900 dark:text-white" placeholder="Match value, e.g. anime" />
-                                <button type="button" onClick={() => removeRailItem(activeRailConfig.key, index)} className="px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-semibold">Remove</button>
+                                <input value={item.value} onChange={e => updateRailItem(activeRailConfig.key, index, 'value', e.target.value)} className={adminInputOnCard} placeholder="Match value, e.g. anime" />
+                                <ActionButton variant="danger" onClick={() => removeRailItem(activeRailConfig.key, index)}>Remove</ActionButton>
                               </div>
                             ))}
-                            <button type="button" onClick={() => addRailItem(activeRailConfig.key)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-50 dark:bg-surface-800 hover:bg-surface-100 dark:hover:bg-surface-700 text-sm font-medium text-surface-900 dark:text-white">
-                              <Plus className="w-4 h-4" /> Add Chip
-                            </button>
+                            <ActionButton variant="outline" onClick={() => addRailItem(activeRailConfig.key)}>
+                              <Plus className="w-4 h-4" /> Add chip
+                            </ActionButton>
                           </div>
                         </div>
                       )}
@@ -5922,13 +5880,9 @@ function AdminInner() {
                   {/* Footer Bar */}
                   <div className="pt-4 border-t border-surface-200 dark:border-surface-800 flex flex-wrap items-center justify-between gap-4">
                     <p className="text-xs text-surface-500">Changes apply to your live configuration.</p>
-                    <button
-                      type="button"
-                      onClick={handleSaveSettings}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-600 text-white font-semibold text-sm hover:bg-primary-700 transition-colors"
-                    >
+                    <ActionButton onClick={handleSaveSettings}>
                       <Save className="w-4 h-4" /> Save {discoveryTab === 'explore' ? 'Explore' : discoveryTab === 'tool' ? 'AI Tool' : 'Tag'} page
-                    </button>
+                    </ActionButton>
                   </div>
                 </div>
               </div>
@@ -6496,15 +6450,20 @@ function AdminInner() {
                           </div>
                         </div>
                         {section && editingSectionId === section.id && (
-                          <div className="mt-4 rounded-lg border border-surface-200 bg-white p-4 dark:border-surface-700 dark:bg-surface-900">
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                              <input value={editSectionName} onChange={e => setEditSectionName(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Section title" />
-                              <input value={editSectionSlug} onChange={e => setEditSectionSlug(slugify(e.target.value))} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Slug" />
-                              <input type="number" min={1} max={50} value={editSectionLimit} onChange={e => setEditSectionLimit(parseInt(e.target.value) || 8)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Post limit" />
+                          <div className="mt-4 border-t border-surface-200 dark:border-surface-800 pt-4 space-y-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                              <Field label="Section name">
+                                <input value={editSectionName} onChange={e => setEditSectionName(e.target.value)} className={adminInput} placeholder="Section title" />
+                              </Field>
+                              <Field label="Slug">
+                                <input value={editSectionSlug} onChange={e => setEditSectionSlug(slugify(e.target.value))} className={adminInput} placeholder="Slug" />
+                              </Field>
+                              <Field label="Post limit">
+                                <input type="number" min={1} max={50} value={editSectionLimit} onChange={e => setEditSectionLimit(parseInt(e.target.value) || 8)} className={adminInput} placeholder="Post limit" />
+                              </Field>
                               <div className="grid gap-3 sm:col-span-2 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
-                                <div>
-                                  <label className="block text-xs text-surface-400 mb-1">Card style override</label>
-                                  <select value={editSectionCardStyle} onChange={e => setEditSectionCardStyle(e.target.value as Section['cardStyle'] | '')} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800">
+                                <Field label="Card style override">
+                                  <select value={editSectionCardStyle} onChange={e => setEditSectionCardStyle(e.target.value as Section['cardStyle'] | '')} className={adminInput}>
                                     <option value="">Use global card style</option>
                                     <option value="v1">v1 Hover Overlay</option>
                                     <option value="v2">v2 Floating Image with Border</option>
@@ -6518,14 +6477,27 @@ function AdminInner() {
                                   <p className="mt-1 text-[11px] text-surface-500">
                                     {editSectionCardStyle ? 'This section will ignore the global card style.' : `Using global card style: ${cardStyleName(cardStyle)}`}
                                   </p>
-                                </div>
+                                </Field>
                                 <CardStylePreview style={editSectionCardStyle || cardStyle} badgeStyle={badgeStyle} label={editSectionCardStyle ? 'Section override preview' : 'Global style preview'} />
                               </div>
-                              <input value={editSectionFilterTags} onChange={e => setEditSectionFilterTags(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Filter rail tags: anime, realistic" />
-                              <input value={editSectionHeroTitle} onChange={e => setEditSectionHeroTitle(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Hero title (blank = section name)" />
-                              <input value={editSectionHeroBadge} onChange={e => setEditSectionHeroBadge(e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Hero badge (blank = Section)" />
-                              <div className="sm:col-span-2">
-                                <div className="mb-1 flex items-center justify-end">
+                              <Field label="Filter rail tags" className="sm:col-span-2">
+                                <input value={editSectionFilterTags} onChange={e => setEditSectionFilterTags(e.target.value)} className={adminInput} placeholder="anime, realistic" />
+                              </Field>
+                              <Field label="Hero title" className="sm:col-span-2">
+                                <input value={editSectionHeroTitle} onChange={e => setEditSectionHeroTitle(e.target.value)} className={adminInput} placeholder="Blank = section name" />
+                              </Field>
+                              <Field label="Hero badge" className="sm:col-span-2">
+                                <input value={editSectionHeroBadge} onChange={e => setEditSectionHeroBadge(e.target.value)} className={adminInput} placeholder="Blank = Section" />
+                              </Field>
+                              <FieldTextarea
+                                className="sm:col-span-2"
+                                label="Hero description"
+                                value={editSectionHeroDescription}
+                                onChange={setEditSectionHeroDescription}
+                                rows={2}
+                                placeholder="Hero description"
+                                recommended={160}
+                                action={(
                                   <WandButton
                                     fieldId="section-hero-desc"
                                     value={editSectionHeroDescription}
@@ -6533,12 +6505,17 @@ function AdminInner() {
                                     prompt={() => homepagePrompts.sectionHeroDescription(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
                                     label="Auto-write hero description"
                                   />
-                                </div>
-                                <textarea rows={2} value={editSectionHeroDescription} onChange={e => setEditSectionHeroDescription(e.target.value)} className="resize-y w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Hero description" />
-                                <CharCount value={editSectionHeroDescription} recommended={160} />
-                              </div>
-                              <div className="sm:col-span-2">
-                                <div className="mb-1 flex items-center justify-end">
+                                )}
+                              />
+                              <FieldTextarea
+                                className="sm:col-span-2"
+                                label="SEO title"
+                                value={editSectionSeoTitle}
+                                onChange={setEditSectionSeoTitle}
+                                rows={2}
+                                placeholder="SEO title (blank = hero title)"
+                                recommended={60}
+                                action={(
                                   <WandButton
                                     fieldId="section-seo-title"
                                     value={editSectionSeoTitle}
@@ -6546,12 +6523,17 @@ function AdminInner() {
                                     prompt={() => homepagePrompts.sectionSeoTitle(editSectionHeroTitle || editSectionName)}
                                     label="Auto-write SEO title"
                                   />
-                                </div>
-                                <textarea rows={2} value={editSectionSeoTitle} onChange={e => setEditSectionSeoTitle(e.target.value)} className="resize-y w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="SEO title (blank = hero title)" />
-                                <CharCount value={editSectionSeoTitle} recommended={60} />
-                              </div>
-                              <div className="sm:col-span-2">
-                                <div className="mb-1 flex items-center justify-end">
+                                )}
+                              />
+                              <FieldTextarea
+                                className="sm:col-span-2"
+                                label="SEO description"
+                                value={editSectionSeoDescription}
+                                onChange={setEditSectionSeoDescription}
+                                rows={2}
+                                placeholder="SEO description"
+                                recommended={160}
+                                action={(
                                   <WandButton
                                     fieldId="section-seo-desc"
                                     value={editSectionSeoDescription}
@@ -6559,12 +6541,16 @@ function AdminInner() {
                                     prompt={() => homepagePrompts.sectionSeoDescription(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
                                     label="Auto-write SEO description"
                                   />
-                                </div>
-                                <textarea value={editSectionSeoDescription} onChange={e => setEditSectionSeoDescription(e.target.value)} rows={2} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="SEO description" />
-                                <CharCount value={editSectionSeoDescription} recommended={160} />
-                              </div>
-                              <div className="sm:col-span-2">
-                                <div className="mb-1 flex items-center justify-end">
+                                )}
+                              />
+                              <FieldTextarea
+                                className="sm:col-span-2"
+                                label="Intro content (Markdown supported)"
+                                value={editSectionIntroContent}
+                                onChange={setEditSectionIntroContent}
+                                rows={3}
+                                placeholder="Intro content"
+                                action={(
                                   <WandButton
                                     fieldId="section-intro-content"
                                     value={editSectionIntroContent}
@@ -6572,24 +6558,23 @@ function AdminInner() {
                                     prompt={() => homepagePrompts.sectionIntroContent(editSectionHeroTitle || editSectionName, editSectionFilterTags)}
                                     label="Auto-write intro"
                                   />
-                                </div>
-                                <textarea value={editSectionIntroContent} onChange={e => setEditSectionIntroContent(e.target.value)} rows={3} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Intro content" />
-                              </div>
+                                )}
+                              />
                             </div>
                             {section.type === 'custom' && (
-                              <div className="mt-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                              <div className="rounded-xl border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
                                 <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-surface-500">Add posts by title</p>
                                 <div className="flex flex-col gap-2 sm:flex-row">
                                   <input
                                     value={sectionPostSearch}
                                     onChange={e => setSectionPostSearch(e.target.value)}
-                                    className="flex-1 rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                                    className={`${adminInput} sm:flex-1`}
                                     placeholder="Search published posts..."
                                   />
                                   <select
                                     value=""
                                     onChange={e => addPostToCustomSection(section, e.target.value)}
-                                    className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 sm:w-80"
+                                    className={`${adminInput} sm:w-80`}
                                   >
                                     <option value="">Choose a post to add...</option>
                                     {publicPosts
@@ -6602,9 +6587,9 @@ function AdminInner() {
                                 <p className="mt-2 text-[11px] text-surface-500">{section.postIds?.length || 0} posts selected. Use the section picker in the Sections tab for detailed ordering.</p>
                               </div>
                             )}
-                            <div className="mt-3 flex gap-2">
-                              <button onClick={() => saveEditSection(section)} className="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-4 py-2 text-sm font-bold text-white hover:bg-primary-600"><Check className="h-4 w-4" /> Save section</button>
-                              <button onClick={() => setEditingSectionId(null)} className="inline-flex items-center gap-2 rounded-lg bg-surface-100 px-4 py-2 text-sm font-bold text-surface-600 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-200 dark:hover:bg-surface-700"><X className="h-4 w-4" /> Cancel</button>
+                            <div className="flex gap-2">
+                              <ActionButton variant="primary" onClick={() => saveEditSection(section)}><Check className="h-4 w-4" /> Save section</ActionButton>
+                              <ActionButton variant="ghost" onClick={() => setEditingSectionId(null)}><X className="h-4 w-4" /> Cancel</ActionButton>
                             </div>
                           </div>
                         )}
@@ -6626,29 +6611,25 @@ function AdminInner() {
                               </p>
                             )}
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <input value={blockContent.badge || ''} onChange={e => updateHomepageContent(blockKey, 'badge', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Badge / eyebrow" />
-                                {(blockKey === 'reviewProcess' || blockKey === 'promptOfDay' || blockKey === 'guides' || blockKey === 'blog') && <input value={blockContent.ctaLabel || ''} onChange={e => updateHomepageContent(blockKey, 'ctaLabel', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Button label" />}
+                                <input value={blockContent.badge || ''} onChange={e => updateHomepageContent(blockKey, 'badge', e.target.value)} className={adminInput} placeholder="Badge / eyebrow" />
+                                {(blockKey === 'reviewProcess' || blockKey === 'promptOfDay' || blockKey === 'guides' || blockKey === 'blog') && <input value={blockContent.ctaLabel || ''} onChange={e => updateHomepageContent(blockKey, 'ctaLabel', e.target.value)} className={adminInput} placeholder="Button label" />}
                                 {blockKey === 'reviewProcess' && (
-                                  <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm font-bold text-surface-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200">
+                                  <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm font-bold text-surface-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200">
                                     <span>Show submit button</span>
-                                    <input
-                                      type="checkbox"
+                                    <Toggle
                                       checked={blockContent.showCta !== false}
-                                      onChange={e => updateHomepageContent(blockKey, 'showCta', e.target.checked)}
-                                      className="h-4 w-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+                                      onChange={(v) => updateHomepageContent(blockKey, 'showCta', v)}
                                     />
-                                  </label>
+                                  </div>
                                 )}
                                 {(blockKey === 'supportedTools' || blockKey === 'creativeDirections') && (
-                                  <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm font-bold text-surface-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 sm:col-span-2">
+                                  <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm font-bold text-surface-700 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 sm:col-span-2">
                                     <span>Hide prompt counts on cards</span>
-                                    <input
-                                      type="checkbox"
+                                    <Toggle
                                       checked={blockContent.hidePromptCounts || false}
-                                      onChange={e => updateHomepageContent(blockKey, 'hidePromptCounts', e.target.checked)}
-                                      className="h-4 w-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
+                                      onChange={(v) => updateHomepageContent(blockKey, 'hidePromptCounts', v)}
                                     />
-                                  </label>
+                                  </div>
                                 )}
                                 {blockKey === 'promptOfDay' && (
                                   <div className="grid gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50 sm:col-span-2 sm:grid-cols-[120px_1fr]">
@@ -6829,8 +6810,10 @@ function AdminInner() {
                                     )}
                                   </div>
                                 )}
-                                <div className="sm:col-span-2">
-                                  <div className="mb-1 flex items-center justify-end">
+                                <Field
+                                  className="sm:col-span-2"
+                                  label="Heading"
+                                  action={(
                                     <WandButton
                                       fieldId={`homepage-${blockKey}-title`}
                                       value={blockContent.title || ''}
@@ -6838,11 +6821,20 @@ function AdminInner() {
                                       prompt={() => homepagePrompts.blockHeading(blockKey)}
                                       label="Auto-write heading"
                                     />
-                                  </div>
-                                  <input value={blockContent.title || ''} onChange={e => updateHomepageContent(blockKey, 'title', e.target.value)} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Heading" />
-                                </div>
-                                <div className="sm:col-span-2">
-                                  <div className="mb-1 flex items-center justify-end">
+                                  )}
+                                >
+                                  <input value={blockContent.title || ''} onChange={e => updateHomepageContent(blockKey, 'title', e.target.value)} className={adminInput} placeholder="Heading" />
+                                  <CharCount value={blockContent.title || ''} recommended={60} />
+                                </Field>
+                                <FieldTextarea
+                                  className="sm:col-span-2"
+                                  label="Description"
+                                  value={blockContent.description || ''}
+                                  onChange={(value) => updateHomepageContent(blockKey, 'description', value)}
+                                  rows={2}
+                                  placeholder="Description"
+                                  recommended={160}
+                                  action={(
                                     <WandButton
                                       fieldId={`homepage-${blockKey}-desc`}
                                       value={blockContent.description || ''}
@@ -6850,9 +6842,8 @@ function AdminInner() {
                                       prompt={() => homepagePrompts.blockDescription(blockKey)}
                                       label="Auto-write description"
                                     />
-                                  </div>
-                                  <textarea value={blockContent.description || ''} onChange={e => updateHomepageContent(blockKey, 'description', e.target.value)} rows={2} className="w-full rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" placeholder="Description" />
-                                </div>
+                                  )}
+                                />
                                 {['howTo', 'reviewProcess', 'supportedTools', 'creatorFeedback'].includes(blockKey) && (
                                   <div className="space-y-3 sm:col-span-2">
                                   <div className="flex items-center justify-between">
@@ -6898,14 +6889,14 @@ function AdminInner() {
                                         <input
                                           value={item.title || ''}
                                           onChange={e => updateHomepageItem(blockKey, itemIndex, 'title', e.target.value)}
-                                          className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                                          className={adminInput}
                                           placeholder={blockKey === 'supportedTools' ? 'Tool name, e.g. ChatGPT' : 'Card title'}
                                         />
                                         <textarea
                                           value={item.text || ''}
                                           onChange={e => updateHomepageItem(blockKey, itemIndex, 'text', e.target.value)}
                                           rows={2}
-                                          className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                                          className={`${adminInput} resize-y`}
                                           placeholder={blockKey === 'supportedTools' ? 'Comma-separated note lines' : 'Card text'}
                                         />
                                         {blockKey === 'howTo' && (
@@ -6913,7 +6904,7 @@ function AdminInner() {
                                             value={(item.checks || []).join('\n')}
                                             onChange={e => updateHomepageItem(blockKey, itemIndex, 'checks', e.target.value)}
                                             rows={3}
-                                            className="rounded-lg border border-surface-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 sm:col-span-2"
+                                            className={`${adminInput} resize-y sm:col-span-2`}
                                             placeholder="One checklist item per line"
                                           />
                                         )}
@@ -6927,8 +6918,8 @@ function AdminInner() {
                                   )}
                                 </div>
                                 )}
-                                {blockKey === 'creativeDirections' && <input value={blockContent.itemDescription || ''} onChange={e => updateHomepageContent(blockKey, 'itemDescription', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Card description line" />}
-                                {(blockKey === 'reviewProcess' || blockKey === 'guides' || blockKey === 'blog') && <input value={blockContent.ctaHref || ''} onChange={e => updateHomepageContent(blockKey, 'ctaHref', e.target.value)} className="rounded-lg border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 sm:col-span-2" placeholder="Button URL" />}
+                                {blockKey === 'creativeDirections' && <input value={blockContent.itemDescription || ''} onChange={e => updateHomepageContent(blockKey, 'itemDescription', e.target.value)} className={`${adminInput} sm:col-span-2`} placeholder="Card description line" />}
+                                {(blockKey === 'reviewProcess' || blockKey === 'guides' || blockKey === 'blog') && <input value={blockContent.ctaHref || ''} onChange={e => updateHomepageContent(blockKey, 'ctaHref', e.target.value)} className={`${adminInput} sm:col-span-2`} placeholder="Button URL" />}
                             </div>
                           </div>
                         )}
@@ -7484,32 +7475,26 @@ function AdminInner() {
           )}
 
           {settingsSubTab === 'ads' && (
-          <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-             <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-               <Settings className="w-4 h-4 text-primary-500" /> Ad Spaces
-             </h3>
-             <div className="space-y-6">
+          <Panel>
+             <PanelHeader title="Ads & scripts" subtitle="Configure AdSense and the reusable ad placements shown across the site." />
+             <div className="space-y-4">
 
                 {/* AdSense Account */}
                 <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                    <div className="flex items-center justify-between mb-3">
                      <span className="font-bold text-base text-surface-900 dark:text-white">Google AdSense Account</span>
-                     <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(adsConfig.autoAdsEnabled)}
-                          onChange={(e) => setAdsConfig(prev => ({ ...prev, autoAdsEnabled: e.target.checked }))}
-                          className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                        />
-                        <span className="text-xs">Auto Ads</span>
-                     </label>
+                     <Toggle
+                       checked={Boolean(adsConfig.autoAdsEnabled)}
+                       onChange={(checked) => setAdsConfig(prev => ({ ...prev, autoAdsEnabled: checked }))}
+                       label="Auto Ads"
+                     />
                    </div>
                    <input
                      type="text"
                      value={adsConfig.publisherId || ''}
                      onChange={(e) => setAdsConfig(prev => ({ ...prev, publisherId: e.target.value.trim() }))}
                      placeholder="ca-pub-XXXXXXXXXXXXXXXX"
-                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono"
+                     className={`${adminInput} font-mono`}
                    />
                    <p className="mt-2 text-xs text-surface-500">
                      Adds the site verification meta tag for AdSense. Enable Auto Ads to load the AdSense script on every page (requires a publisher ID).
@@ -7520,30 +7505,26 @@ function AdminInner() {
                 <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                    <div className="flex items-center justify-between mb-3">
                      <span className="font-bold text-base text-surface-900 dark:text-white">Header Ad (Top of page)</span>
-                     <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={adsConfig.header.enabled}
-                          onChange={(e) => setAdsConfig(prev => ({ ...prev, header: { ...prev.header, enabled: e.target.checked } }))}
-                          className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                        />
-                        <span className="text-xs">Enabled</span>
-                     </label>
+                     <Toggle
+                       checked={adsConfig.header.enabled}
+                       onChange={(checked) => setAdsConfig(prev => ({ ...prev, header: { ...prev.header, enabled: checked } }))}
+                       label="Enabled"
+                     />
                    </div>
                    <textarea
                      value={adsConfig.header.code}
                      onChange={(e) => setAdsConfig(prev => ({ ...prev, header: { ...prev.header, code: e.target.value } }))}
                      rows={3}
                      placeholder="Paste Ad HTML/JS code here (e.g., Google AdSense)"
-                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-y"
+                     className={`${adminInput} resize-y font-mono`}
                    />
                 </div>
 
                 {/* In-Feed Ad */}
                 <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
-                   <div className="flex items-center justify-between mb-3">
+                   <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                      <span className="font-bold text-base text-surface-900 dark:text-white">In-Feed Ad (Post Grids)</span>
-                     <div className="flex items-center gap-4">
+                     <div className="flex flex-wrap items-center gap-4">
                        <div className="flex items-center gap-2">
                          <span className="text-xs text-surface-500">Show every</span>
                          <input
@@ -7556,15 +7537,11 @@ function AdminInner() {
                          />
                          <span className="text-xs text-surface-500">posts</span>
                        </div>
-                       <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={adsConfig.inFeed.enabled}
-                            onChange={(e) => setAdsConfig(prev => ({ ...prev, inFeed: { ...prev.inFeed, enabled: e.target.checked } }))}
-                            className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                          />
-                          <span className="text-xs">Enabled</span>
-                       </label>
+                       <Toggle
+                         checked={adsConfig.inFeed.enabled}
+                         onChange={(checked) => setAdsConfig(prev => ({ ...prev, inFeed: { ...prev.inFeed, enabled: checked } }))}
+                         label="Enabled"
+                       />
                      </div>
                    </div>
                    <textarea
@@ -7572,7 +7549,7 @@ function AdminInner() {
                      onChange={(e) => setAdsConfig(prev => ({ ...prev, inFeed: { ...prev.inFeed, code: e.target.value } }))}
                      rows={3}
                      placeholder="Paste Ad HTML/JS code here"
-                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-y"
+                     className={`${adminInput} resize-y font-mono`}
                    />
                 </div>
 
@@ -7580,22 +7557,18 @@ function AdminInner() {
                 <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                    <div className="flex items-center justify-between mb-3">
                      <span className="font-bold text-base text-surface-900 dark:text-white">Post Details - Top</span>
-                     <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={adsConfig.postTop.enabled}
-                          onChange={(e) => setAdsConfig(prev => ({ ...prev, postTop: { ...prev.postTop, enabled: e.target.checked } }))}
-                          className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                        />
-                        <span className="text-xs">Enabled</span>
-                     </label>
+                     <Toggle
+                       checked={adsConfig.postTop.enabled}
+                       onChange={(checked) => setAdsConfig(prev => ({ ...prev, postTop: { ...prev.postTop, enabled: checked } }))}
+                       label="Enabled"
+                     />
                    </div>
                    <textarea
                      value={adsConfig.postTop.code}
                      onChange={(e) => setAdsConfig(prev => ({ ...prev, postTop: { ...prev.postTop, code: e.target.value } }))}
                      rows={3}
                      placeholder="Paste Ad HTML/JS code here"
-                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-y"
+                     className={`${adminInput} resize-y font-mono`}
                    />
                 </div>
 
@@ -7603,59 +7576,42 @@ function AdminInner() {
                 <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                    <div className="flex items-center justify-between mb-3">
                      <span className="font-bold text-base text-surface-900 dark:text-white">Post Details - Bottom</span>
-                     <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={adsConfig.postBottom.enabled}
-                          onChange={(e) => setAdsConfig(prev => ({ ...prev, postBottom: { ...prev.postBottom, enabled: e.target.checked } }))}
-                          className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                        />
-                        <span className="text-xs">Enabled</span>
-                     </label>
+                     <Toggle
+                       checked={adsConfig.postBottom.enabled}
+                       onChange={(checked) => setAdsConfig(prev => ({ ...prev, postBottom: { ...prev.postBottom, enabled: checked } }))}
+                       label="Enabled"
+                     />
                    </div>
                    <textarea
                      value={adsConfig.postBottom.code}
                      onChange={(e) => setAdsConfig(prev => ({ ...prev, postBottom: { ...prev.postBottom, code: e.target.value } }))}
                      rows={3}
                      placeholder="Paste Ad HTML/JS code here"
-                     className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs font-mono resize-y"
+                     className={`${adminInput} resize-y font-mono`}
                    />
                 </div>
 
-                <button
-                  onClick={handleSaveSettings}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-8"
-                >
-                  <Save className="w-4 h-4" /> Save Ad Settings
-                </button>
+                <ActionButton onClick={handleSaveSettings}>
+                  <Save className="w-4 h-4" /> Save ad settings
+                </ActionButton>
              </div>
-          </div>
+          </Panel>
           )}
 
           {/* AI Tools Management */}
-          {/* AI Tools Management */}
           {settingsSubTab === 'ai-tools' && (
           <div className="space-y-6">
-            <div className="p-4 rounded-xl border border-primary-200 bg-primary-50/60 dark:border-primary-800/40 dark:bg-primary-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <Wand2 className="w-5 h-5 text-primary-600 dark:text-primary-400 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-bold text-surface-900 dark:text-white">AI Tools Registry</h4>
-                  <p className="text-xs text-surface-600 dark:text-surface-300 mt-0.5">
-                    The tool registry powers AI Tool Pages, model selectors, and tool filters across the site. Per-tool page SEO is managed in Discovery Pages.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleBackfillModels}
-                disabled={isBackfillingModels}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-primary-600 disabled:opacity-60 shrink-0"
-              >
-                <RotateCcw className={`h-3.5 w-3.5 ${isBackfillingModels ? 'animate-spin' : ''}`} />
-                {isBackfillingModels ? 'Filling...' : 'Fill missing models'}
-              </button>
-            </div>
+            <TabBanner
+              icon={<Wand2 />}
+              title="AI Tools Registry"
+              text="The tool registry powers AI Tool Pages, model selectors, and tool filters across the site. Per-tool page SEO is managed in Discovery Pages."
+              action={(
+                <ActionButton onClick={handleBackfillModels} disabled={isBackfillingModels}>
+                  <RotateCcw className={`h-3.5 w-3.5 ${isBackfillingModels ? 'animate-spin' : ''}`} />
+                  {isBackfillingModels ? 'Filling...' : 'Fill missing models'}
+                </ActionButton>
+              )}
+            />
 
             <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-100 dark:border-surface-800 pb-4">
@@ -7697,13 +7653,13 @@ function AdminInner() {
                       key={tool}
                       className={`rounded-2xl border transition-all ${
                         isEditing
-                          ? 'border-primary-500/50 bg-primary-50/10 dark:bg-primary-950/10 shadow-md p-6 space-y-6'
+                          ? 'border-primary-500/50 bg-primary-50/10 dark:bg-primary-950/10 shadow-md p-4 sm:p-6 space-y-6'
                           : 'border-surface-200 dark:border-surface-800 bg-surface-50/70 dark:bg-surface-800/40 hover:border-surface-300 dark:hover:border-surface-700 p-4'
                       }`}
                     >
                       {isEditing ? (
                         <div className="space-y-6">
-                          <div className="flex items-center justify-between border-b border-surface-200 dark:border-surface-800 pb-4">
+                          <div className="flex flex-col gap-3 border-b border-surface-200 pb-4 dark:border-surface-800 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-center gap-3">
                               <div className={`w-10 h-10 rounded-xl border border-white/20 flex items-center justify-center relative ${editAiToolColor || 'bg-surface-500'}`}>
                                 {editAiToolLogo && (
@@ -7716,18 +7672,12 @@ function AdminInner() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => setEditingAiTool(null)}
-                                className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
-                              >
+                              <ActionButton variant="ghost" onClick={() => setEditingAiTool(null)}>
                                 Cancel
-                              </button>
-                              <button
-                                onClick={() => saveEditAiTool(tool)}
-                                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-primary-500 text-white text-xs font-bold hover:bg-primary-600 transition-all"
-                              >
-                                <Save className="w-3.5 h-3.5" /> Save Tool
-                              </button>
+                              </ActionButton>
+                              <ActionButton onClick={() => saveEditAiTool(tool)}>
+                                <Save className="w-3.5 h-3.5" /> Save tool
+                              </ActionButton>
                             </div>
                           </div>
 
@@ -7971,7 +7921,7 @@ function AdminInner() {
                                   value={editAiToolStats}
                                   onChange={e => setEditAiToolStats(e.target.value)}
                                   rows={2}
-                                  className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500 font-mono"
+                                  className={`${adminInput} resize-y font-mono`}
                                   placeholder={'Prompt Power: Excellent\nText Fidelity: 98%\nAspect Ratios: Flexible'}
                                 />
                               </div>
@@ -7990,7 +7940,7 @@ function AdminInner() {
                                 value={editAiToolChecks}
                                 onChange={e => setEditAiToolChecks(e.target.value)}
                                 rows={3}
-                                className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
+                                className={`${adminInput} resize-y`}
                                 placeholder={'Strong text rendering\nReference image workflows\nDetailed prompt structure'}
                               />
                             </div>
@@ -8110,21 +8060,19 @@ function AdminInner() {
           )}
 
           {settingsSubTab === 'features' && (
-          <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-            <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-              <Star className="w-4 h-4 text-primary-500" /> Feature Flags
-            </h3>
-            <p className="text-xs text-surface-500 mb-6">Toggle specific site capabilities on or off.</p>
+          <div className="space-y-6">
+            <TabBanner
+              icon={<Star />}
+              title="Feature flags"
+              text="Toggle specific site capabilities on or off."
+            />
 
             <div className="space-y-4">
               {/* User Profiles */}
               <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">User Profiles & Bookmarks</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.userProfiles} onChange={(e) => setFeatures(prev => ({ ...prev, userProfiles: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <Toggle checked={features.userProfiles} onChange={(checked) => setFeatures(prev => ({ ...prev, userProfiles: checked }))} label="Enabled" />
                 </div>
               </div>
 
@@ -8132,17 +8080,11 @@ function AdminInner() {
               <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">User Submissions & Approval Queue</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.userSubmissions} onChange={(e) => setFeatures(prev => ({ ...prev, userSubmissions: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <Toggle checked={features.userSubmissions} onChange={(checked) => setFeatures(prev => ({ ...prev, userSubmissions: checked }))} label="Enabled" />
                 </div>
                 {features.userSubmissions && (
                   <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
-                    <label className="flex items-center gap-2 cursor-pointer text-sm">
-                      <input type="checkbox" checked={features.userSubmissionsAutoApprove} onChange={(e) => setFeatures(prev => ({ ...prev, userSubmissionsAutoApprove: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                      Auto-Approve User Submissions
-                    </label>
+                    <Toggle checked={Boolean(features.userSubmissionsAutoApprove)} onChange={(checked) => setFeatures(prev => ({ ...prev, userSubmissionsAutoApprove: checked }))} label="Auto-approve user submissions" />
                   </div>
                 )}
               </div>
@@ -8151,17 +8093,11 @@ function AdminInner() {
               <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Comments & Feedback</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.comments} onChange={(e) => setFeatures(prev => ({ ...prev, comments: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <Toggle checked={features.comments} onChange={(checked) => setFeatures(prev => ({ ...prev, comments: checked }))} label="Enabled" />
                 </div>
                 {features.comments && (
                   <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
-                    <label className="flex items-center gap-2 cursor-pointer text-sm">
-                      <input type="checkbox" checked={features.commentsRequireApproval} onChange={(e) => setFeatures(prev => ({ ...prev, commentsRequireApproval: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                      Require manual approval for user comments
-                    </label>
+                    <Toggle checked={Boolean(features.commentsRequireApproval)} onChange={(checked) => setFeatures(prev => ({ ...prev, commentsRequireApproval: checked }))} label="Require manual approval" />
                   </div>
                 )}
               </div>
@@ -8175,26 +8111,11 @@ function AdminInner() {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="checkbox" checked={features.showCopyCollection ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showCopyCollection: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    Copy entire collection block
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="checkbox" checked={features.showHowTo ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showHowTo: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    How to use section
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="checkbox" checked={features.showRecommendedPosts ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showRecommendedPosts: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    Recommended prompts
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="checkbox" checked={features.showTags ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showTags: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    Discovery tags
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
-                    <input type="checkbox" checked={features.showDetailedInsights ?? true} onChange={(e) => setFeatures(prev => ({ ...prev, showDetailedInsights: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    Detailed insights
-                  </label>
+                  <Toggle checked={features.showCopyCollection ?? true} onChange={(checked) => setFeatures(prev => ({ ...prev, showCopyCollection: checked }))} label="Copy entire collection block" />
+                  <Toggle checked={features.showHowTo ?? true} onChange={(checked) => setFeatures(prev => ({ ...prev, showHowTo: checked }))} label="How to use section" />
+                  <Toggle checked={features.showRecommendedPosts ?? true} onChange={(checked) => setFeatures(prev => ({ ...prev, showRecommendedPosts: checked }))} label="Recommended prompts" />
+                  <Toggle checked={features.showTags ?? true} onChange={(checked) => setFeatures(prev => ({ ...prev, showTags: checked }))} label="Discovery tags" />
+                  <Toggle checked={features.showDetailedInsights ?? true} onChange={(checked) => setFeatures(prev => ({ ...prev, showDetailedInsights: checked }))} label="Detailed insights" />
                   {[
                     ['showPostSidebar', 'Post sidebar'],
                     ['showShareButtons', 'Share buttons'],
@@ -8206,15 +8127,12 @@ function AdminInner() {
                     ['publicProfileLikes', 'Show likes on public profiles'],
                     ['publicProfileBookmarks', 'Show saves on public profiles'],
                   ].map(([key, label]) => (
-                    <label key={key} className="flex items-center gap-2 cursor-pointer text-sm">
-                      <input
-                        type="checkbox"
-                        checked={Boolean((features as any)[key] ?? ['showPostSidebar', 'showShareButtons', 'showTryButtons', 'showYouMightAlsoLike', 'showScrollProgress', 'showFaqSchema', 'showPublicProfiles'].includes(key))}
-                        onChange={(e) => setFeatures(prev => ({ ...prev, [key]: e.target.checked }))}
-                        className="w-4 h-4 rounded text-primary-500"
-                      />
-                      {label}
-                    </label>
+                    <Toggle
+                      key={key}
+                      checked={Boolean((features as any)[key] ?? ['showPostSidebar', 'showShareButtons', 'showTryButtons', 'showYouMightAlsoLike', 'showScrollProgress', 'showFaqSchema', 'showPublicProfiles'].includes(key))}
+                      onChange={(checked) => setFeatures(prev => ({ ...prev, [key]: checked }))}
+                      label={label}
+                    />
                   ))}
                 </div>
               </div>
@@ -8266,7 +8184,7 @@ function AdminInner() {
                         value={keepExploring.description || ''}
                         onChange={e => setKeepExploring(prev => ({ ...prev, description: e.target.value }))}
                         rows={2}
-                        className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm outline-none focus:border-primary-500 resize-y"
+                        className={`${adminInput} resize-y`}
                         placeholder="Short copy shown under the title"
                       />
                     </label>
@@ -8286,19 +8204,19 @@ function AdminInner() {
                         <input
                           value={link.label}
                           onChange={e => updateKeepExploringLink(index, 'label', e.target.value)}
-                          className="px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 text-sm outline-none focus:border-primary-500"
+                          className={adminInputOnCard}
                           placeholder="Link title"
                         />
                         <input
                           value={link.href}
                           onChange={e => updateKeepExploringLink(index, 'href', e.target.value)}
-                          className="px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 text-sm outline-none focus:border-primary-500"
+                          className={adminInputOnCard}
                           placeholder="/tag/poster"
                         />
                         <select
                           value={link.icon || 'image'}
                           onChange={e => updateKeepExploringLink(index, 'icon', e.target.value)}
-                          className="px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 text-sm outline-none focus:border-primary-500"
+                          className={adminInputOnCard}
                         >
                           <option value="image">Image</option>
                           <option value="layers">Layers</option>
@@ -8321,10 +8239,7 @@ function AdminInner() {
               <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Advanced Search & Filtering</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.advancedFiltering} onChange={(e) => setFeatures(prev => ({ ...prev, advancedFiltering: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <Toggle checked={features.advancedFiltering} onChange={(checked) => setFeatures(prev => ({ ...prev, advancedFiltering: checked }))} label="Enabled" />
                 </div>
               </div>
 
@@ -8332,10 +8247,7 @@ function AdminInner() {
               <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Smart &quot;Fill-in-the-blank&quot; Templates</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.smartTemplates} onChange={(e) => setFeatures(prev => ({ ...prev, smartTemplates: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <Toggle checked={features.smartTemplates} onChange={(checked) => setFeatures(prev => ({ ...prev, smartTemplates: checked }))} label="Enabled" />
                 </div>
               </div>
 
@@ -8343,10 +8255,7 @@ function AdminInner() {
               <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Infinite Scrolling (Explore)</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.infiniteScroll} onChange={(e) => setFeatures(prev => ({ ...prev, infiniteScroll: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <Toggle checked={features.infiniteScroll} onChange={(checked) => setFeatures(prev => ({ ...prev, infiniteScroll: checked }))} label="Enabled" />
                 </div>
                 {features.infiniteScroll && (
                   <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 flex items-center gap-4">
@@ -8367,10 +8276,7 @@ function AdminInner() {
               <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Premium / Pro Prompts</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.premiumPrompts} onChange={(e) => setFeatures(prev => ({ ...prev, premiumPrompts: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <Toggle checked={features.premiumPrompts} onChange={(checked) => setFeatures(prev => ({ ...prev, premiumPrompts: checked }))} label="Enabled" />
                 </div>
                 {features.premiumPrompts && (
                   <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 space-y-3">
@@ -8402,10 +8308,7 @@ function AdminInner() {
               <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Skeleton Loaders</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.skeletonLoaders} onChange={(e) => setFeatures(prev => ({ ...prev, skeletonLoaders: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <Toggle checked={features.skeletonLoaders} onChange={(checked) => setFeatures(prev => ({ ...prev, skeletonLoaders: checked }))} label="Enabled" />
                 </div>
               </div>
 
@@ -8413,10 +8316,7 @@ function AdminInner() {
               <div className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-surface-900 dark:text-white">Trending Algorithms</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={features.trendingAlgorithm} onChange={(e) => setFeatures(prev => ({ ...prev, trendingAlgorithm: e.target.checked }))} className="w-4 h-4 rounded text-primary-500" />
-                    <span className="text-xs">Enabled</span>
-                  </label>
+                  <Toggle checked={features.trendingAlgorithm} onChange={(checked) => setFeatures(prev => ({ ...prev, trendingAlgorithm: checked }))} label="Enabled" />
                 </div>
                 {features.trendingAlgorithm && (
                   <div className="mt-3 pt-3 border-t border-surface-200 dark:border-surface-700 space-y-3">
@@ -8460,7 +8360,7 @@ function AdminInner() {
                   <select
                     value={features.mobileColumns || 2}
                     onChange={(e) => setFeatures(prev => ({ ...prev, mobileColumns: parseInt(e.target.value) as 1 | 2 }))}
-                    className="w-48 px-3 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    className={`${adminInput} max-w-48`}
                   >
                     <option value={1}>1 Column</option>
                     <option value={2}>2 Columns</option>
@@ -8483,7 +8383,7 @@ function AdminInner() {
                   <select
                     value={features.desktopColumns || 4}
                     onChange={(e) => setFeatures(prev => ({ ...prev, desktopColumns: parseInt(e.target.value) as 3 | 4 | 5 | 6 | 7 | 8 }))}
-                    className="w-48 px-3 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    className={`${adminInput} max-w-48`}
                   >
                     <option value={3}>3 Columns</option>
                     <option value={4}>4 Columns</option>
@@ -8496,80 +8396,58 @@ function AdminInner() {
               </div>
             </div>
 
-            <button
-              onClick={handleSaveSettings}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors mt-8"
-            >
-              <Save className="w-4 h-4" /> Save Feature Flags
-            </button>
+            <ActionButton onClick={handleSaveSettings}>
+              <Save className="w-4 h-4" /> Save feature flags
+            </ActionButton>
           </div>
           )}
 
           {settingsSubTab === 'comments' && (
-            <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-              <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                <MessageCircle className="w-4 h-4 text-primary-500" /> Comments
-              </h3>
+            <div className="space-y-6">
+              <TabBanner icon={<MessageCircle />} title="Comments" text="Control the live comment form and moderation defaults." />
+              <Panel>
               <div className="space-y-4">
-                <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
                   <span>
                     <b>Enable comments globally</b>
                     <span className="mt-1 block text-xs text-surface-500">Controls the live comment form and comment lists on post pages.</span>
                   </span>
-                  <input
-                    type="checkbox"
-                    checked={features.comments}
-                    onChange={e => setFeatures(prev => ({ ...prev, comments: e.target.checked }))}
-                    className="h-4 w-4 rounded text-primary-500"
-                  />
-                </label>
-                <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
+                  <Toggle checked={features.comments} onChange={(checked) => setFeatures(prev => ({ ...prev, comments: checked }))} />
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
                   <span>
                     <b>Require approval</b>
                     <span className="mt-1 block text-xs text-surface-500">New comments stay pending until an admin approves them.</span>
                   </span>
-                  <input
-                    type="checkbox"
-                    checked={features.commentsRequireApproval}
-                    onChange={e => setFeatures(prev => ({ ...prev, commentsRequireApproval: e.target.checked }))}
-                    className="h-4 w-4 rounded text-primary-500"
-                  />
-                </label>
+                  <Toggle checked={Boolean(features.commentsRequireApproval)} onChange={(checked) => setFeatures(prev => ({ ...prev, commentsRequireApproval: checked }))} />
+                </div>
                 <div>
                   <label className="block text-xs font-medium text-surface-400 mb-1">Comment provider</label>
-                  <select className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none dark:border-surface-700 dark:bg-surface-800" value="custom" disabled>
+                  <select className={adminInputOnCard} value="custom" disabled>
                     <option value="custom">Custom built-in comments</option>
                   </select>
                   <p className="mt-1 text-xs text-surface-500">This site currently renders the built-in comment system. Disqus can be added later without changing this route.</p>
                 </div>
               </div>
-              <button
-                onClick={handleSaveSettings}
-                className="mt-6 flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-600"
-              >
-                <Save className="w-4 h-4" /> Save Comments
-              </button>
+              <ActionButton onClick={handleSaveSettings}>
+                <Save className="w-4 h-4" /> Save comments
+              </ActionButton>
+              </Panel>
             </div>
           )}
 
           {settingsSubTab === 'share' && (
-            <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900">
-              <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                <ArrowRight className="w-4 h-4 text-primary-500" /> Share Buttons
-              </h3>
+            <div className="space-y-6">
+              <TabBanner icon={<ArrowRight />} title="Share buttons" text="Choose where sharing appears and which targets visitors can use." />
+              <Panel>
               <div className="space-y-4">
-                <label className="flex items-center justify-between gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 bg-surface-50 p-3 text-sm dark:border-surface-800 dark:bg-surface-800/50">
                   <span>
                     <b>Show share buttons on post pages</b>
                     <span className="mt-1 block text-xs text-surface-500">Controls the live share strip rendered on prompt pages.</span>
                   </span>
-                  <input
-                    type="checkbox"
-                    checked={features.showShareButtons ?? true}
-                    onChange={e => setFeatures(prev => ({ ...prev, showShareButtons: e.target.checked }))}
-                    className="h-4 w-4 rounded text-primary-500"
-                  />
-                </label>
+                  <Toggle checked={features.showShareButtons ?? true} onChange={(checked) => setFeatures(prev => ({ ...prev, showShareButtons: checked }))} />
+                </div>
                 <div className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-800 dark:bg-surface-800/50">
                   <p className="text-sm font-bold">Show these share targets</p>
                   <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -8611,7 +8489,7 @@ function AdminInner() {
                         position: e.target.value as 'below-prompt' | 'bottom' | 'floating-sidebar',
                       },
                     })}
-                    className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                    className={adminInputOnCard}
                   >
                     <option value="below-prompt">Below prompt</option>
                     <option value="bottom">Bottom of page</option>
@@ -8619,12 +8497,10 @@ function AdminInner() {
                   </select>
                 </div>
               </div>
-              <button
-                onClick={handleSaveSettings}
-                className="mt-6 flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-600"
-              >
-                <Save className="w-4 h-4" /> Save Share Buttons
-              </button>
+              <ActionButton onClick={handleSaveSettings}>
+                <Save className="w-4 h-4" /> Save share buttons
+              </ActionButton>
+              </Panel>
             </div>
           )}
 
@@ -8694,12 +8570,12 @@ function AdminInner() {
           </div>
 
           {/* Submissions Filter Tabs */}
-          <div className="flex gap-2 border-b border-surface-200 dark:border-surface-800 pb-px">
+          <div className="flex gap-2 overflow-x-auto border-b border-surface-200 pb-px dark:border-surface-800">
             {(['pending', 'approved', 'rejected', 'all'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setSubmissionFilter(f)}
-                className={`pb-3 px-4 text-xs font-bold border-b-2 transition-all capitalize ${
+                className={`shrink-0 border-b-2 px-4 pb-3 text-xs font-bold capitalize transition-all ${
                   submissionFilter === f
                     ? 'border-primary-500 text-primary-600 dark:text-primary-400'
                     : 'border-transparent text-surface-400 hover:text-surface-900 dark:hover:text-surface-100'
@@ -8846,7 +8722,7 @@ function AdminInner() {
                 value={commentSearch}
                 onChange={e => setCommentSearch(e.target.value)}
                 placeholder="Search comments..."
-                className="pl-9 pr-4 py-2 w-full text-xs rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500"
+                className={`${adminInputOnCard} pl-9 pr-4`}
               />
             </div>
           </div>
@@ -8865,8 +8741,8 @@ function AdminInner() {
                   .filter(c => commentFilter === 'all' || c.status === commentFilter)
                   .filter(c => !commentSearch || c.userName.toLowerCase().includes(commentSearch.toLowerCase()) || c.text.toLowerCase().includes(commentSearch.toLowerCase()) || c.postTitle.toLowerCase().includes(commentSearch.toLowerCase()))
                   .map(comment => (
-                    <div key={comment.id} className="p-5 rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900 space-y-3">
-                      <div className="flex items-start justify-between gap-4">
+                    <div key={comment.id} className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900 sm:p-5 space-y-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="flex gap-3">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-50 text-xs font-bold text-surface-600 dark:bg-surface-800 dark:text-surface-300 border border-surface-200/60 dark:border-surface-700/60">
                             {comment.userAvatar}
@@ -8888,7 +8764,7 @@ function AdminInner() {
                           </div>
                         </div>
 
-                        <div className="flex gap-1.5">
+                        <div className="flex justify-end gap-1.5">
                           {comment.status !== 'approved' && (
                             <button
                               onClick={() => handleApproveComment(comment.id)}
@@ -8935,12 +8811,9 @@ function AdminInner() {
               <h2 className="text-xl font-bold tracking-tight text-surface-950 dark:text-white">Users</h2>
               <p className="text-xs text-surface-500 mt-1">Manage members and their roles.</p>
             </div>
-            <button
-              onClick={() => setShowInviteModal(true)}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-primary-500 text-white hover:bg-primary-600 transition-all"
-            >
-              <Plus className="w-4 h-4" /> Invite User
-            </button>
+            <ActionButton onClick={() => setShowInviteModal(true)} className="w-full sm:w-auto">
+              <Plus className="w-4 h-4" /> Invite user
+            </ActionButton>
           </div>
 
           {/* User Stats Cards */}
@@ -9016,22 +8889,22 @@ function AdminInner() {
                 value={userSearch}
                 onChange={e => setUserSearch(e.target.value)}
                 placeholder="Search name or email..."
-                className="pl-9 pr-4 py-2 w-full text-xs rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500"
+                className={`${adminInputOnCard} pl-9 pr-4`}
               />
             </div>
           </div>
 
           {/* Users Grid Table */}
           <div className="border border-surface-200 dark:border-surface-800 rounded-2xl bg-white dark:bg-surface-900 overflow-hidden">
-            <div className="min-w-full overflow-x-auto">
-              <table className="min-w-full divide-y divide-surface-200 dark:divide-surface-800">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[680px] divide-y divide-surface-200 dark:divide-surface-800">
                 <thead className="bg-surface-50/50 dark:bg-surface-950/20 text-[10px] font-black uppercase tracking-wider text-surface-400">
                   <tr>
-                    <th scope="col" className="px-6 py-4 text-left">Member</th>
-                    <th scope="col" className="px-6 py-4 text-left">Role</th>
-                    <th scope="col" className="px-6 py-4 text-center">Posts</th>
-                    <th scope="col" className="px-6 py-4 text-center">Status</th>
-                    <th scope="col" className="px-6 py-4 text-right">Actions</th>
+                    <th scope="col" className="px-4 py-3 text-left">Member</th>
+                    <th scope="col" className="px-4 py-3 text-left">Role</th>
+                    <th scope="col" className="px-4 py-3 text-center">Posts</th>
+                    <th scope="col" className="px-4 py-3 text-center">Status</th>
+                    <th scope="col" className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-surface-200 dark:divide-surface-800">
@@ -9040,11 +8913,11 @@ function AdminInner() {
                     .filter(u => !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase()))
                     .map(member => (
                       <tr key={member.id} className="hover:bg-surface-50/30 dark:hover:bg-surface-950/10 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-4 py-3 text-xs">
                           <div className="flex items-center gap-3">
                             <div className="flex h-9 w-9 overflow-hidden items-center justify-center rounded-xl bg-surface-100 text-xs font-bold text-surface-600 dark:bg-surface-800 dark:text-surface-300 border border-surface-200/60 dark:border-surface-700/60">
                               {member.avatar?.startsWith('http') ? (
-                                <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                <Image src={member.avatar} alt={member.name} width={36} height={36} className="h-full w-full object-cover" referrerPolicy="no-referrer" unoptimized />
                               ) : (
                                 member.avatar
                               )}
@@ -9055,11 +8928,11 @@ function AdminInner() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-4 py-3 text-xs">
                           <select
                             value={member.role}
                             onChange={e => handleUpdateUserRole(member.id, e.target.value)}
-                            className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 text-xs rounded-lg px-2.5 py-1 outline-none font-semibold cursor-pointer focus:border-primary-500"
+                            className="cursor-pointer rounded-xl border border-surface-200 bg-white px-2.5 py-1 text-xs font-semibold outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
                           >
                             <option value="Admin">Admin</option>
                             <option value="Editor">Editor</option>
@@ -9067,10 +8940,10 @@ function AdminInner() {
                             <option value="Subscriber">Subscriber</option>
                           </select>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-surface-600 dark:text-surface-400 font-bold">
+                        <td className="whitespace-nowrap px-4 py-3 text-center text-xs font-bold text-surface-600 dark:text-surface-400">
                           {member.posts}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <td className="whitespace-nowrap px-4 py-3 text-center text-xs">
                           <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
                             member.status === 'active'
                               ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
@@ -9080,7 +8953,7 @@ function AdminInner() {
                             {member.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs">
                           <div className="flex justify-end gap-1.5">
                             <button
                               onClick={() => {
@@ -9124,7 +8997,7 @@ function AdminInner() {
           {/* Invite User Modal Overlay */}
           {showInviteModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/60 backdrop-blur-sm p-4">
-              <div className="w-full max-w-md rounded-2xl border border-surface-200 bg-white p-6 shadow-xl dark:border-surface-800 dark:bg-surface-900 animate-in fade-in duration-200">
+              <div className="w-full max-w-md rounded-2xl border border-surface-200 bg-white p-4 shadow-xl dark:border-surface-800 dark:bg-surface-900 animate-in fade-in duration-200 sm:p-6">
                 <div className="flex items-center justify-between border-b border-surface-100 dark:border-surface-800 pb-3">
                   <h3 className="text-sm font-bold text-surface-950 dark:text-white flex items-center gap-2">
                     <Users className="w-5 h-5 text-primary-500" /> Invite New Member
@@ -9145,7 +9018,7 @@ function AdminInner() {
                       value={inviteName}
                       onChange={e => setInviteName(e.target.value)}
                       placeholder="e.g. John Doe"
-                      className="w-full px-3.5 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
+                      className={adminInputOnCard}
                     />
                   </div>
 
@@ -9157,7 +9030,7 @@ function AdminInner() {
                       value={inviteEmail}
                       onChange={e => setInviteEmail(e.target.value)}
                       placeholder="e.g. john@example.com"
-                      className="w-full px-3.5 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500"
+                      className={adminInputOnCard}
                     />
                   </div>
 
@@ -9166,7 +9039,7 @@ function AdminInner() {
                     <select
                       value={inviteRole}
                       onChange={e => setInviteRole(e.target.value as any)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-xs outline-none focus:border-primary-500 font-semibold"
+                      className={`${adminInputOnCard} font-semibold`}
                     >
                       <option value="Admin">Admin</option>
                       <option value="Editor">Editor</option>
@@ -9175,20 +9048,13 @@ function AdminInner() {
                     </select>
                   </div>
 
-                  <div className="flex gap-2 justify-end pt-2 border-t border-surface-100 dark:border-surface-800 mt-6">
-                    <button
-                      type="button"
-                      onClick={() => setShowInviteModal(false)}
-                      className="px-4 py-2 text-xs font-bold rounded-xl text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800"
-                    >
+                  <div className="mt-6 flex justify-end gap-2 border-t border-surface-100 pt-2 dark:border-surface-800">
+                    <ActionButton variant="ghost" onClick={() => setShowInviteModal(false)}>
                       Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 text-xs font-bold rounded-xl bg-primary-500 text-white hover:bg-primary-600 transition-all"
-                    >
-                      Invite Member
-                    </button>
+                    </ActionButton>
+                    <ActionButton type="submit">
+                      Invite member
+                    </ActionButton>
                   </div>
                 </form>
               </div>
@@ -9198,7 +9064,7 @@ function AdminInner() {
           {/* Ban User Modal Overlay matching Supabase design */}
           {banModalUser && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-              <div className="w-full max-w-md rounded-2xl border border-surface-200 bg-white p-6 shadow-2xl dark:border-surface-800 dark:bg-surface-900">
+              <div className="w-full max-w-md rounded-2xl border border-surface-200 bg-white p-4 shadow-2xl dark:border-surface-800 dark:bg-surface-900 sm:p-6">
                 <div className="flex items-center justify-between border-b border-surface-100 pb-4 dark:border-surface-800">
                   <h3 className="text-base font-extrabold text-surface-900 dark:text-white">Confirm to ban user</h3>
                   <button
@@ -9224,12 +9090,12 @@ function AdminInner() {
                         disabled={banDurationUnit === 'Permanent' || banDurationUnit === 'None'}
                         value={banDurationValue}
                         onChange={e => setBanDurationValue(parseInt(e.target.value) || 1)}
-                        className="w-24 px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-sm font-semibold outline-none focus:border-primary-500 disabled:opacity-50"
+                        className={`${adminInputOnCard} max-w-24 font-semibold disabled:opacity-50`}
                       />
                       <select
                         value={banDurationUnit}
                         onChange={e => setBanDurationUnit(e.target.value as any)}
-                        className="flex-1 px-3 py-2 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 text-sm font-semibold outline-none focus:border-primary-500"
+                        className={`${adminInputOnCard} flex-1 font-semibold`}
                       >
                         <option value="Hours">Hours</option>
                         <option value="Days">Days</option>
@@ -9261,20 +9127,12 @@ function AdminInner() {
                   </div>
 
                   <div className="mt-6 flex items-center justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setBanModalUser(null)}
-                      className="px-4 py-2 text-xs font-bold rounded-xl text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
-                    >
+                    <ActionButton variant="ghost" onClick={() => setBanModalUser(null)}>
                       Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleConfirmUserStatus(banModalUser.id, 'suspended', banDurationValue, banDurationUnit)}
-                      className="px-4 py-2 text-xs font-bold rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all shadow-md shadow-red-500/20"
-                    >
+                    </ActionButton>
+                    <ActionButton variant="danger" onClick={() => handleConfirmUserStatus(banModalUser.id, 'suspended', banDurationValue, banDurationUnit)}>
                       Confirm ban
-                    </button>
+                    </ActionButton>
                   </div>
                 </div>
               </div>

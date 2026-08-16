@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import NextImage from 'next/image';
 import { X, Image as ImageIcon, Loader2, Folder, ArrowLeft, Home, ChevronRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase-client';
 
@@ -70,24 +71,24 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLi
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="w-full max-w-5xl bg-white dark:bg-surface-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[85vh] border border-surface-200 dark:border-surface-800">
         <div className="px-6 py-4 border-b border-surface-100 dark:border-surface-800/50 flex items-center justify-between bg-surface-50/50 dark:bg-surface-900/50 gap-4">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar whitespace-nowrap sm:gap-2">
             <button 
               onClick={() => setCurrentPrefix('')}
               className={`flex items-center gap-2 transition-colors ${!currentPrefix ? 'text-surface-900 dark:text-white font-bold cursor-default' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white font-medium'}`}
             >
-              <Home className="w-5 h-5 shrink-0 text-primary-500" />
-              <span className="shrink-0 text-lg">Library</span>
+              <Home className="h-4 w-4 shrink-0 text-primary-500 sm:h-5 sm:w-5" />
+              <span className="shrink-0 text-sm sm:text-lg">Library</span>
             </button>
             {currentPrefix.split('/').filter(Boolean).map((part, index, array) => {
               const prefixToHere = array.slice(0, index + 1).join('/') + '/';
               const isLast = index === array.length - 1;
               return (
-                <div key={prefixToHere} className="flex items-center gap-2 shrink-0">
-                  <ChevronRight className="w-4 h-4 text-surface-400 shrink-0" />
+                <div key={prefixToHere} className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-surface-400 sm:h-4 sm:w-4" />
                   <button
                     onClick={() => setCurrentPrefix(prefixToHere)}
                     disabled={isLast}
-                    className={`transition-colors text-lg ${isLast ? 'text-surface-900 dark:text-white font-bold cursor-default' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white font-medium'}`}
+                    className={`text-sm transition-colors sm:text-lg ${isLast ? 'text-surface-900 dark:text-white font-bold cursor-default' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white font-medium'}`}
                   >
                     {part}
                   </button>
@@ -128,7 +129,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLi
                     onClose();
                   }}
                 >
-                  <img src={img.url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  <NextImage src={img.url} alt="" fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw" className="object-cover transition-transform group-hover:scale-105" unoptimized />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                 </div>
               ))}

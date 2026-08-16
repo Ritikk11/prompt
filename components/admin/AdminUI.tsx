@@ -1,4 +1,3 @@
-'use client';
 import type { ReactNode } from 'react';
 
 // Shared admin design language, extracted from the AI Tools editor (the reference
@@ -34,7 +33,7 @@ export function TabBanner({ icon, title, text, action }: {
 /** White panel card wrapping a group of related controls. */
 export function Panel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-6 ${className}`}>
+    <div className={`rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900 sm:p-5 space-y-6 ${className}`}>
       {children}
     </div>
   );
@@ -58,7 +57,7 @@ export function PanelHeader({ title, count, subtitle, actions }: {
         </h3>
         {subtitle && <p className="text-xs text-surface-500 mt-0.5">{subtitle}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
@@ -80,7 +79,10 @@ export function Field({ label, action, children, className = '' }: {
   return (
     <div className={className}>
       {action ? (
-        <div className="mb-1 flex items-center justify-between gap-2">
+        // The action slot usually holds a WandButton (Auto-write + Instructions input),
+        // which is far too wide to share a row with the label on a phone. Stack them
+        // until sm, then sit side by side.
+        <div className="mb-1 flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
           <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300">{label}</label>
           {action}
         </div>
@@ -101,7 +103,7 @@ export function EditableCard({ isEditing, children, className = '' }: {
   return (
     <div className={`rounded-2xl border transition-all ${
       isEditing
-        ? 'border-primary-500/50 bg-primary-50/10 dark:bg-primary-950/10 shadow-md p-6 space-y-6'
+        ? 'border-primary-500/50 bg-primary-50/10 dark:bg-primary-950/10 shadow-md p-4 sm:p-6 space-y-6'
         : 'border-surface-200 dark:border-surface-800 bg-surface-50/70 dark:bg-surface-800/40 hover:border-surface-300 dark:hover:border-surface-700 p-4'
     } ${className}`}>
       {children}
@@ -130,5 +132,117 @@ export function CharCount({ value, recommended }: { value: string; recommended: 
     >
       {len} / {recommended}
     </span>
+  );
+}
+
+/**
+ * Single canonical toggle switch. Replaces the several hand-rolled peer/button
+ * checkbox toggles scattered across the admin so they all look and behave the same.
+ */
+export function Toggle({ checked, onChange, label, ariaLabel, disabled = false, className = '' }: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label?: ReactNode;
+  ariaLabel?: string;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <label className={`relative inline-flex items-center shrink-0 ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${className}`}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={e => onChange(e.target.checked)}
+        disabled={disabled}
+        aria-label={ariaLabel || (typeof label === 'string' ? label : 'Toggle setting')}
+        className="sr-only peer"
+      />
+      <div className="w-9 h-5 bg-surface-200 dark:bg-surface-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-500 peer-focus-visible:ring-2 peer-focus-visible:ring-primary-500/40 peer-focus-visible:ring-offset-2 dark:peer-focus-visible:ring-offset-surface-900" />
+      {label && <span className="ml-2 text-xs font-semibold text-surface-600 dark:text-surface-300">{label}</span>}
+    </label>
+  );
+}
+
+/**
+ * Standard admin action button. One shape (rounded-xl, text-xs, font-bold) with a
+ * few variants so Save / Cancel / secondary / destructive actions match everywhere.
+ */
+export function ActionButton({
+  children,
+  onClick,
+  variant = 'primary',
+  type = 'button',
+  disabled = false,
+  title,
+  className = '',
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+  variant?: 'primary' | 'ghost' | 'outline' | 'success' | 'danger';
+  type?: 'button' | 'submit';
+  disabled?: boolean;
+  title?: string;
+  className?: string;
+}) {
+  const variants: Record<string, string> = {
+    primary: 'bg-primary-500 text-white hover:bg-primary-600',
+    ghost: 'text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800',
+    outline: 'border border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800',
+    success: 'bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-500/10 dark:text-green-300 dark:hover:bg-green-500/20',
+    danger: 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/20',
+  };
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/**
+ * Field wrapper around a resizable textarea, bundling the label/action row, the
+ * canonical input styling, resize handle, and an optional CharCount so every
+ * multi-line field gets the same affordances.
+ */
+export function FieldTextarea({
+  label,
+  action,
+  value,
+  onChange,
+  rows = 3,
+  placeholder,
+  recommended,
+  onCard = false,
+  className = '',
+  hint,
+}: {
+  label: string;
+  action?: ReactNode;
+  value: string;
+  onChange: (value: string) => void;
+  rows?: number;
+  placeholder?: string;
+  recommended?: number;
+  onCard?: boolean;
+  className?: string;
+  hint?: ReactNode;
+}) {
+  return (
+    <Field label={label} action={action} className={className}>
+      <textarea
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        rows={rows}
+        placeholder={placeholder}
+        className={`${onCard ? adminInputOnCard : adminInput} resize-y`}
+      />
+      {hint && <p className="text-[11px] text-surface-400 mt-1">{hint}</p>}
+      {recommended !== undefined && <CharCount value={value} recommended={recommended} />}
+    </Field>
   );
 }

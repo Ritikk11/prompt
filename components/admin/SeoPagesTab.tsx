@@ -5,20 +5,10 @@ import { createClient } from '@/lib/supabase-client';
 import type { SeoSettings, SiteSettings } from '@/lib/types';
 import { WandButton } from '@/components/admin/MagicWand';
 import { seoPrompts } from '@/lib/admin/wandPrompts';
-import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, CharCount, adminInput } from '@/components/admin/AdminUI';
+import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, CharCount, Toggle, adminInput } from '@/components/admin/AdminUI';
 
 type SeoPagesTabMode = 'global' | 'pages' | 'all';
 
-function ToggleSwitch({ checked, onChange, label }: { checked: boolean; onChange: (checked: boolean) => void; label?: string }) {
-  return (
-    <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className="inline-flex items-center gap-2 text-xs font-bold">
-      <span className={`relative inline-flex h-6 w-11 rounded-full transition-colors ${checked ? 'bg-primary-500' : 'bg-surface-300 dark:bg-surface-700'}`}>
-        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`} />
-      </span>
-      {label && <span className={checked ? 'text-primary-600 dark:text-primary-300' : 'text-surface-500'}>{label}</span>}
-    </button>
-  );
-}
 
 async function adminRequest(payload?: any) {
   const supabase = createClient();
@@ -181,7 +171,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                 />
               }
             >
-              <textarea rows={2} value={title} onChange={e => setTitle(e.target.value)} className={adminInput} placeholder="e.g. Best Upscale Images generated with Gemini" />
+              <textarea rows={2} value={title} onChange={e => setTitle(e.target.value)} className={`${adminInput} resize-y`} placeholder="e.g. Best Upscale Images generated with Gemini" />
               <CharCount value={title} recommended={60} />
             </Field>
             <Field label="Slug (available as /slug and /page/slug)">
@@ -215,7 +205,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                 />
               }
             >
-              <textarea rows={2} value={seoTitle} onChange={e => setSeoTitle(e.target.value)} className={adminInput} placeholder="Defaults to page heading" />
+              <textarea rows={2} value={seoTitle} onChange={e => setSeoTitle(e.target.value)} className={`${adminInput} resize-y`} placeholder="Defaults to page heading" />
               <CharCount value={seoTitle} recommended={60} />
             </Field>
             <Field
@@ -304,7 +294,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                 <textarea rows={2}
                   value={seoSettings.homeSeoTitleTemplate || ''}
                   onChange={e => updateSeoSettings({ homeSeoTitleTemplate: e.target.value })}
-                  className={adminInput}
+                  className={`${adminInput} resize-y`}
                   placeholder="%site_title% - AI Prompts"
                 />
                 <CharCount value={seoSettings.homeSeoTitleTemplate || ''} recommended={60} />
@@ -323,7 +313,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                 <textarea rows={2}
                   value={seoSettings.metaTitleTemplate || ''}
                   onChange={e => updateSeoSettings({ metaTitleTemplate: e.target.value })}
-                  className={adminInput}
+                  className={`${adminInput} resize-y`}
                   placeholder="%post_title%"
                 />
                 <CharCount value={seoSettings.metaTitleTemplate || ''} recommended={60} />
@@ -389,8 +379,8 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
 
           <div className="space-y-4">
             <SectionEyebrow>3. Sitemap</SectionEyebrow>
-            <div className="rounded-xl border border-surface-200 dark:border-surface-800 bg-surface-50/70 dark:bg-surface-800/40 p-4">
-              <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
                 <p className="text-xs text-surface-500">Readonly URL: aipromptmatrix.in/sitemap.xml</p>
                 <button type="button" onClick={() => window.open('/sitemap.xml', '_blank')} className="rounded-xl px-3 py-2 text-xs font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors">Open sitemap</button>
               </div>
@@ -404,7 +394,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                 ].map(([key, label]) => (
                   <div key={key} className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3 py-2 text-xs font-bold text-surface-700 dark:text-surface-300">
                     <span>{label}</span>
-                    <ToggleSwitch
+                    <Toggle
                       checked={Boolean((seoSettings.sitemapInclude as any)?.[key] ?? true)}
                       onChange={checked => updateSeoSettings({ sitemapInclude: { [key]: checked } as any })}
                     />
@@ -429,13 +419,13 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
           <div className="space-y-4">
             <SectionEyebrow>5. Structured data</SectionEyebrow>
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 dark:border-surface-800 bg-surface-50/70 dark:bg-surface-800/40 p-3 text-xs font-bold text-surface-700 dark:text-surface-300">
+              <div className="flex min-h-10 items-center justify-between gap-3 px-1 py-2 text-xs font-bold text-surface-700 dark:text-surface-300">
                 <span>JSON-LD on post pages</span>
-                <ToggleSwitch checked={seoSettings.enableJsonLd ?? true} onChange={checked => updateSeoSettings({ enableJsonLd: checked })} />
+                <Toggle checked={seoSettings.enableJsonLd ?? true} onChange={checked => updateSeoSettings({ enableJsonLd: checked })} />
               </div>
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 dark:border-surface-800 bg-surface-50/70 dark:bg-surface-800/40 p-3 text-xs font-bold text-surface-700 dark:text-surface-300">
+              <div className="flex min-h-10 items-center justify-between gap-3 px-1 py-2 text-xs font-bold text-surface-700 dark:text-surface-300">
                 <span>BreadcrumbList</span>
-                <ToggleSwitch checked={seoSettings.enableBreadcrumbList ?? true} onChange={checked => updateSeoSettings({ enableBreadcrumbList: checked })} />
+                <Toggle checked={seoSettings.enableBreadcrumbList ?? true} onChange={checked => updateSeoSettings({ enableBreadcrumbList: checked })} />
               </div>
               <Field label="Schema type">
                 <select
@@ -453,7 +443,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
 
           <div className="space-y-4">
             <SectionEyebrow>6. Redirects</SectionEyebrow>
-            <div className="rounded-xl border border-surface-200 dark:border-surface-800 bg-surface-50/70 dark:bg-surface-800/40 p-4">
+            <div className="space-y-3">
               <div className="space-y-2">
                 {(seoSettings.redirects || []).map((redirect, index) => (
                   <div key={`${redirect.from}-${index}`} className="grid gap-2 md:grid-cols-[1fr_1fr_90px_auto]">
@@ -479,7 +469,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                   </div>
                 ))}
               </div>
-              <button type="button" onClick={() => updateSeoSettings({ redirects: [...(seoSettings.redirects || []), { from: '', to: '', status: 301 }] })} className="mt-3 flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white hover:bg-primary-600 transition-colors"><Plus className="w-3.5 h-3.5" /> Add redirect</button>
+              <button type="button" onClick={() => updateSeoSettings({ redirects: [...(seoSettings.redirects || []), { from: '', to: '', status: 301 }] })} className="flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white hover:bg-primary-600 transition-colors"><Plus className="w-3.5 h-3.5" /> Add redirect</button>
             </div>
           </div>
         </Panel>

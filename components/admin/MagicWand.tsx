@@ -123,7 +123,7 @@ export function WandButton({ fieldId, value, onChange, prompt, systemContext, la
     : { btn: 'gap-1.5 rounded-xl px-3 py-2 text-xs', icon: 'h-3.5 w-3.5' };
 
   return (
-    <span className="inline-flex items-center gap-2">
+    <span className="inline-flex flex-wrap items-center gap-2">
       {error[fieldId] && (
         <span className="max-w-[200px] truncate text-[10px] font-semibold text-rose-500" title={error[fieldId]}>
           AI failed — try again
