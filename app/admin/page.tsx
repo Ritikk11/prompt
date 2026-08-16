@@ -5157,7 +5157,7 @@ function AdminInner() {
             {/* Settings navigation: horizontal chips on mobile, sticky sidebar on desktop. */}
             <div className="min-w-0 rounded-2xl border border-surface-200 bg-white p-2 dark:border-surface-800 dark:bg-surface-900 lg:sticky lg:top-6 lg:p-4">
               <h3 className="mb-3 hidden px-3 text-xs font-mono uppercase tracking-widest text-surface-400 dark:text-surface-500 lg:block">Settings Categories</h3>
-              <div className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
+              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] [&::-webkit-scrollbar]:hidden lg:block lg:space-y-1 lg:overflow-visible lg:pb-0 lg:[mask-image:none]">
                 {[
                   { id: 'general', label: 'General', icon: <Settings className="w-4 h-4" /> },
                   { id: 'homepage', label: 'Homepage Blocks', icon: <Layers className="w-4 h-4" /> },

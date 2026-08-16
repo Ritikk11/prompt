@@ -24,6 +24,8 @@ loadCloudflarePublicEnv();
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Hide the floating Next.js dev-tools badge; it overlaps admin UI on phones.
+  devIndicators: false,
   typescript: {
     ignoreBuildErrors: true,
   },

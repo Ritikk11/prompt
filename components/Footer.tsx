@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 import { ChevronUp } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
@@ -31,8 +32,12 @@ const fallbackFooterGroups: FooterLinkGroup[] = [
 
 export default function Footer() {
   const { settings } = useData();
+  const pathname = usePathname();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  // The floating scroll-to-top button overlaps admin editors on small screens;
+  // the admin has its own navigation, so skip it there.
+  const isAdminRoute = pathname?.startsWith('/admin');
   const footerGroups = settings.footerLinkGroups?.length ? settings.footerLinkGroups : fallbackFooterGroups;
   // Built-in content links (Blog / Guides) — shown automatically unless the
   // admin already added them to a custom footer group.
@@ -166,7 +171,7 @@ export default function Footer() {
         </div>
       </div>
 
-      {showScrollTop && (
+      {showScrollTop && !isAdminRoute && (
         <button
           onClick={scrollToTop}
           className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full p-1 shadow-xl transition-all fade-in"
