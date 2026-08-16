@@ -451,7 +451,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
             <div className="space-y-3">
               <div className="space-y-2">
                 {(seoSettings.redirects || []).map((redirect, index) => (
-                  <div key={`${redirect.from}-${index}`} className="grid gap-2 md:grid-cols-[1fr_1fr_90px_auto]">
+                  <div key={`${redirect.from}-${index}`} className="grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_90px_auto]">
                     <input value={redirect.from} onChange={e => {
                       const redirects = [...(seoSettings.redirects || [])];
                       redirects[index] = { ...redirect, from: e.target.value };

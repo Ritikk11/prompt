@@ -3209,7 +3209,7 @@ function AdminInner() {
             </button>
           )}
 
-          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
             <div className="rounded-xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
               <h2 className="mb-4 text-sm font-bold">Site Health Checklist</h2>
               <div className="space-y-3">
@@ -4478,7 +4478,7 @@ function AdminInner() {
                     <p className="text-[11px] text-surface-400 mt-1">Cards shown in the homepage block. The section page always shows all posts.</p>
                   </Field>
                 )}
-                <div className="sm:col-span-2 grid gap-4 lg:grid-cols-[1fr_300px] lg:items-start">
+                <div className="sm:col-span-2 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
                   <Field label="Card style override">
                     <select
                       value={newSectionCardStyle}
@@ -4863,7 +4863,7 @@ function AdminInner() {
 
                                 <div className="space-y-2">
                                   {editSectionRailItems.map((item, index) => (
-                                    <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_120px_1fr_auto] items-center">
+                                    <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)_auto] items-center">
                                       <input
                                         value={item.label}
                                         onChange={e => {
@@ -5152,7 +5152,7 @@ function AdminInner() {
       {/* ===== SETTINGS TAB ===== */}
       {tab === 'settings' && (
         <div className="max-w-7xl">
-          <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)] gap-8 items-start">
 
             {/* Settings navigation: horizontal chips on mobile, sticky sidebar on desktop. */}
             <div className="min-w-0 rounded-2xl border border-surface-200 bg-white p-2 dark:border-surface-800 dark:bg-surface-900 lg:sticky lg:top-6 lg:p-4">
@@ -5955,7 +5955,7 @@ function AdminInner() {
                           </div>
                           <div className="space-y-3">
                             {activeRailConfig.items.map((item, index) => (
-                              <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[auto_1fr_140px_1fr_auto]">
+                              <div key={index} className="grid grid-cols-1 gap-2 sm:grid-cols-[auto_minmax(0,1fr)_140px_minmax(0,1fr)_auto]">
                                 <div className="flex sm:flex-col gap-1">
                                   <button type="button" onClick={() => moveRailItem(activeRailConfig.key, index, -1)} disabled={index === 0} className="p-1 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed" title="Move up"><ChevronUp className="w-3.5 h-3.5" /></button>
                                   <button type="button" onClick={() => moveRailItem(activeRailConfig.key, index, 1)} disabled={index === activeRailConfig.items.length - 1} className="p-1 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed" title="Move down"><ChevronDown className="w-3.5 h-3.5" /></button>
@@ -6007,7 +6007,7 @@ function AdminInner() {
                 />
                 <div className="space-y-2">
                   {headerNavItems.map((item, index) => (
-                    <EditableCard key={item.navKey} isEditing={false} className="grid grid-cols-1 sm:grid-cols-[auto_1fr_1fr_auto] gap-2 items-center">
+                    <EditableCard key={item.navKey} isEditing={false} className="grid grid-cols-1 sm:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 items-center">
                       <div className="flex sm:flex-col gap-1">
                         <button
                           onClick={() => moveHeaderNavItem(item.navKey, -1)}
@@ -6734,7 +6734,7 @@ function AdminInner() {
                                   </div>
                                 )}
                                 {blockKey === 'promptOfDay' && (
-                                  <div className="grid gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50 sm:col-span-2 sm:grid-cols-[120px_1fr]">
+                                  <div className="grid gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50 sm:col-span-2 sm:grid-cols-[120px_minmax(0,1fr)]">
                                   <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-white dark:bg-surface-900">
                                     {currentPromptOfDay && currentPromptOfDayImage ? (
                                       <Image
@@ -6749,7 +6749,7 @@ function AdminInner() {
                                       <div className="flex h-full items-center justify-center text-[11px] font-bold text-surface-400">No image</div>
                                     )}
                                   </div>
-                                  <div>
+                                  <div className="min-w-0">
                                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                                       <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">Custom post picker</p>
                                       <button
@@ -7121,7 +7121,7 @@ function AdminInner() {
                         </button>
                       </div>
                       {isExpanded && (
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_140px_1fr] items-start px-3 pb-3 pt-1 border-t border-surface-200/60 dark:border-surface-800/80">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_140px_minmax(0,1fr)] items-start px-3 pb-3 pt-1 border-t border-surface-200/60 dark:border-surface-800/80">
                       <div className="space-y-1">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Card Display Label</span>
                         <input
@@ -7152,7 +7152,7 @@ function AdminInner() {
                           placeholder="Match value, e.g. anime"
                         />
                       </div>
-                      <div className="grid grid-cols-1 gap-3 sm:col-span-3 sm:grid-cols-[140px_1fr]">
+                      <div className="grid grid-cols-1 gap-3 sm:col-span-3 sm:grid-cols-[140px_minmax(0,1fr)]">
                         <div className="space-y-1">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Icon</span>
                           <select
@@ -7247,7 +7247,7 @@ function AdminInner() {
                             <Trash2 className="w-4 h-4" /> Remove
                           </button>
                         </div>
-                        <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-4">
                           <div className="space-y-3">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <label className="space-y-1">
@@ -7468,7 +7468,7 @@ function AdminInner() {
               <div className="space-y-4">
                 {footerLinkGroups.map((group, groupIndex) => (
                   <EditableCard key={groupIndex} isEditing={false} className="space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-2 items-center">
+                    <div className="grid grid-cols-1 sm:grid-cols-[auto_minmax(0,1fr)_auto] gap-2 items-center">
                       <div className="flex sm:flex-col gap-1">
                         <button
                           onClick={() => setFooterLinkGroups(prev => moveArrayItem(prev, groupIndex, groupIndex - 1))}
@@ -7505,7 +7505,7 @@ function AdminInner() {
                         <p className="text-xs text-surface-500">No links in this group.</p>
                       )}
                       {group.links.map((link, linkIndex) => (
-                        <div key={linkIndex} className="grid grid-cols-1 sm:grid-cols-[auto_1fr_1fr_auto] gap-2 items-center rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 hover:border-surface-300 dark:hover:border-surface-600 p-2.5 transition-all">
+                        <div key={linkIndex} className="grid grid-cols-1 sm:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 items-center rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 hover:border-surface-300 dark:hover:border-surface-600 p-2.5 transition-all">
                           <div className="flex sm:flex-col gap-1">
                             <button
                               onClick={() => moveFooterLink(groupIndex, linkIndex, linkIndex - 1)}
@@ -8302,7 +8302,7 @@ function AdminInner() {
                   </div>
                   <div className="space-y-2">
                     {(keepExploring.links || defaultKeepExploring.links).map((link, index) => (
-                      <div key={index} className="grid gap-2 rounded-lg border border-surface-200 bg-white p-3 dark:border-surface-700 dark:bg-surface-900 sm:grid-cols-[1fr_1fr_130px]">
+                      <div key={index} className="grid gap-2 rounded-lg border border-surface-200 bg-white p-3 dark:border-surface-700 dark:bg-surface-900 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_130px]">
                         <input
                           value={link.label}
                           onChange={e => updateKeepExploringLink(index, 'label', e.target.value)}
