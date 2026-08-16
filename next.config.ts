@@ -63,6 +63,14 @@ const nextConfig: NextConfig = {
     ],
   },
   transpilePackages: ['motion'],
+  async redirects() {
+    return [
+      // Legacy structure: prompt posts used to live at /explore/:slug. Those URLs
+      // are still indexed (ranking pages that now 404) and split signals with the
+      // canonical /:slug routes, so fold them together permanently.
+      { source: '/explore/:slug', destination: '/:slug', permanent: true },
+    ];
+  },
   async headers() {
     // Security headers applied to every route. Kept minimal + safe: no CSP here
     // (would need per-origin allowlisting for gtag/adsense/supabase and risks

@@ -21,6 +21,26 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+/**
+ * Google skips meta descriptions it considers weak (too short, thin, or generic)
+ * and substitutes visible page text — for us that meant the boilerplate site
+ * description bleeding into prompt-page snippets. Pad genuinely short
+ * descriptions with post-specific context so they're worth displaying.
+ * Only ever extends; never rewrites an admin-provided description.
+ */
+const META_DESC_MIN_LENGTH = 110;
+const META_DESC_MAX_LENGTH = 158;
+
+function strengthenMetaDescription(desc: string, post: Post): string {
+  const trimmed = desc.trim();
+  if (trimmed.length === 0 || trimmed.length >= META_DESC_MIN_LENGTH) return trimmed;
+  const suffix = ' Copy and customize it for your own AI images.';
+  const combined = `${trimmed.endsWith('.') || trimmed.endsWith('!') || trimmed.endsWith('?') ? trimmed : `${trimmed}.`}${suffix}`.replace(/\s+/g, ' ');
+  if (combined.length <= META_DESC_MAX_LENGTH) return combined;
+  const cut = combined.slice(0, META_DESC_MAX_LENGTH - 1);
+  return `${cut.slice(0, cut.lastIndexOf(' '))}…`;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlugOrId(slug);
@@ -48,7 +68,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .replace(/%post_title%/g, post!.title)
     .replace(/%site_title%/g, siteTitle);
   const metaTitle = formatTitleWithBrand(rawTitle, siteTitle);
-  const metaDescription = post!.seoDescription || post!.description || seoSettings?.defaultMetaDescription || settings.siteDescription;
+  const metaDescription = strengthenMetaDescription(
+    post!.seoDescription || post!.description || seoSettings?.defaultMetaDescription || settings.siteDescription || '',
+    post!
+  );
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
   const ogImage = isBase64 ? `${siteUrl}/og-image.png` : firstImageUrl || seoSettings?.defaultOgImage || `${siteUrl}/og-image.png`;
 
