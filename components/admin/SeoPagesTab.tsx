@@ -284,7 +284,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
 
           <div className="space-y-4">
             <SectionEyebrow>1. Default metadata</SectionEyebrow>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Field
                 label="Home SEO title template"
                 action={
@@ -364,7 +364,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
 
           <div className="space-y-4">
             <SectionEyebrow>2. Site verification</SectionEyebrow>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {[
                 ['googleVerification', 'Google Search Console'],
                 ['bingVerification', 'Bing Webmaster'],
@@ -423,7 +423,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
 
           <div className="space-y-4">
             <SectionEyebrow>5. Structured data</SectionEyebrow>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="flex min-h-10 items-center justify-between gap-3 px-1 py-2 text-xs font-bold text-surface-700 dark:text-surface-300">
                 <span>JSON-LD on post pages</span>
                 <Toggle checked={seoSettings.enableJsonLd ?? true} onChange={checked => updateSeoSettings({ enableJsonLd: checked })} />
@@ -451,7 +451,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
             <div className="space-y-3">
               <div className="space-y-2">
                 {(seoSettings.redirects || []).map((redirect, index) => (
-                  <div key={`${redirect.from}-${index}`} className="grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_90px_auto]">
+                  <div key={`${redirect.from}-${index}`} className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_90px_auto]">
                     <input value={redirect.from} onChange={e => {
                       const redirects = [...(seoSettings.redirects || [])];
                       redirects[index] = { ...redirect, from: e.target.value };

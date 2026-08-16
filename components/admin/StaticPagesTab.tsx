@@ -195,7 +195,7 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
 
         <div className="space-y-4">
           <SectionEyebrow>1. Hero content</SectionEyebrow>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label="Page title (H1)">
               <input
                 value={currentPage.title || ''}
@@ -228,7 +228,7 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
 
         <div className="space-y-4">
           <SectionEyebrow>2. Search appearance</SectionEyebrow>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field
               label="Meta title"
               action={
@@ -324,7 +324,7 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
           </div>
 
           {showHelp && (
-            <div className="grid gap-3 rounded-xl border border-primary-200 bg-primary-50/60 p-3 text-xs dark:border-primary-800/40 dark:bg-primary-950/20 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 rounded-xl border border-primary-200 bg-primary-50/60 p-3 text-xs dark:border-primary-800/40 dark:bg-primary-950/20 md:grid-cols-2">
               <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg bg-surface-950 p-3 font-mono text-[11px] leading-relaxed text-surface-50">{MARKDOWN_HELP_EXAMPLE}</pre>
               <div className="prose prose-sm max-w-none dark:prose-invert">
                 <MarkdownRenderer>{MARKDOWN_HELP_EXAMPLE}</MarkdownRenderer>

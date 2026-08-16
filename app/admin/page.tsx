@@ -3209,7 +3209,7 @@ function AdminInner() {
             </button>
           )}
 
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
             <div className="rounded-xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
               <h2 className="mb-4 text-sm font-bold">Site Health Checklist</h2>
               <div className="space-y-3">
@@ -3279,7 +3279,7 @@ function AdminInner() {
                   />
                 </div>
               </div>
-              <div className="mb-4 grid gap-2 md:grid-cols-5">
+              <div className="mb-4 grid grid-cols-1 gap-2 md:grid-cols-5">
                 <select value={postToolFilter} onChange={e => setPostToolFilter(e.target.value)} className={adminInputOnCard}>
                   <option value="">All tools</option>
                   {postToolOptions.map(tool => <option key={tool} value={tool}>{tool}</option>)}
@@ -3327,7 +3327,7 @@ function AdminInner() {
               </div>
 
               {/* Posts list */}
-              <div className="grid gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 {filteredPosts.map(post => (
                   <div key={post.id} className="flex flex-wrap items-start gap-3 rounded-xl border border-surface-200 bg-white p-3 transition-shadow hover:shadow-md dark:border-surface-800 dark:bg-surface-900 sm:flex-nowrap sm:items-center sm:gap-4 sm:p-4">
                     <input
@@ -3768,7 +3768,7 @@ function AdminInner() {
                   </div>
 
                   {showMarkdownHelp && (
-                    <div className="mb-3 grid gap-3 rounded-xl border border-primary-200 bg-primary-50/60 p-3 text-xs dark:border-primary-800/40 dark:bg-primary-950/20 md:grid-cols-2">
+                    <div className="mb-3 grid grid-cols-1 gap-3 rounded-xl border border-primary-200 bg-primary-50/60 p-3 text-xs dark:border-primary-800/40 dark:bg-primary-950/20 md:grid-cols-2">
                       <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg bg-surface-950 p-3 font-mono text-[11px] leading-relaxed text-surface-50">{MARKDOWN_HELP_EXAMPLE}</pre>
                       <div className="prose prose-sm max-w-none dark:prose-invert">
                         <MarkdownRenderer>{MARKDOWN_HELP_EXAMPLE}</MarkdownRenderer>
@@ -4148,7 +4148,7 @@ function AdminInner() {
             </div>
           </div>
 
-          <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
             <div className="rounded-2xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900">
               <div className="max-h-[72vh] space-y-2 overflow-y-auto pr-1">
                 {filteredManagedArticles.map(article => {
@@ -4203,8 +4203,8 @@ function AdminInner() {
                   </ActionButton>
                 </div>
                 <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
-                  <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
-                    <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <label className="space-y-1 sm:col-span-2">
                         <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Title</span>
                         <textarea rows={2} value={selectedArticle.title} onChange={e => updateManagedArticle(selectedArticle.slug, { title: e.target.value })} className="resize-y w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
@@ -4478,7 +4478,7 @@ function AdminInner() {
                     <p className="text-[11px] text-surface-400 mt-1">Cards shown in the homepage block. The section page always shows all posts.</p>
                   </Field>
                 )}
-                <div className="sm:col-span-2 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+                <div className="sm:col-span-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
                   <Field label="Card style override">
                     <select
                       value={newSectionCardStyle}
@@ -5396,7 +5396,7 @@ function AdminInner() {
                   <option value="v8">Floating Card</option>
                 </select>
               </div>
-              <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+              <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
                 <div className="space-y-3">
                   <div>
                     <label className={adminLabel}>Card style</label>
@@ -6200,7 +6200,7 @@ function AdminInner() {
           )}
 
           {settingsSubTab === 'homepage' && (
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,780px)_minmax(360px,1fr)] xl:items-start">
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,780px)_minmax(360px,1fr)] xl:items-start">
               <div className="min-w-0 space-y-6">
               <Panel>
                 <PanelHeader
@@ -6209,7 +6209,7 @@ function AdminInner() {
                 />
 
                 {/* Switch list */}
-                <div className="mb-6 grid gap-4 sm:grid-cols-3">
+                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
                   {[
                     { label: 'Library Hero Intro', checked: features.showHomepageLibraryHero ?? true, onChange: (val: boolean) => setFeatures(prev => ({ ...prev, showHomepageLibraryHero: val })), desc: 'Intro block above content' },
                     { label: 'Hero Slideshow', checked: heroEnabled, onChange: (val: boolean) => setHeroEnabled(val), desc: 'Interactive featured slides' },
@@ -6240,7 +6240,7 @@ function AdminInner() {
                 {/* Visual style cards */}
                 <div>
                   <span className="block text-xs font-bold uppercase tracking-wider text-surface-400 mb-3">Choose Hero Visual Style</span>
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {[
                       { value: 'v3', label: 'Diagonal Cards (Current)', desc: 'Overlapping responsive perspective layout with quick action tabs' },
                       { value: 'v1', label: 'Classic Slider', desc: 'Minimal swiper carousel showcasing standard prompt cards' },
@@ -6286,7 +6286,7 @@ function AdminInner() {
                   }
                 />
 
-                <div className="grid gap-8 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                   <div className="space-y-6">
                     <div>
                       <SectionEyebrow>Current Live Choice</SectionEyebrow>
@@ -6316,7 +6316,7 @@ function AdminInner() {
                       <div className="flex items-center justify-between">
                         <SectionEyebrow>Section Copy & Settings</SectionEyebrow>
                       </div>
-                      <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <Field label="Section Badge">
                           <input value={promptOfDayContent.badge || ''} onChange={e => updateHomepageContent('promptOfDay', 'badge', e.target.value)} className={adminInput} placeholder="e.g. Prompt of the Day" />
                         </Field>
@@ -6563,7 +6563,7 @@ function AdminInner() {
                               <Field label="Post limit">
                                 <input type="number" min={1} max={50} value={editSectionLimit} onChange={e => setEditSectionLimit(parseInt(e.target.value) || 8)} className={adminInput} placeholder="Post limit" />
                               </Field>
-                              <div className="grid gap-3 sm:col-span-2 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+                              <div className="grid grid-cols-1 gap-3 sm:col-span-2 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
                                 <Field label="Card style override">
                                   <select value={editSectionCardStyle} onChange={e => setEditSectionCardStyle(e.target.value as Section['cardStyle'] | '')} className={adminInput}>
                                     <option value="">Use global card style</option>
@@ -6734,7 +6734,7 @@ function AdminInner() {
                                   </div>
                                 )}
                                 {blockKey === 'promptOfDay' && (
-                                  <div className="grid gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50 sm:col-span-2 sm:grid-cols-[120px_minmax(0,1fr)]">
+                                  <div className="grid grid-cols-1 gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50 sm:col-span-2 sm:grid-cols-[120px_minmax(0,1fr)]">
                                   <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-white dark:bg-surface-900">
                                     {currentPromptOfDay && currentPromptOfDayImage ? (
                                       <Image
@@ -6987,7 +6987,7 @@ function AdminInner() {
                                   </div>
                                   {(blockContent.items || []).map((item, itemIndex) => (
                                     <div key={`${blockKey}-${itemIndex}`} className="rounded-lg border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
-                                      <div className="grid gap-2 sm:grid-cols-2">
+                                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                         <input
                                           value={item.title || ''}
                                           onChange={e => updateHomepageItem(blockKey, itemIndex, 'title', e.target.value)}
@@ -7051,7 +7051,7 @@ function AdminInner() {
                       {savedCreativeItems.length > 0 ? 'Using saved custom cards' : 'Using auto cards from posts'}
                     </span>
                   </div>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
                     {liveCreativeItems.slice(0, 8).map(item => {
                       const count = countRailMatches(posts, item);
                       return (
@@ -7431,7 +7431,7 @@ function AdminInner() {
                 title="Social links"
                 subtitle="Shown as icons under the site description in the footer. Leave a field empty to hide that icon."
               />
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {([
                   ['twitter', 'X (Twitter)', 'https://x.com/yourhandle'],
                   ['instagram', 'Instagram', 'https://instagram.com/yourhandle'],
@@ -7879,7 +7879,7 @@ function AdminInner() {
                             
                             <div className="pt-2">
                               <h4 className="text-xs font-bold text-surface-900 dark:text-white mb-2">SEO & Hero Overrides (Optional)</h4>
-                              <div className="grid gap-3 sm:grid-cols-2 mb-3">
+                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 mb-3">
                                 <div>
                                   <label className="block text-[11px] font-bold text-surface-700 dark:text-surface-300 mb-1">Hero Title</label>
                                   <textarea rows={2}
@@ -8245,7 +8245,7 @@ function AdminInner() {
                   <p className="mt-1 text-xs text-surface-500">Controls the card in the post sidebar and its mobile version.</p>
                 </div>
                 <div className="space-y-3">
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <label className="space-y-1">
                       <span className="flex items-center justify-between text-xs font-medium text-surface-500">
                         Title
@@ -8302,7 +8302,7 @@ function AdminInner() {
                   </div>
                   <div className="space-y-2">
                     {(keepExploring.links || defaultKeepExploring.links).map((link, index) => (
-                      <div key={index} className="grid gap-2 rounded-lg border border-surface-200 bg-white p-3 dark:border-surface-700 dark:bg-surface-900 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_130px]">
+                      <div key={index} className="grid grid-cols-1 gap-2 rounded-lg border border-surface-200 bg-white p-3 dark:border-surface-700 dark:bg-surface-900 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_130px]">
                         <input
                           value={link.label}
                           onChange={e => updateKeepExploringLink(index, 'label', e.target.value)}
