@@ -18,32 +18,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     sitemapEntries.push(entry);
   };
 
+  // Note: Google explicitly ignores <priority> and <changefreq> in sitemaps, so
+  // only <loc> and <lastmod> are emitted here. See
+  // https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap
   const sitemapEntries: MetadataRoute.Sitemap = [];
   const baseEntries: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/explore`,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/blog`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/guides`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
+    { url: baseUrl, lastModified: now },
+    { url: `${baseUrl}/explore`, lastModified: now },
+    { url: `${baseUrl}/blog`, lastModified: now },
+    { url: `${baseUrl}/guides`, lastModified: now },
   ];
   baseEntries.forEach(addEntry);
 
@@ -63,8 +46,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       addEntry({
         url: `${baseUrl}/${article.category === 'guide' ? 'guides' : 'blog'}/${article.slug}`,
         lastModified: new Date(article.dateModified || article.datePublished),
-        changeFrequency: 'monthly',
-        priority: 0.8,
       });
     });
 
@@ -76,8 +57,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           // updatedAt isn't exposed by public_post_summaries yet; falls back to
           // createdAt until the view is migrated.
           lastModified: new Date(post.updatedAt || post.createdAt),
-          changeFrequency: 'daily',
-          priority: 1.0,
         });
       });
     }
@@ -93,8 +72,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         addEntry({
           url: `${baseUrl}/tool/${encodeURIComponent(tool.toLowerCase())}`,
           lastModified: lastModified ? new Date(lastModified) : now,
-          changeFrequency: 'daily',
-          priority: 0.8,
         });
       });
     }
@@ -110,8 +87,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         addEntry({
           url: `${baseUrl}/tag/${encodeURIComponent(tag.toLowerCase())}`,
           lastModified: lastModified ? new Date(lastModified) : now,
-          changeFrequency: 'daily',
-          priority: 0.7,
         });
       });
     }
@@ -124,15 +99,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         addEntry({
           url: `${baseUrl}/page/${page.slug}`,
           lastModified: page.createdAt ? new Date(page.createdAt) : new Date(),
-          changeFrequency: 'weekly',
-          priority: 0.9,
         });
         if (!postSlugs.has(slug) && !staticPaths.includes(slug)) {
           addEntry({
             url: `${baseUrl}/${slug}`,
             lastModified: page.createdAt ? new Date(page.createdAt) : now,
-            changeFrequency: 'weekly',
-            priority: 0.9,
           });
         }
       });
@@ -140,8 +111,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         addEntry({
           url: `${baseUrl}/${path}`,
           lastModified: now,
-          changeFrequency: 'monthly',
-          priority: 0.6,
         });
       });
     }
@@ -152,8 +121,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         addEntry({
           url: `${baseUrl}/section/${section.slug}`,
           lastModified: now,
-          changeFrequency: 'daily',
-          priority: 0.7,
         });
       });
     }
@@ -163,8 +130,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       addEntry({
         url: `${baseUrl}/${article.category === 'guide' ? 'guides' : 'blog'}/${article.slug}`,
         lastModified: new Date(article.dateModified || article.datePublished),
-        changeFrequency: 'monthly',
-        priority: 0.8,
       });
     });
     if (error?.name !== 'AbortError' && !error?.message?.includes('aborted') && !String(error).includes('aborted')) {
