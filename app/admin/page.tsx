@@ -10,9 +10,10 @@ import {
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload, Copy,
   Settings, Check, Filter, Search, RotateCcw, GripVertical, Image as ImageIcon,
   Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass, Menu, Mail,
-  Ban, Shield, Flag, CheckCircle, Cpu, BookOpen, Newspaper, Share2
+  Ban, Shield, Flag, CheckCircle, Cpu, BookOpen, Newspaper, Share2, Loader2, KeyRound
 } from 'lucide-react';
 import { showToast } from '@/components/ui/ToastContainer';
+import { ConfirmDialogHost, confirmAction } from '@/components/ui/ConfirmDialog';
 
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -459,6 +460,47 @@ function CardStylePreview({ style, badgeStyle = 'v1', label = 'Live preview' }: 
   );
 }
 
+/**
+ * Renders fixed-width content (a real homepage block, laid out at desktop width)
+ * scaled down to fit whatever column it sits in. Without this the 1200px content
+ * at a fixed 0.32 scale overflows narrow columns and mobile screens.
+ */
+function ScaledFrame({
+  children,
+  contentWidth = 1200,
+  maxScale = 0.32,
+  className = '',
+}: {
+  children: React.ReactNode;
+  contentWidth?: number;
+  maxScale?: number;
+  className?: string;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(maxScale);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => setScale(Math.min(maxScale, el.clientWidth / contentWidth));
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [contentWidth, maxScale]);
+
+  return (
+    <div ref={containerRef} className={`overflow-hidden ${className}`}>
+      <div
+        className="pointer-events-none origin-top-left"
+        style={{ width: contentWidth, transform: `scale(${scale})` }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function HomepageBlockPreview({
   blockKey,
   title,
@@ -523,11 +565,9 @@ function HomepageBlockPreview({
         <p className="text-[11px] font-bold uppercase tracking-wide text-surface-500">Actual block preview</p>
         <span className="rounded-full bg-primary-500/10 px-2 py-1 text-[10px] font-black text-primary-600 dark:text-primary-300">{title}</span>
       </div>
-      <div className="h-[560px] overflow-hidden rounded-xl border border-surface-200 bg-white dark:border-surface-700 dark:bg-surface-950">
-        <div className="pointer-events-none origin-top-left scale-[0.32] [width:1200px]">
-          {actualPreview}
-        </div>
-      </div>
+      <ScaledFrame className="h-[560px] rounded-xl border border-surface-200 bg-white dark:border-surface-700 dark:bg-surface-950">
+        {actualPreview}
+      </ScaledFrame>
       <p className="mt-2 text-[11px] leading-5 text-surface-500">
         This is the real homepage component scaled down for admin preview.
       </p>
@@ -567,6 +607,28 @@ function AdminInner() {
   const [authError, setAuthError] = useState('');
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [passwordRecoveryOpen, setPasswordRecoveryOpen] = useState(false);
+  const [recoveryPassword, setRecoveryPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+  const handleRecoveryPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!recoveryPassword || isUpdatingPassword) return;
+    setIsUpdatingPassword(true);
+    try {
+      const supabase = createSupabaseClient();
+      const { error } = await supabase.auth.updateUser({ password: recoveryPassword });
+      if (error) {
+        showToast('Error updating password: ' + error.message, 'error');
+      } else {
+        showToast('Password updated successfully!');
+        setPasswordRecoveryOpen(false);
+        setRecoveryPassword('');
+      }
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
 
   const isAdmin = Boolean(user && !adminAccessDenied);
 
@@ -631,9 +693,9 @@ function AdminInner() {
           const newPassword = prompt('Enter your new password:');
           if (newPassword) {
             supabase.auth.updateUser({ password: newPassword }).then(({ error }) => {
-              if (error) alert('Error updating password: ' + error.message);
+              if (error) showToast('Error updating password: ' + error.message, 'error');
               else {
-                alert('Password updated successfully!');
+                showToast('Password updated successfully!');
                 window.history.replaceState({}, '', '/admin');
               }
             });
@@ -680,13 +742,7 @@ function AdminInner() {
       applyAuthSession(session?.user ?? null);
 
       if (event === 'PASSWORD_RECOVERY') {
-        const newPassword = prompt('Enter your new password:');
-        if (newPassword) {
-          supabase.auth.updateUser({ password: newPassword }).then(({ error }) => {
-            if (error) alert('Error updating password: ' + error.message);
-            else alert('Password updated successfully!');
-          });
-        }
+        setPasswordRecoveryOpen(true);
       }
     });
     return () => {
@@ -704,7 +760,7 @@ function AdminInner() {
       'width=600,height=700'
     );
     if (!authWindow) {
-      alert('Please allow popups for this site to sign in with Google.');
+      showToast('Please allow popups for this site to sign in with Google.', 'info');
     }
   };
 
@@ -725,7 +781,7 @@ function AdminInner() {
         const res = await supabase.auth.signUp({ email, password });
         error = res.error;
         if (!error && res.data.user && !res.data.session) {
-          alert("Signup successful! Please check your email to confirm your account.");
+          showToast("Signup successful! Please check your email to confirm your account.");
         }
       }
       if (error) throw error;
@@ -746,7 +802,7 @@ function AdminInner() {
         redirectTo: `${window.location.origin}/admin?reset=true`,
       });
       if (error) throw error;
-      alert('Password reset email sent! Check your inbox.');
+      showToast('Password reset email sent! Check your inbox.');
     } catch (e: any) {
       setAuthError(e.message || 'Password reset failed');
     }
@@ -915,7 +971,7 @@ function AdminInner() {
           status: current
         }
       }));
-      alert('Failed to update user status');
+      showToast('Failed to update user status', 'error');
     }
   };
 
@@ -1272,7 +1328,7 @@ function AdminInner() {
       const response = await askAi(aiStudioPrompt, { systemContext: sysCtx, imageUrl: aiStudioImageUrl });
       setAiStudioResponse(response);
     } catch (err: any) {
-      alert("Failed to generate: " + err.message);
+      showToast("Failed to generate: " + err.message, 'error');
     } finally {
       setIsAiStudioLoading(false);
     }
@@ -1602,7 +1658,7 @@ function AdminInner() {
       .filter((post): post is Post => Boolean(post));
 
     if (postsToUpdate.length === 0) {
-      alert('All image model labels are already filled.');
+      showToast('All image model labels are already filled.', 'info');
       return;
     }
 
@@ -1612,10 +1668,10 @@ function AdminInner() {
         await updatePost(post);
       }
       await loadAdminData();
-      alert(`Filled model labels for ${postsToUpdate.length} posts.`);
+      showToast(`Filled model labels for ${postsToUpdate.length} posts.`);
     } catch (error: any) {
       console.error('Failed to backfill models:', error);
-      alert(`Failed to fill model labels: ${error?.message || 'Unknown error'}`);
+      showToast(`Failed to fill model labels: ${error?.message || 'Unknown error'}`, 'error');
     } finally {
       setIsBackfillingModels(false);
     }
@@ -1641,7 +1697,7 @@ function AdminInner() {
       updateImage(idx, 'url', url);
     } catch (err) {
       console.error(err);
-      alert('Failed to process image');
+      showToast('Failed to process image', 'error');
       updateImage(idx, 'url', '');
     }
   };
@@ -1653,7 +1709,7 @@ function AdminInner() {
       updateManagedArticle(slug, { thumbnailUrl: url });
     } catch (err) {
       console.error(err);
-      alert('Failed to upload article thumbnail');
+      showToast('Failed to upload article thumbnail', 'error');
       updateManagedArticle(slug, { thumbnailUrl: '' });
     }
   };
@@ -1665,7 +1721,7 @@ function AdminInner() {
       updateRailItem('creative', index, 'imageUrl', url);
     } catch (err) {
       console.error(err);
-      alert('Failed to upload browse card logo');
+      showToast('Failed to upload browse card logo', 'error');
       updateRailItem('creative', index, 'imageUrl', '');
     }
   };
@@ -1682,7 +1738,7 @@ function AdminInner() {
     // Collect the images that have prompts
     const usedImages = images.filter(i => i.prompt);
     if (usedImages.length === 0) {
-      alert("Please add at least one image with a prompt first before generating details.");
+      showToast("Please add at least one image with a prompt first before generating details.", 'info');
       return;
     }
 
@@ -1754,7 +1810,7 @@ function AdminInner() {
 
     const hasTopic = selectedArticle.title.trim() && selectedArticle.title.trim() !== 'New Article';
     if (!hasTopic && !articleAiInstruction.trim()) {
-      alert('Set a working title first, or describe the article you want in the instructions box.');
+      showToast('Set a working title first, or describe the article you want in the instructions box.', 'info');
       return;
     }
 
@@ -1829,7 +1885,7 @@ function AdminInner() {
 
   const handleSavePost = async () => {
     if (!thumbnailUrl) {
-      alert('Thumbnail URL is required');
+      showToast('Thumbnail URL is required', 'error');
       return;
     }
 
@@ -1838,7 +1894,7 @@ function AdminInner() {
     // Check for duplicate slugs
     const slugInUse = posts.some(p => p.slug === finalSlug && p.id !== (editingPost?.id || ''));
     if (slugInUse) {
-      alert('This slug is already in use. Please choose a different one.');
+      showToast('This slug is already in use. Please choose a different one.', 'error');
       return;
     }
 
@@ -1901,12 +1957,12 @@ function AdminInner() {
 
       await loadAdminData();
       closePostForm();
-      alert(!isFinished && status === 'published'
+      showToast(!isFinished && status === 'published'
         ? 'Post saved as draft because some required fields (title, description, or images) are missing.'
-        : 'Post saved successfully.');
+        : 'Post saved successfully.', !isFinished && status === 'published' ? 'info' : 'success');
     } catch (error: any) {
       console.error('Failed to save post:', error);
-      alert(`Failed to save post: ${error?.message || 'Unknown error'}`);
+      showToast(`Failed to save post: ${error?.message || 'Unknown error'}`, 'error');
     }
   };
 
@@ -1976,7 +2032,7 @@ function AdminInner() {
   const applyBulkPostAction = async (action: 'feature' | 'unfeature' | 'publish' | 'unpublish' | 'delete') => {
     const selected = posts.filter(post => selectedPostIds.includes(post.id));
     if (selected.length === 0) return;
-    if (action === 'delete' && !confirm(`Delete ${selected.length} selected posts?`)) return;
+    if (action === 'delete' && !(await confirmAction({ title: `Delete ${selected.length} selected post${selected.length === 1 ? '' : 's'}?`, message: 'This permanently removes the posts and their data.', confirmLabel: 'Delete' }))) return;
 
     for (const post of selected) {
       if (action === 'delete') await deletePost(post.id);
@@ -2485,7 +2541,7 @@ function AdminInner() {
     const toolList = settings.aiTools || [];
     if (!newAiTool.trim()) return;
     if (toolList.includes(newAiTool.trim())) {
-      alert('AI Tool already exists');
+      showToast('AI Tool already exists', 'error');
       return;
     }
     updateSettings({ ...settings, aiTools: [...toolList, newAiTool.trim()] });
@@ -2495,7 +2551,7 @@ function AdminInner() {
   const removeAiTool = (tool: string) => {
     const inUse = posts.some(p => p.aiTools?.includes(tool) || p.images.some(img => img.aiTools ? img.aiTools.includes(tool) : img.aiTool === tool));
     if (inUse) {
-      alert(`Cannot delete "${tool}" - it's used by existing posts. Remove or reassign those images first.`);
+      showToast(`Cannot delete "${tool}" - it's used by existing posts. Remove or reassign those images first.`, 'error');
       return;
     }
     updateSettings({ ...settings, aiTools: (settings.aiTools || []).filter(t => t !== tool) });
@@ -2590,7 +2646,7 @@ function AdminInner() {
       setEditAiToolLogo(url);
     } catch (err) {
       console.error(err);
-      alert('Failed to process image');
+      showToast('Failed to process image', 'error');
       setEditAiToolLogo('');
     }
   };
@@ -2609,8 +2665,12 @@ function AdminInner() {
     updateSection(newSection);
   };
 
-  const handleResetData = () => {
-    if (confirm('This will reset ALL data to defaults (posts, sections, settings). Are you sure?')) {
+  const handleResetData = async () => {
+    if (await confirmAction({
+      title: 'Reset all data to defaults?',
+      message: 'Posts, sections, and settings will be restored to their default state. This cannot be undone.',
+      confirmLabel: 'Reset everything',
+    })) {
       resetData();
       window.location.reload();
     }
@@ -2928,6 +2988,48 @@ function AdminInner() {
 
   return (
     <div className="min-h-screen bg-surface-50/40 dark:bg-surface-950 text-surface-900 dark:text-surface-50">
+      <ConfirmDialogHost />
+
+      {/* Password recovery modal (Supabase PASSWORD_RECOVERY event) */}
+      {passwordRecoveryOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-surface-950/60 p-4 backdrop-blur-sm animate-in fade-in duration-150">
+          <form
+            onSubmit={handleRecoveryPasswordSubmit}
+            className="w-full max-w-sm rounded-2xl border border-surface-200 bg-white p-5 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-150 dark:border-surface-800 dark:bg-surface-900"
+          >
+            <h3 className="text-sm font-bold text-surface-950 dark:text-white">Set a new password</h3>
+            <p className="mt-1 text-xs text-surface-500 dark:text-surface-400">Enter the new password for your account.</p>
+            <input
+              type="password"
+              value={recoveryPassword}
+              onChange={e => setRecoveryPassword(e.target.value)}
+              minLength={6}
+              required
+              autoFocus
+              className={`${adminInput} mt-4 py-2.5`}
+              placeholder="New password (min 6 characters)"
+            />
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPasswordRecoveryOpen(false)}
+                className="rounded-xl px-4 py-2 text-xs font-bold text-surface-600 transition-colors hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isUpdatingPassword || recoveryPassword.length < 6}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-primary-600 disabled:opacity-50"
+              >
+                {isUpdatingPassword ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
+                Update password
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* Mobile Top Header */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 bg-white dark:bg-surface-900 border-b border-surface-200 dark:border-surface-800 sticky top-0 z-40">
         <div className="flex items-center gap-2">
@@ -3260,7 +3362,7 @@ function AdminInner() {
                           e.preventDefault(); e.stopPropagation();
                           const url = `${window.location.origin}/${post.slug || post.id}`;
                           navigator.clipboard.writeText(url);
-                          alert('Link copied to clipboard!');
+                          showToast('Link copied to clipboard!');
                         }}
                         className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
                         title="Copy Post Link"
@@ -3295,7 +3397,7 @@ function AdminInner() {
                         <Edit3 className="w-4 h-4 text-primary-500" />
                       </button>
                       <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (confirm('Delete this post?')) deletePost(post.id); }}
+                        onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await confirmAction({ title: 'Delete this post?', message: `"${post.title}" will be permanently removed.`, confirmLabel: 'Delete' })) deletePost(post.id); }}
                         className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
@@ -3544,7 +3646,7 @@ function AdminInner() {
                                setThumbnailUrl(url);
                              } catch (err: any) {
                                console.error(err);
-                               alert(`Failed to process thumbnail: ${err?.message || err}`);
+                               showToast(`Failed to process thumbnail: ${err?.message || err}`, 'error');
                                setThumbnailUrl('');
                              }
                           }
@@ -3594,7 +3696,7 @@ function AdminInner() {
                                ]);
                              } catch (err) {
                                console.error(err);
-                               alert('Failed to process some reference images');
+                               showToast('Failed to process some reference images', 'error');
                                setReferenceImages(prev => prev.filter(url => url !== 'Uploading...'));
                              }
                           }
@@ -4926,7 +5028,7 @@ function AdminInner() {
                           }
                         </button>
                         <button
-                          onClick={() => { if (confirm('Delete this section?')) deleteSection(section.id); }}
+                          onClick={async () => { if (await confirmAction({ title: 'Delete this section?', message: `"${section.name}" will be permanently removed.`, confirmLabel: 'Delete' })) deleteSection(section.id); }}
                           className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                           title="Delete section"
                         >
@@ -5161,12 +5263,12 @@ function AdminInner() {
                         });
                         const result = await res.json();
                         if (result.text) {
-                          alert(`Suggested domains:\n${result.text}`);
+                          showToast(`Suggested domains:\n${result.text}`, 'info');
                         } else {
-                          alert('Could not generate domain names. Please try again.');
+                          showToast('Could not generate domain names. Please try again.', 'error');
                         }
                       } catch(e) {
-                        alert('Could not generate domain names. Please try again.');
+                        showToast('Could not generate domain names. Please try again.', 'error');
                       }
                     }}
                     className="px-4 py-2 rounded-xl text-xs font-bold text-surface-600 dark:text-surface-300 border border-surface-200 dark:border-surface-700 hover:bg-surface-100 dark:hover:bg-surface-800 whitespace-nowrap transition-colors"
@@ -6286,7 +6388,7 @@ function AdminInner() {
                             className={`flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition ${
                               selected
                                 ? 'border-primary-500 bg-primary-50/50 dark:border-primary-500/40 dark:bg-primary-900/20'
-                                : 'border-surface-200 bg-white hover:border-primary-300 dark:border-surface-800 dark:bg-surface-900 hover:'
+                                : 'border-surface-200 bg-white hover:border-primary-300 dark:border-surface-800 dark:bg-surface-900'
                             }`}
                           >
                             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-100 dark:bg-surface-800">

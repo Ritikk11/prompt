@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import NextImage from 'next/image';
 import { X, Image as ImageIcon, Loader2, Folder, ArrowLeft, Home, ChevronRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase-client';
+import { showToast } from '@/components/ui/ToastContainer';
 
 type MediaLibraryModalProps = {
   isOpen: boolean;
@@ -43,7 +44,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLi
         if (!mounted) return;
 
         if (data.error) {
-          alert('API Error: ' + data.error);
+          showToast('API Error: ' + data.error, 'error');
           return;
         }
         if (data.images) setImages(data.images);
@@ -51,7 +52,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLi
       } catch (err: any) {
         if (mounted) {
           console.error(err);
-          alert(String(err));
+          showToast(String(err), 'error');
         }
       } finally {
         if (mounted) setLoading(false);
@@ -69,7 +70,7 @@ export default function MediaLibraryModal({ isOpen, onClose, onSelect }: MediaLi
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-5xl bg-white dark:bg-surface-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[85vh] border border-surface-200 dark:border-surface-800">
+      <div className="w-full max-w-5xl bg-white dark:bg-surface-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[85vh] border border-surface-200 dark:border-surface-800 animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200">
         <div className="px-6 py-4 border-b border-surface-100 dark:border-surface-800/50 flex items-center justify-between bg-surface-50/50 dark:bg-surface-900/50 gap-4">
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar whitespace-nowrap sm:gap-2">
             <button 

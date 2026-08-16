@@ -6,6 +6,8 @@ import type { SeoSettings, SiteSettings } from '@/lib/types';
 import { WandButton } from '@/components/admin/MagicWand';
 import { seoPrompts } from '@/lib/admin/wandPrompts';
 import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, CharCount, Toggle, adminInput } from '@/components/admin/AdminUI';
+import { showToast } from '@/components/ui/ToastContainer';
+import { confirmAction } from '@/components/ui/ConfirmDialog';
 
 type SeoPagesTabMode = 'global' | 'pages' | 'all';
 
@@ -106,7 +108,10 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
   };
 
   const handleSave = async () => {
-    if (!title || !slug) return alert('Title and slug required');
+    if (!title || !slug) {
+      showToast('Title and slug required', 'error');
+      return;
+    }
     const id = editingId || Math.random().toString(36).substr(2, 9);
     
     const data = {
@@ -131,18 +136,18 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
       resetForm();
     } catch (e) {
       console.error(e);
-      alert('Error saving SEO page');
+      showToast('Error saving SEO page', 'error');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this SEO page?')) return;
+    if (!(await confirmAction({ title: 'Delete this SEO page?', message: 'The page and its settings will be permanently removed.', confirmLabel: 'Delete' }))) return;
     try {
       await adminRequest({ action: 'delete', resource: 'seopages', id });
       setSeoPages(prev => prev.filter(page => page.id !== id));
     } catch (e) {
       console.error(e);
-      alert('Error deleting');
+      showToast('Error deleting', 'error');
     }
   };
 

@@ -101,9 +101,9 @@ export function EditableCard({ isEditing, children, className = '' }: {
   className?: string;
 }) {
   return (
-    <div className={`rounded-2xl border transition-all ${
+    <div className={`rounded-2xl border transition-all duration-200 ${
       isEditing
-        ? 'border-primary-500/50 bg-primary-50/10 dark:bg-primary-950/10 shadow-md p-4 sm:p-6 space-y-6'
+        ? 'border-primary-500/50 bg-primary-50/10 dark:bg-primary-950/10 shadow-md p-4 sm:p-6 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-200'
         : 'border-surface-200 dark:border-surface-800 bg-surface-50/70 dark:bg-surface-800/40 hover:border-surface-300 dark:hover:border-surface-700 p-4'
     } ${className}`}>
       {children}
@@ -197,7 +197,7 @@ export function ActionButton({
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-150 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ${variants[variant]} ${className}`}
     >
       {children}
     </button>
