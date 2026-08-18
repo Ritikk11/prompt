@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bodoni+Moda:ital,opsz,wght@1,6..96,800&family=Caveat:wght@700&family=Cinzel:wght@800&family=Dancing+Script:wght@700&family=Instrument+Serif:ital@1&family=Playfair+Display:ital,wght@1,600;1,800&family=Plus+Jakarta+Sans:ital,wght@1,800&family=Space+Grotesk:wght@700&family=Syne:wght@800&display=swap');
 
 @source "../app";
 @source "../components";
@@ -9,7 +10,55 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+.font-serif-italic {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+}
+
+.font-instrument {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-style: italic;
+}
+
+.font-bodoni {
+  font-family: 'Bodoni Moda', Georgia, serif;
+  font-style: italic;
+}
+
+.font-syne {
+  font-family: 'Syne', var(--font-heading), sans-serif;
+}
+
+.font-script {
+  font-family: 'Caveat', cursive;
+}
+
+.font-dancing {
+  font-family: 'Dancing Script', cursive;
+}
+
+.font-bebas {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.05em;
+}
+
+.font-space {
+  font-family: 'Space Grotesk', monospace, sans-serif;
+}
+
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-jakarta {
+  font-family: 'Plus Jakarta Sans', var(--font-sans), sans-serif;
+  font-style: italic;
+}
+
 @theme {
+  --font-sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: var(--font-heading), var(--font-sans), sans-serif;
+
   /* Google brand quad — used for spot color (headline letters, step tiles) */
   --color-google-blue: #4285f4;
   --color-google-red: #ea4335;

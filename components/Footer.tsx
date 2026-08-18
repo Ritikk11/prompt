@@ -110,10 +110,7 @@ export default function Footer() {
               <span className="text-xl font-bold gradient-text">{settings.siteTitle}</span>
             </Link>
             <p className="text-sm text-surface-500 dark:text-surface-400 leading-relaxed">
-              {/* Never render the meta description here: Google lifts boilerplate
-                  footer text into SERP snippets when it skips weak meta descriptions,
-                  which makes every page look like the homepage in search results. */}
-              {settings.footerDescription || 'Curated prompts, prompt-writing guides, and model notes for AI image generation.'}
+              {settings.footerDescription || settings.siteDescription || 'Curated prompts, prompt-writing guides, and model notes for AI image generation.'}
             </p>
             {socialItems.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">

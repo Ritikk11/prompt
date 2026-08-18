@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Outfit } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 // Global styles
@@ -15,6 +15,13 @@ import { fetchSections, fetchSettings } from '@/lib/data';
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
+  display: 'swap',
+});
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-heading',
+  display: 'swap',
 });
 
 function toOrigin(value?: string | null) {
@@ -138,7 +145,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ].filter(Boolean)));
 
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${outfit.variable}`}>
       <head>
         {/* Favicons, apple-touch-icon and manifest are declared once via the
             Metadata `icons`/`manifest` fields in generateMetadata — do not add
