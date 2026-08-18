@@ -27,6 +27,14 @@ import AdSlot from '@/components/AdSlot';
 import ScrollReveal from '@/components/ScrollReveal';
 import ToolBadge from '@/components/ToolBadge';
 
+const GALLERY_SIZES = '(max-width: 768px) calc(100vw - 48px), 680px';
+const buildGallerySrcSet = (url?: string) => {
+  if (!url) return undefined;
+  return [480, 768, 1100]
+    .map((w) => `${getPromptImageUrl(url, { width: w, quality: 78 })} ${w}w`)
+    .join(', ');
+};
+
 function PromptImageGallery({
   img,
   index,
@@ -50,34 +58,35 @@ function PromptImageGallery({
   }, [img.urls, img.url]);
 
   const [activeIdx, setActiveIdx] = useState(0);
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+
   const safeActiveIdx = activeIdx < images.length ? activeIdx : 0;
   const activeUrl = images[safeActiveIdx] || img.url || '';
-  const tools = img.aiTools || [img.aiTool].filter(Boolean);
-
-  const touchStartXRef = useRef<number | null>(null);
-  const touchEndXRef = useRef<number | null>(null);
+  const tools = img.aiTool ? img.aiTool.split(',').map((t) => t.trim()).filter(Boolean) : [];
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartXRef.current = e.touches[0].clientX;
+    touchStartX.current = e.touches[0].clientX;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndXRef.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
   };
 
   const handleTouchEnd = () => {
-    if (touchStartXRef.current === null || touchEndXRef.current === null) return;
-    const diff = touchStartXRef.current - touchEndXRef.current;
-    const threshold = 40;
-    if (diff > threshold) {
-      // Swiped Left -> Next
-      setActiveIdx((prev) => (prev + 1) % images.length);
-    } else if (diff < -threshold) {
-      // Swiped Right -> Prev
-      setActiveIdx((prev) => (prev - 1 + images.length) % images.length);
+    if (!touchStartX.current || !touchEndX.current || images.length <= 1) return;
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 45) {
+      if (diff > 0) {
+        // Swiped Left -> Next
+        setActiveIdx((prev) => (prev + 1) % images.length);
+      } else {
+        // Swiped Right -> Prev
+        setActiveIdx((prev) => (prev - 1 + images.length) % images.length);
+      }
     }
-    touchStartXRef.current = null;
-    touchEndXRef.current = null;
+    touchStartX.current = 0;
+    touchEndX.current = 0;
   };
 
   const prevImage = (e: React.MouseEvent) => {
@@ -104,6 +113,8 @@ function PromptImageGallery({
         >
           <LoadingImg
             src={getPromptImageUrl(activeUrl || 'https://picsum.photos/seed/placeholder/800/600', { width: 1100, quality: 78 })}
+            srcSet={buildGallerySrcSet(activeUrl)}
+            sizes={GALLERY_SIZES}
             alt={`${postTitle}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}`}
             showSkeleton={showSkeleton}
             priority={index === 0 && safeActiveIdx === 0}
