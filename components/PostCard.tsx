@@ -64,7 +64,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
   const showSkeleton = settings.features?.skeletonLoaders ?? true;
   const showLikeCount = settings.features?.showLikeCount ?? true;
   const showViewCount = settings.features?.showViewCount ?? true;
-  const imageUrl = getThumbnailImageUrl(post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600');
+  const imageUrl = getThumbnailImageUrl(post.thumbnailUrl || post.images[0]?.url || '');
 
   const renderBadges = (className = "") => (
     <div className="flex flex-wrap gap-1">

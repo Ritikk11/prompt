@@ -49,12 +49,12 @@ export default function HeroV2({ featuredPosts: featured, settings }: HeroProps)
                 {isNearbySlide(i, current, featured.length) ? (
                   <>
                     <Image
-                      src={promptImageUrl(p, 'https://picsum.photos/seed/placeholder/1200/800')} alt={`bg-${p.title}`} fill
+                      src={promptImageUrl(p)} alt={`bg-${p.title}`} fill
                       className="object-cover blur-3xl scale-125 opacity-30 dark:opacity-20" sizes="50vw"
                       loading={i === current ? 'eager' : 'lazy'}
                       referrerPolicy="no-referrer" />
                     <LoadingImage
-                      src={promptImageUrl(p, 'https://picsum.photos/seed/placeholder/1200/800')} alt={p.title} fill priority={i === current}
+                      src={promptImageUrl(p)} alt={p.title} fill priority={i === current}
                       showSkeleton={showSkeleton}
                       className="object-contain" sizes="50vw"
                       referrerPolicy="no-referrer" />

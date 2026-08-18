@@ -112,7 +112,7 @@ function PromptImageGallery({
           onClick={() => onOpenLightbox(images, safeActiveIdx, index, tools)}
         >
           <LoadingImg
-            src={getPromptImageUrl(activeUrl || 'https://picsum.photos/seed/placeholder/800/600', { width: 1100, quality: 78 })}
+            src={getPromptImageUrl(activeUrl || '', { width: 1100, quality: 78 })}
             srcSet={buildGallerySrcSet(activeUrl)}
             sizes={GALLERY_SIZES}
             alt={`${postTitle}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}`}
@@ -467,7 +467,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const primaryHeroToolInfo = heroTools.length > 0 ? getToolInfo(heroTools[0], settings?.toolDetails) : { color: '', logo: '', logoScale: undefined };
   const heroToolInfo = primaryHeroToolInfo;
   const heroToolName = heroTools.join(' + ');
-  const fallbackPromptImageUrl = 'https://picsum.photos/seed/placeholder/800/600';
+  const fallbackPromptImageUrl = '';
   const originalMainImageUrl = post.thumbnailUrl || post.images[0]?.url || fallbackPromptImageUrl;
   const mainPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 1280, quality: 78 });
   const backgroundPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 720, quality: 60 });
