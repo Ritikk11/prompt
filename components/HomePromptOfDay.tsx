@@ -64,7 +64,9 @@ export default function HomePromptOfDay({ post, settings }: { post?: Post; setti
                   <span className="leading-snug">Best for {tools.join(', ')}</span>
                 </span>
               )}
-              <span className="inline-flex items-center gap-2"><Heart className="h-4 w-4" /> {post.likes || 0} likes</span>
+              {settings?.features?.showLikeCount !== false && (
+                <span className="inline-flex items-center gap-2"><Heart className="h-4 w-4" /> {post.likes || 0} likes</span>
+              )}
             </div>
             <Link href={`/${post.slug || post.id}`} className="btn-glow mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full border border-surface-300 py-3 text-sm font-semibold text-surface-800 transition-colors dark:border-white/15 dark:text-surface-200">
               {content.ctaLabel || 'View This Prompt'}

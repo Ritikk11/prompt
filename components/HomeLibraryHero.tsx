@@ -18,7 +18,7 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
   const statItems = settings.heroHideStats ? [] : [
     { label: 'Prompts', value: `${postCount}+`, icon: Layers },
     { label: 'Featured', value: `${featuredPosts.length}`, icon: Flame },
-    { label: 'Likes', value: `${totalLikes}`, icon: Heart },
+    ...(settings.features?.showLikeCount !== false ? [{ label: 'Likes', value: `${totalLikes}`, icon: Heart }] : []),
     { label: 'Saves', value: `${totalSaves}`, icon: Bookmark },
   ];
 

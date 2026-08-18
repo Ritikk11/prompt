@@ -128,6 +128,8 @@ export interface SiteFeatures {
   showPostSidebar?: boolean;
   showShareButtons?: boolean;
   showTryButtons?: boolean;
+  showLikeCount?: boolean;
+  showViewCount?: boolean;
   showYouMightAlsoLike?: boolean;
   showHomepageLibraryHero?: boolean;
   showHomepageHowTo?: boolean;

@@ -151,7 +151,7 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
               ) : (
                 <button 
                   onClick={() => setDisplayedCount(prev => prev + itemsPerLoad)}
-                  className="press-feedback px-6 py-2.5 rounded-full font-bold bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-300 transition-colors"
+                  className="px-6 py-2.5 rounded-full font-bold bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-300 transition-colors"
                 >
                   Load More Prompts
                 </button>

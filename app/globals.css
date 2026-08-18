@@ -79,30 +79,6 @@ html {
     0 0 24px rgba(138, 180, 248, 0.18);
 }
 
-/* Touch press feedback. Card polish (zoom, glow, tilt) is hover-based and
-   never fires on touch devices, so taps get no visual response before the
-   navigation commits. Give tappable masonry cards and .press-feedback
-   elements a physical press-down instead; desktop keeps its hover styles. */
-.press-feedback {
-  transition: transform 0.12s ease;
-}
-
-@media (hover: none) {
-  .break-inside-avoid:active {
-    transform: scale(0.98);
-  }
-
-  .press-feedback:active {
-    transform: scale(0.97);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .break-inside-avoid:active,
-  .press-feedback:active {
-    transform: none;
-  }
-}
 
 /* View Transition: smooth GPU crossfade for theme toggle.
    The browser snapshots the old page, applies the change, then

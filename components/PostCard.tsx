@@ -62,6 +62,8 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
   const cardStyle = cardStyleOverride || settings?.cardStyle || 'v1';
   const badgeStyle = badgeStyleOverride || settings?.badgeStyle || 'v1';
   const showSkeleton = settings.features?.skeletonLoaders ?? true;
+  const showLikeCount = settings.features?.showLikeCount ?? true;
+  const showViewCount = settings.features?.showViewCount ?? true;
   const imageUrl = getThumbnailImageUrl(post.thumbnailUrl || post.images[0]?.url || 'https://picsum.photos/seed/placeholder/800/600');
 
   const renderBadges = (className = "") => (
@@ -107,10 +109,10 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
           <h3 className="font-bold text-surface-900 dark:text-white text-base leading-snug line-clamp-2 mb-3">
             {post.title}
           </h3>
-          <div className="flex items-center gap-4 text-surface-500 dark:text-surface-400">
-             <span className="flex items-center gap-1 text-xs font-bold"><Heart className="w-4 h-4 text-red-500" />{post.likes}</span>
-             <span className="flex items-center gap-1 text-xs font-bold"><Eye className="w-4 h-4 text-blue-500" />{post.views}</span>
-          </div>
+          {(showLikeCount || showViewCount) && <div className="flex items-center gap-4 text-surface-500 dark:text-surface-400">
+             {showLikeCount && <span className="flex items-center gap-1 text-xs font-bold"><Heart className="w-4 h-4 text-red-500" />{post.likes}</span>}
+             {showViewCount && <span className="flex items-center gap-1 text-xs font-bold"><Eye className="w-4 h-4 text-blue-500" />{post.views}</span>}
+          </div>}
         </div>
       </Link>
     );
@@ -139,10 +141,10 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
           </h3>
           <div className="flex justify-between items-center border-t-2 border-black dark:border-white pt-3">
              <span className="font-black text-[10px] uppercase">By PromptHub</span>
-             <div className="flex gap-3">
-                <span className="text-xs font-black italic">{post.views} VWS</span>
-                <span className="text-xs font-black italic text-primary-500">{post.likes} LKS</span>
-             </div>
+             {(showLikeCount || showViewCount) && <div className="flex gap-3">
+                {showViewCount && <span className="text-xs font-black italic">{post.views} VWS</span>}
+                {showLikeCount && <span className="text-xs font-black italic text-primary-500">{post.likes} LKS</span>}
+             </div>}
           </div>
         </div>
       </Link>
@@ -170,10 +172,10 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
              <h3 className="font-bold text-white text-xl mb-4 leading-tight drop-shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform">
                {post.title}
              </h3>
-             <div className="flex items-center gap-4 text-white/80 opacity-0 group-hover:opacity-100 transition-opacity delay-100">
-                <span className="flex items-center gap-1 text-xs font-bold bg-white/10 backdrop-blur-md px-2 py-1 rounded-full"><Heart className="w-3.5 h-3.5" /> {post.likes}</span>
-                <span className="flex items-center gap-1 text-xs font-bold bg-white/10 backdrop-blur-md px-2 py-1 rounded-full"><Eye className="w-3.5 h-3.5" /> {post.views}</span>
-             </div>
+             {(showLikeCount || showViewCount) && <div className="flex items-center gap-4 text-white/80 opacity-0 group-hover:opacity-100 transition-opacity delay-100">
+                {showLikeCount && <span className="flex items-center gap-1 text-xs font-bold bg-white/10 backdrop-blur-md px-2 py-1 rounded-full"><Heart className="w-3.5 h-3.5" /> {post.likes}</span>}
+                {showViewCount && <span className="flex items-center gap-1 text-xs font-bold bg-white/10 backdrop-blur-md px-2 py-1 rounded-full"><Eye className="w-3.5 h-3.5" /> {post.views}</span>}
+             </div>}
            </div>
         </div>
       </Link>
@@ -204,7 +206,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
             </h3>
             <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-tighter text-surface-400">
                <span>ID: {post.id.slice(0, 8)}</span>
-               <span className="text-primary-500 font-bold">{post.likes} LIKES</span>
+               {showLikeCount && <span className="text-primary-500 font-bold">{post.likes} LIKES</span>}
             </div>
           </div>
         </Link>
@@ -238,7 +240,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
               <div className="flex -space-x-2">
                 {[1,2,3].map(i => <div key={i} className="w-5 h-5 rounded-full border-2 border-white bg-surface-200 dark:bg-surface-800 overflow-hidden text-[8px] flex items-center justify-center font-bold">U{i}</div>)}
               </div>
-              <span className="text-[10px] text-surface-700 dark:text-surface-300 font-medium">Liked by {post.likes} users</span>
+              {showLikeCount && <span className="text-[10px] text-surface-700 dark:text-surface-300 font-medium">Liked by {post.likes} users</span>}
            </div>
         </div>
       </Link>
@@ -290,10 +292,10 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
           </h3>
           <div className="flex items-center justify-between text-surface-500 dark:text-surface-400">
              <span className="text-[10px] font-medium text-surface-600 dark:text-surface-400">{post.images.length} {post.images.length === 1 ? 'Prompt' : 'Prompts'}</span>
-             <div className="flex gap-2.5">
-               <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-medium"><Eye className="w-3.5 h-3.5" />{post.views}</span>
-               <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-medium"><Heart className="w-3.5 h-3.5" />{post.likes}</span>
-             </div>
+             {(showLikeCount || showViewCount) && <div className="flex gap-2.5">
+               {showViewCount && <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-medium"><Eye className="w-3.5 h-3.5" />{post.views}</span>}
+               {showLikeCount && <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-medium"><Heart className="w-3.5 h-3.5" />{post.likes}</span>}
+             </div>}
           </div>
         </div>
       </Link>
@@ -325,10 +327,10 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
           <h3 className="font-bold text-surface-900 dark:text-white text-xs sm:text-sm leading-snug line-clamp-2 mb-1.5 group-hover:text-primary-500 transition-colors">
             {post.title}
           </h3>
-          <div className="flex items-center gap-2 mb-0.5 text-surface-400 dark:text-surface-500">
-             <span className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium"><Eye className="w-3 h-3" />{post.views}</span>
-             <span className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium"><Heart className="w-3 h-3" />{post.likes}</span>
-          </div>
+          {(showLikeCount || showViewCount) && <div className="flex items-center gap-2 mb-0.5 text-surface-400 dark:text-surface-500">
+             {showViewCount && <span className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium"><Eye className="w-3 h-3" />{post.views}</span>}
+             {showLikeCount && <span className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium"><Heart className="w-3 h-3" />{post.likes}</span>}
+          </div>}
         </div>
       </Link>
     );
@@ -373,14 +375,14 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
             {post.title}
           </h3>
           
-          <div className="flex items-center gap-3 mt-2">
-            <span className="flex items-center gap-1 font-bold text-[10px] sm:text-[11px] text-white/90 drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+          {(showLikeCount || showViewCount) && <div className="flex items-center gap-3 mt-2">
+            {showViewCount && <span className="flex items-center gap-1 font-bold text-[10px] sm:text-[11px] text-white/90 drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
               <Eye className="w-3 h-3 opacity-90" /> {post.views}
-            </span>
-            <span className="flex items-center gap-1 font-bold text-[10px] sm:text-[11px] text-white/90 drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+            </span>}
+            {showLikeCount && <span className="flex items-center gap-1 font-bold text-[10px] sm:text-[11px] text-white/90 drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
               <Heart className="w-3 h-3 opacity-90" /> {post.likes}
-            </span>
-          </div>
+            </span>}
+          </div>}
         </div>
       </div>
     </Link>

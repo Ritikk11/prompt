@@ -92,6 +92,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   
   const viewIncrementedRef = useRef(false);
   const showSkeleton = settings.features?.skeletonLoaders ?? false;
+  const showLikeCount = settings.features?.showLikeCount ?? true;
+  const showViewCount = settings.features?.showViewCount ?? true;
 
   const [lightboxImage, setLightboxImage] = useState<{ url: string; index: number; tools: string[] } | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -405,9 +407,9 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       <div className="min-w-0 flex-1 py-1">
         <h4 className="line-clamp-2 text-xs font-bold leading-snug text-surface-900 dark:text-white">{item.title}</h4>
         <div className="mt-1 flex items-center justify-between gap-2">
-          <p className="flex min-w-0 items-center gap-2 text-[11px] text-surface-400">
+            {showViewCount && <p className="flex min-w-0 items-center gap-2 text-[11px] text-surface-400">
             <Eye className="h-3 w-3" /> {(item.views || 0).toLocaleString()}
-          </p>
+          </p>}
           {firstTool && firstToolInfo && (
             <ToolBadge toolName={firstTool} toolInfo={firstToolInfo} size="sm" className="shrink-0" />
           )}
@@ -511,13 +513,13 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     return (
       <div className={`flex flex-col items-center gap-5 sm:gap-4 ${align === 'start' ? 'lg:items-start' : ''}`}>
         <div className="flex flex-nowrap items-center justify-center gap-2 sm:gap-5 rounded-[32px] border border-white/20 bg-black/25 py-2 px-3 sm:py-3 sm:px-7 text-xs sm:text-sm font-medium text-white/75 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_-1px_0_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.5),0_0_30px_rgba(129,140,248,0.25),0_0_60px_rgba(139,92,246,0.15)] transition-shadow duration-300 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_-1px_0_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.5),0_0_40px_rgba(129,140,248,0.35),0_0_80px_rgba(139,92,246,0.2)]">
-          <span className="flex items-center gap-2 sm:gap-2.5">
+          {showViewCount && <><span className="flex items-center gap-2 sm:gap-2.5">
             <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
               <Eye className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.7)]" />
             </span>
             {(post.views || 0).toLocaleString()} views
           </span>
-          <span className="h-5 w-px bg-white/15" />
+          <span className="h-5 w-px bg-white/15" /></>}
           <button
             onClick={() => toggleLike(post.id, initialPost)}
             className="flex items-center gap-2 sm:gap-2.5 transition-all duration-300 hover:text-white hover:scale-105 active:scale-95"
@@ -525,7 +527,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
               <Heart className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${post.likedByUser ? 'text-red-500 fill-red-500 animate-heart-pop drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]' : 'text-violet-400 drop-shadow-[0_0_8px_rgba(167,139,250,0.7)]'}`} />
             </span>
-            {(post.likes || 0).toLocaleString()} likes
+            {showLikeCount ? `${(post.likes || 0).toLocaleString()} likes` : (post.likedByUser ? 'liked' : 'like')}
           </button>
           <span className="h-5 w-px bg-white/15" />
           <button
