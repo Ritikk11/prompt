@@ -7,6 +7,7 @@ import { getGridClasses } from '@/lib/utils';
 import AdSlot from '@/components/AdSlot';
 import { getSectionPath } from '@/lib/sections';
 import FilterChipRail from '@/components/FilterChipRail';
+import MasonryGrid from './MasonryGrid';
 
 import PostCard from './PostCard';
 
@@ -74,16 +75,11 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
         />
       ) : isLatest ? (
         /* Latest — one batch of the masonry grid */
-        <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-          {visibleLatest.map((post, i) => (
-            <React.Fragment key={post.id}>
-              <div className="mb-1 inline-block w-full break-inside-avoid">
-                <PostCard post={post} index={i} cardStyleOverride={section.cardStyle} />
-              </div>
-              <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
-            </React.Fragment>
-          ))}
-        </div>
+        <MasonryGrid
+          posts={visibleLatest}
+          settings={settings}
+          cardStyleOverride={section.cardStyle}
+        />
       ) : (
         /* Other sections — Horizontal scroll */
         <div className="relative group/section">

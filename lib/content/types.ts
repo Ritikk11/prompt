@@ -17,6 +17,8 @@ export type ArticleIcon =
 export interface Article {
   slug: string;
   title: string;
+  seoTitle?: string;
+  seoDescription?: string;
   /** Meta description, 140-160 chars. */
   description: string;
   category: ArticleCategory;

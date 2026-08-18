@@ -7,6 +7,7 @@ import type { Post, Section, SiteSettings } from '@/lib/types';
 import AdSlot from '@/components/AdSlot';
 import PostCard from '@/components/PostCard';
 import FilterChipRail from '@/components/FilterChipRail';
+import MasonryGrid from '@/components/MasonryGrid';
 import DiscoveryPageHero from '@/components/DiscoveryPageHero';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import ScrollReveal from '@/components/ScrollReveal';
@@ -164,16 +165,11 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
         </ScrollReveal>
       ) : (
         <ScrollReveal>
-          <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-            {filtered.map((post, i) => (
-              <React.Fragment key={post.id}>
-                <div className="mb-1 inline-block w-full break-inside-avoid">
-                  <PostCard post={post} index={i} cardStyleOverride={section.cardStyle} />
-                </div>
-                <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
-              </React.Fragment>
-            ))}
-          </div>
+          <MasonryGrid
+            posts={filtered}
+            settings={settings}
+            cardStyleOverride={section.cardStyle}
+          />
         </ScrollReveal>
       )}
     </div>

@@ -3,6 +3,7 @@ import type { ArticleIcon } from './content/types';
 export interface ImagePrompt {
   id: string;
   url: string;
+  urls?: string[];
   prompt: string;
   aiTool: string;
   aiTools?: string[];

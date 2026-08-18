@@ -4,6 +4,7 @@ import { getGridClasses } from '@/lib/utils';
 import type { Post, SiteSettings } from '@/lib/types';
 import AdSlot from '@/components/AdSlot';
 import PostCard from '@/components/PostCard';
+import MasonryGrid from '@/components/MasonryGrid';
 import FilterChipRail from '@/components/FilterChipRail';
 import { getFilterTagsFromPosts } from '@/lib/filter-tags';
 import { getAllTools } from '@/lib/constants';
@@ -132,16 +133,10 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
       {!showCustomRail && (
         <>
           <ScrollReveal>
-          <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-            {visiblePosts.map((post, i) => (
-              <React.Fragment key={post.id}>
-                <div className="mb-1 inline-block w-full break-inside-avoid">
-                  <PostCard post={post} index={i} />
-                </div>
-                <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
-              </React.Fragment>
-            ))}
-          </div>
+            <MasonryGrid
+              posts={visiblePosts}
+              settings={settings}
+            />
           </ScrollReveal>
           
           {visiblePosts.length < filtered.length && (

@@ -9,6 +9,7 @@ import { getGridClasses } from '@/lib/utils';
 import type { Post, SiteSettings } from '@/lib/types';
 
 import PostCard from '@/components/PostCard';
+import MasonryGrid from '@/components/MasonryGrid';
 import ScrollReveal from '@/components/ScrollReveal';
 
 function SearchContent({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
@@ -45,13 +46,10 @@ function SearchContent({ posts, settings }: { posts: Post[], settings: SiteSetti
 
       {results.length > 0 ? (
         <ScrollReveal>
-          <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-            {results.map((post, i) => (
-               <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
-                <PostCard post={post} index={i} />
-              </div>
-            ))}
-          </div>
+          <MasonryGrid
+            posts={results}
+            settings={settings}
+          />
         </ScrollReveal>
       ) : (
         <div className="text-center py-20">
@@ -59,7 +57,7 @@ function SearchContent({ posts, settings }: { posts: Post[], settings: SiteSetti
           <p className="text-xl font-semibold text-surface-400">No results found</p>
           <p className="text-sm text-surface-400 mt-2 mb-6">Try different keywords or browse collections</p>
           <Link href="/" className="px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors">
-            Browse Home
+            Back to Home
           </Link>
         </div>
       )}
@@ -69,7 +67,16 @@ function SearchContent({ posts, settings }: { posts: Post[], settings: SiteSetti
 
 export default function SearchClient({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
   return (
-    <Suspense fallback={<div className="p-8 text-center">Loading search results...</div>}>
+    <Suspense fallback={
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="h-8 bg-surface-200 dark:bg-surface-800 rounded w-1/4 mb-8 animate-pulse" />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[...Array(8)].map((_, i) => (
+            <SkeletonPostCard key={i} />
+          ))}
+        </div>
+      </div>
+    }>
       <SearchContent posts={posts} settings={settings} />
     </Suspense>
   );

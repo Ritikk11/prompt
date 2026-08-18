@@ -9,6 +9,7 @@ import AdSlot from '@/components/AdSlot';
 import PostCard from '@/components/PostCard';
 import FilterChipRail from '@/components/FilterChipRail';
 import DiscoveryPageHero from '@/components/DiscoveryPageHero';
+import MasonryGrid from '@/components/MasonryGrid';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
 import ScrollReveal from '@/components/ScrollReveal';
 
@@ -132,18 +133,14 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
             sticky
           />
         </ScrollReveal>
-      ) : <ScrollReveal>
-      <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-        {filtered.map((post, i) => (
-          <React.Fragment key={post.id}>
-            <div className="mb-1 inline-block w-full break-inside-avoid">
-              <PostCard post={post} index={i} />
-            </div>
-            <AdSlot placement="inFeed" inFeedIndex={i} className="mb-1 inline-block w-full break-inside-avoid bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
-          </React.Fragment>
-        ))}
-      </div>
-      </ScrollReveal>}
+      ) : (
+        <ScrollReveal>
+          <MasonryGrid
+            posts={filtered}
+            settings={settings}
+          />
+        </ScrollReveal>
+      )}
 
       {filtered.length === 0 && (
         <div className="text-center py-20">

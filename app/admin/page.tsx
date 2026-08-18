@@ -1794,14 +1794,90 @@ function AdminInner() {
 
   const handleImageUpload = async (idx: number, file: File) => {
     try {
-      updateImage(idx, 'url', 'Uploading...');
-      const url = await uploadImageFile(file, 'prompt', title);
-      updateImage(idx, 'url', url);
+      const currentUrls = (images[idx].urls && images[idx].urls!.length > 0 ? images[idx].urls! : [images[idx].url]).filter(Boolean);
+      updateImage(idx, {
+        urls: [...currentUrls, 'Uploading...'],
+        url: currentUrls[0] || 'Uploading...'
+      });
+      const url = await uploadImageFile(file, 'prompt', title || slug);
+      const updated = [...currentUrls, url];
+      updateImage(idx, {
+        urls: updated,
+        url: updated[0] || ''
+      });
     } catch (err) {
       console.error(err);
       showToast('Failed to process image', 'error');
-      updateImage(idx, 'url', '');
+      const currentUrls = (images[idx].urls && images[idx].urls!.length > 0 ? images[idx].urls! : [images[idx].url]).filter(u => u !== 'Uploading...');
+      updateImage(idx, {
+        urls: currentUrls,
+        url: currentUrls[0] || ''
+      });
     }
+  };
+
+  const handlePromptImagesUpload = async (idx: number, files: File[]) => {
+    if (files.length === 0) return;
+    try {
+      const currentUrls = (images[idx].urls && images[idx].urls!.length > 0 ? images[idx].urls! : [images[idx].url]).filter(Boolean);
+      const uploadingLabels = files.map(() => 'Uploading...');
+      updateImage(idx, {
+        urls: [...currentUrls, ...uploadingLabels],
+        url: currentUrls[0] || 'Uploading...'
+      });
+
+      const newUrls = await Promise.all(
+        files.map(file => uploadImageFile(file, 'prompt', title || slug))
+      );
+
+      const finalUrls = [...currentUrls, ...newUrls];
+      updateImage(idx, {
+        urls: finalUrls,
+        url: finalUrls[0] || ''
+      });
+      showToast(`Uploaded ${newUrls.length} image${newUrls.length === 1 ? '' : 's'}`);
+    } catch (err: any) {
+      console.error(err);
+      showToast('Failed to upload some prompt images', 'error');
+      const currentUrls = (images[idx].urls && images[idx].urls!.length > 0 ? images[idx].urls! : [images[idx].url]).filter(u => u !== 'Uploading...');
+      updateImage(idx, {
+        urls: currentUrls,
+        url: currentUrls[0] || ''
+      });
+    }
+  };
+
+  const addPromptImageUrl = (idx: number, url: string) => {
+    if (!url.trim()) return;
+    const currentUrls = (images[idx].urls && images[idx].urls!.length > 0 ? images[idx].urls! : [images[idx].url]).filter(Boolean);
+    if (!currentUrls.includes(url.trim())) {
+      const updated = [...currentUrls, url.trim()];
+      updateImage(idx, {
+        urls: updated,
+        url: updated[0] || ''
+      });
+    }
+  };
+
+  const removePromptImageUrl = (promptIdx: number, imgIdx: number) => {
+    const currentUrls = (images[promptIdx].urls && images[promptIdx].urls!.length > 0 ? images[promptIdx].urls! : [images[promptIdx].url]).filter(Boolean);
+    const updated = currentUrls.filter((_, i) => i !== imgIdx);
+    updateImage(promptIdx, {
+      urls: updated,
+      url: updated[0] || ''
+    });
+  };
+
+  const setPromptCoverImage = (promptIdx: number, imgIdx: number) => {
+    const currentUrls = (images[promptIdx].urls && images[promptIdx].urls!.length > 0 ? images[promptIdx].urls! : [images[promptIdx].url]).filter(Boolean);
+    if (imgIdx === 0 || !currentUrls[imgIdx]) return;
+    const target = currentUrls[imgIdx];
+    const remaining = currentUrls.filter((_, i) => i !== imgIdx);
+    const reordered = [target, ...remaining];
+    updateImage(promptIdx, {
+      urls: reordered,
+      url: target
+    });
   };
 
   const handleArticleThumbnailUpload = async (slug: string, file: File) => {
@@ -4079,31 +4155,38 @@ function AdminInner() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                           <div>
-                            <label className="block text-xs text-surface-400 mb-1">Image URL or Upload</label>
+                            <label className="block text-xs text-surface-400 mb-1">Add Images (URL or Multi-Upload)</label>
                             <div className="flex gap-2">
                               <input
                                 value={img.url}
                                 onChange={e => updateImage(idx, 'url', e.target.value)}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    addPromptImageUrl(idx, img.url);
+                                  }
+                                }}
                                 className="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
-                                placeholder="https://..."
+                                placeholder="https://... (Press Enter to add)"
                               />
                               <button 
                                 type="button" 
-                                onClick={() => setMediaLibraryCallback(() => (url: string) => updateImage(idx, 'url', url))}
+                                onClick={() => setMediaLibraryCallback(() => (url: string) => addPromptImageUrl(idx, url))}
                                 className="p-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 cursor-pointer hover:border-primary-500 transition-colors shrink-0"
                                 title="Choose from Library"
                               >
                                 <ImageIcon className="w-3.5 h-3.5 text-surface-400" />
                               </button>
-                              <label className="p-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 cursor-pointer hover:border-primary-500 transition-colors">
+                              <label className="p-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 cursor-pointer hover:border-primary-500 transition-colors shrink-0 flex items-center gap-1">
                                 <Upload className="w-3.5 h-3.5 text-surface-400" />
                                 <input
                                   type="file"
                                   accept="image/*"
+                                  multiple
                                   className="hidden"
                                   onChange={e => {
-                                    const file = e.target.files?.[0];
-                                    if (file) handleImageUpload(idx, file);
+                                    const files = Array.from(e.target.files || []);
+                                    if (files.length > 0) handlePromptImagesUpload(idx, files);
                                   }}
                                 />
                               </label>
@@ -4176,19 +4259,61 @@ function AdminInner() {
                           />
                         </div>
 
-                        {img.url && (
-                          <div className="relative mt-3 h-32 rounded-lg overflow-hidden bg-surface-200 dark:bg-surface-700 flex items-center justify-center p-2 group">
-                            <Image src={img.url} alt="" fill className="object-contain p-2" sizes="(max-width: 768px) 100vw, 33vw" referrerPolicy="no-referrer" />
-                            <button
-                              type="button"
-                              onClick={() => updateImage(idx, 'url', '')}
-                              className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 md:opacity-0 md:group-hover:opacity-100 transition-all"
-                              title="Remove Image"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        )}
+                        {/* Multi-Image Thumbnails Gallery */}
+                        {(() => {
+                          const promptUrls = (img.urls && img.urls.length > 0 ? img.urls : [img.url]).filter(Boolean);
+                          if (promptUrls.length === 0) return null;
+                          return (
+                            <div className="mt-3">
+                              <label className="block text-[11px] font-semibold text-surface-400 mb-1.5 uppercase tracking-wider">
+                                Attached Images ({promptUrls.length}) — First is Cover
+                              </label>
+                              <div className="flex flex-wrap gap-2.5">
+                                {promptUrls.map((u, imgIndex) => (
+                                  <div 
+                                    key={imgIndex} 
+                                    className={`relative w-24 h-24 rounded-xl overflow-hidden border-2 bg-surface-100 dark:bg-surface-800 group/thumb shadow-sm transition-all ${
+                                      imgIndex === 0 ? 'border-primary-500 ring-2 ring-primary-500/20' : 'border-surface-200 dark:border-surface-700'
+                                    }`}
+                                  >
+                                    {u === 'Uploading...' ? (
+                                      <div className="w-full h-full flex items-center justify-center text-[10px] text-surface-400 font-medium">Uploading...</div>
+                                    ) : (
+                                      <>
+                                        <Image src={u} alt="" fill className="object-cover" sizes="100px" referrerPolicy="no-referrer" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                          {imgIndex !== 0 && (
+                                            <button
+                                              type="button"
+                                              onClick={() => setPromptCoverImage(idx, imgIndex)}
+                                              className="p-1 rounded-md bg-primary-600 text-white hover:bg-primary-700 text-[9px] font-bold shadow"
+                                              title="Make Primary Cover"
+                                            >
+                                              ★ Cover
+                                            </button>
+                                          )}
+                                          <button
+                                            type="button"
+                                            onClick={() => removePromptImageUrl(idx, imgIndex)}
+                                            className="p-1 rounded-md bg-red-600 text-white hover:bg-red-700 shadow"
+                                            title="Delete image"
+                                          >
+                                            <X className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                        {imgIndex === 0 && (
+                                          <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-primary-600 text-white text-[8px] font-bold uppercase tracking-wider shadow">
+                                            Cover
+                                          </div>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     ))}
                   </div>

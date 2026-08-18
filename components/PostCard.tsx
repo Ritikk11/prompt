@@ -83,7 +83,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
     return (
       <Link
         href={`/${post.slug || post.id}`}
-        className={`group block bg-white p-3 dark:bg-surface-900 rounded-[28px] border border-surface-200 dark:border-surface-800 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary-500/50 break-inside-avoid mb-4 ${aspect ? aspect : ''}`}
+        className={`group block bg-white p-3 dark:bg-surface-900 rounded-[24px] border border-surface-200 dark:border-surface-800 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary-500/50 break-inside-avoid mb-4 ${aspect ? aspect : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
         <div className="px-1 pb-3 flex items-center gap-3">
@@ -95,7 +95,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
             <div className="h-3 w-16 bg-surface-100 dark:bg-surface-800 rounded" />
           </div>
         </div>
-        <div className="relative aspect-square overflow-hidden rounded-[22px]">
+        <div className="relative aspect-square overflow-hidden rounded-[12px]">
            <LoadingImage
             src={imageUrl}
             alt={post.title}
@@ -251,10 +251,10 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
     return (
       <Link
         href={`/${post.slug || post.id}`}
-        className={`group block relative rounded-[15px] overflow-hidden bg-surface-50 p-2 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 transition-all duration-300 hover:border-primary-500 break-inside-avoid hover:shadow-lg ${aspect ? `${aspect} h-full` : ''}`}
+        className={`group block relative rounded-[20px] overflow-hidden bg-surface-50 p-2 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 transition-all duration-300 hover:border-primary-500 break-inside-avoid hover:shadow-lg ${aspect ? `${aspect} h-full` : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
-        <div className={`relative overflow-hidden rounded-[15px] bg-white dark:bg-surface-950 ${aspect ? 'h-full' : ''}`}>
+        <div className={`relative overflow-hidden rounded-[12px] bg-white dark:bg-surface-950 ${aspect ? 'h-full' : ''}`}>
           {aspect ? (
             <LoadingImage
               src={imageUrl}

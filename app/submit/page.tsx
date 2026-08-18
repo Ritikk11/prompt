@@ -71,6 +71,17 @@ export default function SubmitPage() {
     );
   }
 
+  const generateId = () => Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+  const hasIncompleteProfile = Boolean(user && (!user.user_metadata?.full_name || !user.user_metadata?.username));
+
+  const updateImage = (idx: number, patch: Partial<ImagePrompt>) => {
+    setImages(prev => prev.map((item, i) => i === idx ? { ...item, ...patch } : item));
+  };
+
+  const removeImage = (idx: number) => {
+    setImages(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const handleImageUpload = async (file: File) => {
     try {
       const optimizedFile = await optimizeImageFile(file, 'prompt');
@@ -85,6 +96,53 @@ export default function SubmitPage() {
       setImages(prev => [...prev, { id: generateId(), url, prompt: '', aiTool: defaultTool, model: getImageModelForTools([defaultTool]) }]);
     } catch (e: any) {
       showToast(e.message || "Error uploading image", 'error');
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    for (const file of files) {
+      await handleImageUpload(file);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (images.length === 0) {
+      showToast('Please upload at least one image', 'error');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const isAutoApprove = settings.features?.userSubmissionsAutoApprove;
+      const newPost: any = {
+        id: generateId(),
+        slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || generateId(),
+        title,
+        description,
+        thumbnailUrl: images[0]?.url || '',
+        images,
+        tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+        authorId: user?.id,
+        authorName: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Anonymous',
+        authorUsername: user?.user_metadata?.username || user?.email?.split('@')[0] || 'anonymous',
+        authorAvatar: user?.user_metadata?.avatar_url || '',
+        featured: false,
+        views: 0,
+        likes: 0,
+        createdAt: new Date().toISOString(),
+        status: isAutoApprove ? 'published' : 'pending',
+        visibility: 'public',
+      };
+
+      await addPost(newPost);
+      showToast(isAutoApprove ? 'Prompt submitted and published!' : 'Prompt submitted for review!');
+      navigate.push('/profile');
+    } catch (err: any) {
+      console.error(err);
+      showToast(err?.message || 'Failed to submit prompt', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

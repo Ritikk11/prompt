@@ -563,3 +563,64 @@ textarea {
 .dark .image-shimmer::before {
   background: linear-gradient(110deg, transparent 8%, rgba(51, 65, 85, 0.95) 45%, transparent 72%);
 }
+
+/* Snappy, Feather-Light Lightbox Modal Animations */
+@keyframes lightboxFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes lightboxFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes lightboxZoomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes lightboxZoomOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.lightbox-backdrop-in {
+  animation: lightboxFadeIn 0.15s ease-out forwards;
+  will-change: opacity;
+}
+
+.lightbox-backdrop-out {
+  animation: lightboxFadeOut 0.13s ease-in forwards;
+  will-change: opacity;
+}
+
+.lightbox-content-in {
+  animation: lightboxZoomIn 0.16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.lightbox-content-out {
+  animation: lightboxZoomOut 0.13s ease-in forwards;
+  will-change: transform, opacity;
+}

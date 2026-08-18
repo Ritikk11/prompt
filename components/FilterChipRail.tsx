@@ -7,6 +7,7 @@ import type { FilterRailItem, Post } from '@/lib/types';
 import { getAllTools, getToolInfo } from '@/lib/constants';
 import PostCard from '@/components/PostCard';
 import AdSlot from '@/components/AdSlot';
+import MasonryGrid from '@/components/MasonryGrid';
 import { getGridClasses } from '@/lib/utils';
 
 type Chip = {
@@ -317,14 +318,11 @@ export default function FilterChipRail({
 
       {renderGrid && (
         <>
-          <div data-reveal-stagger className={getGridClasses(settings?.features?.mobileColumns, settings?.features?.desktopColumns)}>
-            {filteredPosts.map((post, i) => (
-              <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
-                <PostCard post={post} index={i} cardStyleOverride={cardStyleOverride} />
-                <AdSlot placement="inFeed" inFeedIndex={i} className="mt-1 bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
-              </div>
-            ))}
-          </div>
+          <MasonryGrid
+            posts={filteredPosts}
+            settings={settings}
+            cardStyleOverride={cardStyleOverride}
+          />
           {filteredPosts.length === 0 && (
             <div className="py-14 text-center">
               <p className="text-sm font-semibold text-surface-400">No prompts found for this selection.</p>

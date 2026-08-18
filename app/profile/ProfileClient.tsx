@@ -14,6 +14,7 @@ import { getPostPath } from '@/lib/sections';
 import { uploadImageFileToProvider } from '@/lib/client-upload';
 
 import PostCard from '@/components/PostCard';
+import MasonryGrid from '@/components/MasonryGrid';
 
 type ProfileComment = {
   id: string;
@@ -380,13 +381,11 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                     </Link>
                   </div>
                 ) : (
-                  <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-                    {savedPosts.map((post, i) => (
-                      <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
-                        <PostCard post={post} index={i} />
-                      </div>
-                    ))}
-                  </div>
+                  <MasonryGrid
+                    posts={savedPosts}
+                    settings={settings}
+                    renderAdSlot={false}
+                  />
                 )}
               </div>
 
@@ -407,13 +406,11 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                     </Link>
                   </div>
                 ) : (
-                  <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-                    {likedPosts.map((post, i) => (
-                      <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid">
-                        <PostCard post={post} index={i} />
-                      </div>
-                    ))}
-                  </div>
+                  <MasonryGrid
+                    posts={likedPosts}
+                    settings={settings}
+                    renderAdSlot={false}
+                  />
                 )}
               </div>
             </>
@@ -436,19 +433,11 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                   </Link>
                 </div>
               ) : (
-                <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-                  {mySubmissions.map((post, i) => (
-                    <div key={post.id} className="mb-1 inline-block w-full break-inside-avoid relative">
-                       {/* Overlay indicator for pending/draft */}
-                       {(post.status === 'pending' || post.status === 'draft') && (
-                          <div className="absolute top-2 right-2 z-10 px-2 py-1 bg-yellow-500 text-white text-[10px] font-bold uppercase tracking-wider rounded">
-                            {post.status}
-                          </div>
-                       )}
-                       <PostCard post={post} index={i} />
-                    </div>
-                  ))}
-                </div>
+                <MasonryGrid
+                  posts={mySubmissions}
+                  settings={settings}
+                  renderAdSlot={false}
+                />
               )}
             </div>
           )}

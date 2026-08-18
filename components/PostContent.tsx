@@ -1,11 +1,11 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
 import Image from 'next/image';
-import { Copy, Check, Eye, Heart, Tag, ChevronLeft, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Compass, Lightbulb, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle, Layers, ClipboardCheck } from 'lucide-react';
+import { Copy, Check, Eye, Heart, Tag, ChevronLeft, ChevronRight, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Compass, Lightbulb, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle, Layers, ClipboardCheck } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
 import { getDefaultImageModel, getToolInfo, getAllTools, getToolForImageModel } from '@/lib/constants';
@@ -13,7 +13,7 @@ import { isUserOwnedPost, EDITORIAL_TEAM_NAME } from '@/lib/authors';
 import TemplatePrompt from '@/components/TemplatePrompt';
 import { getSupabaseClient } from '@/lib/supabase-lazy';
 import type { User } from '@supabase/supabase-js';
-import type { Post, ShareTarget } from '@/lib/types';
+import type { Post, ImagePrompt, ShareTarget } from '@/lib/types';
 
 import CopyButton from '@/components/CopyButton';
 import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
@@ -21,10 +21,201 @@ import dynamic from 'next/dynamic';
 
 const MarkdownRenderer = dynamic(() => import('@/components/MarkdownRenderer'), { ssr: true });
 const PostCard = dynamic(() => import('@/components/PostCard'), { ssr: true });
+import MasonryGrid from '@/components/MasonryGrid';
 import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
 import AdSlot from '@/components/AdSlot';
 import ScrollReveal from '@/components/ScrollReveal';
 import ToolBadge from '@/components/ToolBadge';
+
+function PromptImageGallery({
+  img,
+  index,
+  postTitle,
+  showSkeleton,
+  settings,
+  onOpenLightbox,
+  onDownload,
+}: {
+  img: ImagePrompt;
+  index: number;
+  postTitle: string;
+  showSkeleton: boolean;
+  settings: any;
+  onOpenLightbox: (images: string[], initialIndex: number, promptIndex: number, tools: string[]) => void;
+  onDownload: (url: string, filename: string) => void;
+}) {
+  const images = useMemo(() => {
+    if (img.urls && img.urls.length > 0) return img.urls.filter(Boolean);
+    return [img.url].filter(Boolean);
+  }, [img.urls, img.url]);
+
+  const [activeIdx, setActiveIdx] = useState(0);
+  const safeActiveIdx = activeIdx < images.length ? activeIdx : 0;
+  const activeUrl = images[safeActiveIdx] || img.url || '';
+  const tools = img.aiTools || [img.aiTool].filter(Boolean);
+
+  const touchStartXRef = useRef<number | null>(null);
+  const touchEndXRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartXRef.current === null || touchEndXRef.current === null) return;
+    const diff = touchStartXRef.current - touchEndXRef.current;
+    const threshold = 40;
+    if (diff > threshold) {
+      // Swiped Left -> Next
+      setActiveIdx((prev) => (prev + 1) % images.length);
+    } else if (diff < -threshold) {
+      // Swiped Right -> Prev
+      setActiveIdx((prev) => (prev - 1 + images.length) % images.length);
+    }
+    touchStartXRef.current = null;
+    touchEndXRef.current = null;
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveIdx((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveIdx((prev) => (prev + 1) % images.length);
+  };
+
+  return (
+    <div className="relative self-start p-3 sm:p-4">
+      <div 
+        className="relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-2 dark:border-surface-700/70 dark:bg-surface-800/60 group/img select-none"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div
+          className="relative flex w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-900"
+          onClick={() => onOpenLightbox(images, safeActiveIdx, index, tools)}
+        >
+          <LoadingImg
+            src={getPromptImageUrl(activeUrl || 'https://picsum.photos/seed/placeholder/800/600', { width: 1100, quality: 78 })}
+            alt={`${postTitle}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}`}
+            showSkeleton={showSkeleton}
+            priority={index === 0 && safeActiveIdx === 0}
+            wrapperClassName="w-full"
+            className="block h-auto w-full rounded-xl transition-all duration-300 group-hover/img:scale-[1.01]"
+            referrerPolicy="no-referrer"
+          />
+        </div>
+
+        {/* Top-Left Tool Badges */}
+        <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-2 pointer-events-none">
+          {tools.map((tool) => {
+            const info = getToolInfo(tool, settings?.toolDetails);
+            return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="sm" />;
+          })}
+        </div>
+
+        {/* Top-Right: Prompt Number & Image Counter */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 pointer-events-none">
+          {images.length > 1 && (
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-primary-600/90 text-white backdrop-blur-md border border-white/20 uppercase tracking-wider shadow-lg">
+              {safeActiveIdx + 1} / {images.length}
+            </span>
+          )}
+          <span className="px-2.5 py-1.5 rounded-full text-[9px] font-bold bg-black/50 text-white backdrop-blur-md border border-white/10 uppercase tracking-widest shadow-xl">
+            PROMPT #{index + 1}
+          </span>
+        </div>
+
+        {/* Desktop Side Chevron Arrows on Hover */}
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={prevImage}
+              aria-label="Previous variation"
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md opacity-0 group-hover/img:opacity-100 transition-all hover:scale-110 shadow-xl hidden sm:flex items-center justify-center"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={nextImage}
+              aria-label="Next variation"
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md opacity-0 group-hover/img:opacity-100 transition-all hover:scale-110 shadow-xl hidden sm:flex items-center justify-center"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </>
+        )}
+
+        {/* In-Image Floating Bottom Bar (Thumbnails & Action Buttons) */}
+        <div className="absolute inset-x-2 bottom-2 z-20 pointer-events-none flex items-end justify-between gap-2 p-2 rounded-b-xl bg-gradient-to-t from-black/45 via-black/10 to-transparent pt-8">
+          {/* Floating Mini-Thumbnails (Small size, optimized) */}
+          {images.length > 1 ? (
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pointer-events-auto py-1 max-w-[calc(100%-96px)]">
+              {images.map((u, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveIdx(i);
+                  }}
+                  className={`relative flex-none w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden transition-all duration-200 ${
+                    i === safeActiveIdx
+                      ? 'ring-2 ring-primary-500 scale-105 opacity-100 shadow-md'
+                      : 'opacity-60 hover:opacity-100 scale-95 hover:scale-100 border border-white/30'
+                  }`}
+                  title={`Variation ${i + 1}`}
+                >
+                  <img
+                    src={getThumbnailImageUrl(u, { width: 90, quality: 65 })}
+                    alt={`Thumb ${i + 1}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div />
+          )}
+
+          {/* Action buttons (Download & Fullscreen) with True Frosted Glassmorphism */}
+          <div className="flex items-center gap-2 pointer-events-auto ml-auto">
+            <button
+              title="Download image"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (activeUrl) onDownload(activeUrl, `prompt_${postTitle}_${index + 1}_v${safeActiveIdx + 1}.png`);
+              }}
+              className="p-2.5 sm:p-3 rounded-full bg-white/20 hover:bg-white/35 active:bg-white/40 text-white backdrop-blur-xl border border-white/35 hover:border-white/60 hover:scale-110 active:scale-95 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+            <button
+              title="View fullscreen"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenLightbox(images, safeActiveIdx, index, tools);
+              }}
+              className="p-2.5 sm:p-3 rounded-full bg-white/20 hover:bg-white/35 active:bg-white/40 text-white backdrop-blur-xl border border-white/35 hover:border-white/60 hover:scale-110 active:scale-95 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -95,7 +286,47 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const showLikeCount = settings.features?.showLikeCount ?? true;
   const showViewCount = settings.features?.showViewCount ?? true;
 
-  const [lightboxImage, setLightboxImage] = useState<{ url: string; index: number; tools: string[] } | null>(null);
+  const [lightboxState, setLightboxState] = useState<{
+    images: string[];
+    activeImageIndex: number;
+    promptIndex: number;
+    tools: string[];
+  } | null>(null);
+  const [isLightboxClosing, setIsLightboxClosing] = useState(false);
+
+  const closeLightbox = useCallback(() => {
+    setIsLightboxClosing(true);
+    setTimeout(() => {
+      setLightboxState(null);
+      setIsLightboxClosing(false);
+    }, 130);
+  }, []);
+
+  const openLightbox = useCallback((images: string[], initialIndex: number, promptIndex: number, tools: string[]) => {
+    setIsLightboxClosing(false);
+    setLightboxState({ images, activeImageIndex: initialIndex, promptIndex, tools });
+  }, []);
+
+  useEffect(() => {
+    if (!lightboxState) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft' && lightboxState.images.length > 1) {
+        setLightboxState(prev => prev ? ({
+          ...prev,
+          activeImageIndex: (prev.activeImageIndex - 1 + prev.images.length) % prev.images.length
+        }) : null);
+      }
+      if (e.key === 'ArrowRight' && lightboxState.images.length > 1) {
+        setLightboxState(prev => prev ? ({
+          ...prev,
+          activeImageIndex: (prev.activeImageIndex + 1) % prev.images.length
+        }) : null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxState, closeLightbox]);
   const [user, setUser] = useState<User | null>(null);
   const [expandedPrompts, setExpandedPrompts] = useState<Record<string, boolean>>({});
   const [shareFeedback, setShareFeedback] = useState('');
@@ -517,7 +748,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
               <Eye className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.7)]" />
             </span>
-            {(post.views || 0).toLocaleString()} views
+            {(post.views || 0).toLocaleString()} {(post.views === 1) ? 'view' : 'views'}
           </span>
           <span className="h-5 w-px bg-white/15" /></>}
           <button
@@ -527,7 +758,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
               <Heart className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${post.likedByUser ? 'text-red-500 fill-red-500 animate-heart-pop drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]' : 'text-violet-400 drop-shadow-[0_0_8px_rgba(167,139,250,0.7)]'}`} />
             </span>
-            {showLikeCount ? `${(post.likes || 0).toLocaleString()} likes` : (post.likedByUser ? 'liked' : 'like')}
+            {showLikeCount ? `${(post.likes || 0).toLocaleString()} ${post.likes === 1 ? 'like' : 'likes'}` : (post.likedByUser ? 'Liked' : 'Like')}
           </button>
           <span className="h-5 w-px bg-white/15" />
           <button
@@ -538,7 +769,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
               <Bookmark className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${post.bookmarkedByUser ? 'text-indigo-300 fill-indigo-300' : 'text-indigo-400'} drop-shadow-[0_0_8px_rgba(129,140,248,0.7)]`} />
             </span>
-            {post.bookmarkedByUser ? 'saved' : 'save'}
+            {post.bookmarkedByUser ? 'Saved' : 'Save'}
           </button>
         </div>
         {renderAuthorByline()}
@@ -921,7 +1152,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
              {post.referenceImages.map((url, idx) => (
                <div key={idx} className="relative group rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 flex flex-col w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.67rem)] lg:w-[calc(25%-0.75rem)]">
                  <div className="relative w-full h-auto flex items-center justify-center p-3 sm:p-4 bg-surface-50 dark:bg-surface-800">
-                    <div className="w-full relative rounded-xl overflow-hidden cursor-zoom-in" onClick={() => setLightboxImage({ url, index: idx, tools: [] })}>
+                    <div className="w-full relative rounded-xl overflow-hidden cursor-zoom-in" onClick={() => setLightboxState({ images: post.referenceImages || [], activeImageIndex: idx, promptIndex: -1, tools: [] })}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={displayReferenceImageUrl(url)}
@@ -969,66 +1200,18 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             >
               {/* Image + Prompt layout */}
               <div className="grid grid-cols-1 items-start gap-0 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:gap-5">
-                {/* Image — no cropping, natural display */}
-                <div className="relative self-start p-3 sm:p-4">
-                  <div className="relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-2 dark:border-surface-700/70 dark:bg-surface-800/60 group/img">
-                    <div className="relative flex w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-900" onClick={() => setLightboxImage({ url: img.url || '', index, tools: img.aiTools || [img.aiTool].filter(Boolean) })}>
-                      <LoadingImg
-                        src={displayPromptImageUrl(img.url, 1100)}
-                        srcSet={buildGallerySrcSet(img.url)}
-                        sizes={GALLERY_SIZES}
-                        alt={`${post.title}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}`}
-                        showSkeleton={showSkeleton}
-                        // First gallery image is the mobile LCP element — must
-                        // load eagerly and paint before hydration.
-                        priority={index === 0}
-                        wrapperClassName="w-full"
-                        className="block h-auto w-full rounded-xl transition-transform duration-500 group-hover/img:scale-[1.02]"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-2 pointer-events-none">
-                      {(img.aiTools || [img.aiTool].filter(Boolean)).map((tool) => {
-                        const info = getToolInfo(tool, settings?.toolDetails);
-                        return (
-                          <ToolBadge key={tool} toolName={tool} toolInfo={info} size="sm" />
-                        );
-                      })}
-                    </div>
-                    <div className="absolute top-4 right-4 z-20">
-                      <span className="px-2.5 py-1.5 rounded-full text-[9px] font-bold bg-black/40 text-white backdrop-blur-md border border-white/10 uppercase tracking-widest shadow-xl">
-                        PROMPT #{index + 1}
-                      </span>
-                    </div>
-
-                    {/* Hover Actions */}
-                    <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors pointer-events-none rounded-2xl" />
-                    <div className="absolute bottom-4 right-4 flex items-center gap-2 opacity-0 group-hover/img:opacity-100 transition-opacity translate-y-2 group-hover/img:translate-y-0 duration-300 z-30">
-                      <button
-                        title="Download Image"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (img.url) handleDownload(img.url, `prompt_${post.id}_${index + 1}.png`);
-                        }}
-                        className="p-2.5 rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/70 hover:scale-110 transition-all shadow-xl transform-gpu will-change-transform"
-                        style={{ WebkitBackfaceVisibility: 'hidden' }}
-                      >
-                        <Download className="w-5 h-5" />
-                      </button>
-                      <button
-                        title="View Fullscreen"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setLightboxImage({ url: img.url || '', index, tools: img.aiTools || [img.aiTool].filter(Boolean) });
-                        }}
-                        className="p-2.5 rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/70 hover:scale-110 transition-all shadow-xl transform-gpu will-change-transform"
-                        style={{ WebkitBackfaceVisibility: 'hidden' }}
-                      >
-                        <ZoomIn className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                {/* Image Gallery — multi-image swipeable with mini thumbnails */}
+                <PromptImageGallery
+                  img={img}
+                  index={index}
+                  postTitle={post.title}
+                  showSkeleton={showSkeleton}
+                  settings={settings}
+                  onOpenLightbox={(images, initialIndex, promptIndex, tools) => {
+                    setLightboxState({ images, activeImageIndex: initialIndex, promptIndex, tools });
+                  }}
+                  onDownload={handleDownload}
+                />
 
                 {/* Prompt */}
                 <div className="flex flex-col justify-between p-5 sm:p-6">
@@ -1103,8 +1286,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         renderShareCard(`mb-10 ${sharePosition === 'floating-sidebar' ? 'lg:hidden' : ''}`)
       )}
 
-      {/* Copy All Prompts CTA */}
-      {showCopyCollection && (
+      {/* Copy All Prompts CTA — only for collections with >1 prompt */}
+      {showCopyCollection && (post.images?.length || 0) > 1 && (
         <div className="mb-16 p-8 md:p-12 rounded-[32px] bg-gradient-to-br from-primary-600 via-primary-500 to-purple-600 text-white text-center shadow-2xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-32 translate-x-32 group-hover:scale-150 transition-transform duration-1000" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-900/20 rounded-full blur-3xl translate-y-32 -translate-x-32 group-hover:scale-150 transition-transform duration-1000" />
@@ -1292,12 +1475,12 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             </Link>
           </div>
           <ScrollReveal>
-            <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns) + " mb-16"}>
-              {relatedPosts.map((p, i) => (
-                <div key={p.id} className="mb-1 inline-block w-full break-inside-avoid">
-                  <PostCard post={p} index={i} />
-                </div>
-              ))}
+            <div className="mb-16">
+              <MasonryGrid
+                posts={relatedPosts}
+                settings={settings}
+                renderAdSlot={false}
+              />
             </div>
           </ScrollReveal>
         </div>
@@ -1371,77 +1554,130 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             </Link>
           </div>
           <ScrollReveal>
-            <div data-reveal-stagger className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns) + " mb-16"}>
-              {recommendedPosts.map((p, i) => (
-                <div key={p.id} className="mb-1 inline-block w-full break-inside-avoid">
-                  <PostCard post={p} index={i} />
-                </div>
-              ))}
+            <div className="mb-16">
+              <MasonryGrid
+                posts={recommendedPosts}
+                settings={settings}
+                renderAdSlot={false}
+              />
             </div>
           </ScrollReveal>
         </div>
       )}
 
-      {/* Lightbox Modal */}
-      {lightboxImage && (
+      {/* Enhanced Lightbox Modal with Snappy Animations & Glassmorphism */}
+      {lightboxState && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 md:p-10 transition-opacity"
-          onClick={() => setLightboxImage(null)}
+          className={`fixed inset-0 z-50 flex flex-col items-center justify-between p-3 sm:p-6 cursor-zoom-out bg-black/90 backdrop-blur-[4px] select-none ${isLightboxClosing ? 'lightbox-backdrop-out pointer-events-none' : 'lightbox-backdrop-in'}`}
+          onClick={closeLightbox}
         >
-          <div className="relative max-w-7xl max-h-full w-full h-full flex items-center justify-center">
-            {/* Toolbar */}
-            <div className="absolute top-0 right-0 flex items-center gap-4 z-50 p-4">
-              <button 
-                className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all shadow-xl"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDownload(lightboxImage.url, `prompt_${post.id}_${lightboxImage.index + 1}.png`);
-                }}
-                title="Download Image"
-              >
-                <Download className="w-6 h-6" />
-              </button>
-              <button 
-                className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all shadow-xl"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightboxImage(null);
-                }}
-                title="Close"
-              >
-                <X className="w-6 h-6" />
-              </button>
+          {/* Top Bar (Floating Badges on left, Floating Glass Actions on right) */}
+          <div className="w-full max-w-7xl flex items-center justify-between gap-2 z-50 pointer-events-none shrink-0 px-2 sm:px-4 py-2">
+            <div className="flex items-center gap-1.5 pointer-events-auto min-w-0 overflow-x-auto no-scrollbar py-0.5">
+              {lightboxState.tools.map(tool => {
+                const info = getToolInfo(tool, settings?.toolDetails);
+                return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="sm" className="whitespace-nowrap shrink-0" />;
+              })}
+              <span className="whitespace-nowrap shrink-0 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-bold bg-white/15 text-white backdrop-blur-xl border border-white/25 uppercase tracking-wider shadow-lg">
+                {lightboxState.promptIndex >= 0 ? `Prompt #${lightboxState.promptIndex + 1}` : 'Reference'}
+                {lightboxState.images.length > 1 && (
+                  <span className="text-white/80 font-normal ml-1">
+                    ({lightboxState.activeImageIndex + 1}/{lightboxState.images.length})
+                  </span>
+                )}
+              </span>
             </div>
-            {/* Image */}
-            <div 
-              className="relative w-full h-full max-h-[90vh] flex items-center justify-center cursor-default"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="absolute top-4 left-4 z-20 pointer-events-none flex flex-wrap gap-2">
-                {lightboxImage.tools.map(tool => {
-                  const info = getToolInfo(tool, settings?.toolDetails);
-                  return (
-                    <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />
-                  );
-                })}
-              </div>
-              <div className="absolute top-4 right-4 z-20 hidden md:block pointer-events-none">
-                 <span className="px-3 py-2 rounded-full text-xs font-bold bg-black/40 text-white backdrop-blur-md border border-white/10 uppercase tracking-widest shadow-xl">
-                   PROMPT #{lightboxImage.index + 1}
-                 </span>
-              </div>
-              <div className="w-full h-full max-h-[90vh] overflow-hidden rounded-2xl relative">
-                <LoadingImage
-                  src={lightboxImage.url}
-                  alt={`${post.title} — prompt ${lightboxImage.index + 1}`}
-                  fill
-                  showSkeleton={showSkeleton}
-                  className="object-contain shadow-2xl"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
+
+            <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto shrink-0" onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => {
+                  const currentUrl = lightboxState.images[lightboxState.activeImageIndex];
+                  if (currentUrl) handleDownload(currentUrl, `prompt_${post.id}_${lightboxState.promptIndex + 1}_v${lightboxState.activeImageIndex + 1}.png`);
+                }}
+                className="p-2 sm:p-2.5 rounded-full bg-white/20 hover:bg-white/35 text-white backdrop-blur-xl border border-white/30 hover:border-white/50 hover:scale-110 active:scale-95 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
+                title="Download image"
+              >
+                <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              <button
+                onClick={closeLightbox}
+                className="p-2 sm:p-2.5 rounded-full bg-white/20 hover:bg-white/35 text-white backdrop-blur-xl border border-white/30 hover:border-white/50 hover:scale-110 active:scale-95 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
+                title="Close (Esc)"
+              >
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
             </div>
           </div>
+
+          {/* Center Area — Perfectly fits image with zero cropping & zoom animation */}
+          <div 
+            className={`relative w-full flex-1 min-h-0 flex items-center justify-center p-2 sm:p-4 ${isLightboxClosing ? 'lightbox-content-out' : 'lightbox-content-in'}`}
+            onClick={closeLightbox}
+          >
+            {/* Side Navigation Arrows (if multiple images) */}
+            {lightboxState.images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightboxState(prev => prev ? ({ ...prev, activeImageIndex: (prev.activeImageIndex - 1 + prev.images.length) % prev.images.length }) : null);
+                  }}
+                  className="absolute left-2 sm:left-4 z-50 p-2.5 sm:p-3 rounded-full bg-white/20 hover:bg-white/35 text-white backdrop-blur-xl border border-white/30 hover:border-white/50 hover:scale-110 active:scale-95 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
+                  title="Previous image"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightboxState(prev => prev ? ({ ...prev, activeImageIndex: (prev.activeImageIndex + 1) % prev.images.length }) : null);
+                  }}
+                  className="absolute right-2 sm:right-4 z-50 p-2.5 sm:p-3 rounded-full bg-white/20 hover:bg-white/35 text-white backdrop-blur-xl border border-white/30 hover:border-white/50 hover:scale-110 active:scale-95 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
+                  title="Next image"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </>
+            )}
+
+            {/* Click on image stops propagation so only background clicks close */}
+            <img
+              src={lightboxState.images[lightboxState.activeImageIndex]}
+              alt={`${post.title} full view`}
+              onClick={e => e.stopPropagation()}
+              className="max-h-full max-w-full w-auto h-auto object-contain rounded-2xl shadow-2xl cursor-default"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+
+          {/* Bottom Floating Thumbnails (if multiple images) */}
+          {lightboxState.images.length > 1 ? (
+            <div 
+              className="z-50 shrink-0 flex items-center gap-2 p-2 rounded-2xl bg-white/15 backdrop-blur-xl border border-white/25 shadow-2xl max-w-[90vw] overflow-x-auto no-scrollbar mb-1"
+              onClick={e => e.stopPropagation()}
+            >
+              {lightboxState.images.map((u, i) => (
+                <button
+                  key={i}
+                  onClick={() => setLightboxState(prev => prev ? ({ ...prev, activeImageIndex: i }) : null)}
+                  className={`relative flex-none w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden transition-all ${
+                    i === lightboxState.activeImageIndex
+                      ? 'ring-2 ring-primary-400 scale-105 opacity-100 shadow-xl'
+                      : 'opacity-60 hover:opacity-100 scale-95 border border-white/30'
+                  }`}
+                >
+                  <img
+                    src={getThumbnailImageUrl(u, { width: 100, quality: 65 })}
+                    alt={`Thumb ${i + 1}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="h-2" />
+          )}
         </div>
       )}
     </div>

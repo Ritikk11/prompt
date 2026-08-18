@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { getSeoPageBySlug, fetchPostSummaries, isPublicPost, fetchSettings } from '@/lib/data';
 import type { Post } from '@/lib/types';
 import SeoPageContent from '@/components/SeoPageContent';
-import { generateSeoPageMetadata } from '@/lib/seo-helpers';
+import { generateSeoPageMetadata, formatTitleWithBrand } from '@/lib/seo-helpers';
 
 interface Props {
   params: Promise<{ slug: string }>;
