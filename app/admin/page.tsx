@@ -673,6 +673,10 @@ function AdminInner() {
     const applyAuthSession = (nextUser: User | null) => {
       const nextUserId = nextUser?.id ?? null;
       const userChanged = lastAuthUserId.current !== nextUserId;
+      // Skip no-op updates (e.g. TOKEN_REFRESHED) — calling setUser with the
+      // same user object still creates a new reference and re-renders the
+      // entire 9,300-line admin component tree.
+      if (!userChanged && !authLoading) return;
       lastAuthUserId.current = nextUserId;
       setUser(nextUser);
       if (userChanged) {
@@ -739,6 +743,10 @@ function AdminInner() {
     window.addEventListener('message', handleOauthMessage);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Skip token-only refreshes — the singleton fix prevents the race, but
+      // even a single client firing TOKEN_REFRESHED would trigger a setUser
+      // re-render cascade. Only respond to real auth state changes.
+      if (event === 'TOKEN_REFRESHED') return;
       applyAuthSession(session?.user ?? null);
 
       if (event === 'PASSWORD_RECOVERY') {
@@ -1127,6 +1135,92 @@ function AdminInner() {
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
   const [images, setImages] = useState<ImagePrompt[]>([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
   const [assignedSections, setAssignedSections] = useState<string[]>([]);
+
+  // --- Draft persistence (sessionStorage) ---
+  // Debounce-save the in-progress post form so even a genuine reload (browser
+  // discarding a backgrounded tab, deploy invalidating old chunks) never loses
+  // typed content. The draft is keyed to distinguish new vs edit.
+  const DRAFT_KEY = 'pmx-admin-post-draft';
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveDraft = useCallback(() => {
+    if (!showPostForm) return;
+    try {
+      const draft = {
+        editingPostId: editingPost?.id || null,
+        title, slug, description, extendedDescription, thumbnailUrl,
+        referenceImages, seoTitle, seoDescription, schemaType, faqs,
+        tagsStr, category, categoriesStr, selectedAiTools, featured,
+        status, visibility, images, assignedSections,
+        savedAt: Date.now(),
+      };
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch { /* quota exceeded — ignore */ }
+  }, [
+    showPostForm, editingPost, title, slug, description, extendedDescription,
+    thumbnailUrl, referenceImages, seoTitle, seoDescription, schemaType, faqs,
+    tagsStr, category, categoriesStr, selectedAiTools, featured, status,
+    visibility, images, assignedSections,
+  ]);
+
+  // Debounce draft saves to every 500ms
+  useEffect(() => {
+    if (!showPostForm) return;
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    draftTimerRef.current = setTimeout(saveDraft, 500);
+    return () => { if (draftTimerRef.current) clearTimeout(draftTimerRef.current); };
+  }, [saveDraft, showPostForm]);
+
+  // Restore draft on mount if the form isn't already populated
+  const draftRestoredRef = useRef(false);
+  useEffect(() => {
+    if (draftRestoredRef.current) return;
+    draftRestoredRef.current = true;
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      // Only restore if saved less than 30 minutes ago
+      if (Date.now() - (draft.savedAt || 0) > 30 * 60 * 1000) {
+        sessionStorage.removeItem(DRAFT_KEY);
+        return;
+      }
+      // Only auto-restore if the URL says we should be on the post form
+      const urlTab = new URLSearchParams(window.location.search).get('tab');
+      const urlAction = new URLSearchParams(window.location.search).get('action');
+      if (urlTab !== 'posts' || !urlAction) return;
+      if (urlAction === 'new' && draft.editingPostId) return;
+      if (urlAction === 'edit') {
+        const urlId = new URLSearchParams(window.location.search).get('id');
+        if (draft.editingPostId !== urlId) return;
+      }
+      // Restore
+      if (draft.title) setTitle(draft.title);
+      if (draft.slug) setSlug(draft.slug);
+      if (draft.description) setDescription(draft.description);
+      if (draft.extendedDescription) setExtendedDescription(draft.extendedDescription);
+      if (draft.thumbnailUrl) setThumbnailUrl(draft.thumbnailUrl);
+      if (draft.referenceImages) setReferenceImages(draft.referenceImages);
+      if (draft.seoTitle) setSeoTitle(draft.seoTitle);
+      if (draft.seoDescription) setSeoDescription(draft.seoDescription);
+      if (draft.schemaType) setSchemaType(draft.schemaType);
+      if (draft.faqs) setFaqs(draft.faqs);
+      if (draft.tagsStr) setTagsStr(draft.tagsStr);
+      if (draft.category) setCategory(draft.category);
+      if (draft.categoriesStr) setCategoriesStr(draft.categoriesStr);
+      if (draft.selectedAiTools) setSelectedAiTools(draft.selectedAiTools);
+      if (draft.featured !== undefined) setFeatured(draft.featured);
+      if (draft.status) setStatus(draft.status);
+      if (draft.visibility) setVisibility(draft.visibility);
+      if (draft.images?.length) setImages(draft.images);
+      if (draft.assignedSections) setAssignedSections(draft.assignedSections);
+      setShowPostForm(true);
+      showToast('Restored your unsaved draft', 'info');
+    } catch { /* corrupt draft — ignore */ }
+  }, []);
+
+  const clearDraft = useCallback(() => {
+    try { sessionStorage.removeItem(DRAFT_KEY); } catch {}
+  }, []);
 
 
   // Section form
@@ -1536,6 +1630,7 @@ function AdminInner() {
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
     setStatus('published'); setVisibility('public');
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
+    clearDraft();
   };
 
   const closePostForm = () => {
@@ -1587,6 +1682,11 @@ function AdminInner() {
     router.push(`/admin?tab=posts&action=edit&id=${encodeURIComponent(post.id)}`, { scroll: false });
   };
 
+  // Ref for posts so the URL-sync effect below doesn't re-run on every posts
+  // array reference change (which happens on token refresh, likes, views, etc.)
+  const postsRef = useRef(posts);
+  postsRef.current = posts;
+
   useEffect(() => {
     if (parseAdminTab(searchParams.get('tab')) !== 'posts') return;
     const action = searchParams.get('action');
@@ -1598,13 +1698,13 @@ function AdminInner() {
       return;
     }
     if (action === 'edit' && id) {
-      const post = posts.find(item => item.id === id || item.slug === id);
+      const post = postsRef.current.find(item => item.id === id || item.slug === id);
       if (post && editingPost?.id !== post.id) {
         startEdit(post);
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, posts]);
+  }, [searchParams]);
 
   const addImageField = () => {
     setImages(prev => [...prev, { id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);

@@ -159,8 +159,13 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
     getSupabaseClient().then(supabase => {
       if (cancelled) return;
       applyViewerState();
-      ({ data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-        applyViewerState();
+      ({ data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+        // Only re-fetch viewer state for meaningful auth changes. TOKEN_REFRESHED
+        // fires every ~60s (and on tab regain) and would trigger setLocalBookmarks/
+        // setLocalLikes → re-render every child including the admin form.
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+          applyViewerState();
+        }
       }));
     });
     return () => {

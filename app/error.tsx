@@ -7,12 +7,17 @@ import { useEffect } from 'react';
 // ChunkLoadError / failed-fetch client exceptions. A full reload fetches the
 // new build and always fixes it, so do that automatically — once per session
 // per URL, to avoid a reload loop when the error is a real crash.
+//
+// NOTE: We intentionally do NOT match generic "failed to fetch" / "load failed"
+// / "networkerror" because backgrounded tabs routinely abort in-flight requests
+// and those transient network blips would otherwise force a full page reload,
+// destroying any unsaved admin form state.
 function isStaleDeploymentError(error: Error) {
   const text = `${error.name} ${error.message}`;
   return (
     error.name === 'ChunkLoadError' ||
     /loading chunk [\w-]+ failed/i.test(text) ||
-    /failed to fetch|load failed|networkerror|dynamically imported module/i.test(text)
+    /dynamically imported module/i.test(text)
   );
 }
 
