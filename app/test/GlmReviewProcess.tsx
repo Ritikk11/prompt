@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, FileCheck2, SearchCheck, ShieldCheck } from 'lucide-react';
 import type { SiteSettings } from '@/lib/types';
-import { GlmSectionHeader, glassCard } from './GlmSection';
+import { accentGradient, glassCard } from './GlmSection';
 import GlmReveal from './GlmReveal';
 
 const reviewSteps = [
@@ -39,42 +39,52 @@ export default function GlmReviewProcess({ settings }: { settings?: SiteSettings
     text: content.items?.[index]?.text || step.text,
   })) : reviewSteps;
 
+  // Same title treatment as GlmSectionHeader: Playfair-italic gradient accent
+  // on the word "reviewed".
+  const title = content.title || 'How prompts are reviewed before they go live';
+  const accentWord = 'reviewed';
+  const accentIndex = title.toLowerCase().indexOf(accentWord);
+  const titleNode = accentIndex >= 0 ? (
+    <>
+      {title.slice(0, accentIndex)}
+      <span className={`font-serif-italic font-bold px-1 ${accentGradient}`}>
+        {title.slice(accentIndex, accentIndex + accentWord.length)}
+      </span>
+      {title.slice(accentIndex + accentWord.length)}
+    </>
+  ) : title;
+
   return (
     <section className="relative w-full overflow-clip px-5 py-16 sm:px-8">
       <div className="absolute inset-x-0 top-0 mx-auto h-px max-w-4xl bg-gradient-to-r from-transparent via-primary-400/70 to-transparent" />
-      <div className="mx-auto max-w-6xl">
+      {/* Same layout as main: heading column beside the 2x2 step cards (the
+          previous "Quality you can trust" card was a /test invention that
+          stacked awkwardly on mobile and diverged from main's heading). */}
+      <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+        {/* Left: badge, title, description, CTA — plain text column like main */}
         <GlmReveal slide>
-          <GlmSectionHeader
-            icon={<ShieldCheck className="h-4 w-4" />}
-            badge={content.badge || 'Review process'}
-            title={content.title || 'How prompts are reviewed before they go live'}
-            accentWord="reviewed"
-            description={content.description || 'Every public prompt is checked for clarity, useful examples, model context, and clean organization before it appears in the library.'}
-          />
-        </GlmReveal>
-
-        <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
-          {/* Left: trust summary card */}
-          <GlmReveal delay={100}>
-            <div className={`${glassCard} p-8`}>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-google-blue to-primary-700 text-white shadow-lg">
-              <ShieldCheck className="h-6 w-6" />
+          <div>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/75 px-4 py-2 text-xs font-bold text-primary-700 shadow-sm dark:border-white/10 dark:bg-white/[0.14] dark:text-primary-200">
+              <ShieldCheck className="h-4 w-4" />
+              {content.badge || 'Review process'}
             </div>
-            <h3 className="mt-5 text-xl font-extrabold text-surface-950 dark:text-white">Quality you can trust</h3>
-            <p className="mt-3 text-sm leading-7 text-surface-600 dark:text-surface-300">
+            <h2 className="max-w-xl text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white sm:text-4xl">
+              {titleNode}
+            </h2>
+            <p className="mt-4 max-w-xl text-base leading-7 text-surface-600 dark:text-surface-300">
               {content.description || 'Every public prompt is checked for clarity, useful examples, model context, and clean organization before it appears in the library.'}
             </p>
             {content.showCta !== false && (
               <Link
                 href={content.ctaHref || '/submit'}
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary-600 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:scale-105 hover:bg-primary-700 active:scale-95 dark:bg-primary-500 dark:hover:bg-primary-600"
+                className="mt-7 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#4285f4] to-[#1a73e8] px-5 py-3 text-sm font-bold text-white shadow-md shadow-primary-500/25 transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg hover:shadow-primary-500/40 hover:brightness-[1.06] active:scale-95"
               >
                 {content.ctaLabel || 'Submit a prompt'}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             )}
-            </div>
-          </GlmReveal>
+          </div>
+        </GlmReveal>
 
           {/* Right: 2x2 glass step cards */}
           <GlmReveal stagger delay={150} className="grid gap-4 sm:grid-cols-2">
@@ -94,7 +104,6 @@ export default function GlmReviewProcess({ settings }: { settings?: SiteSettings
               );
             })}
           </GlmReveal>
-        </div>
       </div>
     </section>
   );
