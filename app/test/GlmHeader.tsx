@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, type FormEvent } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { ChevronDown, ChevronRight, Sun, Moon, Wand2, Compass, ArrowRight } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { ChevronDown, ChevronRight, Sun, Moon, Wand2, Compass, ArrowRight, Search, X, User as UserIcon, LogOut } from 'lucide-react';
+import type { User } from '@supabase/supabase-js';
 import { useData } from '@/components/context/DataContext';
 import { useTheme } from '@/components/context/ThemeContext';
 import { buildHeaderNavItems, type HeaderNavItem } from '@/lib/header-nav';
 import { getToolInfo } from '@/lib/constants';
+import { getSupabaseClient } from '@/lib/supabase-lazy';
+import { getPostPath } from '@/lib/sections';
 import SmartLink from '@/components/SmartLink';
 
 const getToolBrandName = (itemLabel: string) => {
@@ -37,21 +40,41 @@ export function Logo({ siteLogo, siteTitle }: { siteLogo?: string; siteTitle?: s
 }
 
 export default function GlmHeader() {
-  const { settings, sections } = useData();
+  const { settings, sections, posts, ensurePostsLoaded } = useData();
   const { theme, toggleTheme } = useTheme();
+  const navigate = useRouter();
   const [isVisible, setIsVisible] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileAccordion, setMobileAccordion] = useState<Record<string, boolean>>({});
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [query, setQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [showLiveResults, setShowLiveResults] = useState(false);
+  const [postsLoading, setPostsLoading] = useState(false);
 
   const isAnyDesktopMenuOpen = activeMenuId !== null;
 
   const pathname = usePathname();
+  // Production gates the account cluster behind settings.features.userProfiles
+  // (currently disabled in live settings). The sandbox preview shows it
+  // regardless so the design can be reviewed — re-apply the flag gate when this
+  // gets ported into main:
+  //   Boolean(settings?.features?.userProfiles)
+  const accountFeaturesEnabled = true;
+  const isHomepage = pathname === '/' || pathname === '/test';
+  // Hidden at the top of the homepage (the hero has its own search bar);
+  // appears once scrolled and on every non-homepage route.
+  const showSearchIcon = scrolled || !isHomepage || searchOpen;
+
   const lastScrollYRef = useRef(0);
   const suppressHideRef = useRef(false);
   const suppressHideTimeoutRef = useRef<number | null>(null);
   const hoverTimerRef = useRef<number | null>(null);
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const searchPanelRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Scroll visibility behavior: transparent at top, frosted glass on scroll
   useEffect(() => {
@@ -67,11 +90,13 @@ export default function GlmHeader() {
         delta > 4 &&
         currentScrollY > 64 &&
         !mobileMenuOpen &&
+        !searchOpen &&
         !suppressHideRef.current;
       const shouldShow =
         delta < -4 ||
         currentScrollY <= 16 ||
-        mobileMenuOpen;
+        mobileMenuOpen ||
+        searchOpen;
 
       if (shouldHide) {
         setIsVisible(false);
@@ -97,7 +122,7 @@ export default function GlmHeader() {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
     };
-  }, [mobileMenuOpen]);
+  }, [mobileMenuOpen, searchOpen]);
 
   const handleThemeToggle = useCallback(() => {
     setIsVisible(true);
@@ -109,6 +134,126 @@ export default function GlmHeader() {
     }, 500);
     toggleTheme();
   }, [toggleTheme]);
+
+  // Account auth (mirrors the production header): Supabase client loads lazily
+  // and only after a delay so hydration is never blocked; skipped entirely when
+  // the userProfiles feature is off.
+  useEffect(() => {
+    if (!accountFeaturesEnabled) return;
+
+    let subscription: { unsubscribe: () => void } | undefined;
+    let cancelled = false;
+
+    const initAuth = () => {
+      getSupabaseClient().then((supabase) => {
+        if (cancelled) return;
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          setUser(session?.user ?? null);
+        });
+        ({ data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          setUser(session?.user ?? null);
+        }));
+      });
+    };
+
+    const timeoutId = window.setTimeout(initAuth, 2500);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+      subscription?.unsubscribe();
+    };
+  }, [accountFeaturesEnabled]);
+
+  // Search: post summaries load on demand the first time search is used.
+  const activateSearch = useCallback(() => {
+    setShowLiveResults(true);
+    if (posts.length === 0) {
+      setPostsLoading(true);
+      ensurePostsLoaded().finally(() => setPostsLoading(false));
+    }
+  }, [posts.length, ensurePostsLoaded]);
+
+  const openSearch = useCallback(() => {
+    setSearchOpen(true);
+    setActiveMenuId(null);
+    setMobileMenuOpen(false);
+    activateSearch();
+  }, [activateSearch]);
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    setShowLiveResults(false);
+    setQuery('');
+  }, []);
+
+  const getLiveResults = () => {
+    if (!query.trim()) return [];
+    const q = query.toLowerCase();
+    return posts
+      .filter((p) => {
+        if ((p.status && p.status !== 'published') || p.visibility === 'private') return false;
+        return (
+          p.title.toLowerCase().includes(q) ||
+          (p.tags && p.tags.some((t) => t.toLowerCase().includes(q))) ||
+          (p.category && p.category.toLowerCase().includes(q)) ||
+          (p.images && p.images.some((img) => img.aiTool?.toLowerCase().includes(q)))
+        );
+      })
+      .slice(0, 5);
+  };
+
+  const submitSearch = () => {
+    if (!query.trim()) return;
+    navigate.push(`/search?q=${encodeURIComponent(query.trim())}`);
+    closeSearch();
+  };
+
+  const handleSearchSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    submitSearch();
+  };
+
+  const handleLogin = () => {
+    navigate.push(`/login?redirectTo=${encodeURIComponent(pathname)}`);
+  };
+
+  const handleLogout = async () => {
+    try {
+      const supabase = await getSupabaseClient();
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Close the search panel on outside click or Escape.
+  useEffect(() => {
+    if (!searchOpen) return;
+    const onMouseDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (searchPanelRef.current?.contains(target)) return;
+      if (searchButtonRef.current?.contains(target)) return;
+      closeSearch();
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeSearch();
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [searchOpen, closeSearch]);
+
+  // Autofocus the input once the panel has finished expanding (focusing a
+  // still-collapsed input gets dropped by the browser).
+  useEffect(() => {
+    if (!searchOpen) return;
+    const t = window.setTimeout(() => searchInputRef.current?.focus(), 320);
+    return () => window.clearTimeout(t);
+  }, [searchOpen]);
 
   // Dynamic Navigation Setup
   const headerSections = (sections || [])
@@ -156,10 +301,12 @@ export default function GlmHeader() {
     })
     .filter((m) => m.items.length > 0);
 
+  const liveResults = searchOpen ? getLiveResults() : [];
+
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 w-full transition-all duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'
-        } ${scrolled || mobileMenuOpen || isAnyDesktopMenuOpen
+        } ${scrolled || mobileMenuOpen || isAnyDesktopMenuOpen || searchOpen
           ? 'glass-bar shadow-md shadow-black/5 dark:shadow-black/40'
           : 'bg-transparent border-b border-transparent shadow-none'
         }`}
@@ -201,6 +348,7 @@ export default function GlmHeader() {
               <button
                 key={menu.id}
                 onMouseEnter={() => {
+                  if (searchOpen) return;
                   if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current);
                   setActiveMenuId(menu.id);
                 }}
@@ -219,8 +367,38 @@ export default function GlmHeader() {
           })}
         </nav>
 
-        {/* Right Actions: Theme Toggle + CTA Button (Desktop) + Morphing Mobile Toggle */}
+        {/* Right Actions: Search Icon + Theme Toggle + Account + CTA Button (Desktop) + Morphing Mobile Toggle */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {/* Search Icon — hidden at the top of the homepage (the hero has its
+              own search bar); appears once scrolled and on other pages. No
+              backdrop-blur on this chip on purpose: it fades in/out, and a
+              frosted surface can't be opacity-animated without flashing. */}
+          <button
+            ref={searchButtonRef}
+            type="button"
+            onClick={() => (searchOpen ? closeSearch() : openSearch())}
+            tabIndex={showSearchIcon ? 0 : -1}
+            aria-hidden={!showSearchIcon}
+            aria-label={searchOpen ? 'Close search' : 'Open search'}
+            aria-expanded={searchOpen}
+            className={`flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 ${showSearchIcon
+                ? 'scale-100 opacity-100 pointer-events-auto'
+                : 'scale-75 opacity-0 pointer-events-none'
+              } ${searchOpen
+                ? 'border-[#4285f4]/50 bg-blue-500/10 text-[#1a73e8] dark:bg-blue-500/20 dark:text-[#669df6]'
+                : 'border-black/[0.06] bg-black/[0.04] text-slate-700 hover:border-[#4285f4]/50 hover:bg-black/[0.08] hover:text-slate-900 dark:border-white/[0.08] dark:bg-white/[0.06] dark:text-slate-200 dark:hover:bg-white/[0.12] dark:hover:text-white'
+              }`}
+          >
+            <span className="relative block h-4 w-4">
+              <Search
+                className={`absolute inset-0 h-4 w-4 transform-gpu transition-all duration-200 ${searchOpen ? 'rotate-90 scale-50 opacity-0' : 'rotate-0 scale-100 opacity-100'}`}
+              />
+              <X
+                className={`absolute inset-0 h-4 w-4 transform-gpu transition-all duration-200 ${searchOpen ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-50 opacity-0'}`}
+              />
+            </span>
+          </button>
+
           {/* Light / Dark Mode Toggle (Pill / Circle with Accent Border Hover) */}
           <button
             onClick={handleThemeToggle}
@@ -238,6 +416,41 @@ export default function GlmHeader() {
               />
             </span>
           </button>
+
+          {/* Account Cluster (gated by the userProfiles feature flag) */}
+          {accountFeaturesEnabled && (
+            <div className="hidden md:flex items-center gap-1.5 border-l border-black/10 dark:border-white/10 ml-0.5 sm:ml-1 pl-2 sm:pl-2.5">
+              {user ? (
+                <>
+                  <Link
+                    href="/profile"
+                    prefetch={false}
+                    className="flex h-9 items-center gap-1.5 rounded-full border border-transparent px-3.5 text-sm font-medium text-slate-700 transition-all duration-150 hover:border-[#4285f4]/40 hover:bg-black/5 hover:text-[#1a73e8] dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white"
+                  >
+                    <UserIcon className="h-4 w-4" />
+                    Profile
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    title="Log out"
+                    aria-label="Log out"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-transparent text-slate-500 transition-all duration-150 hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleLogin}
+                  className="inline-flex h-9 items-center rounded-full bg-gradient-to-r from-[#1a73e8] to-[#4285f4] px-4 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:from-[#174ea6] hover:to-[#1a73e8] active:scale-[0.98]"
+                >
+                  Sign In
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Primary CTA Button (Visible on screens >= 640px) */}
           <Link
@@ -261,7 +474,10 @@ export default function GlmHeader() {
           {/* Morphing Hamburger / Close Button */}
           <button
             type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={() => {
+              setMobileMenuOpen(!mobileMenuOpen);
+              if (searchOpen) closeSearch();
+            }}
             className="inline-flex md:hidden relative items-center justify-center h-9 w-9 rounded-full text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] border border-transparent hover:border-[#4285f4]/40 transition-colors focus:outline-none"
             aria-label="Toggle menu"
           >
@@ -280,6 +496,79 @@ export default function GlmHeader() {
               />
             </div>
           </button>
+        </div>
+      </div>
+
+      {/* Search Panel — opens from the header search icon. Collapses via
+          grid-rows like the mega menu; the panel itself carries no
+          backdrop-filter so its open/close fade can never flash frost. */}
+      <div
+        ref={searchPanelRef}
+        className={`grid overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${searchOpen
+            ? 'grid-rows-[1fr] opacity-100 border-t border-black/5 dark:border-white/10'
+            : 'grid-rows-[0fr] opacity-0 border-t border-transparent pointer-events-none'
+          }`}
+      >
+        <div className="overflow-hidden">
+          <div className="mx-auto w-full max-w-2xl px-3.5 sm:px-6 py-3.5 sm:py-4">
+            <form onSubmit={handleSearchSubmit}>
+              <div className="group/search relative flex items-center">
+                <Search className="pointer-events-none absolute left-4 h-4 w-4 text-slate-400 transition-colors group-focus-within/search:text-[#1a73e8] dark:text-slate-500 dark:group-focus-within/search:text-[#669df6]" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    activateSearch();
+                  }}
+                  onFocus={activateSearch}
+                  placeholder="Search prompts, tools, categories…"
+                  aria-label="Search prompts"
+                  className="h-11 w-full rounded-full border border-black/10 bg-white/70 pl-10 pr-24 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-[#4285f4]/60 focus:bg-white/90 focus:shadow-lg focus:shadow-primary-500/10 dark:border-white/10 dark:bg-white/[0.08] dark:text-white dark:placeholder:text-slate-500 dark:focus:bg-white/[0.12]"
+                />
+                <button
+                  type="submit"
+                  disabled={!query.trim()}
+                  className="absolute right-1.5 inline-flex h-8 items-center rounded-full bg-gradient-to-r from-[#1a73e8] to-[#4285f4] px-3.5 text-xs font-semibold text-white transition-all duration-200 hover:from-[#174ea6] hover:to-[#1a73e8] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40"
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+
+            {showLiveResults && query.trim() && (
+              <div className="mt-2.5 overflow-hidden rounded-2xl border border-black/5 bg-black/[0.03] dark:border-white/10 dark:bg-white/[0.05]">
+                <div className="max-h-[45vh] overflow-y-auto">
+                  {liveResults.length > 0 ? (
+                    liveResults.map((post) => (
+                      <Link
+                        key={post.id}
+                        href={getPostPath(post)}
+                        onClick={closeSearch}
+                        className="flex items-center justify-between gap-3 border-b border-black/5 px-4 py-2.5 text-sm transition-colors last:border-b-0 hover:bg-black/[0.05] dark:border-white/5 dark:hover:bg-white/[0.08]"
+                      >
+                        <span className="truncate font-medium text-slate-800 dark:text-slate-100">{post.title}</span>
+                        <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">{post.category || 'Prompt'}</span>
+                      </Link>
+                    ))
+                  ) : (
+                    <p className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
+                      {postsLoading ? 'Loading prompts…' : 'No matching prompts found.'}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={submitSearch}
+                  className="flex w-full items-center justify-between gap-2 border-t border-black/5 bg-black/[0.02] px-4 py-2.5 text-left text-xs font-semibold text-[#1a73e8] transition-colors hover:bg-black/[0.05] dark:border-white/5 dark:bg-white/[0.03] dark:text-[#669df6] dark:hover:bg-white/[0.08]"
+                >
+                  <span className="truncate">See all results for “{query.trim()}”</span>
+                  <ArrowRight className="h-3.5 w-3.5 shrink-0" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -385,6 +674,50 @@ export default function GlmHeader() {
               </div>
             ))}
 
+            {/* Account Links (gated by the userProfiles feature flag) */}
+            {accountFeaturesEnabled && (
+              <div
+                className={`flex flex-col gap-1 pt-1 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${mobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+                  }`}
+              >
+                {user ? (
+                  <>
+                    <Link
+                      href="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center justify-between rounded-2xl border border-transparent px-4 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 hover:border-[#4285f4]/40 hover:bg-black/5 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white"
+                    >
+                      <span className="flex items-center gap-2">
+                        <UserIcon className="h-4 w-4" /> Profile
+                      </span>
+                      <ChevronRight className="h-4 w-4 opacity-40" />
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="flex items-center gap-2 rounded-2xl border border-transparent px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition-all duration-200 hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-500 dark:text-slate-200 dark:hover:text-red-400"
+                    >
+                      <LogOut className="h-4 w-4" /> Log out
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogin();
+                    }}
+                    className="flex items-center justify-center gap-2 rounded-2xl border border-[#4285f4]/30 bg-[#4285f4]/10 px-4 py-2.5 text-sm font-semibold text-[#1a73e8] transition-all duration-200 hover:bg-[#4285f4]/15 dark:text-[#669df6]"
+                  >
+                    <UserIcon className="h-4 w-4" /> Sign In
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Full-width Blue Pill CTA Button with Spring Entrance */}
             <div
               className={`pt-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform ${mobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
@@ -479,7 +812,7 @@ export default function GlmHeader() {
         </div>
       </div>
       {/* Bottom specular gradient highlight */}
-      {(scrolled || mobileMenuOpen || isAnyDesktopMenuOpen) && (
+      {(scrolled || mobileMenuOpen || isAnyDesktopMenuOpen || searchOpen) && (
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#4285f4]/30 dark:via-[#4285f4]/40 to-transparent pointer-events-none" />
       )}
 
