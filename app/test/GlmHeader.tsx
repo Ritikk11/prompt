@@ -1,0 +1,515 @@
+'use client';
+
+import { useState, useRef, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { ChevronDown, ChevronRight, Sun, Moon, Wand2, Compass, ArrowRight } from 'lucide-react';
+import { useData } from '@/components/context/DataContext';
+import { useTheme } from '@/components/context/ThemeContext';
+import { buildHeaderNavItems, type HeaderNavItem } from '@/lib/header-nav';
+import { getToolInfo } from '@/lib/constants';
+import SmartLink from '@/components/SmartLink';
+
+const getToolBrandName = (itemLabel: string) => {
+  const cleaned = itemLabel.replace(/Prompts/gi, '').trim();
+  return cleaned || itemLabel;
+};
+
+export function Logo({ siteLogo, siteTitle }: { siteLogo?: string; siteTitle?: string }) {
+  return (
+    <span className="inline-flex items-center gap-2">
+      <div className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 relative overflow-hidden rounded-xl">
+        <Image
+          src={siteLogo || '/icon-190x190.jpg'}
+          alt={siteTitle || 'Logo'}
+          fill
+          sizes="36px"
+          className="object-cover"
+          priority
+        />
+      </div>
+      <span className="text-sm sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white font-sans whitespace-nowrap">
+        AI Prompt<span className="bg-gradient-to-r from-[#1a73e8] to-[#4285f4] dark:from-[#669df6] dark:to-[#aecbfa] bg-clip-text text-transparent">Matrix</span>
+      </span>
+    </span>
+  );
+}
+
+export default function GlmHeader() {
+  const { settings, sections } = useData();
+  const { theme, toggleTheme } = useTheme();
+  const [isVisible, setIsVisible] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileAccordion, setMobileAccordion] = useState<Record<string, boolean>>({});
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+
+  const isAnyDesktopMenuOpen = activeMenuId !== null;
+
+  const pathname = usePathname();
+  const lastScrollYRef = useRef(0);
+  const suppressHideRef = useRef(false);
+  const suppressHideTimeoutRef = useRef<number | null>(null);
+  const hoverTimerRef = useRef<number | null>(null);
+
+  // Scroll visibility behavior: transparent at top, frosted glass on scroll
+  useEffect(() => {
+    let ticking = false;
+
+    const updateHeader = () => {
+      ticking = false;
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 15);
+
+      const delta = currentScrollY - lastScrollYRef.current;
+      const shouldHide =
+        delta > 4 &&
+        currentScrollY > 64 &&
+        !mobileMenuOpen &&
+        !suppressHideRef.current;
+      const shouldShow =
+        delta < -4 ||
+        currentScrollY <= 16 ||
+        mobileMenuOpen;
+
+      if (shouldHide) {
+        setIsVisible(false);
+      } else if (shouldShow) {
+        setIsVisible(true);
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateHeader);
+        ticking = true;
+      }
+    };
+
+    updateHeader();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [mobileMenuOpen]);
+
+  const handleThemeToggle = useCallback(() => {
+    setIsVisible(true);
+    suppressHideRef.current = true;
+    if (suppressHideTimeoutRef.current) window.clearTimeout(suppressHideTimeoutRef.current);
+    suppressHideTimeoutRef.current = window.setTimeout(() => {
+      suppressHideRef.current = false;
+      suppressHideTimeoutRef.current = null;
+    }, 500);
+    toggleTheme();
+  }, [toggleTheme]);
+
+  // Dynamic Navigation Setup
+  const headerSections = (sections || [])
+    .filter((s) => s.location === 'header' && s.visible)
+    .sort((a, b) => a.order - b.order);
+
+  const navItems = buildHeaderNavItems(settings, headerSections);
+
+  const menuDefs = (() => {
+    const saved = settings?.headerMenus;
+    if (saved) {
+      return saved.map((m, i) => ({
+        id: m.id || `menu-${i}`,
+        label: m.label?.trim() || 'Menu',
+        keys: m.itemNavKeys || [],
+      }));
+    }
+    const legacy = settings?.headerToolsMenu;
+    if (legacy) {
+      return legacy.enabled === false
+        ? []
+        : [
+          {
+            id: 'legacy-tools',
+            label: legacy.label?.trim() || 'Tools',
+            keys: legacy.itemNavKeys ?? navItems.filter((i) => i.kind === 'section').map((i) => i.navKey),
+          },
+        ];
+    }
+    return [
+      {
+        id: 'auto-tools',
+        label: 'Tools',
+        keys: navItems.filter((i) => i.kind === 'section').map((i) => i.navKey),
+      },
+    ];
+  })();
+
+  const menuKeyUnion = new Set(menuDefs.flatMap((def) => def.keys));
+  const inlineNavItems = navItems.filter((i) => !menuKeyUnion.has(i.navKey));
+  const headerMenus = menuDefs
+    .map((def) => {
+      const keySet = new Set(def.keys);
+      return { ...def, items: navItems.filter((i) => keySet.has(i.navKey)) };
+    })
+    .filter((m) => m.items.length > 0);
+
+  return (
+    <header
+      className={`fixed inset-x-0 top-0 z-50 w-full transition-all duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'
+        } ${scrolled || mobileMenuOpen || isAnyDesktopMenuOpen
+          ? 'glass-bar shadow-md shadow-black/5 dark:shadow-black/40'
+          : 'bg-transparent border-b border-transparent shadow-none'
+        }`}
+    >
+      {/* Top Navbar Row */}
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-3.5 sm:px-6 gap-2">
+        {/* Brand Logo */}
+        <Link href="/test" className="shrink-0 flex items-center">
+          <Logo siteLogo={settings?.siteLogo} siteTitle={settings?.siteTitle} />
+        </Link>
+
+        {/* Center Desktop Navigation Links (Pill Shapes with Accent Border on Hover) */}
+        <nav className="hidden md:flex items-center gap-1">
+          {inlineNavItems.map((item) => {
+            const isActive = pathname === item.href;
+            const linkClass = `rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-150 border ${isActive
+              ? 'text-[#1a73e8] dark:text-[#669df6] bg-blue-500/10 dark:bg-blue-500/20 font-semibold border-[#4285f4]/40'
+              : 'border-transparent hover:border-[#4285f4]/40 text-slate-700 dark:text-slate-200 hover:text-[#1a73e8] dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10'
+              }`;
+
+            if (item.kind === 'link') {
+              return (
+                <SmartLink key={item.navKey} href={item.href} className={linkClass}>
+                  {item.label}
+                </SmartLink>
+              );
+            }
+            return (
+              <Link key={item.navKey} href={item.href} prefetch={false} className={linkClass}>
+                {item.label}
+              </Link>
+            );
+          })}
+
+          {/* Desktop Dropdown Menus */}
+          {headerMenus.map((menu) => {
+            const isOpen = activeMenuId === menu.id;
+            return (
+              <button
+                key={menu.id}
+                onMouseEnter={() => {
+                  if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current);
+                  setActiveMenuId(menu.id);
+                }}
+                onMouseLeave={() => {
+                  hoverTimerRef.current = window.setTimeout(() => setActiveMenuId(null), 150);
+                }}
+                className={`px-3.5 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 transition-colors duration-200 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white border ${isOpen
+                    ? 'text-[#1a73e8] dark:text-[#669df6] bg-blue-500/10 dark:bg-blue-500/20 border-[#4285f4]/50'
+                    : 'border-transparent hover:border-[#4285f4]/40 hover:bg-black/5 dark:hover:bg-white/10'
+                  }`}
+              >
+                <span>{menu.label}</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#1a73e8] dark:text-[#669df6]' : 'text-slate-400 dark:text-slate-400'}`} />
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Right Actions: Theme Toggle + CTA Button (Desktop) + Morphing Mobile Toggle */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {/* Light / Dark Mode Toggle (Pill / Circle with Accent Border Hover) */}
+          <button
+            onClick={handleThemeToggle}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] border border-black/[0.06] dark:border-white/[0.08] hover:border-[#4285f4]/50 transition-all backdrop-blur-md"
+            aria-label="Toggle theme"
+          >
+            <span className="relative block w-4 h-4">
+              <Sun
+                className={`absolute inset-0 w-4 h-4 text-amber-500 transition-all duration-200 transform-gpu ${theme === 'dark' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-90 scale-50'
+                  }`}
+              />
+              <Moon
+                className={`absolute inset-0 w-4 h-4 text-slate-700 dark:text-slate-200 transition-all duration-200 transform-gpu ${theme === 'dark' ? 'opacity-0 -rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'
+                  }`}
+              />
+            </span>
+          </button>
+
+          {/* Primary CTA Button (Visible on screens >= 640px) */}
+          <Link
+            href="/explore"
+            className="hidden sm:inline-flex group relative items-center gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-[#1a73e8] to-[#4285f4] hover:from-[#174ea6] hover:to-[#1a73e8] px-4 sm:px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow transition-all duration-200 hover:brightness-105 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <span className="relative z-10">Browse Prompts</span>
+            <svg
+              className="relative z-10 h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </Link>
+
+          {/* Morphing Hamburger / Close Button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="inline-flex md:hidden relative items-center justify-center h-9 w-9 rounded-full text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] border border-transparent hover:border-[#4285f4]/40 transition-colors focus:outline-none"
+            aria-label="Toggle menu"
+          >
+            <div className="w-4 h-3.5 relative flex flex-col justify-between items-center">
+              <span
+                className={`w-full h-0.5 bg-current rounded-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${mobileMenuOpen ? 'rotate-45 translate-y-[6px]' : ''
+                  }`}
+              />
+              <span
+                className={`w-full h-0.5 bg-current rounded-full transition-all duration-200 ${mobileMenuOpen ? 'opacity-0 scale-x-0' : 'opacity-100'
+                  }`}
+              />
+              <span
+                className={`w-full h-0.5 bg-current rounded-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${mobileMenuOpen ? '-rotate-45 -translate-y-[6px]' : ''
+                  }`}
+              />
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Smooth Animated Slide-Down Accordion Mobile Menu */}
+      <div
+        className={`md:hidden grid transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${mobileMenuOpen
+          ? 'grid-rows-[1fr] opacity-100 border-t border-black/5 dark:border-white/10'
+          : 'grid-rows-[0fr] opacity-0 border-t border-transparent pointer-events-none'
+          }`}
+      >
+        <div className="overflow-hidden">
+          <div className="px-4 pt-3 pb-5 flex flex-col gap-2 max-h-[calc(100vh-50px)] overflow-y-auto">
+            {/* Staggered Navigation Links with Accent Border on Hover */}
+            <div className="flex flex-col gap-1">
+              {inlineNavItems.map((item, idx) => {
+                const isActive = pathname === item.href;
+                const linkClass = `flex items-center justify-between px-4 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 border ${isActive
+                  ? 'bg-[#4285f4]/15 text-[#1a73e8] dark:text-[#669df6] font-semibold border-[#4285f4]/40'
+                  : 'border-transparent hover:border-[#4285f4]/40 text-slate-700 dark:text-slate-200 hover:bg-black/5 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white'
+                  } ${mobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`;
+
+                if (item.kind === 'link') {
+                  return (
+                    <SmartLink
+                      key={item.navKey}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={linkClass}
+                    >
+                      <span>{item.label}</span>
+                      <ChevronRight className="w-4 h-4 opacity-40" />
+                    </SmartLink>
+                  );
+                }
+                return (
+                  <Link
+                    key={item.navKey}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={linkClass}
+                  >
+                    <span>{item.label}</span>
+                    <ChevronRight className="w-4 h-4 opacity-40" />
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Smooth Tools Collapsible Accordion */}
+            {headerMenus.map((menu) => (
+              <div key={menu.id} className="flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => setMobileAccordion((prev) => ({ ...prev, [menu.id]: !prev[menu.id] }))}
+                  className="flex items-center justify-between px-4 py-2.5 rounded-2xl text-sm font-medium text-slate-700 dark:text-slate-200 border border-transparent hover:border-[#4285f4]/40 hover:bg-black/5 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-all"
+                >
+                  <span>{menu.label}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${mobileAccordion[menu.id] ? 'rotate-180 text-[#4285f4]' : 'text-slate-400'
+                      }`}
+                  />
+                </button>
+
+                {/* Submenu Height Collapse/Expand Grid */}
+                <div
+                  className={`grid transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${mobileAccordion[menu.id] ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0'
+                    }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="grid grid-cols-2 gap-1.5 pt-1 pb-1 px-1">
+                      {menu.items.map((sub) => {
+                        const isSubActive = pathname === sub.href;
+                        const toolName = getToolBrandName(sub.label);
+                        const info = getToolInfo(toolName, settings?.toolDetails);
+                        return (
+                          <Link
+                            key={sub.navKey}
+                            href={sub.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border ${isSubActive
+                              ? 'bg-[#4285f4]/15 border-[#4285f4]/40 text-slate-900 dark:text-white font-semibold'
+                              : 'bg-black/[0.03] dark:bg-white/[0.05] border-black/5 dark:border-white/5 hover:border-[#4285f4]/50 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/[0.06] dark:hover:bg-white/10'
+                              }`}
+                          >
+                            {info?.logo && (
+                              <div className="relative h-4 w-4 shrink-0 overflow-hidden rounded-md">
+                                <Image
+                                  src={info.logo}
+                                  alt={toolName}
+                                  fill
+                                  sizes="16px"
+                                  className={`object-contain ${toolName.toLowerCase().includes('chatgpt') ? 'dark:invert' : ''}`}
+                                />
+                              </div>
+                            )}
+                            <span className="truncate">{toolName}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Full-width Blue Pill CTA Button with Spring Entrance */}
+            <div
+              className={`pt-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform ${mobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+                }`}
+            >
+              <Link
+                href="/explore"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center gap-2 w-full rounded-full bg-gradient-to-r from-[#1a73e8] to-[#4285f4] hover:from-[#174ea6] hover:to-[#1a73e8] py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow active:scale-[0.98] transition-all"
+              >
+                <span>Browse All Prompts</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Dropdown Mega Menu (Turn 1 style) */}
+      <div
+        onMouseEnter={() => {
+          if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current);
+        }}
+        onMouseLeave={() => {
+          hoverTimerRef.current = window.setTimeout(() => setActiveMenuId(null), 150);
+        }}
+        className={`hidden md:grid overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${isAnyDesktopMenuOpen ? 'grid-rows-[1fr] opacity-100 border-t border-black/5 dark:border-white/10' : 'grid-rows-[0fr] opacity-0 border-transparent pointer-events-none'
+          }`}
+      >
+        <div className="overflow-hidden">
+          <div className="mx-auto max-w-7xl px-3.5 sm:px-6 py-4">
+            {headerMenus.map((menu) => (
+              <div
+                key={menu.id}
+                className={`transition-all duration-300 flex flex-col items-center w-full ${activeMenuId === menu.id ? 'opacity-100' : 'hidden'
+                  }`}
+              >
+                <div className="flex flex-wrap justify-center gap-2 w-full max-w-4xl">
+                  {menu.items.map(item => {
+                    const isActive = pathname === item.href;
+                    const toolName = getToolBrandName(item.label);
+                    const info = getToolInfo(toolName, settings?.toolDetails);
+
+                    const rowClass = `flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border ${isActive
+                        ? 'bg-[#4285f4]/15 border-[#4285f4]/40 text-slate-900 dark:text-white font-semibold'
+                        : 'bg-black/[0.03] dark:bg-white/[0.05] border-black/5 dark:border-white/5 hover:border-[#4285f4]/50 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/[0.06] dark:hover:bg-white/10'
+                      }`;
+
+                    const inner = (
+                      <>
+                        {info?.logo && (
+                          <div className="relative h-4 w-4 shrink-0 overflow-hidden rounded-md">
+                            <Image
+                              src={info.logo}
+                              alt={toolName}
+                              fill
+                              sizes="16px"
+                              className={`object-contain ${toolName.toLowerCase().includes('chatgpt') ? 'dark:invert' : ''}`}
+                            />
+                          </div>
+                        )}
+                        <span className="truncate">{toolName}</span>
+                      </>
+                    );
+
+                    return item.kind === 'link' ? (
+                      <SmartLink key={item.navKey} href={item.href} onClick={() => setActiveMenuId(null)} className={rowClass}>
+                        {inner}
+                      </SmartLink>
+                    ) : (
+                      <Link key={item.navKey} href={item.href} prefetch={false} onClick={() => setActiveMenuId(null)} className={rowClass}>
+                        {inner}
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                <div className="w-full mt-4 pt-3 border-t border-black/5 dark:border-white/10 flex justify-center">
+                  <Link
+                    href="/explore"
+                    onClick={() => setActiveMenuId(null)}
+                    className="inline-flex items-center gap-1.5 rounded-xl py-1 px-3 text-xs font-bold text-[#1a73e8] dark:text-[#669df6] hover:text-[#174ea6] dark:hover:text-white transition-colors hover:bg-black/[0.04] dark:hover:bg-white/5"
+                  >
+                    <Compass className="w-3.5 h-3.5" />
+                    <span>Explore all prompts</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      {/* Bottom specular gradient highlight */}
+      {(scrolled || mobileMenuOpen || isAnyDesktopMenuOpen) && (
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#4285f4]/30 dark:via-[#4285f4]/40 to-transparent pointer-events-none" />
+      )}
+
+      {/* Glass Bar CSS */}
+      <style jsx global>{`
+        .glass-bar {
+          background: rgba(255, 255, 255, 0.5);
+          backdrop-filter: blur(28px) saturate(190%);
+          -webkit-backdrop-filter: blur(28px) saturate(190%);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+          box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+        .dark .glass-bar {
+          background: rgba(9, 11, 28, 0.5);
+          backdrop-filter: blur(32px) saturate(200%);
+          -webkit-backdrop-filter: blur(32px) saturate(200%);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        }
+        @keyframes dropdownItemIn {
+          from {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </header>
+  );
+}

@@ -156,7 +156,17 @@ function DesktopNavMenu({ label, items, pathname }: { label: string; items: Head
   );
 }
 
+// Pathname-based early return must live in a wrapper so the real header's
+// hook order stays identical on every route (Rules of Hooks).
 export default function Header() {
+  const pathname = usePathname();
+  if (pathname === '/test' || pathname?.startsWith('/test/')) {
+    return null;
+  }
+  return <SiteHeader />;
+}
+
+function SiteHeader() {
   const { theme, toggleTheme } = useTheme();
   const { settings, sections, posts, ensurePostsLoaded } = useData();
   const accountFeaturesEnabled = Boolean(settings.features?.userProfiles);
@@ -165,9 +175,9 @@ export default function Header() {
   // Single ordered nav list (built-ins + sections + custom links), honoring the
   // saved header order and built-in hide/rename overrides. The Submit item is
   // rendered with its Plus icon; everything else is a plain link.
-  const navItems = buildHeaderNavItems(settings, headerSections);
   const navigate = useRouter();
   const pathname = usePathname();
+  const navItems = buildHeaderNavItems(settings, headerSections);
   // Header dropdown menus: chosen nav items collapse behind labeled triggers
   // so the header never overflows. Auto mode (no saved setting) groups all
   // header sections under "Tools"; admin overrides come from settings.
