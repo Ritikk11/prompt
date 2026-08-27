@@ -13,6 +13,7 @@ import { getToolInfo } from '@/lib/constants';
 import { getSupabaseClient } from '@/lib/supabase-lazy';
 import { getPostPath } from '@/lib/sections';
 import SmartLink from '@/components/SmartLink';
+import type { Post } from '@/lib/types';
 
 const getToolBrandName = (itemLabel: string) => {
   const cleaned = itemLabel.replace(/Prompts/gi, '').trim();
@@ -197,6 +198,7 @@ export default function GlmHeader() {
           p.title.toLowerCase().includes(q) ||
           (p.tags && p.tags.some((t) => t.toLowerCase().includes(q))) ||
           (p.category && p.category.toLowerCase().includes(q)) ||
+          (p.aiTools && p.aiTools.some((t) => t.toLowerCase().includes(q))) ||
           (p.images && p.images.some((img) => img.aiTool?.toLowerCase().includes(q)))
         );
       })
@@ -302,6 +304,27 @@ export default function GlmHeader() {
     .filter((m) => m.items.length > 0);
 
   const liveResults = searchOpen ? getLiveResults() : [];
+
+  // Per-result context line: prefer the field(s) that actually matched the
+  // query (category / tool / tag), fall back to general context.
+  const getResultMeta = (post: Post, qRaw: string) => {
+    const q = qRaw.trim().toLowerCase();
+    if (!q) return '';
+    const parts: string[] = [];
+    if (post.category && post.category.toLowerCase().includes(q)) parts.push(post.category);
+    const tool =
+      post.aiTools?.find((t) => t.toLowerCase().includes(q)) ||
+      post.images?.find((img) => img.aiTool?.toLowerCase().includes(q))?.aiTool;
+    if (tool) parts.push(tool);
+    const tag = post.tags?.find((t) => t.toLowerCase().includes(q));
+    if (tag) parts.push(`#${tag}`);
+    if (parts.length === 0) {
+      if (post.category) parts.push(post.category);
+      const anyTool = post.aiTools?.[0] || post.images?.find((img) => img.aiTool)?.aiTool;
+      if (anyTool && anyTool !== post.category) parts.push(anyTool);
+    }
+    return parts.slice(0, 3).join(' · ');
+  };
 
   return (
     <header
@@ -444,7 +467,7 @@ export default function GlmHeader() {
                 <button
                   type="button"
                   onClick={handleLogin}
-                  className="inline-flex h-9 items-center rounded-full bg-gradient-to-r from-[#1a73e8] to-[#4285f4] px-4 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:from-[#174ea6] hover:to-[#1a73e8] active:scale-[0.98]"
+                  className="glm-grad-shift inline-flex h-9 items-center rounded-full px-4 text-sm font-semibold text-white shadow-md shadow-primary-500/25 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary-500/40 active:scale-[0.98]"
                 >
                   Sign In
                 </button>
@@ -455,7 +478,7 @@ export default function GlmHeader() {
           {/* Primary CTA Button (Visible on screens >= 640px) */}
           <Link
             href="/explore"
-            className="hidden sm:inline-flex group relative items-center gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-[#1a73e8] to-[#4285f4] hover:from-[#174ea6] hover:to-[#1a73e8] px-4 sm:px-5 py-2 text-sm font-semibold text-white shadow-sm hover:shadow transition-all duration-200 hover:brightness-105 hover:scale-[1.02] active:scale-[0.98]"
+            className="glm-grad-shift hidden sm:inline-flex group relative items-center gap-1.5 overflow-hidden rounded-full px-4 sm:px-5 py-2 text-sm font-semibold text-white shadow-md shadow-primary-500/25 hover:shadow-lg hover:shadow-primary-500/40 hover:scale-[1.02] active:scale-[0.98]"
           >
             <span className="relative z-10">Browse Prompts</span>
             <svg
@@ -530,7 +553,7 @@ export default function GlmHeader() {
                 <button
                   type="submit"
                   disabled={!query.trim()}
-                  className="absolute right-1.5 inline-flex h-8 items-center rounded-full bg-gradient-to-r from-[#1a73e8] to-[#4285f4] px-3.5 text-xs font-semibold text-white transition-all duration-200 hover:from-[#174ea6] hover:to-[#1a73e8] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40"
+                  className="glm-grad-shift absolute right-1.5 inline-flex h-8 items-center rounded-full px-3.5 text-xs font-semibold text-white shadow-sm shadow-primary-500/25 hover:shadow-md hover:shadow-primary-500/40 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40"
                 >
                   Search
                 </button>
@@ -541,17 +564,40 @@ export default function GlmHeader() {
               <div className="mt-2.5 overflow-hidden rounded-2xl border border-black/5 bg-black/[0.03] dark:border-white/10 dark:bg-white/[0.05]">
                 <div className="max-h-[45vh] overflow-y-auto">
                   {liveResults.length > 0 ? (
-                    liveResults.map((post) => (
-                      <Link
-                        key={post.id}
-                        href={getPostPath(post)}
-                        onClick={closeSearch}
-                        className="flex items-center justify-between gap-3 border-b border-black/5 px-4 py-2.5 text-sm transition-colors last:border-b-0 hover:bg-black/[0.05] dark:border-white/5 dark:hover:bg-white/[0.08]"
-                      >
-                        <span className="truncate font-medium text-slate-800 dark:text-slate-100">{post.title}</span>
-                        <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">{post.category || 'Prompt'}</span>
-                      </Link>
-                    ))
+                    liveResults.map((post) => {
+                      const meta = getResultMeta(post, query);
+                      return (
+                        <Link
+                          key={post.id}
+                          href={getPostPath(post)}
+                          onClick={closeSearch}
+                          className="group/result flex items-center gap-3 border-b border-black/5 px-3 py-2.5 transition-colors last:border-b-0 hover:bg-black/[0.05] dark:border-white/5 dark:hover:bg-white/[0.08]"
+                        >
+                          {/* Thumbnail */}
+                          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-black/5 bg-black/[0.04] dark:border-white/10 dark:bg-white/[0.06]">
+                            {post.thumbnailUrl ? (
+                              <Image
+                                src={post.thumbnailUrl}
+                                alt=""
+                                fill
+                                sizes="44px"
+                                className="object-cover transition-transform duration-300 ease-out group-hover/result:scale-[1.08]"
+                              />
+                            ) : (
+                              <span className="flex h-full w-full items-center justify-center text-slate-400 dark:text-slate-500">
+                                <Wand2 className="h-4 w-4" />
+                              </span>
+                            )}
+                          </div>
+                          {/* Title + match context */}
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">{post.title}</p>
+                            <p className="mt-0.5 truncate text-xs text-slate-400 dark:text-slate-500">{meta || 'Prompt'}</p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition-all duration-200 group-hover/result:translate-x-0.5 group-hover/result:text-[#1a73e8] dark:text-slate-600 dark:group-hover/result:text-[#669df6]" />
+                        </Link>
+                      );
+                    })
                   ) : (
                     <p className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
                       {postsLoading ? 'Loading prompts…' : 'No matching prompts found.'}
@@ -726,7 +772,7 @@ export default function GlmHeader() {
               <Link
                 href="/explore"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 w-full rounded-full bg-gradient-to-r from-[#1a73e8] to-[#4285f4] hover:from-[#174ea6] hover:to-[#1a73e8] py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow active:scale-[0.98] transition-all"
+                className="glm-grad-shift flex items-center justify-center gap-2 w-full rounded-full py-2.5 text-sm font-semibold text-white shadow-md shadow-primary-500/25 hover:shadow-lg hover:shadow-primary-500/40 active:scale-[0.98]"
               >
                 <span>Browse All Prompts</span>
                 <ArrowRight className="w-4 h-4" />
@@ -841,6 +887,19 @@ export default function GlmHeader() {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+        /* Gradient-shift hover for the blue CTA pills: instead of darkening,
+           a lighter blue band sweeps across the pill on hover. The class owns
+           the whole transition so Tailwind's transition-all can't fight it. */
+        .glm-grad-shift {
+          background-image: linear-gradient(100deg, #1a73e8 0%, #4285f4 40%, #669df6 50%, #4285f4 60%, #1a73e8 100%);
+          background-size: 250% auto;
+          background-position: 0% center;
+          transition: background-position 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.2s ease, box-shadow 0.25s ease;
+        }
+        .glm-grad-shift:hover {
+          background-position: 100% center;
         }
       `}</style>
     </header>
