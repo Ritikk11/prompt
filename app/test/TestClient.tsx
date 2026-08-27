@@ -97,6 +97,48 @@ body:has(#test-sandbox-root) [data-ad-slot] {
 #test-sandbox-root .glm-reveal.glm-stagger-fade.glm-revealed > .glm-post-card:nth-child(3) > a > * { animation-delay: calc(var(--glm-delay, 0ms) + 300ms); }
 #test-sandbox-root .glm-reveal.glm-stagger-fade.glm-revealed > .glm-post-card:nth-child(4) > a > * { animation-delay: calc(var(--glm-delay, 0ms) + 400ms); }
 #test-sandbox-root .glm-reveal.glm-stagger-fade.glm-revealed > .glm-post-card:nth-child(n+5) > a > * { animation-delay: calc(var(--glm-delay, 0ms) + 500ms); }
+
+/* Accent scrollbars — the site-wide scrollbar in globals.css is neutral
+   gray; the redesign uses the Google-blue accent everywhere, so the
+   scrollbar follows. Scoped to the sandbox page via :has(). The page
+   scrollbar gets the vertical brand gradient; inner scroll areas (the
+   prompt rails) get the same thumb horizontally. */
+html:has(#test-sandbox-root) {
+  scrollbar-width: thin;
+  scrollbar-color: #4285f4 rgba(66, 133, 244, 0.08);
+}
+html:has(#test-sandbox-root)::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+html:has(#test-sandbox-root)::-webkit-scrollbar-track {
+  background: transparent;
+}
+html:has(#test-sandbox-root)::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #4285f4, #1a73e8);
+  border-radius: 9999px;
+}
+html:has(#test-sandbox-root)::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #5a93f6, #2b7de8);
+}
+html:has(#test-sandbox-root)::-webkit-scrollbar-corner {
+  background: transparent;
+}
+#test-sandbox-root *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+#test-sandbox-root *::-webkit-scrollbar-track {
+  background: transparent;
+}
+#test-sandbox-root *::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #4285f4, #1a73e8);
+  border-radius: 9999px;
+}
+#test-sandbox-root * {
+  scrollbar-width: thin;
+  scrollbar-color: #4285f4 rgba(66, 133, 244, 0.08);
+}
 `;
 
 export default function TestClient({
@@ -134,7 +176,7 @@ export default function TestClient({
   };
 
   return (
-    <div id="test-sandbox-root" className="relative min-h-screen text-slate-900 dark:text-slate-100 selection:bg-purple-500/30 selection:text-white font-sans">
+    <div id="test-sandbox-root" className="relative min-h-screen text-slate-900 dark:text-slate-100 selection:bg-primary-500/30 selection:text-white font-sans">
       {/* Blocking theme script — must stay the sandbox's first node. The global
           ThemeProvider applies the stored theme in useEffect (AFTER first
           paint), so dark-mode users would otherwise see every glass panel and
