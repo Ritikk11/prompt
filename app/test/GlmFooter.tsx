@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { ChevronUp } from 'lucide-react';
 import type { FooterLinkGroup, SiteSettings } from '@/lib/types';
 import { XLogo, InstagramLogo, YouTubeLogo, FacebookLogo, PinterestLogo } from '@/components/SocialLogos';
+import { Logo } from './GlmHeader';
 
 /*
  * Glassmorphic adaptation of the main site footer (components/Footer.tsx).
@@ -107,10 +107,7 @@ export default function GlmFooter({ settings }: { settings?: SiteSettings }) {
           {/* Brand: logo, description, then social icons and AI tool chips (no headings) */}
           <div className="lg:col-span-4">
             <Link href="/" className="mb-4 flex w-fit items-center gap-2">
-              <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl">
-                <Image src={settings?.siteLogo || '/icon-190x190.jpg'} alt={settings?.siteTitle || 'Site Logo'} fill sizes="36px" className="object-contain" referrerPolicy="no-referrer" />
-              </div>
-              <span className="gradient-text text-xl font-bold">{settings?.siteTitle}</span>
+              <Logo siteLogo={settings?.siteLogo} siteTitle={settings?.siteTitle} />
             </Link>
             <p className="text-sm leading-relaxed text-surface-600 dark:text-surface-300">
               {settings?.footerDescription || settings?.siteDescription || 'Curated prompts, prompt-writing guides, and model notes for AI image generation.'}
@@ -125,7 +122,7 @@ export default function GlmFooter({ settings }: { settings?: SiteSettings }) {
                     rel="noreferrer"
                     aria-label={item.label}
                     title={item.label}
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 bg-white/60 text-surface-600 shadow-sm transition-colors hover:border-primary-500 hover:bg-primary-500 hover:text-white dark:border-white/10 dark:bg-white/10 dark:text-surface-300 dark:hover:border-primary-500 dark:hover:bg-primary-500 dark:hover:text-white"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 bg-white/60 text-surface-600 shadow-sm transition-all duration-200 ease-out hover:scale-110 hover:border-primary-500 hover:bg-primary-500 hover:text-white hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/10 dark:text-surface-300 dark:hover:border-primary-500 dark:hover:bg-primary-500 dark:hover:text-white"
                   >
                     {item.icon}
                   </a>
@@ -137,7 +134,7 @@ export default function GlmFooter({ settings }: { settings?: SiteSettings }) {
                 <Link
                   key={tool}
                   href={`/tool/${encodeURIComponent(tool)}`}
-                  className="rounded-full border border-white/80 bg-white/60 px-3 py-1 text-xs font-medium text-surface-700 shadow-sm transition-colors hover:border-primary-400 hover:text-primary-600 dark:border-white/12 dark:bg-white/8 dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:text-white"
+                  className="rounded-full border border-white/80 bg-white/60 px-3 py-1 text-xs font-medium text-surface-700 shadow-sm transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/80 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/12 dark:bg-white/8 dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/14 dark:hover:text-white"
                 >
                   {tool}
                 </Link>

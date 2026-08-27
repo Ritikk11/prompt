@@ -29,7 +29,7 @@ export function Logo({ siteLogo, siteTitle }: { siteLogo?: string; siteTitle?: s
           priority
         />
       </div>
-      <span className="text-sm sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white font-sans whitespace-nowrap">
+      <span className="text-base sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white font-sans whitespace-nowrap">
         AI Prompt<span className="bg-gradient-to-r from-[#1a73e8] to-[#4285f4] dark:from-[#669df6] dark:to-[#aecbfa] bg-clip-text text-transparent">Matrix</span>
       </span>
     </span>
