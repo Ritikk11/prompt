@@ -2,6 +2,37 @@
 
 import { useEffect, useState } from 'react';
 
+/* Keyframes + media rules for the background canvas. Server-rendered as a
+   plain <style> tag (NOT styled-jsx, which would only inject these at
+   hydration — the grid/orbs would sit frozen and the touch-device spotlight
+   would briefly show). */
+const GLM_BACKGROUND_CSS = `
+@keyframes gridmove {
+  from { transform: translateY(0); }
+  to { transform: translateY(-560px); }
+}
+@keyframes floatOrb {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+/* The spotlight is pointless on touch devices — it only ever reacts
+   to emulated tap-mousemoves and is barely visible on small screens —
+   so drop it there completely. Desktop (hover + fine pointer) keeps
+   it, byte-identical to before. */
+@media (hover: none), (pointer: coarse) {
+  #glm-cursor-spotlight { display: none; }
+}
+/* Respect reduced-motion: freeze the grid + orbs (the cursor
+   spotlight already only reacts to pointer movement). The grid tile
+   layer is a grandchild now, hence the second selector. */
+@media (prefers-reduced-motion: reduce) {
+  #animated-background-canvas > div,
+  #animated-background-canvas > div > div {
+    animation: none !important;
+  }
+}
+`;
+
 export default function GlmBackground() {
   const [pos, setPos] = useState({ x: 50, y: 30 });
 
@@ -95,43 +126,7 @@ export default function GlmBackground() {
       {/* Keyframe animations — both are transform-only on purpose so the
           compositor can run them without repainting this canvas (see the grid
           and orb comments above for why that matters here specifically). */}
-      <style jsx>{`
-        @keyframes gridmove {
-          from {
-            transform: translateY(0);
-          }
-          to {
-            transform: translateY(-560px);
-          }
-        }
-        @keyframes floatOrb {
-          0%,
-          100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
-        }
-        /* The spotlight is pointless on touch devices — it only ever reacts
-           to emulated tap-mousemoves and is barely visible on small screens —
-           so drop it there completely. Desktop (hover + fine pointer) keeps
-           it, byte-identical to before. */
-        @media (hover: none), (pointer: coarse) {
-          #glm-cursor-spotlight {
-            display: none;
-          }
-        }
-        /* Respect reduced-motion: freeze the grid + orbs (the cursor
-           spotlight already only reacts to pointer movement). The grid tile
-           layer is a grandchild now, hence the second selector. */
-        @media (prefers-reduced-motion: reduce) {
-          #animated-background-canvas > div,
-          #animated-background-canvas > div > div {
-            animation: none !important;
-          }
-        }
-      `}</style>
+      <style>{GLM_BACKGROUND_CSS}</style>
     </div>
   );
 }

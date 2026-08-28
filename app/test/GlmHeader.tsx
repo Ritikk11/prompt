@@ -18,8 +18,9 @@
  *   Prompts CTA only renders at >=1080px where the full row fits.
  * - Search is an icon chip + collapsing panel (hidden at the top of the
  *   homepage where the hero has its own search).
- * - Depends on the .glass-bar and .glm-grad-shift styles in the styled-jsx
- *   block at the bottom — port them with the component (or into globals.css).
+ * - Depends on the .glass-bar and .glm-grad-shift rules in GLM_HEADER_CSS
+ *   (server-rendered <style> tag — keep it server-rendered when porting, or
+ *   move the rules into globals.css; styled-jsx would flash unstyled buttons).
  * - No ad slots in this design.
  */
 
@@ -37,6 +38,48 @@ import { getSupabaseClient } from '@/lib/supabase-lazy';
 import { getPostPath } from '@/lib/sections';
 import SmartLink from '@/components/SmartLink';
 import type { Post } from '@/lib/types';
+
+/*
+ * Header CSS — server-rendered as a plain <style> tag below (NOT styled-jsx).
+ * styled-jsx ships its CSS in the client JS chunk and injects it at hydration,
+ * so on the first paint the .glm-grad-shift gradient and the .glass-bar frost
+ * were missing: the blue pills rendered unstyled (dark/white) and then blinked
+ * to blue when the CSS landed. A plain <style> tag in a client component IS
+ * part of the SSR HTML, so these rules exist from the very first paint.
+ */
+const GLM_HEADER_CSS = `
+.glass-bar {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.dark .glass-bar {
+  background: rgba(9, 11, 28, 0.5);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+@keyframes dropdownItemIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* Gradient-shift hover for the blue CTA pills: instead of darkening,
+   a lighter blue band sweeps across the pill on hover. The class owns
+   the whole transition so Tailwind's transition-all can't fight it. */
+.glm-grad-shift {
+  background-image: linear-gradient(100deg, #1a73e8 0%, #4285f4 40%, #669df6 50%, #4285f4 60%, #1a73e8 100%);
+  background-size: 250% auto;
+  background-position: 0% center;
+  transition: background-position 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s ease, box-shadow 0.25s ease;
+}
+.glm-grad-shift:hover {
+  background-position: 100% center;
+}
+`;
 
 const getToolBrandName = (itemLabel: string) => {
   const cleaned = itemLabel.replace(/Prompts/gi, '').trim();
@@ -929,46 +972,8 @@ export default function GlmHeader() {
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#4285f4]/30 dark:via-[#4285f4]/40 to-transparent pointer-events-none" />
       )}
 
-      {/* Glass Bar CSS */}
-      <style jsx global>{`
-        .glass-bar {
-          background: rgba(255, 255, 255, 0.5);
-          backdrop-filter: blur(28px) saturate(190%);
-          -webkit-backdrop-filter: blur(28px) saturate(190%);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.6);
-          box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        }
-        .dark .glass-bar {
-          background: rgba(9, 11, 28, 0.5);
-          backdrop-filter: blur(32px) saturate(200%);
-          -webkit-backdrop-filter: blur(32px) saturate(200%);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-        }
-        @keyframes dropdownItemIn {
-          from {
-            opacity: 0;
-            transform: translateY(6px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        /* Gradient-shift hover for the blue CTA pills: instead of darkening,
-           a lighter blue band sweeps across the pill on hover. The class owns
-           the whole transition so Tailwind's transition-all can't fight it. */
-        .glm-grad-shift {
-          background-image: linear-gradient(100deg, #1a73e8 0%, #4285f4 40%, #669df6 50%, #4285f4 60%, #1a73e8 100%);
-          background-size: 250% auto;
-          background-position: 0% center;
-          transition: background-position 0.55s cubic-bezier(0.16, 1, 0.3, 1),
-            transform 0.2s ease, box-shadow 0.25s ease;
-        }
-        .glm-grad-shift:hover {
-          background-position: 100% center;
-        }
-      `}</style>
+      {/* Glass Bar CSS — server-rendered (see GLM_HEADER_CSS note) */}
+      <style>{GLM_HEADER_CSS}</style>
     </header>
   );
 }

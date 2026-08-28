@@ -1,5 +1,5 @@
 'use client';
-import { useState, type CSSProperties } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -42,53 +42,17 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
   // theme (the color-selector toolbar was removed as no longer needed).
   const accentGradient = 'bg-gradient-to-r from-primary-800 via-primary-600 to-primary-500 dark:from-primary-200 dark:via-primary-300 dark:to-primary-400 bg-clip-text text-transparent';
 
-  const heroDelay = (ms: number) => ({ '--glm-hero-delay': `${ms}ms` } as CSSProperties);
-
   return (
     <section className="relative isolate flex w-full flex-col items-center justify-center overflow-hidden bg-transparent px-5 py-10 text-surface-950 dark:text-white sm:px-8 sm:py-16 md:min-h-[calc(100vh-64px)] md:py-20 lg:px-12">
-      {/* Staged hero entrance — same recipe as the stylish about-us design's
-          hero: fade + slide-up on load, blocks cascading via delays.
-          CWV-safe: the H1 (LCP element) starts with zero delay, the cascade
-          finishes in ~1.1s, and only transform/opacity animate (compositor
-          work — no layout shift, no main-thread blocking). */}
-      <style>{`
-        @keyframes glm-hero-in { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
-        @keyframes glm-hero-in-sm { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
-        @keyframes glm-hero-rise { from { transform: translateY(20px); } to { transform: none; } }
-        @keyframes glm-hero-fade { from { opacity: 0; } to { opacity: 1; } }
-        .glm-hero-in, .glm-hero-in-sm {
-          animation: glm-hero-in 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
-          animation-delay: var(--glm-hero-delay, 0ms);
-          backface-visibility: hidden;
-        }
-        .glm-hero-in-sm { animation-name: glm-hero-in-sm; animation-duration: 0.6s; }
-        /* Frosted surfaces must never be opacity-animated, and neither may any
-           wrapper around one: backdrop-filter is not computed while the element
-           is faded, so the frost snaps in when opacity lands — the flash that
-           reads as the panel re-animating. Same rule and same fix as the scroll
-           reveal (see GlmReveal): move the surface with a TRANSFORM only, and
-           fade the plain content inside it. Combined it reads the same as the
-           old fade+rise, minus the pop.
-           -rise    = transform on the surface + fade its direct children
-           -rise-only = transform, no fade at all — for wrappers whose own
-                        children are the glass (search form, tool pills) */
-        .glm-hero-rise, .glm-hero-rise-only {
-          animation: glm-hero-rise 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
-          animation-delay: var(--glm-hero-delay, 0ms);
-          backface-visibility: hidden;
-        }
-        .glm-hero-rise > * {
-          animation: glm-hero-fade 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
-          animation-delay: var(--glm-hero-delay, 0ms);
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .glm-hero-in, .glm-hero-in-sm, .glm-hero-rise, .glm-hero-rise-only, .glm-hero-rise > * { animation: none !important; }
-        }
-      `}</style>
+      {/* No entrance animations in the hero: any fade/slide (even transform-only)
+          delays the paint of the elements it touches — the H1 is the LCP element
+          and the cascade read as a visible up-shift on first render. Everything
+          renders stable in its final place; scroll reveals below the fold still
+          animate via GlmReveal. */}
 
       <div className="mx-auto flex w-full max-w-5xl flex-col items-center justify-center text-center">
         {/* Kicker Pill — same glass recipe as the tag/tool pills below */}
-        <div style={heroDelay(60)} className="glm-hero-rise mb-5 sm:mb-7 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/60 px-4 py-2 text-xs font-bold text-surface-700 shadow-sm backdrop-blur-xl dark:border-white/12 dark:bg-white/8 dark:text-white/85">
+        <div className="mb-5 sm:mb-7 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/60 px-4 py-2 text-xs font-bold text-surface-700 shadow-sm backdrop-blur-xl dark:border-white/12 dark:bg-white/8 dark:text-white/85">
           <Flame className="h-4 w-4 text-amber-400" />
           <span>Curated prompts for {toolNames.slice(0, 4).join(', ') || 'ChatGPT, Gemini, Grok & Qwen'}</span>
         </div>
@@ -126,12 +90,12 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
         </h1>
 
         {/* Subtitle */}
-        <p style={heroDelay(200)} className="glm-hero-in mt-6 max-w-3xl text-base leading-8 text-surface-600 dark:text-surface-300 sm:text-lg">
+        <p className="mt-6 max-w-3xl text-base leading-8 text-surface-600 dark:text-surface-300 sm:text-lg">
           {subtitle}
         </p>
 
         {/* Integrated Search Bar with matching animated Explore button */}
-        <div style={heroDelay(350)} className="glm-hero-rise-only mt-7 sm:mt-9 w-full max-w-2xl">
+        <div className="mt-7 sm:mt-9 w-full max-w-2xl">
           <form
             onSubmit={e => {
               e.preventDefault();
@@ -191,7 +155,7 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
         </div>
 
         {/* Trust Badges */}
-        <div style={heroDelay(500)} className="glm-hero-in-sm mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-surface-600 dark:text-surface-300">
+        <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-surface-600 dark:text-surface-300">
           <div className="flex items-center gap-1.5">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             <span>100% Free to Copy</span>
@@ -213,8 +177,7 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
             return (
               <div
                 key={item.label}
-                style={heroDelay(500 + index * 100)}
-                className="glm-hero-rise group relative overflow-hidden rounded-2xl border border-white/80 bg-white/55 p-3.5 text-left shadow-lg shadow-slate-900/5 backdrop-blur-2xl backdrop-saturate-[160%] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] transition-all duration-300 ease-out hover:scale-[1.03] hover:border-primary-400 hover:shadow-xl sm:p-4 dark:border-white/10 dark:bg-white/10 dark:hover:border-primary-400/60"
+                className="group relative overflow-hidden rounded-2xl border border-white/80 bg-white/55 p-3.5 text-left shadow-lg shadow-slate-900/5 backdrop-blur-2xl backdrop-saturate-[160%] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] transition-all duration-300 ease-out hover:scale-[1.03] hover:border-primary-400 hover:shadow-xl sm:p-4 dark:border-white/10 dark:bg-white/10 dark:hover:border-primary-400/60"
               >
                 <div className="flex items-center gap-3">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-300 ease-out group-hover:scale-110 ${item.color}`}>
@@ -232,7 +195,7 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
 
         {/* Supported AI Tools with real tool logos and rich hover animation */}
         {toolNames.length > 0 && (
-          <div style={heroDelay(650)} className="glm-hero-rise-only mt-7 sm:mt-9 flex flex-col items-center gap-3">
+          <div className="mt-7 sm:mt-9 flex flex-col items-center gap-3">
             <span className="text-xs font-bold uppercase tracking-wider text-surface-400 dark:text-surface-500">
               Browse Prompts by AI Tools:
             </span>
