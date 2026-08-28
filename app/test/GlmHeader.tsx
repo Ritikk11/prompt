@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback, type FormEvent } from 'react'
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronDown, ChevronRight, Sun, Moon, Wand2, Compass, ArrowRight, Search, X, User as UserIcon, LogOut } from 'lucide-react';
+import { ChevronDown, ChevronRight, Sun, Moon, Wand2, Compass, ArrowRight, Search, X, User as UserIcon, LogOut, Plus } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { useData } from '@/components/context/DataContext';
 import { useTheme } from '@/components/context/ThemeContext';
@@ -54,6 +54,10 @@ export default function GlmHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [showLiveResults, setShowLiveResults] = useState(false);
   const [postsLoading, setPostsLoading] = useState(false);
+  // ThemeProvider starts at 'light' and only reads localStorage after mount,
+  // so on dark pages the toggle would flash the wrong icon for a frame. Hide
+  // both icons until the stored theme has hydrated.
+  const [themeMounted, setThemeMounted] = useState(false);
 
   const isAnyDesktopMenuOpen = activeMenuId !== null;
 
@@ -135,6 +139,10 @@ export default function GlmHeader() {
     }, 500);
     toggleTheme();
   }, [toggleTheme]);
+
+  useEffect(() => {
+    setThemeMounted(true);
+  }, []);
 
   // Account auth (mirrors the production header): Supabase client loads lazily
   // and only after a delay so hydration is never blocked; skipped entirely when
@@ -305,6 +313,15 @@ export default function GlmHeader() {
 
   const liveResults = searchOpen ? getLiveResults() : [];
 
+  // Submit pill preview: production only supplies this item via
+  // buildHeaderNavItems when userSubmissions is enabled (currently off in
+  // live settings, like userProfiles). The sandbox shows it regardless so the
+  // design can be reviewed — and hides the preview automatically if the real
+  // nav item ever appears, so it can never double up.
+  const showSubmitPreview = !inlineNavItems.some(
+    (i) => i.kind === 'builtin' && i.key === 'submit'
+  );
+
   // Per-result context line: prefer the field(s) that actually matched the
   // query (category / tool / tag), fall back to general context.
   const getResultMeta = (post: Post, qRaw: string) => {
@@ -342,7 +359,7 @@ export default function GlmHeader() {
         </Link>
 
         {/* Center Desktop Navigation Links (Pill Shapes with Accent Border on Hover) */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           {inlineNavItems.map((item) => {
             const isActive = pathname === item.href;
             const linkClass = `rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-150 border ${isActive
@@ -388,6 +405,18 @@ export default function GlmHeader() {
               </button>
             );
           })}
+
+          {/* Submit Prompt — sandbox preview (see showSubmitPreview note) */}
+          {showSubmitPreview && (
+            <Link
+              href="/submit"
+              prefetch={false}
+              className="ml-1 flex items-center gap-1.5 rounded-full border border-[#4285f4]/40 bg-blue-500/10 px-3.5 py-1.5 text-sm font-semibold text-[#1a73e8] transition-all duration-150 hover:border-[#4285f4]/60 hover:bg-blue-500/15 dark:border-[#4285f4]/30 dark:bg-blue-500/15 dark:text-[#669df6] dark:hover:bg-blue-500/25 dark:hover:text-white"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Submit Prompt
+            </Link>
+          )}
         </nav>
 
         {/* Right Actions: Search Icon + Theme Toggle + Account + CTA Button (Desktop) + Morphing Mobile Toggle */}
@@ -428,13 +457,13 @@ export default function GlmHeader() {
             className="flex h-9 w-9 items-center justify-center rounded-full text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] border border-black/[0.06] dark:border-white/[0.08] hover:border-[#4285f4]/50 transition-all backdrop-blur-md"
             aria-label="Toggle theme"
           >
-            <span className="relative block w-4 h-4">
+            <span className={`relative block w-4 h-4 transition-opacity duration-200 ${themeMounted ? 'opacity-100' : 'opacity-0'}`}>
               <Sun
-                className={`absolute inset-0 w-4 h-4 text-amber-500 transition-all duration-200 transform-gpu ${theme === 'dark' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-90 scale-50'
+                className={`absolute inset-0 w-4 h-4 transition-all duration-300 transform-gpu ${theme === 'dark' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-90 scale-50'
                   }`}
               />
               <Moon
-                className={`absolute inset-0 w-4 h-4 text-slate-700 dark:text-slate-200 transition-all duration-200 transform-gpu ${theme === 'dark' ? 'opacity-0 -rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'
+                className={`absolute inset-0 w-4 h-4 transition-all duration-300 transform-gpu ${theme === 'dark' ? 'opacity-0 -rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'
                   }`}
               />
             </span>
@@ -467,18 +496,19 @@ export default function GlmHeader() {
                 <button
                   type="button"
                   onClick={handleLogin}
-                  className="glm-grad-shift inline-flex h-9 items-center rounded-full px-4 text-sm font-semibold text-white shadow-md shadow-primary-500/25 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary-500/40 active:scale-[0.98]"
+                  className="inline-flex h-9 items-center gap-2 rounded-full border border-[#dadce0] bg-white px-4 text-sm font-medium text-[#1a73e8] shadow-sm transition-all duration-200 hover:border-[#c6cad1] hover:bg-[#f7f8f8] hover:shadow-md active:scale-[0.98] dark:border-[#3c4043] dark:bg-[#1b1d22] dark:text-[#8ab4f8] dark:hover:border-[#5f6368] dark:hover:bg-[#24272d]"
                 >
+                  <UserIcon className="h-4 w-4" />
                   Sign In
                 </button>
               )}
             </div>
           )}
 
-          {/* Primary CTA Button (Visible on screens >= 640px) */}
+          {/* Primary CTA Button — shown only when the full row actually fits */}
           <Link
             href="/explore"
-            className="glm-grad-shift hidden sm:inline-flex group relative items-center gap-1.5 overflow-hidden rounded-full px-4 sm:px-5 py-2 text-sm font-semibold text-white shadow-md shadow-primary-500/25 hover:shadow-lg hover:shadow-primary-500/40 hover:scale-[1.02] active:scale-[0.98]"
+            className="glm-grad-shift hidden min-[1080px]:inline-flex group relative items-center gap-1.5 overflow-hidden rounded-full px-4 sm:px-5 py-2 text-sm font-semibold text-white shadow-md shadow-primary-500/25 hover:shadow-lg hover:shadow-primary-500/40 hover:scale-[1.02] active:scale-[0.98]"
           >
             <span className="relative z-10">Browse Prompts</span>
             <svg
@@ -501,7 +531,7 @@ export default function GlmHeader() {
               setMobileMenuOpen(!mobileMenuOpen);
               if (searchOpen) closeSearch();
             }}
-            className="inline-flex md:hidden relative items-center justify-center h-9 w-9 rounded-full text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] border border-transparent hover:border-[#4285f4]/40 transition-colors focus:outline-none"
+            className="inline-flex lg:hidden relative items-center justify-center h-9 w-9 rounded-full text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] border border-transparent hover:border-[#4285f4]/40 transition-colors focus:outline-none"
             aria-label="Toggle menu"
           >
             <div className="w-4 h-3.5 relative flex flex-col justify-between items-center">
@@ -620,7 +650,7 @@ export default function GlmHeader() {
 
       {/* Smooth Animated Slide-Down Accordion Mobile Menu */}
       <div
-        className={`md:hidden grid transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${mobileMenuOpen
+        className={`lg:hidden grid transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${mobileMenuOpen
           ? 'grid-rows-[1fr] opacity-100 border-t border-black/5 dark:border-white/10'
           : 'grid-rows-[0fr] opacity-0 border-t border-transparent pointer-events-none'
           }`}
@@ -720,6 +750,21 @@ export default function GlmHeader() {
               </div>
             ))}
 
+            {/* Submit Prompt (sandbox preview — production gates this behind
+                userSubmissions; see showSubmitPreview note) */}
+            {showSubmitPreview && (
+              <Link
+                href="/submit"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between rounded-2xl border border-[#4285f4]/30 bg-[#4285f4]/10 px-4 py-2.5 text-sm font-semibold text-[#1a73e8] transition-all duration-200 hover:bg-[#4285f4]/15 dark:text-[#669df6] ${mobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
+              >
+                <span className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" /> Submit Prompt
+                </span>
+                <ChevronRight className="h-4 w-4 opacity-40" />
+              </Link>
+            )}
+
             {/* Account Links (gated by the userProfiles feature flag) */}
             {accountFeaturesEnabled && (
               <div
@@ -756,7 +801,7 @@ export default function GlmHeader() {
                       setMobileMenuOpen(false);
                       handleLogin();
                     }}
-                    className="flex items-center justify-center gap-2 rounded-2xl border border-[#4285f4]/30 bg-[#4285f4]/10 px-4 py-2.5 text-sm font-semibold text-[#1a73e8] transition-all duration-200 hover:bg-[#4285f4]/15 dark:text-[#669df6]"
+                    className="flex items-center justify-center gap-2 rounded-full border border-[#dadce0] bg-white px-4 py-2.5 text-sm font-medium text-[#1a73e8] shadow-sm transition-all duration-200 hover:border-[#c6cad1] hover:bg-[#f7f8f8] hover:shadow-md active:scale-[0.98] dark:border-[#3c4043] dark:bg-[#1b1d22] dark:text-[#8ab4f8] dark:hover:border-[#5f6368] dark:hover:bg-[#24272d]"
                   >
                     <UserIcon className="h-4 w-4" /> Sign In
                   </button>
@@ -790,7 +835,7 @@ export default function GlmHeader() {
         onMouseLeave={() => {
           hoverTimerRef.current = window.setTimeout(() => setActiveMenuId(null), 150);
         }}
-        className={`hidden md:grid overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${isAnyDesktopMenuOpen ? 'grid-rows-[1fr] opacity-100 border-t border-black/5 dark:border-white/10' : 'grid-rows-[0fr] opacity-0 border-transparent pointer-events-none'
+        className={`hidden lg:grid overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${isAnyDesktopMenuOpen ? 'grid-rows-[1fr] opacity-100 border-t border-black/5 dark:border-white/10' : 'grid-rows-[0fr] opacity-0 border-transparent pointer-events-none'
           }`}
       >
         <div className="overflow-hidden">
