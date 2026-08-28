@@ -76,7 +76,6 @@ export default function GlmHeader() {
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const searchPanelRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const progressBarRef = useRef<HTMLDivElement>(null);
 
   // Scroll visibility behavior: transparent at top, frosted glass on scroll
   useEffect(() => {
@@ -86,14 +85,6 @@ export default function GlmHeader() {
       ticking = false;
       const currentScrollY = window.scrollY;
       setScrolled(currentScrollY > 15);
-
-      // Reading progress: written straight to the element (no React state)
-      // so scrolling never re-renders the header.
-      if (progressBarRef.current) {
-        const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = scrollable > 0 ? Math.min(1, Math.max(0, currentScrollY / scrollable)) : 0;
-        progressBarRef.current.style.transform = `scaleX(${progress})`;
-      }
 
       const delta = currentScrollY - lastScrollYRef.current;
       const shouldHide =
@@ -336,19 +327,7 @@ export default function GlmHeader() {
   };
 
   return (
-    <>
-      {/* Reading-progress line — standalone fixed hairline at the viewport top
-          so it stays visible even when the header hides on scroll-down.
-          scaleX is driven imperatively in the scroll tick (no re-renders) and
-          starts at 0, so it only exists once you actually scroll. */}
-      <div
-        ref={progressBarRef}
-        aria-hidden
-        style={{ transform: 'scaleX(0)' }}
-        className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[2px] origin-left bg-gradient-to-r from-[#1a73e8] via-[#4285f4] to-[#669df6]"
-      />
-
-      <header
+    <header
       className={`fixed inset-x-0 top-0 z-50 w-full transition-all duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'
         } ${scrolled || mobileMenuOpen || isAnyDesktopMenuOpen || searchOpen
           ? 'glass-bar shadow-md shadow-black/5 dark:shadow-black/40'
@@ -924,6 +903,5 @@ export default function GlmHeader() {
         }
       `}</style>
     </header>
-    </>
   );
 }
