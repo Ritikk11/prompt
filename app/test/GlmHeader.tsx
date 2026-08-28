@@ -496,9 +496,8 @@ export default function GlmHeader() {
                 <button
                   type="button"
                   onClick={handleLogin}
-                  className="inline-flex h-9 items-center gap-2 rounded-full border border-[#dadce0] bg-white px-4 text-sm font-medium text-[#1a73e8] shadow-sm transition-all duration-200 hover:border-[#c6cad1] hover:bg-[#f7f8f8] hover:shadow-md active:scale-[0.98] dark:border-[#3c4043] dark:bg-[#1b1d22] dark:text-[#8ab4f8] dark:hover:border-[#5f6368] dark:hover:bg-[#24272d]"
+                  className="inline-flex h-9 items-center rounded-full bg-[#1a73e8] px-4 text-sm font-medium text-white shadow-sm shadow-blue-600/30 transition-all duration-200 hover:bg-[#1765cc] hover:shadow-md hover:shadow-blue-600/40 active:scale-[0.98] dark:hover:bg-[#4285f4]"
                 >
-                  <UserIcon className="h-4 w-4" />
                   Sign In
                 </button>
               )}
@@ -801,9 +800,9 @@ export default function GlmHeader() {
                       setMobileMenuOpen(false);
                       handleLogin();
                     }}
-                    className="flex items-center justify-center gap-2 rounded-full border border-[#dadce0] bg-white px-4 py-2.5 text-sm font-medium text-[#1a73e8] shadow-sm transition-all duration-200 hover:border-[#c6cad1] hover:bg-[#f7f8f8] hover:shadow-md active:scale-[0.98] dark:border-[#3c4043] dark:bg-[#1b1d22] dark:text-[#8ab4f8] dark:hover:border-[#5f6368] dark:hover:bg-[#24272d]"
+                    className="flex items-center justify-center rounded-full bg-[#1a73e8] px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-blue-600/30 transition-all duration-200 hover:bg-[#1765cc] hover:shadow-md active:scale-[0.98] dark:hover:bg-[#4285f4]"
                   >
-                    <UserIcon className="h-4 w-4" /> Sign In
+                    Sign In
                   </button>
                 )}
               </div>
