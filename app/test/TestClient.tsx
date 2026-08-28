@@ -1,23 +1,30 @@
 'use client';
 
 import { Fragment, type ReactNode } from 'react';
+import dynamic from 'next/dynamic';
 import type { Post, PostSummary, Section, SiteSettings } from '@/lib/types';
 import GlmBackground from './GlmBackground';
 import GlmHeader from './GlmHeader';
-import GlmFooter from './GlmFooter';
 import HeroLandingSearchFocus from './HeroSearchFocus';
-import GlmFeaturedSlider from './GlmFeaturedSlider';
-import GlmLinkBlocks from './GlmLinkBlocks';
-import GlmHowItWorks from './GlmHowItWorks';
-import GlmReviewProcess from './GlmReviewProcess';
-import GlmSupportedTools from './GlmSupportedTools';
-import GlmCreativeDirections from './GlmCreativeDirections';
-import GlmGuides from './GlmGuides';
-import GlmBlog from './GlmBlog';
-import GlmCreatorFeedback from './GlmCreatorFeedback';
-import GlmPromptOfDay from './GlmPromptOfDay';
-import GlmPromptSection from './GlmPromptSections';
 import { REVEAL_CSS } from './GlmReveal';
+
+// Everything below the fold is code-split with next/dynamic. ssr stays at its
+// default (true), so the server-rendered HTML/SEO content is unchanged — only
+// the JS delivery splits into separate chunks instead of one eager bundle.
+// Same pattern the live homepage uses for its hero variants; this is what
+// brings /test First Load JS from ~221 kB down to parity with live / (~131 kB).
+const GlmFooter = dynamic(() => import('./GlmFooter'));
+const GlmFeaturedSlider = dynamic(() => import('./GlmFeaturedSlider'));
+const GlmLinkBlocks = dynamic(() => import('./GlmLinkBlocks'));
+const GlmHowItWorks = dynamic(() => import('./GlmHowItWorks'));
+const GlmReviewProcess = dynamic(() => import('./GlmReviewProcess'));
+const GlmSupportedTools = dynamic(() => import('./GlmSupportedTools'));
+const GlmCreativeDirections = dynamic(() => import('./GlmCreativeDirections'));
+const GlmGuides = dynamic(() => import('./GlmGuides'));
+const GlmBlog = dynamic(() => import('./GlmBlog'));
+const GlmCreatorFeedback = dynamic(() => import('./GlmCreatorFeedback'));
+const GlmPromptOfDay = dynamic(() => import('./GlmPromptOfDay'));
+const GlmPromptSection = dynamic(() => import('./GlmPromptSections'));
 
 /*
  * Sandbox-scoped CSS. This is server-rendered below (a plain <style> tag, like
