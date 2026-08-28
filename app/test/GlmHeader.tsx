@@ -496,9 +496,15 @@ export default function GlmHeader() {
                 <button
                   type="button"
                   onClick={handleLogin}
-                  className="glm-grad-shift inline-flex h-9 items-center rounded-full px-4 text-sm font-semibold text-white shadow-md shadow-primary-500/25 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary-500/40 active:scale-[0.98]"
+                  className="inline-flex h-9 items-center rounded-full border border-transparent bg-[#202124] px-4 text-sm font-medium shadow-md transition-all duration-200 hover:scale-[1.02] hover:bg-[#2a2b30] hover:shadow-lg active:scale-[0.98] dark:border-white/10"
                 >
-                  Sign In
+                  <span className="text-[#4285F4]">S</span>
+                  <span className="text-[#EA4335]">i</span>
+                  <span className="text-[#FBBC05]">g</span>
+                  <span className="text-[#34A853]">n</span>
+                  <span>&nbsp;</span>
+                  <span className="text-[#4285F4]">I</span>
+                  <span className="text-[#EA4335]">n</span>
                 </button>
               )}
             </div>
@@ -800,9 +806,15 @@ export default function GlmHeader() {
                       setMobileMenuOpen(false);
                       handleLogin();
                     }}
-                    className="glm-grad-shift flex items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary-500/25 hover:shadow-lg hover:shadow-primary-500/40 active:scale-[0.98]"
+                    className="flex items-center justify-center rounded-full border border-transparent bg-[#202124] px-4 py-2.5 text-sm font-medium shadow-md transition-all duration-200 hover:bg-[#2a2b30] hover:shadow-lg active:scale-[0.98] dark:border-white/10"
                   >
-                    Sign In
+                    <span className="text-[#4285F4]">S</span>
+                    <span className="text-[#EA4335]">i</span>
+                    <span className="text-[#FBBC05]">g</span>
+                    <span className="text-[#34A853]">n</span>
+                    <span>&nbsp;</span>
+                    <span className="text-[#4285F4]">I</span>
+                    <span className="text-[#EA4335]">n</span>
                   </button>
                 )}
               </div>
