@@ -93,8 +93,11 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
           <span>Curated prompts for {toolNames.slice(0, 4).join(', ') || 'ChatGPT, Gemini, Grok & Qwen'}</span>
         </div>
 
-        {/* Main Headline with default font & custom styled AI Prompt */}
-        <h1 className="glm-hero-in max-w-5xl text-4xl font-black leading-[1.14] tracking-tight text-surface-950 dark:text-white sm:text-6xl lg:text-7xl">
+        {/* Main Headline with default font & custom styled AI Prompt.
+            LCP element — must NOT fade from opacity:0 (that delays its paint
+            and tanks LCP). Uses the transform-only rise so it's fully opaque
+            from the first frame and just slides into place. */}
+        <h1 className="glm-hero-rise-only max-w-5xl text-4xl font-black leading-[1.14] tracking-tight text-surface-950 dark:text-white sm:text-6xl lg:text-7xl">
           {(() => {
             const regex = /(ai\s+prompts?|image\s+prompts?)/i;
             const match = title.match(regex);
