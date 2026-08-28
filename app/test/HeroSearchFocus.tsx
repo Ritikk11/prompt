@@ -94,10 +94,11 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
         </div>
 
         {/* Main Headline with default font & custom styled AI Prompt.
-            LCP element — must NOT fade from opacity:0 (that delays its paint
-            and tanks LCP). Uses the transform-only rise so it's fully opaque
-            from the first frame and just slides into place. */}
-        <h1 className="glm-hero-rise-only max-w-5xl text-4xl font-black leading-[1.14] tracking-tight text-surface-950 dark:text-white sm:text-6xl lg:text-7xl">
+            LCP element — NO entrance animation. Any animation (even transform-only
+            with a backwards fill) makes Lighthouse wait to count it as painted,
+            which inflates LCP. It renders instantly at full opacity; the kicker,
+            subtitle, stats and pills still cascade in around it. */}
+        <h1 className="max-w-5xl text-4xl font-black leading-[1.14] tracking-tight text-surface-950 dark:text-white sm:text-6xl lg:text-7xl">
           {(() => {
             const regex = /(ai\s+prompts?|image\s+prompts?)/i;
             const match = title.match(regex);
