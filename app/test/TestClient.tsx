@@ -221,13 +221,18 @@ export default function TestClient({
       {/* Redesigned Compact Floating Glassmorphic Header */}
       <GlmHeader />
 
-      {/* Original Hero 1: HeroLandingSearchFocus */}
+      {/* GLM hero — gated by the same feature flag as main's library hero.
+          Main additionally checks heroStyle !== 'v9', but that belongs to the
+          legacy v1–v9 variant system which gets dropped when this hero is
+          merged in, so only the feature flag applies here. */}
       <main className="relative z-10 pt-12 sm:pt-14">
-        <HeroLandingSearchFocus
-          featuredPosts={featuredPosts}
-          settings={settings}
-          postCount={allPosts.length}
-        />
+        {(settings?.features?.showHomepageLibraryHero ?? true) && (
+          <HeroLandingSearchFocus
+            featuredPosts={featuredPosts}
+            settings={settings}
+            postCount={allPosts.length}
+          />
+        )}
       </main>
 
       {/* Homepage blocks in admin-defined order — glassmorphic adaptations of

@@ -1,5 +1,28 @@
 'use client';
 
+/*
+ * MERGE NOTE — /test sandbox header
+ * ---------------------------------
+ * Redesigned header for the /test preview. At merge time this replaces
+ * components/Header.tsx (precise pick-into-main, not wholesale copy).
+ * Sandbox-only relaxations to fix up when porting:
+ * - accountFeaturesEnabled is hardcoded true so the account cluster shows in
+ *   the preview; production gates it behind settings.features.userProfiles —
+ *   re-apply that gate.
+ * - The Submit Prompt pill is a sandbox preview (see showSubmitPreview);
+ *   production supplies it via buildHeaderNavItems, gated behind
+ *   userProfiles && userSubmissions — reconcile, don't duplicate.
+ * Intentional design changes to carry over:
+ * - Production Header's 6px reading-progress bar is dropped.
+ * - Desktop nav / mega-menu / hamburger switch at lg (was md); the Browse
+ *   Prompts CTA only renders at >=1080px where the full row fits.
+ * - Search is an icon chip + collapsing panel (hidden at the top of the
+ *   homepage where the hero has its own search).
+ * - Depends on the .glass-bar and .glm-grad-shift styles in the styled-jsx
+ *   block at the bottom — port them with the component (or into globals.css).
+ * - No ad slots in this design.
+ */
+
 import { useState, useRef, useEffect, useCallback, type FormEvent } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';

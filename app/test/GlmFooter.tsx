@@ -15,6 +15,13 @@ import { Logo } from './GlmHeader';
  * progress ring — only the surface treatment changes: the footer is one static
  * glass panel (never opacity-animated, never reveal-wrapped, so the frost is
  * safe), with glass pills for the social icons and tool chips.
+ *
+ * MERGE NOTE — /test sandbox footer
+ * ---------------------------------
+ * Redesigned footer for the /test preview. At merge time this replaces
+ * components/Footer.tsx (precise pick-into-main): same data logic, new glass
+ * surface. No ad slots in this design. Keep the panel static — never
+ * opacity-animate or reveal-wrap the glass panel itself (frost rule).
  */
 
 const fallbackFooterGroups: FooterLinkGroup[] = [
