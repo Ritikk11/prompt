@@ -63,8 +63,8 @@ body:has(#test-sandbox-root) [data-ad-slot] {
 #test-sandbox-root .glm-post-card > a {
   background: rgba(255, 255, 255, 0.6);
   border-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(40px) saturate(1.6);
-  -webkit-backdrop-filter: blur(40px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
   box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
   padding: 6px 6px 10px; /* thinner top/sides, kept bottom */
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
