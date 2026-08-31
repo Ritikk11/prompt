@@ -109,42 +109,59 @@ body:has(#test-sandbox-root) [data-ad-slot] {
    gray; the redesign uses the Google-blue accent everywhere, so the
    scrollbar follows. Scoped to the sandbox page via :has(). The page
    scrollbar gets the vertical brand gradient; inner scroll areas (the
-   prompt rails) get the same thumb horizontally. */
-html:has(#test-sandbox-root) {
-  scrollbar-width: thin;
-  scrollbar-color: #4285f4 rgba(66, 133, 244, 0.08);
+   prompt rails) get the same thumb horizontally.
+
+   DESKTOP ONLY (fine pointer): styling scrollbars on Android Chrome forces
+   it out of overlay mode into space-reserving scrollbars — a permanent blue
+   gutter down the right edge and a full-width blue line along the bottom
+   (the horizontal scrollbar that appears for even a few px of overflow).
+   Touch devices keep their native auto-hiding overlay scrollbars. */
+@media (hover: hover) and (pointer: fine) {
+  html:has(#test-sandbox-root) {
+    scrollbar-width: thin;
+    scrollbar-color: #4285f4 rgba(66, 133, 244, 0.08);
+  }
+  html:has(#test-sandbox-root)::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  html:has(#test-sandbox-root)::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  html:has(#test-sandbox-root)::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #4285f4, #1a73e8);
+    border-radius: 9999px;
+  }
+  html:has(#test-sandbox-root)::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #5a93f6, #2b7de8);
+  }
+  html:has(#test-sandbox-root)::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  #test-sandbox-root *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  #test-sandbox-root *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  #test-sandbox-root *::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #4285f4, #1a73e8);
+    border-radius: 9999px;
+  }
+  #test-sandbox-root * {
+    scrollbar-width: thin;
+    scrollbar-color: #4285f4 rgba(66, 133, 244, 0.08);
+  }
 }
-html:has(#test-sandbox-root)::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-html:has(#test-sandbox-root)::-webkit-scrollbar-track {
-  background: transparent;
-}
-html:has(#test-sandbox-root)::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #4285f4, #1a73e8);
-  border-radius: 9999px;
-}
-html:has(#test-sandbox-root)::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #5a93f6, #2b7de8);
-}
-html:has(#test-sandbox-root)::-webkit-scrollbar-corner {
-  background: transparent;
-}
-#test-sandbox-root *::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-#test-sandbox-root *::-webkit-scrollbar-track {
-  background: transparent;
-}
-#test-sandbox-root *::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, #4285f4, #1a73e8);
-  border-radius: 9999px;
-}
-#test-sandbox-root * {
-  scrollbar-width: thin;
-  scrollbar-color: #4285f4 rgba(66, 133, 244, 0.08);
+/* Kill horizontal panning on the page: phone loads showed a ~few-px overflow
+   (Chrome then auto-zoomed to the wider content — "opens slightly overflow to
+   the right, zoom out and it fits"). clip, unlike hidden, does not create a
+   scroll container, so the sticky header and the fixed background keep
+   working, and the horizontal scrollbar never appears. */
+html:has(#test-sandbox-root),
+body:has(#test-sandbox-root) {
+  overflow-x: clip;
 }
 `;
 
