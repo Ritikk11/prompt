@@ -65,7 +65,7 @@ export default function GlmBackground() {
   }, []);
 
   return (
-    <div id="animated-background-canvas" className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[100lvh] min-h-full overflow-hidden bg-[#f8fafc] dark:bg-[#05060f]">
+    <div id="animated-background-canvas" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-[#f8fafc] dark:bg-[#05060f] transition-colors duration-500">
       {/* Base radial wash (Light & Dark) */}
       <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(168,85,247,0.18),transparent_60%)] dark:bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(124,58,237,0.3),transparent_55%)]" />
 
