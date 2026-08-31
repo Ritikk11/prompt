@@ -105,6 +105,16 @@ body:has(#test-sandbox-root) [data-ad-slot] {
 #test-sandbox-root .glm-reveal.glm-stagger-fade.glm-revealed > .glm-post-card:nth-child(4) > a > * { animation-delay: calc(var(--glm-delay, 0ms) + 400ms); }
 #test-sandbox-root .glm-reveal.glm-stagger-fade.glm-revealed > .glm-post-card:nth-child(n+5) > a > * { animation-delay: calc(var(--glm-delay, 0ms) + 500ms); }
 
+/* Small glass controls — ToolBadge pills (a production component, overridden
+   here instead of edited) plus the remaining chips/CTAs/rail arrows that use
+   the backdrop-blur-xl utility. 24px blur on a pill-sized element is wasted
+   GPU work; 12px reads the same at that size. One scoped rule hits every
+   24px element inside the sandbox. */
+#test-sandbox-root .backdrop-blur-xl {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
 /* Accent scrollbars — the site-wide scrollbar in globals.css is neutral
    gray; the redesign uses the Google-blue accent everywhere, so the
    scrollbar follows. Scoped to the sandbox page via :has(). The page
