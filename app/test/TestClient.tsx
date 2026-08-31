@@ -162,15 +162,6 @@ body:has(#test-sandbox-root) [data-ad-slot] {
 html:has(#test-sandbox-root),
 body:has(#test-sandbox-root) {
   overflow-x: clip;
-  /* Same fill as #animated-background-canvas. On Android Chrome the URL bar
-     resizes the visual viewport; a fixed inset-0 canvas can lag a frame and
-     flash the page color as a dark strip at the bottom. Matching this color
-     makes that gap invisible even if the canvas is a frame late. */
-  background-color: #f8fafc;
-}
-html.dark:has(#test-sandbox-root),
-html.dark body:has(#test-sandbox-root) {
-  background-color: #05060f;
 }
 `;
 
