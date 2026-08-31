@@ -63,8 +63,8 @@ body:has(#test-sandbox-root) [data-ad-slot] {
 #test-sandbox-root .glm-post-card > a {
   background: rgba(255, 255, 255, 0.6);
   border-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px) saturate(1.6);
-  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
   box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
   padding: 6px 6px 10px; /* thinner top/sides, kept bottom */
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -113,6 +113,16 @@ body:has(#test-sandbox-root) [data-ad-slot] {
 #test-sandbox-root .backdrop-blur-xl {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+/* Heavy glass panels & hero stats/search — 40px backdrop blur (backdrop-blur-2xl)
+   causes mobile GPU frame drops during scroll. Capped to 8px (<10px) to ensure
+   smooth 60fps scrolling while preserving the frosted glass refraction. Note that
+   the slider's background image uses standard element filter (blur-2xl), which
+   remains separate and unaffected. */
+#test-sandbox-root .backdrop-blur-2xl {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* Accent scrollbars — the site-wide scrollbar in globals.css is neutral

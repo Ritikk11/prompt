@@ -50,15 +50,15 @@ import type { Post } from '@/lib/types';
 const GLM_HEADER_CSS = `
 .glass-bar {
   background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(14px) saturate(190%);
-  -webkit-backdrop-filter: blur(14px) saturate(190%);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 .dark .glass-bar {
   background: rgba(9, 11, 28, 0.5);
-  backdrop-filter: blur(16px) saturate(200%);
-  -webkit-backdrop-filter: blur(16px) saturate(200%);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
@@ -517,20 +517,23 @@ export default function GlmHeader() {
             </span>
           </button>
 
-          {/* Light / Dark Mode Toggle (Pill / Circle with Accent Border Hover) */}
+          {/* Light / Dark Mode Toggle (Consistent Pill styling matching Search & Hamburger) */}
           <button
+            type="button"
             onClick={handleThemeToggle}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] border border-black/[0.06] dark:border-white/[0.08] hover:border-[#4285f4]/50 transition-all backdrop-blur-md"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-black/[0.06] bg-black/[0.04] text-slate-700 hover:border-[#4285f4]/50 hover:bg-black/[0.08] hover:text-slate-900 dark:border-white/[0.08] dark:bg-white/[0.06] dark:text-slate-200 dark:hover:bg-white/[0.12] dark:hover:text-white transition-all duration-200 focus:outline-none"
             aria-label="Toggle theme"
           >
-            <span className={`relative block w-4 h-4 transition-opacity duration-200 ${themeMounted ? 'opacity-100' : 'opacity-0'}`}>
+            <span className={`relative block h-4 w-4 transition-opacity duration-200 ${themeMounted ? 'opacity-100' : 'opacity-0'}`}>
               <Sun
-                className={`absolute inset-0 w-4 h-4 transition-all duration-300 transform-gpu ${theme === 'dark' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-90 scale-50'
-                  }`}
+                className={`absolute inset-0 h-4 w-4 transform-gpu transition-all duration-200 ${
+                  theme === 'dark' ? 'rotate-0 scale-100 opacity-100 text-amber-400' : 'rotate-90 scale-50 opacity-0'
+                }`}
               />
               <Moon
-                className={`absolute inset-0 w-4 h-4 transition-all duration-300 transform-gpu ${theme === 'dark' ? 'opacity-0 -rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'
-                  }`}
+                className={`absolute inset-0 h-4 w-4 transform-gpu transition-all duration-200 ${
+                  theme === 'dark' ? '-rotate-90 scale-50 opacity-0' : 'rotate-0 scale-100 opacity-100 text-slate-700'
+                }`}
               />
             </span>
           </button>
@@ -596,7 +599,7 @@ export default function GlmHeader() {
               setMobileMenuOpen(!mobileMenuOpen);
               if (searchOpen) closeSearch();
             }}
-            className="inline-flex lg:hidden relative items-center justify-center h-9 w-9 rounded-full text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] border border-transparent hover:border-[#4285f4]/40 transition-colors focus:outline-none"
+            className="inline-flex lg:hidden relative items-center justify-center h-9 w-9 rounded-full border border-black/[0.06] bg-black/[0.04] text-slate-700 hover:border-[#4285f4]/50 hover:bg-black/[0.08] hover:text-slate-900 dark:border-white/[0.08] dark:bg-white/[0.06] dark:text-slate-200 dark:hover:bg-white/[0.12] dark:hover:text-white transition-all duration-200 focus:outline-none"
             aria-label="Toggle menu"
           >
             <div className="w-4 h-3.5 relative flex flex-col justify-between items-center">

@@ -35,6 +35,8 @@ export const REVEAL_CSS = `
 .glm-reveal.glm-stagger > *,
 .glm-reveal.glm-plain > * {
   transform: translateY(18px);
+  will-change: transform;
+  backface-visibility: hidden;
 }
 .glm-reveal.glm-glass.glm-revealed > *,
 .glm-reveal.glm-slide.glm-revealed > *,
@@ -53,20 +55,8 @@ export const REVEAL_CSS = `
   from { transform: translateY(18px); }
   to { transform: none; }
 }
-/* Content inside the card: fade + soft slide (safe on non-glass content).
-   Gated on .glm-reveal-armed, which the inline script in TestClient adds to
-   <html> at parse time. Reason: this hidden state is server-rendered, but the
-   class that clears it — .glm-revealed — is only ever added by JS, so if the
-   chunk never arrives (JS off, blocked, or a failed load) the content used to
-   stay invisible forever: panels and card frames painted, titles and images
-   blank. Arming it from a script means "hidden" only ever applies when JS is
-   actually alive to un-hide it, and that script disarms itself if hydration
-   hasn't happened in time (see TestClient).
 
-   NOTE: do not replace this with a delayed CSS animation that reveals itself.
-   That was tried and is wrong — the timer fires on off-screen content too, so
-   every below-fold section faded in early and then animated a SECOND time when
-   scrolled into view. */
+/* Content inside the card: pure smooth fade-in (avoids conflicting compound transforms with outer card rise) */
 .glm-reveal-armed .glm-reveal.glm-glass:not(.glm-revealed) > * > *,
 .glm-reveal-armed .glm-reveal.glm-slide:not(.glm-revealed) > * > *,
 .glm-reveal-armed .glm-reveal.glm-stagger:not(.glm-revealed) > * > * {
@@ -75,30 +65,22 @@ export const REVEAL_CSS = `
 }
 .glm-reveal.glm-glass.glm-revealed > * > *,
 .glm-reveal.glm-slide.glm-revealed > * > * {
-  animation: glm-reveal-in-soft 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+  animation: glm-reveal-fade-in 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
   animation-delay: var(--glm-delay, 0ms);
   backface-visibility: hidden;
 }
 .glm-reveal.glm-stagger.glm-revealed > * > * {
-  animation: glm-reveal-in-soft 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
-  animation-delay: calc(var(--glm-delay, 0ms) + 100ms);
+  animation: glm-reveal-fade-in 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+  animation-delay: var(--glm-delay, 0ms);
   backface-visibility: hidden;
 }
-.glm-reveal.glm-stagger.glm-revealed > *:nth-child(2) > * { animation-delay: calc(var(--glm-delay, 0ms) + 200ms); }
-.glm-reveal.glm-stagger.glm-revealed > *:nth-child(3) > * { animation-delay: calc(var(--glm-delay, 0ms) + 300ms); }
-.glm-reveal.glm-stagger.glm-revealed > *:nth-child(4) > * { animation-delay: calc(var(--glm-delay, 0ms) + 400ms); }
-.glm-reveal.glm-stagger.glm-revealed > *:nth-child(5) > * { animation-delay: calc(var(--glm-delay, 0ms) + 500ms); }
-.glm-reveal.glm-stagger.glm-revealed > *:nth-child(n+6) > * { animation-delay: calc(var(--glm-delay, 0ms) + 600ms); }
-@keyframes glm-reveal-in-soft {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: none; }
-}
-/* Fade-only stagger for horizontal overflow-x rows: a translateY here would
-   momentarily overflow the row vertically and flash a scrollbar that shifts
-   the cards (same reason main uses data-reveal-stagger="fade"). These rows
-   hold main-site PostCards (no glass on the row itself), so hiding the
-   wrapper is safe — identical to main's behavior. */
-/* Armed for the same reason as the rule above. */
+.glm-reveal.glm-stagger.glm-revealed > *:nth-child(2) > * { animation-delay: calc(var(--glm-delay, 0ms) + 100ms); }
+.glm-reveal.glm-stagger.glm-revealed > *:nth-child(3) > * { animation-delay: calc(var(--glm-delay, 0ms) + 200ms); }
+.glm-reveal.glm-stagger.glm-revealed > *:nth-child(4) > * { animation-delay: calc(var(--glm-delay, 0ms) + 300ms); }
+.glm-reveal.glm-stagger.glm-revealed > *:nth-child(5) > * { animation-delay: calc(var(--glm-delay, 0ms) + 400ms); }
+.glm-reveal.glm-stagger.glm-revealed > *:nth-child(n+6) > * { animation-delay: calc(var(--glm-delay, 0ms) + 500ms); }
+
+/* Fade-only stagger for horizontal overflow-x rows */
 .glm-reveal-armed .glm-reveal.glm-stagger-fade:not(.glm-revealed) { opacity: 0; }
 .glm-reveal.glm-stagger-fade.glm-revealed {
   animation: glm-reveal-fade-in 0.5s ease-out backwards;
@@ -106,16 +88,15 @@ export const REVEAL_CSS = `
 }
 .glm-reveal.glm-stagger-fade.glm-revealed > * {
   animation: glm-reveal-fade-in 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
-  animation-delay: calc(var(--glm-delay, 0ms) + 100ms);
+  animation-delay: var(--glm-delay, 0ms);
 }
-.glm-reveal.glm-stagger-fade.glm-revealed > *:nth-child(2) { animation-delay: calc(var(--glm-delay, 0ms) + 200ms); }
-.glm-reveal.glm-stagger-fade.glm-revealed > *:nth-child(3) { animation-delay: calc(var(--glm-delay, 0ms) + 300ms); }
-.glm-reveal.glm-stagger-fade.glm-revealed > *:nth-child(4) { animation-delay: calc(var(--glm-delay, 0ms) + 400ms); }
-.glm-reveal.glm-stagger-fade.glm-revealed > *:nth-child(5) { animation-delay: calc(var(--glm-delay, 0ms) + 500ms); }
-.glm-reveal.glm-stagger-fade.glm-revealed > *:nth-child(6),
-.glm-reveal.glm-stagger-fade.glm-revealed > *:nth-child(n+7) { animation-delay: calc(var(--glm-delay, 0ms) + 600ms); }
+.glm-reveal.glm-stagger-fade.glm-revealed > *:nth-child(2) { animation-delay: calc(var(--glm-delay, 0ms) + 100ms); }
+.glm-reveal.glm-stagger-fade.glm-revealed > *:nth-child(3) { animation-delay: calc(var(--glm-delay, 0ms) + 200ms); }
+.glm-reveal.glm-stagger-fade.glm-revealed > *:nth-child(4) { animation-delay: calc(var(--glm-delay, 0ms) + 300ms); }
+.glm-reveal.glm-stagger-fade.glm-revealed > *:nth-child(5) { animation-delay: calc(var(--glm-delay, 0ms) + 400ms); }
+.glm-reveal.glm-stagger-fade.glm-revealed > *:nth-child(n+6) { animation-delay: calc(var(--glm-delay, 0ms) + 500ms); }
 @keyframes glm-reveal-in {
-  from { opacity: 0; transform: translateY(32px); }
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: none; }
 }
 @keyframes glm-reveal-fade-in {

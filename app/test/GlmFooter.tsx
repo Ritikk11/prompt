@@ -108,7 +108,7 @@ export default function GlmFooter({ settings }: { settings?: SiteSettings }) {
   };
 
   return (
-    <footer className="relative z-10 mt-16 border-t border-white/80 bg-white/60 backdrop-blur-2xl backdrop-saturate-[160%] transition-colors duration-300 dark:border-white/10 dark:bg-white/[0.05]">
+    <footer className="relative z-10 mt-16 border-t border-white/80 bg-white/60 backdrop-blur-2xl backdrop-saturate-[120%] transition-colors duration-300 dark:border-white/10 dark:bg-white/[0.05]">
       <div className="mx-auto max-w-7xl px-4 py-12">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
           {/* Brand: logo, description, then social icons and AI tool chips (no headings) */}

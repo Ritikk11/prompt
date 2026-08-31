@@ -43,7 +43,7 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
   const accentGradient = 'bg-gradient-to-r from-primary-800 via-primary-600 to-primary-500 dark:from-primary-200 dark:via-primary-300 dark:to-primary-400 bg-clip-text text-transparent';
 
   return (
-    <section className="relative isolate flex w-full flex-col items-center justify-center overflow-hidden bg-transparent px-5 py-10 text-surface-950 dark:text-white sm:px-8 sm:py-16 md:min-h-[calc(100vh-64px)] md:py-20 lg:px-12">
+    <section className="relative isolate flex w-full flex-col items-center justify-center overflow-hidden bg-transparent px-5 pt-8 pb-16 text-surface-950 dark:text-white sm:px-8 sm:py-16 md:min-h-[calc(100vh-64px)] md:py-20 lg:px-12">
       {/* No entrance animations in the hero: any fade/slide (even transform-only)
           delays the paint of the elements it touches — the H1 is the LCP element
           and the cascade read as a visible up-shift on first render. Everything
@@ -103,7 +103,7 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
                 window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
               }
             }}
-            className="group/search relative flex items-center rounded-full border border-white/80 bg-white/60 p-1.5 shadow-xl shadow-slate-900/5 backdrop-blur-2xl backdrop-saturate-[160%] transition-all duration-300 ease-out hover:border-primary-400 hover:shadow-2xl focus-within:scale-[1.02] focus-within:border-primary-500 focus-within:shadow-2xl focus-within:shadow-primary-500/20 focus-within:ring-4 focus-within:ring-primary-500/15 dark:border-white/15 dark:bg-white/10 dark:shadow-black/50 dark:hover:border-white/30"
+            className="group/search relative flex items-center rounded-full border border-white/80 bg-white/60 p-1.5 shadow-xl shadow-slate-900/5 backdrop-blur-2xl backdrop-saturate-[120%] transition-all duration-300 ease-out hover:border-primary-400 hover:shadow-2xl focus-within:scale-[1.02] focus-within:border-primary-500 focus-within:shadow-2xl focus-within:shadow-primary-500/20 focus-within:ring-4 focus-within:ring-primary-500/15 dark:border-white/15 dark:bg-white/10 dark:shadow-black/50 dark:hover:border-white/30"
           >
             <input
               type="text"
@@ -177,7 +177,7 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
             return (
               <div
                 key={item.label}
-                className="group relative overflow-hidden rounded-2xl border border-white/80 bg-white/55 p-3.5 text-left shadow-lg shadow-slate-900/5 backdrop-blur-2xl backdrop-saturate-[160%] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] transition-all duration-300 ease-out hover:scale-[1.03] hover:border-primary-400 hover:shadow-xl sm:p-4 dark:border-white/10 dark:bg-white/10 dark:hover:border-primary-400/60"
+                className="group relative overflow-hidden rounded-2xl border border-white/80 bg-white/55 p-3.5 text-left shadow-lg shadow-slate-900/5 backdrop-blur-2xl backdrop-saturate-[120%] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] transition-all duration-300 ease-out hover:scale-[1.03] hover:border-primary-400 hover:shadow-xl sm:p-4 dark:border-white/10 dark:bg-white/10 dark:hover:border-primary-400/60"
               >
                 <div className="flex items-center gap-3">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-300 ease-out group-hover:scale-110 ${item.color}`}>
