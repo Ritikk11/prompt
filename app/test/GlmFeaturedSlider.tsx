@@ -1,24 +1,62 @@
 'use client';
+import { useCallback, useEffect, useState, type TouchEvent } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 import { getAllTools, getToolInfo } from '@/lib/constants';
 import ToolBadge from '@/components/ToolBadge';
-import { isNearbySlide, promptImageUrl, useFeaturedSlider } from '@/components/hero/sliderShared';
+import { isNearbySlide, promptImageUrl } from '@/components/hero/sliderShared';
 import { glassCard } from './GlmSection';
 
 /*
  * Glassmorphic featured carousel for the /test redesign — the HeroV3
  * "diagonal cards" layout restyled in glass, reusing the main-site slider
- * brain (useFeaturedSlider timing, promptImageUrl sizing) so autoplay and
- * swipe behavior stay identical.
+ * helpers (isNearbySlide, promptImageUrl) so swipe/sizing behavior stays
+ * identical. The autoplay brain is a sandbox-local copy of useFeaturedSlider:
+ * the shared hook hardcodes SLIDE_DURATION_MS = 6700ms (10/1.5 progress
+ * ticker compatibility), which reads as sluggish here — the sandbox advances
+ * every 4s. If main ever wants this pacing, move the constant into the hook.
  *
  * Sits BELOW the search hero on /test, so it is never the LCP element:
  * every slide image (including the first) loads lazily, and only nearby
  * slides are rendered (isNearbySlide). The one big glass panel carries the
  * expensive backdrop blur — a single below-fold surface, not a grid of them.
  */
+
+const GLM_SLIDE_DURATION_MS = 4000;
+
+/* Same shape as the shared useFeaturedSlider, sandbox pacing only. */
+function useGlmFeaturedSlider(featured: Post[], autoPlay: boolean) {
+  const [current, setCurrent] = useState(0);
+
+  const goTo = useCallback((i: number) => {
+    if (featured.length === 0) return;
+    setCurrent(((i % featured.length) + featured.length) % featured.length);
+  }, [featured.length]);
+
+  useEffect(() => {
+    if (!autoPlay || featured.length <= 1) return;
+    const timer = setInterval(() => goTo(current + 1), GLM_SLIDE_DURATION_MS);
+    return () => clearInterval(timer);
+  }, [autoPlay, current, goTo, featured.length]);
+
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+
+  const handleTouchStart = (e: TouchEvent) => setTouchStart(e.targetTouches[0].clientX);
+  const handleTouchMove = (e: TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    if (distance > 50) goTo(current + 1);
+    if (distance < -50) goTo(current - 1);
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
+  return { current, goTo, handleTouchStart, handleTouchMove, handleTouchEnd };
+}
 
 export default function GlmFeaturedSlider({
   featuredPosts: featured,
@@ -28,7 +66,7 @@ export default function GlmFeaturedSlider({
   settings?: SiteSettings;
 }) {
   const { current, goTo, handleTouchStart, handleTouchMove, handleTouchEnd } =
-    useFeaturedSlider(featured || [], settings?.heroAutoPlay ?? true);
+    useGlmFeaturedSlider(featured || [], settings?.heroAutoPlay ?? true);
 
   if (!featured || featured.length === 0) return null;
 
