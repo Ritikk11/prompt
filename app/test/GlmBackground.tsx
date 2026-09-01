@@ -61,7 +61,7 @@ export default function GlmBackground() {
   }, []);
 
   return (
-    <div id="animated-background-canvas" className="pointer-events-none fixed inset-x-0 -top-16 bottom-[-140px] -z-10 overflow-hidden bg-[#f8fafc] dark:bg-[#05060f]">
+    <div id="animated-background-canvas" className="pointer-events-none fixed inset-x-0 -top-16 bottom-[-140px] -z-10 overflow-hidden bg-[#f8fafc] dark:bg-[#05060f] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)]">
       {/* Base radial wash (Light & Dark) */}
       <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(168,85,247,0.18),transparent_60%)] dark:bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(124,58,237,0.3),transparent_55%)]" />
 
@@ -95,12 +95,16 @@ export default function GlmBackground() {
       </div>
 
       {/* Ambient glowing orbs (Light & Dark) — blur-[100px] on mobile for fast GPU rastering,
-          restoring full blur on larger screens. Kept static with zero animation overhead. */}
-      <div id="bg-orb-purple" className="absolute -top-32 -left-24 h-[36rem] w-[36rem] rounded-full bg-[#8b5cf6]/24 dark:bg-[#8b5cf6]/30 blur-[100px] sm:blur-[130px]" />
+          restoring full blur on larger screens. Kept static with zero animation overhead.
+          Each orb keeps its own compositor layer (transform-gpu + backface-visibility) even
+          though nothing animates: without it, the ~100 backdrop-filter glass panels sampling
+          this canvas can force a mid-scroll re-raster of the orb layer, which shows as a
+          one-frame saturation/color swing of the background. */}
+      <div id="bg-orb-purple" className="absolute -top-32 -left-24 h-[36rem] w-[36rem] rounded-full bg-[#8b5cf6]/24 dark:bg-[#8b5cf6]/30 blur-[100px] sm:blur-[130px] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)]" />
       {/* Blue orb parked behind the nav/dropdown zone so the glass there has color to frost */}
-      <div id="bg-orb-blue" className="absolute -top-24 right-[12%] h-[26rem] w-[26rem] rounded-full bg-[#60a5fa]/15 dark:bg-[#60a5fa]/20 blur-[100px] sm:blur-[120px]" />
-      <div id="bg-orb-pink" className="absolute top-1/3 -right-28 h-[32rem] w-[32rem] rounded-full bg-[#e64bd6]/22 dark:bg-[#e64bd6]/25 blur-[100px] sm:blur-[130px]" />
-      <div id="bg-orb-teal" className="absolute bottom-0 left-1/4 h-[28rem] w-[28rem] rounded-full bg-[#2dd4bf]/20 dark:bg-[#2dd4bf]/20 blur-[100px] sm:blur-[130px]" />
+      <div id="bg-orb-blue" className="absolute -top-24 right-[12%] h-[26rem] w-[26rem] rounded-full bg-[#60a5fa]/15 dark:bg-[#60a5fa]/20 blur-[100px] sm:blur-[120px] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)]" />
+      <div id="bg-orb-pink" className="absolute top-1/3 -right-28 h-[32rem] w-[32rem] rounded-full bg-[#e64bd6]/22 dark:bg-[#e64bd6]/25 blur-[100px] sm:blur-[130px] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)]" />
+      <div id="bg-orb-teal" className="absolute bottom-0 left-1/4 h-[28rem] w-[28rem] rounded-full bg-[#2dd4bf]/20 dark:bg-[#2dd4bf]/20 blur-[100px] sm:blur-[130px] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)]" />
 
       {/* Cursor spotlight — desktop-only; hidden on touch devices below */}
       <div

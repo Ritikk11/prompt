@@ -80,10 +80,14 @@ export default function GlmFeaturedSlider({
                          animating, so the ENTRANCE must not fade: the active
                          slide switches in instantly, and only the EXITING slide
                          fades out. */
-                      className={`transition-all duration-500 ease-out ${
+                      className={`${
                         i === current
-                          ? 'relative z-10 opacity-100'
-                          : 'pointer-events-none absolute inset-0 -translate-y-2 opacity-0'
+                          ? /* No transition on the entering slide: opacity must snap
+                               in so the ToolBadge frost computes from frame one
+                               (see comment above) and the old/new titles never
+                               overlap for 500ms. */
+                            'relative z-10 opacity-100'
+                          : 'pointer-events-none absolute inset-0 -translate-y-2 opacity-0 transition-all duration-500 ease-out'
                       }`}
                     >
                       {/* Tool Tags */}
