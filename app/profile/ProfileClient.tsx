@@ -409,7 +409,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                 </h2>
                 {profileLoading ? (
                   <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-                    {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} />)}
+                    {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} cardStyle={settings.cardStyle === 'v1' ? 'v1' : 'v2'} />)}
                   </div>
                 ) : savedPosts.length === 0 ? (
                   <div className="text-center py-12 border border-dashed border-white/80 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-white/5">
@@ -434,7 +434,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                 </h2>
                 {profileLoading ? (
                   <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-                    {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} />)}
+                    {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} cardStyle={settings.cardStyle === 'v1' ? 'v1' : 'v2'} />)}
                   </div>
                 ) : likedPosts.length === 0 ? (
                   <div className="text-center py-12 border border-dashed border-white/80 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-white/5">
@@ -462,7 +462,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
               </h2>
               {profileLoading ? (
                 <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
-                  {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} />)}
+                  {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} cardStyle={settings.cardStyle === 'v1' ? 'v1' : 'v2'} />)}
                 </div>
               ) : mySubmissions.length === 0 ? (
                 <div className="text-center py-12 border border-dashed border-white/80 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-white/5">

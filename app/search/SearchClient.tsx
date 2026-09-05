@@ -66,13 +66,17 @@ function SearchContent({ posts, settings }: { posts: Post[], settings: SiteSetti
 }
 
 export default function SearchClient({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
+  // The fallback has to use the SAME grid helper and card style as the real
+  // results, or a 1-column mobile setting still gets a 2-up skeleton grid that
+  // reflows the moment the results land.
+  const skeletonCardStyle = settings.cardStyle === 'v1' ? 'v1' : 'v2';
   return (
     <Suspense fallback={
       <div className="max-w-7xl mx-auto px-2 py-8">
         <div className="mb-8 h-8 w-1/4 animate-pulse rounded bg-black/[0.07] dark:bg-white/[0.09]" />
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {[...Array(8)].map((_, i) => (
-            <SkeletonPostCard key={i} />
+        <div className={getGridClasses(settings.features?.mobileColumns, settings.features?.desktopColumns)}>
+          {[...Array(4)].map((_, i) => (
+            <SkeletonPostCard key={i} cardStyle={skeletonCardStyle} />
           ))}
         </div>
       </div>
