@@ -523,7 +523,7 @@ function SiteHeader() {
           bar, and in normal flow that growth would shove the page down instead
           of overlaying it. The h-14 spacer in app/layout.tsx reserves the row. */}
       <header
-        className={`fixed inset-x-0 top-0 z-50 w-full transition-[transform,background-color,border-color,box-shadow] duration-300 ease-in-out will-change-transform ${isVisible ? 'translate-y-0' : '-translate-y-full'} ${
+        className={`fixed inset-x-0 top-0 z-50 w-full transition-all duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'} ${
           barExpanded ? 'glass-bar shadow-md shadow-black/5 dark:shadow-black/40' : 'border-b border-transparent bg-transparent shadow-none'
         }`}
       >
