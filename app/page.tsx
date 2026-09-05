@@ -1,7 +1,11 @@
-// 1h TTL: on-demand revalidation (admin edits) refreshes pages instantly, so the
-// time-based fallback only bounds staleness of view/like counts, which update the
-// DB without revalidatePath. 300s caused a cold ~2.5s SSR miss every 5 minutes.
-export const revalidate = 3600;
+// 12h TTL: admin edits (posts, sections, and settings — which is also where the
+// articles live) call revalidatePath, and settings even revalidates the root
+// layout, so content never waits on this window. It only bounds staleness of
+// view/like counts and the trending order derived from them, because those are
+// written by /api/posts on nearly every page view and deliberately skip
+// revalidation. Shorter windows only bought cold SSR misses: 300s cost ~2.5s
+// every 5 minutes.
+export const revalidate = 43200;
 import type { ReactNode } from 'react';
 import { Fragment } from 'react';
 import type { Metadata } from 'next';

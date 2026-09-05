@@ -5,7 +5,7 @@ import TestClient from './TestClient';
 // ISR like the production homepage (app/page.tsx uses the same window). Without
 // it every hit paid a full cold SSR of settings + sections + posts — the same
 // ~2.5s cold-miss problem main's comment warns about.
-export const revalidate = 3600;
+export const revalidate = 43200;
 
 export const metadata: Metadata = {
   title: 'Test Homepage Preview | AI PromptMatrix',
