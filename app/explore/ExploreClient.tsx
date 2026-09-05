@@ -66,7 +66,7 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
   const visiblePosts = filtered.slice(0, displayedCount);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8 fade-in">
+    <div className="max-w-7xl mx-auto px-2 py-6 sm:py-8 fade-in">
       <DiscoveryPageHero
         badge={discovery.exploreBadge || 'Prompt Library'}
         title={discovery.exploreTitle || 'Explore curated AI image prompts'}
@@ -87,14 +87,14 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
             <button
               onClick={() => setSortBy('latest')}
-              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'latest' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'latest' ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
             >
               <Clock className="h-3.5 w-3.5" />
               Latest
             </button>
             <button
               onClick={() => setSortBy('popular')}
-              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'popular' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'popular' ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
             >
               <Flame className="h-3.5 w-3.5" />
               Popular
@@ -102,7 +102,7 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
             {showTrending && (
               <button
                 onClick={() => setSortBy('trending')}
-                className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'trending' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+                className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'trending' ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
               >
                 <Flame className="h-3.5 w-3.5" />
                 Trending
@@ -146,7 +146,7 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
               ) : (
                 <button 
                   onClick={() => setDisplayedCount(prev => prev + itemsPerLoad)}
-                  className="px-6 py-2.5 rounded-full font-bold bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700 text-surface-600 dark:text-surface-300 transition-colors"
+                  className="rounded-full border border-white/80 bg-white/60 px-6 py-2.5 font-bold text-surface-800 shadow-sm backdrop-blur-xl transition hover:scale-105 hover:border-primary-400/60 hover:text-primary-600 active:scale-95 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-200 dark:hover:text-white"
                 >
                   Load More Prompts
                 </button>

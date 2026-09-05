@@ -31,7 +31,7 @@ function SearchContent({ posts, settings }: { posts: Post[], settings: SiteSetti
   const results = searchPosts(query);
 
   return (
-    <div className="max-w-7xl mx-auto px-1 py-4 sm:py-6 fade-in">
+    <div className="max-w-7xl mx-auto px-2 py-4 sm:py-6 fade-in">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <SearchIcon className="w-6 h-6 text-primary-500" />
@@ -68,8 +68,8 @@ function SearchContent({ posts, settings }: { posts: Post[], settings: SiteSetti
 export default function SearchClient({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
   return (
     <Suspense fallback={
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="h-8 bg-surface-200 dark:bg-surface-800 rounded w-1/4 mb-8 animate-pulse" />
+      <div className="max-w-7xl mx-auto px-2 py-8">
+        <div className="mb-8 h-8 w-1/4 animate-pulse rounded bg-black/[0.07] dark:bg-white/[0.09]" />
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {[...Array(8)].map((_, i) => (
             <SkeletonPostCard key={i} />

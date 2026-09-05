@@ -80,7 +80,7 @@ export default function MasonryGrid({
                 <AdSlot
                   placement="inFeed"
                   inFeedIndex={index}
-                  className="mt-3 sm:mt-4 bg-surface-50 dark:bg-surface-800/30 rounded-[18px]"
+                  className="mt-3 sm:mt-4 rounded-[18px] bg-black/[0.03] dark:bg-white/[0.04]"
                 />
               )}
             </div>

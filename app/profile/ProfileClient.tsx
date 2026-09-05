@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState, Suspense } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { LogOut, Heart, FileText, MessageCircle, Edit2, Camera, User as UserIcon, AlertCircle } from 'lucide-react';
+import { LogOut, Heart, FileText, MessageCircle, Edit2, Camera, User as UserIcon, AlertCircle, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { showToast } from '@/components/ui/ToastContainer';
@@ -43,6 +43,8 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [bio, setBio] = useState('');
+  const [website, setWebsite] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -54,6 +56,8 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
       setFullName(nextUser.user_metadata?.full_name || '');
       setUsername(nextUser.user_metadata?.username || '');
       setAvatarUrl(nextUser.user_metadata?.avatar_url || '');
+      setBio(nextUser.user_metadata?.bio || '');
+      setWebsite(nextUser.user_metadata?.website || '');
       const incompleteProfile = !nextUser.user_metadata?.username || !nextUser.user_metadata?.full_name;
       if (searchParams.get('setup') === 'true' || incompleteProfile) {
         setIsEditing(true);
@@ -70,8 +74,10 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
       const { data, error } = await supabase.auth.updateUser({
         data: {
           full_name: fullName.trim(),
-          username: username.toLowerCase().trim(),
+          username: username.toLowerCase().trim().replace(/^@/, ''),
           avatar_url: avatarUrl.trim(),
+          bio: bio.trim().slice(0, 200),
+          website: website.trim(),
         }
       });
       if (error) throw error;
@@ -209,9 +215,9 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
     <div className="max-w-7xl mx-auto px-1 py-6 sm:py-8 fade-in">
       <div className="flex flex-col md:flex-row gap-8 items-start">
         {/* Sidebar */}
-        <div className="w-full md:w-64 shrink-0 bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl p-6 relative">
+        <div className="w-full md:w-64 shrink-0 bg-white/40 dark:bg-white/5 border border-white/80 dark:border-white/10 rounded-2xl p-6 relative">
           <div className="flex flex-col items-center text-center">
-            <div className="w-20 h-20 bg-surface-200 dark:bg-surface-700 rounded-full mb-4 overflow-hidden relative group">
+            <div className="w-20 h-20 bg-black/[0.07] dark:bg-white/[0.09] rounded-full mb-4 overflow-hidden relative group">
               {avatarUrl ? (
                 <Image src={avatarUrl} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
               ) : (
@@ -222,17 +228,26 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
             </div>
             <h2 className="font-bold text-lg leading-tight">{fullName || 'Anonymous Creator'}</h2>
             <p className="text-xs font-semibold text-primary-500 mt-1">@{username || 'set_username'}</p>
+            {bio && <p className="mt-2 text-xs text-surface-600 dark:text-surface-400 line-clamp-2">{bio}</p>}
             <p className="text-[10px] text-surface-400 mt-2 truncate w-full" title={user.email || ''}>{user.email}</p>
+
+            <Link
+              href={`/user/${username || user.id}`}
+              target="_blank"
+              className="mt-4 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-primary-500/20 bg-primary-500/10 text-primary-600 dark:text-primary-400 hover:bg-primary-500/15 transition-colors"
+            >
+              <ExternalLink className="w-3.5 h-3.5" /> View Public Profile
+            </Link>
 
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="mt-6 w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border border-surface-200 dark:border-surface-800 hover:border-primary-400 dark:hover:border-primary-500/50 hover:bg-white dark:hover:bg-surface-900 transition-colors"
+              className="mt-2 w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border border-white/80 dark:border-white/10 hover:border-primary-400 dark:hover:border-primary-500/50 hover:bg-white/70 dark:hover:bg-white/10 transition-colors"
             >
               <Edit2 className="w-3.5 h-3.5" /> {isEditing ? "View Dashboard" : "Edit Profile"}
             </button>
           </div>
           
-          <hr className="my-6 border-surface-200 dark:border-surface-800" />
+          <hr className="my-6 border-white/80 dark:border-white/10" />
           
           <button onClick={async () => {
             const supabase = createClient();
@@ -246,7 +261,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
         {/* Content */}
         <div className="flex-1 min-w-0">
           {isEditing ? (
-            <div className="mb-10 rounded-2xl border border-surface-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900 fade-in">
+            <div className="mb-10 rounded-2xl border border-white/80 bg-white/60 backdrop-blur-[16px] backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.08] p-6 fade-in">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-surface-900 dark:text-white flex items-center gap-2">
@@ -282,7 +297,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                       value={fullName}
                       onChange={e => setFullName(e.target.value)}
                       placeholder="e.g. John Doe"
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/25 outline-none text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white/40 dark:bg-white/5 border border-white/80 dark:border-white/10 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/25 outline-none text-sm"
                     />
                   </div>
                   <div>
@@ -293,15 +308,39 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                       value={username}
                       onChange={e => setUsername(e.target.value)}
                       placeholder="e.g. johndoe"
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/25 outline-none text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white/40 dark:bg-white/5 border border-white/80 dark:border-white/10 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/25 outline-none text-sm"
                     />
                   </div>
                 </div>
 
                 <div>
+                  <label className="block text-xs font-bold text-surface-500 uppercase tracking-wider mb-1.5">Bio / Creator Tagline</label>
+                  <textarea
+                    rows={2}
+                    maxLength={200}
+                    value={bio}
+                    onChange={e => setBio(e.target.value)}
+                    placeholder="Short bio about yourself or your AI prompt workflows (max 200 characters)"
+                    className="w-full px-4 py-2 rounded-xl bg-white/40 dark:bg-white/5 border border-white/80 dark:border-white/10 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/25 outline-none text-sm"
+                  />
+                  <span className="text-[11px] text-surface-400">{200 - bio.length} characters left</span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-surface-500 uppercase tracking-wider mb-1.5">Website / Portfolio Link</label>
+                  <input
+                    type="url"
+                    value={website}
+                    onChange={e => setWebsite(e.target.value)}
+                    placeholder="https://example.com"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/40 dark:bg-white/5 border border-white/80 dark:border-white/10 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/25 outline-none text-sm"
+                  />
+                </div>
+
+                <div>
                   <label className="block text-xs font-bold text-surface-500 uppercase tracking-wider mb-1.5">Profile Picture</label>
                   <div className="flex items-center gap-4">
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-surface-200 ring-2 ring-surface-200 dark:bg-surface-800 dark:ring-surface-700">
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-black/[0.07] ring-2 ring-white/70 dark:bg-white/[0.09] dark:ring-white/15">
                       {avatarUrl ? (
                         <Image src={avatarUrl} alt="Profile picture preview" fill className="object-cover" referrerPolicy="no-referrer" />
                       ) : (
@@ -311,7 +350,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                       )}
                     </div>
                     <div className="space-y-1">
-                      <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-surface-200 bg-white px-4 py-2 text-xs font-bold transition-colors hover:bg-surface-50 dark:border-surface-800 dark:bg-surface-900 dark:hover:bg-surface-800">
+                      <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/80 bg-white/60 px-4 py-2 text-xs font-bold shadow-sm backdrop-blur-xl transition hover:border-primary-400/60 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:hover:text-white">
                         <Camera className="w-4 h-4" /> {avatarUrl ? 'Change photo' : 'Upload photo'}
                         <input
                           type="file"
@@ -346,7 +385,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
           ) : (
             <>
               {settings.features?.userSubmissions && (
-                <div className="mb-10 rounded-2xl border border-primary-100 bg-primary-50 p-5 dark:border-primary-500/20 dark:bg-surface-900">
+                <div className="mb-10 rounded-2xl border border-primary-500/25 bg-primary-500/10 p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.2em] text-primary-500">Creator dashboard</p>
@@ -373,7 +412,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                     {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} />)}
                   </div>
                 ) : savedPosts.length === 0 ? (
-                  <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
+                  <div className="text-center py-12 border border-dashed border-white/80 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-white/5">
                     <Heart className="w-8 h-8 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
                     <p className="text-surface-500 font-medium">No bookmarks yet</p>
                     <Link href="/explore" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
@@ -398,7 +437,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                     {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} />)}
                   </div>
                 ) : likedPosts.length === 0 ? (
-                  <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
+                  <div className="text-center py-12 border border-dashed border-white/80 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-white/5">
                     <Heart className="w-8 h-8 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
                     <p className="text-surface-500 font-medium">No liked prompts yet</p>
                     <Link href="/explore" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
@@ -426,7 +465,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                   {Array.from({ length: 3 }).map((_, i) => <SkeletonPostCard key={i} />)}
                 </div>
               ) : mySubmissions.length === 0 ? (
-                <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
+                <div className="text-center py-12 border border-dashed border-white/80 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-white/5">
                   <p className="text-surface-500 font-medium">You haven&apos;t submitted any prompts.</p>
                   <Link href="/submit" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
                     Submit a new prompt
@@ -450,11 +489,11 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
               {profileLoading ? (
                 <div className="space-y-3">
                   {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="h-24 animate-pulse rounded-2xl bg-surface-100 dark:bg-surface-800" />
+                    <div key={i} className="h-24 animate-pulse rounded-2xl bg-black/[0.04] dark:bg-white/[0.06]" />
                   ))}
                 </div>
               ) : comments.length === 0 ? (
-                <div className="text-center py-12 border border-dashed border-surface-200 dark:border-surface-800 rounded-2xl bg-surface-50/50 dark:bg-surface-900/50">
+                <div className="text-center py-12 border border-dashed border-white/80 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-white/5">
                   <MessageCircle className="w-8 h-8 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
                   <p className="text-surface-500 font-medium">No comments yet</p>
                   <Link href="/explore" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
@@ -464,7 +503,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
               ) : (
                 <div className="space-y-3">
                   {comments.map(comment => (
-                    <div key={comment.id} className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-950">
+                    <div key={comment.id} className="rounded-2xl border border-white/80 bg-white/60 backdrop-blur-[16px] backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.08] p-4">
                       <div className="flex flex-wrap items-center gap-2 text-xs text-surface-500">
                         <Link href={getPostPath({ id: comment.postId, slug: comment.postSlug })} className="font-bold text-primary-500 hover:text-primary-600">
                           {comment.postTitle}

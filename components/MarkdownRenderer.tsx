@@ -55,8 +55,8 @@ const calloutStyles: Record<CalloutType, {
     titleClassName: 'text-fuchsia-600 dark:text-fuchsia-300'
   },
   quote: {
-    className: 'border-surface-200 bg-surface-50 text-surface-800 dark:border-surface-700 dark:bg-surface-800/60 dark:text-surface-50',
-    accentClassName: 'bg-surface-400 dark:bg-surface-500',
+    className: 'border-white/70 bg-white/40 text-surface-800 dark:border-white/10 dark:bg-white/[0.06] dark:text-surface-50',
+    accentClassName: 'bg-surface-500 dark:bg-surface-400',
     titleClassName: 'text-surface-500 dark:text-surface-400'
   },
   prompt: {
@@ -95,9 +95,9 @@ const inlineStyles: Record<string, string> = {
   purple: 'rounded-md bg-violet-100 px-1.5 py-0.5 font-semibold text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
   orange: 'rounded-md bg-orange-100 px-1.5 py-0.5 font-semibold text-orange-700 dark:bg-orange-500/15 dark:text-orange-300',
   pink: 'rounded-md bg-pink-100 px-1.5 py-0.5 font-semibold text-pink-700 dark:bg-pink-500/15 dark:text-pink-300',
-  gray: 'rounded-md bg-surface-100 px-1.5 py-0.5 font-medium text-surface-700 dark:bg-surface-800 dark:text-surface-200',
+  gray: 'rounded-md bg-black/[0.05] px-1.5 py-0.5 font-medium text-surface-700 dark:bg-white/10 dark:text-surface-200',
   outline: 'rounded-md border border-current px-1.5 py-0.5 font-semibold',
-  kbd: 'rounded-md border border-surface-300 bg-white px-1.5 py-0.5 font-mono text-[0.85em] font-semibold text-surface-700 dark:border-surface-600 dark:bg-surface-900 dark:text-surface-200'
+  kbd: 'rounded-md border border-white/80 bg-white/70 px-1.5 py-0.5 font-mono text-[0.85em] font-semibold text-surface-700 dark:border-white/15 dark:bg-white/10 dark:text-surface-200'
 };
 
 function parseMarkdownBlocks(content: string): MarkdownBlock[] {
@@ -261,8 +261,8 @@ function CodeBlock({ raw, lang }: { raw: string; lang: string }) {
   };
 
   return (
-    <div className="group my-6 overflow-hidden rounded-2xl border border-surface-800 bg-surface-900 shadow-inner">
-      <div className="flex items-center justify-between border-b border-surface-800/80 bg-surface-950/60 px-4 py-2">
+    <div className="group my-6 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.08] shadow-inner">
+      <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-2">
         <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-surface-400">
           {effectiveLang || 'code'}
         </span>
@@ -291,7 +291,7 @@ function renderMarkdown(content: string) {
       rehypePlugins={[rehypeRaw]}
       components={{
         h2: (props) => (
-          <h2 className="mt-10 mb-6 border-b border-surface-100 pb-3 text-3xl font-bold tracking-tight text-surface-900 dark:border-surface-800 dark:text-white">
+          <h2 className="mt-10 mb-6 border-b border-white/70 pb-3 text-3xl font-bold tracking-tight text-surface-900 dark:border-white/10 dark:text-white">
             <span className="mr-3 inline-block h-6 w-1.5 rounded-full bg-primary-500 align-[-3px]" />
             {renderInline(props.children)}
           </h2>
@@ -325,13 +325,13 @@ function renderMarkdown(content: string) {
             {renderInline(props.children)}
           </li>
         ),
-        hr: () => <hr className="my-10 border-0 border-t border-surface-200 dark:border-surface-800" />,
+        hr: () => <hr className="my-10 border-0 border-t border-white/80 dark:border-white/10" />,
         blockquote: (props) => (
-          <blockquote className="my-8 rounded-r-2xl border-l-4 border-primary-500 bg-surface-50 py-4 pl-6 font-serif text-xl italic text-surface-700 dark:bg-surface-800/50 dark:text-surface-300">
+          <blockquote className="my-8 rounded-r-2xl border-l-4 border-primary-500 bg-white/40 py-4 pl-6 font-serif text-xl italic text-surface-700 dark:bg-white/[0.06] dark:text-surface-300">
             {props.children}
           </blockquote>
         ),
-        code: (props) => <code className="rounded-md border border-surface-200 bg-surface-100 px-2 py-1 font-mono text-[0.9em] text-primary-600 dark:border-surface-700 dark:bg-surface-800/80 dark:text-primary-400" {...props} />,
+        code: (props) => <code className="rounded-md border border-white/80 bg-black/[0.04] px-2 py-1 font-mono text-[0.9em] text-primary-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-primary-400" {...props} />,
         pre: (props) => {
           // The single child is react-markdown's <code>; recover its raw text
           // and language, then render our highlighted, copyable CodeBlock.
@@ -342,22 +342,22 @@ function renderMarkdown(content: string) {
           return <CodeBlock raw={raw} lang={lang} />;
         },
         table: (props) => (
-          <div className="my-6 overflow-x-auto rounded-xl border border-surface-200 dark:border-surface-700">
+          <div className="my-6 overflow-x-auto rounded-xl border border-white/80 dark:border-white/10">
             <table className="w-full border-collapse text-sm" {...props} />
           </div>
         ),
-        thead: (props) => <thead className="bg-surface-100 dark:bg-surface-800/70" {...props} />,
+        thead: (props) => <thead className="bg-black/[0.04] dark:bg-white/[0.07]" {...props} />,
         th: (props) => (
-          <th className="border-b border-surface-200 px-4 py-2.5 text-left font-bold text-surface-900 dark:border-surface-700 dark:text-white">
+          <th className="border-b border-white/80 px-4 py-2.5 text-left font-bold text-surface-900 dark:border-white/10 dark:text-white">
             {renderInline(props.children)}
           </th>
         ),
         td: (props) => (
-          <td className="border-b border-surface-100 px-4 py-2.5 align-top text-surface-700 dark:border-surface-800 dark:text-surface-200">
+          <td className="border-b border-white/70 px-4 py-2.5 align-top text-surface-700 dark:border-white/10 dark:text-surface-200">
             {renderInline(props.children)}
           </td>
         ),
-        tr: (props) => <tr className="even:bg-surface-50/50 dark:even:bg-surface-800/30" {...props} />
+        tr: (props) => <tr className="even:bg-black/[0.02] dark:even:bg-white/[0.03]" {...props} />
       }}
     >
       {content}

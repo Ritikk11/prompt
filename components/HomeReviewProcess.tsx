@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, FileCheck2, SearchCheck, ShieldCheck } from 'lucide-react';
 import type { SiteSettings } from '@/lib/types';
+import ScrollReveal from '@/components/ScrollReveal';
+import { accentTitle } from '@/components/SectionHeader';
 
 const reviewSteps = [
   {
@@ -37,39 +39,43 @@ export default function HomeReviewProcess({ settings }: { settings?: SiteSetting
     text: content.items?.[index]?.text || step.text,
   })) : reviewSteps;
   return (
-    <section className="relative w-full overflow-clip bg-surface-50 px-5 py-16 dark:bg-surface-950 sm:px-8">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
+    <section className="relative w-full overflow-clip px-5 py-16 sm:px-8">
+      <div className="absolute inset-x-0 top-0 mx-auto h-px max-w-4xl bg-gradient-to-r from-transparent via-primary-400/70 to-transparent" />
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-        <div>
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300">
-            <ShieldCheck className="h-4 w-4" />
-            {content.badge || 'Review process'}
+        {/* Left: badge, title, description, CTA — plain text column */}
+        <ScrollReveal slide>
+          <div>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/75 px-4 py-2 text-xs font-bold text-primary-700 shadow-sm dark:border-white/10 dark:bg-white/[0.14] dark:text-primary-200">
+              <ShieldCheck className="h-4 w-4" />
+              {content.badge || 'Review process'}
+            </div>
+            <h2 className="max-w-xl text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white sm:text-4xl">
+              {accentTitle(content.title || 'How prompts are reviewed before they go live', 'reviewed')}
+            </h2>
+            <p className="mt-4 max-w-xl text-base leading-7 text-surface-600 dark:text-surface-300">
+              {content.description || 'Every public prompt is checked for clarity, useful examples, model context, and clean organization before it appears in the library.'}
+            </p>
+            {content.showCta !== false && (
+              <Link
+                href={content.ctaHref || '/submit'}
+                className="mt-7 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-google-blue to-[#1a73e8] px-5 py-3 text-sm font-bold text-white shadow-md shadow-primary-500/25 transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg hover:shadow-primary-500/40 hover:brightness-[1.06] active:scale-95"
+              >
+                {content.ctaLabel || 'Submit a prompt'}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
           </div>
-          <h2 className="max-w-xl text-3xl font-extrabold tracking-normal text-surface-950 dark:text-white sm:text-4xl">
-            {content.title || 'How prompts are reviewed before they go live'}
-          </h2>
-          <p className="mt-4 max-w-xl text-base leading-7 text-surface-600 dark:text-surface-300">
-            {content.description || 'Every public prompt is checked for clarity, useful examples, model context, and clean organization before it appears in the library.'}
-          </p>
-          {content.showCta !== false && (
-            <Link
-              href={content.ctaHref || '/submit'}
-              className="mt-7 inline-flex items-center gap-2 rounded-full bg-surface-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-primary-600 dark:bg-white dark:text-surface-950 dark:hover:bg-primary-100"
-            >
-              {content.ctaLabel || 'Submit a prompt'}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          )}
-        </div>
+        </ScrollReveal>
 
-        <div data-reveal-stagger className="grid gap-4 sm:grid-cols-2">
+        {/* Right: 2x2 step cards */}
+        <ScrollReveal stagger delay={150} className="grid gap-4 sm:grid-cols-2">
           {editableSteps.map(step => {
             const Icon = step.icon;
             return (
-              <div key={step.number} className="rounded-2xl border border-surface-200 bg-surface-50 p-5 transition hover:border-emerald-300 dark:border-surface-800 dark:bg-surface-900/70 dark:hover:border-emerald-500/50">
+              <div key={step.number} className="glass-card p-5 transition hover:border-primary-400/60 dark:hover:border-primary-400/50">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-xs font-black tracking-[0.2em] text-emerald-700 dark:text-emerald-400">{step.number}</span>
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <span className="text-xs font-black tracking-[0.2em] text-primary-600 dark:text-primary-300">{step.number}</span>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500/10 text-primary-600 dark:text-primary-300">
                     <Icon className="h-5 w-5" />
                   </span>
                 </div>
@@ -78,7 +84,7 @@ export default function HomeReviewProcess({ settings }: { settings?: SiteSetting
               </div>
             );
           })}
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

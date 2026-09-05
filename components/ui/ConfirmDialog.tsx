@@ -73,7 +73,7 @@ export function ConfirmDialogHost() {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-surface-950/60 p-4 backdrop-blur-sm animate-in fade-in duration-150"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-white/5 p-4 backdrop-blur-sm animate-in fade-in duration-150"
       onClick={() => finish(false)}
       role="presentation"
     >
@@ -81,7 +81,7 @@ export function ConfirmDialogHost() {
         role="alertdialog"
         aria-modal="true"
         aria-label={dialog.title}
-        className="w-full max-w-sm rounded-2xl border border-surface-200 bg-white p-5 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-150 dark:border-surface-800 dark:bg-surface-900"
+        className="w-full max-w-sm rounded-2xl border border-white/80 bg-white/60 p-5 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-150 dark:border-white/10 dark:bg-white/[0.08] backdrop-blur-xl backdrop-saturate-[120%]"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-start gap-3">
@@ -103,7 +103,7 @@ export function ConfirmDialogHost() {
           <button
             type="button"
             onClick={() => finish(false)}
-            className="rounded-xl px-4 py-2 text-xs font-bold text-surface-600 transition-colors hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-800"
+            className="rounded-xl px-4 py-2 text-xs font-bold text-surface-600 transition-colors hover:bg-black/[0.06] dark:hover:bg-white/10 dark:text-surface-300 dark:hover:bg-white/10"
           >
             {dialog.cancelLabel || 'Cancel'}
           </button>

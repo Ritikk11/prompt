@@ -102,13 +102,13 @@ function PromptImageGallery({
   return (
     <div className="relative self-start p-3 sm:p-4">
       <div 
-        className="relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-2 dark:border-surface-700/70 dark:bg-surface-800/60 group/img select-none"
+        className="relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-white/60 bg-white/40 p-2 dark:border-white/10 dark:bg-white/[0.06] group/img select-none"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         <div
-          className="relative flex w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-900"
+          className="relative flex w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-black/[0.04] dark:bg-white/[0.06]"
           onClick={() => onOpenLightbox(images, safeActiveIdx, index, tools)}
         >
           <LoadingImg
@@ -586,7 +586,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   };
 
   const renderShareCard = (className = '') => (
-    <div className={`rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900 ${className}`}>
+    <div className={`rounded-2xl border border-white/80 bg-white/60 p-4 dark:border-white/10 dark:bg-white/[0.08]  backdrop-blur-xl backdrop-saturate-[120%]${className}`}>
       <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-surface-900 dark:text-white">
         <Share2 className="h-4 w-4 text-primary-500" /> Share
       </h3>
@@ -595,7 +595,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           <button
             key={target}
             onClick={() => handleShare(target)}
-            className={`flex items-center justify-center rounded-xl bg-surface-100 p-2 dark:bg-surface-800 ${shareButtonMeta[target].className}`}
+            className={`flex items-center justify-center rounded-xl bg-black/[0.04] p-2 dark:bg-white/[0.06] ${shareButtonMeta[target].className}`}
             title={shareButtonMeta[target].title}
             aria-label={shareButtonMeta[target].title}
           >
@@ -642,8 +642,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     const firstToolInfo = firstTool ? getToolInfo(firstTool, settings?.toolDetails) : null;
     const itemImageUrl = getThumbnailImageUrl(item.thumbnailUrl || item.images?.[0]?.url || '', { width: 220, quality: 72 });
     return (
-    <Link href={`/${item.slug || item.id}`} className="group flex gap-3 rounded-2xl border border-surface-200 bg-white p-2.5 transition-colors hover:border-primary-400 dark:border-surface-800 dark:bg-surface-900">
-      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-surface-100 dark:bg-surface-800">
+    <Link href={`/${item.slug || item.id}`} className="group flex gap-3 rounded-2xl border border-white/80 bg-white/60 p-2.5 shadow-sm backdrop-blur-xl backdrop-saturate-[120%] transition-[border-color,box-shadow] duration-300 hover:border-primary-400/60 hover:shadow-md dark:border-white/10 dark:bg-white/[0.08] dark:hover:border-primary-400/50">
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-black/[0.04] dark:bg-white/[0.06]">
         <LoadingImage src={itemImageUrl} alt={item.title} fill showSkeleton={showSkeleton} className="object-cover transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
       </div>
       <div className="min-w-0 flex-1 py-1">
@@ -674,7 +674,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     };
 
     return (
-      <div className={`rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900 ${mobile ? 'mb-16 lg:hidden' : ''}`}>
+      <div className={`rounded-2xl border border-white/80 bg-white/60 p-4 dark:border-white/10 dark:bg-white/[0.08]  backdrop-blur-xl backdrop-saturate-[120%]${mobile ? 'mb-16 lg:hidden' : ''}`}>
         <div className="mb-4 flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-500/10 text-primary-500">
             <Compass className="h-4 w-4" />
@@ -693,7 +693,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               <Link
                 key={`${item.label}:${item.href}`}
                 href={item.href}
-                className="group flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-xs font-bold text-surface-700 hover:border-primary-300 hover:bg-white hover:text-primary-600 dark:border-surface-800 dark:bg-surface-950/60 dark:text-surface-300 dark:hover:border-primary-500/50 dark:hover:bg-surface-900 dark:hover:text-white"
+                className="group flex items-center justify-between rounded-xl border border-white/80 bg-white/40 px-3 py-2.5 text-xs font-bold text-surface-700 hover:border-primary-400/60 hover:bg-white/70 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:bg-white/10 dark:hover:text-white"
               >
                 <span className="flex items-center gap-2">
                   <Icon className="h-3.5 w-3.5 text-primary-500" />
@@ -734,10 +734,10 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           <button
             key={tool}
             onClick={() => handleTryTool(tool, prompt)}
-            className="inline-flex items-center gap-2 rounded-xl border border-surface-200 bg-white px-3 py-2 text-xs font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200 dark:hover:text-white"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/80 bg-white/60 px-3 py-2 text-xs font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-surface-200 dark:hover:text-white backdrop-blur-xl backdrop-saturate-[120%]"
           >
             {info.logo && (
-              <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white p-[1px]">
+              <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white/60 p-[1px] backdrop-blur-xl backdrop-saturate-[120%]">
                 <Image src={info.logo} alt={`${tool} logo`} fill className="object-contain" referrerPolicy="no-referrer" />
               </span>
             )}
@@ -837,7 +837,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     switch (postHeroStyle) {
       case 'v2': // Immersive Blur Background
         return (
-          <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-surface-900 shadow-2xl group min-h-[500px] flex items-end">
+          <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-white/[0.08] shadow-2xl group min-h-[500px] flex items-end">
             {/* Decorative, but it covers the viewport so Lighthouse counts it
                 as the mobile LCP element — priority makes it paint immediately
                 (same file as the preloaded hero thumbnail, so no extra fetch). */}
@@ -874,7 +874,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         );
       case 'v3': // Diagonal Split
         return (
-          <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-xl">
+          <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-white/40 dark:bg-white/[0.08] border border-white/80 dark:border-white/10 shadow-xl backdrop-blur-xl backdrop-saturate-[120%]">
              <div className="grid grid-cols-1 md:grid-cols-2 min-h-[400px]">
                 <div className="flex flex-col justify-center p-8 md:p-12 order-2 md:order-1">
                    <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -884,13 +884,13 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                        return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
                      })}
                    </div>
-                     {post.featured && <span className="px-3 py-1 rounded-full text-xs font-medium bg-surface-200 dark:bg-surface-800 text-surface-700 dark:text-surface-300">⭐ Featured</span>}
+                     {post.featured && <span className="px-3 py-1 rounded-full text-xs font-medium bg-black/[0.07] dark:bg-white/[0.09] text-surface-700 dark:text-surface-300">⭐ Featured</span>}
                    </div>
                    <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 leading-tight">{post.title}</h1>
                    <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg mb-8 line-clamp-4">{post.description}</p>
                    <div className="flex justify-start">{renderMetaInfo()}</div>
                 </div>
-                <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-surface-100 dark:bg-surface-800/30 flex items-center justify-center p-6 lg:p-10">
+                <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-black/[0.04] dark:bg-white/[0.06] flex items-center justify-center p-6 lg:p-10">
                    <Image src={backgroundPromptImageUrl} alt="" fill className="object-cover blur-3xl opacity-20 scale-125 z-0"  referrerPolicy="no-referrer" />
                    <div className="max-h-[400px] w-full max-w-[800px] h-full sm:w-[600px] rounded-[24px] shadow-2xl relative z-10 overflow-hidden">
                      <LoadingImage
@@ -915,7 +915,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <ToolBadge toolName={heroToolName} toolInfo={heroToolInfo} size="lg" className="mb-6" />
             <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 tracking-tight leading-tight max-w-4xl">{post.title}</h1>
             <p className="text-surface-600 dark:text-surface-400 text-lg md:text-2xl max-w-3xl leading-relaxed mb-8 font-medium">{post.description}</p>
-            <div className="relative w-full max-w-2xl aspect-video mb-10 rounded-3xl overflow-hidden shadow-xl bg-surface-100 dark:bg-surface-800/50 p-4">
+            <div className="relative w-full max-w-2xl aspect-video mb-10 rounded-3xl overflow-hidden shadow-xl bg-black/[0.04] dark:bg-white/[0.06] p-4">
               <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-inner">
                 <LoadingImage 
                   src={mainPromptImageUrl}
@@ -971,13 +971,13 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       case 'v6': // Cyberpunk Bordered
         return (
           <div className="relative mb-16 w-full p-1 bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 rounded-[32px] shadow-[0_20px_50px_rgba(var(--primary-500),0.3)]">
-            <div className="bg-white dark:bg-surface-950 rounded-[30px] p-8 md:p-12 overflow-hidden relative">
+            <div className="bg-white/60 dark:bg-white/[0.08] rounded-[30px] p-8 md:p-12 overflow-hidden relative">
                <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 blur-[100px] pointer-events-none" />
                <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[100px] pointer-events-none" />
                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                   <div>
                     <div className="flex gap-2 mb-6">
-                       <span className="px-2 py-1 bg-black text-white dark:bg-white dark:text-black text-[10px] font-black uppercase tracking-widest">AI GENERATED</span>
+                       <span className="px-2 py-1 bg-black text-white dark:bg-white/60 dark:text-black text-[10px] font-black uppercase tracking-widest">AI GENERATED</span>
                        <ToolBadge toolName={heroToolName} toolInfo={heroToolInfo} size="sm" />
                     </div>
                     <h1 className="text-4xl md:text-5xl font-black text-surface-900 dark:text-white mb-6 uppercase tracking-tighter italic">
@@ -988,7 +988,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                     </p>
                     <div className="flex justify-start">{renderMetaInfo()}</div>
                   </div>
-                  <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-surface-900 shadow-2xl rotate-1">
+                  <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-white/80 shadow-2xl rotate-1">
                     <LoadingImage
                       src={mainPromptImageUrl}
                       alt={post.title}
@@ -1049,7 +1049,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white dark:to-surface-950" />
              </div>
-             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-0 md:-translate-y-1/2 w-[95%] max-w-5xl bg-white dark:bg-surface-900 rounded-[32px] shadow-2xl border border-surface-100 dark:border-surface-800 p-8 md:p-12 flex flex-col md:flex-row gap-10 items-center">
+             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-0 md:-translate-y-1/2 w-[95%] max-w-5xl bg-white/60 dark:bg-white/[0.08] rounded-[32px] shadow-2xl border border-white/70 dark:border-white/10 p-8 md:p-12 flex flex-col md:flex-row gap-10 items-center backdrop-blur-xl backdrop-saturate-[120%]">
                 <div className="w-full md:w-1/2 aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shrink-0">
                   <LoadingImage
                     src={mainPromptImageUrl}
@@ -1093,7 +1093,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               {renderMetaInfo()}
             </div>
             <div className="relative mb-12 w-full max-w-5xl mx-auto flex justify-center">
-              <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-surface-100 dark:bg-surface-800/30 p-2 sm:p-4">
+              <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-black/[0.04] dark:bg-white/[0.06] p-2 sm:p-4">
                 <div className="relative aspect-[4/5] min-h-0 w-full overflow-hidden rounded-[24px] shadow-md sm:aspect-auto sm:h-[70vh] sm:min-h-[520px] sm:max-h-[760px]">
                   <LoadingImage
                     src={mainPromptImageUrl}
@@ -1127,7 +1127,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   return (
     <div className="max-w-6xl mx-auto px-1 py-4 sm:py-6 fade-in">
       {(shareFeedback || tryFeedback) && (
-        <div className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-full border border-surface-200 bg-white px-4 py-2 text-xs font-bold text-surface-800 shadow-xl dark:border-surface-700 dark:bg-surface-900 dark:text-white">
+        <div className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-full border border-white/80 bg-white/60 px-4 py-2 text-xs font-bold text-surface-800 shadow-xl dark:border-white/10 dark:bg-white/[0.08] dark:text-white backdrop-blur-xl backdrop-saturate-[120%]">
           {shareFeedback || tryFeedback}
         </div>
       )}
@@ -1161,8 +1161,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           
           <div className="flex flex-wrap gap-4">
              {post.referenceImages.map((url, idx) => (
-               <div key={idx} className="relative group rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 flex flex-col w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.67rem)] lg:w-[calc(25%-0.75rem)]">
-                 <div className="relative w-full h-auto flex items-center justify-center p-3 sm:p-4 bg-surface-50 dark:bg-surface-800">
+               <div key={idx} className="relative group rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-white/80 dark:border-white/10 bg-white/60 backdrop-blur-[16px] backdrop-saturate-[120%] dark:bg-white/[0.08] flex flex-col w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.67rem)] lg:w-[calc(25%-0.75rem)]">
+                 <div className="relative w-full h-auto flex items-center justify-center p-3 sm:p-4 bg-white/40 dark:bg-white/5">
                     <div className="w-full relative rounded-xl overflow-hidden cursor-zoom-in" onClick={() => setLightboxState({ images: post.referenceImages || [], activeImageIndex: idx, promptIndex: -1, tools: [] })}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -1175,11 +1175,11 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                       />
                     </div>
                  </div>
-                 <div className="p-3 sm:p-4 border-t border-surface-100 dark:border-surface-800 flex justify-between items-center bg-white dark:bg-surface-900 mt-auto">
+                 <div className="p-3 sm:p-4 border-t border-white/70 dark:border-white/10 flex justify-between items-center bg-white/60 dark:bg-white/[0.08] mt-auto backdrop-blur-xl backdrop-saturate-[120%]">
                     <span className="text-sm font-semibold tracking-wide text-surface-600 dark:text-surface-400">Ref {idx + 1}</span>
                     <button
                       onClick={() => handleDownload(url, `reference_${post.id}_${idx + 1}.png`)}
-                      className="p-2 hover:bg-surface-100 dark:hover:bg-surface-800 rounded-lg transition-colors text-surface-600 dark:text-surface-400"
+                      className="rounded-lg p-2 transition-colors hover:bg-black/[0.06] dark:hover:bg-white/10 text-surface-600 dark:text-surface-400"
                       title="Download image"
                     >
                       <DownloadCloud className="w-5 h-5" />
@@ -1206,7 +1206,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           {(post.images || []).map((img, index) => (
             <div
               key={img.id}
-              className="group rounded-2xl overflow-hidden border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 hover:shadow-xl transition-all duration-300"
+              className="group rounded-2xl overflow-hidden border border-white/80 dark:border-white/10 bg-white/60 backdrop-blur-[16px] backdrop-saturate-[120%] dark:bg-white/[0.08] hover:shadow-xl transition-all duration-300"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Image + Prompt layout */}
@@ -1228,8 +1228,8 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                 <div className="flex flex-col justify-between p-5 sm:p-6">
                   <div>
                     {settings.features?.premiumPrompts && post.isPremium && !user ? (
-                       <div className="bg-surface-50 dark:bg-surface-800/50 rounded-2xl p-6 mb-6 text-center border border-surface-200/50 dark:border-surface-700/50 relative overflow-hidden group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
-                         <div className="absolute inset-0 bg-surface-50/80 dark:bg-surface-900/80 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6">
+                       <div className="bg-white/40 dark:bg-white/5 rounded-2xl p-6 mb-6 text-center border border-white/60 dark:border-white/10 relative overflow-hidden group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
+                         <div className="absolute inset-0 bg-white/40 dark:bg-white/5 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6">
                            <Lock className="w-8 h-8 text-yellow-500 mb-3" />
                            <h4 className="font-bold text-lg mb-1">Premium Prompt</h4>
                            <p className="text-sm text-surface-500 mb-4 max-w-sm">
@@ -1261,7 +1261,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                           <CopyButton text={img.prompt} />
                         </div>
                         <div className="relative mb-4">
-                          <div className={`no-scrollbar overflow-hidden rounded-2xl border border-surface-200/70 bg-surface-50 p-5 transition-colors group-hover:bg-primary-50/20 dark:border-surface-700/70 dark:bg-surface-800/50 dark:group-hover:bg-primary-900/10 sm:p-6 md:max-h-[460px] md:overflow-y-auto ${expandedPrompts[img.id] ? 'max-h-none md:max-h-[460px]' : 'max-h-[260px]'}`}>
+                          <div className={`no-scrollbar overflow-hidden rounded-2xl border border-white/60 bg-white/40 p-5 transition-colors group-hover:bg-primary-50/20 dark:border-white/10 dark:bg-white/[0.06] dark:group-hover:bg-primary-900/10 sm:p-6 md:max-h-[460px] md:overflow-y-auto ${expandedPrompts[img.id] ? 'max-h-none md:max-h-[460px]' : 'max-h-[260px]'}`}>
                             <p className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-surface-700 dark:text-surface-300 md:text-base">
                               {img.prompt}
                             </p>
@@ -1274,7 +1274,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                         <button
                           type="button"
                           onClick={() => setExpandedPrompts(prev => ({ ...prev, [img.id]: !prev[img.id] }))}
-                          className="btn-glow mb-6 inline-flex w-full items-center justify-center rounded-full border border-surface-300 px-4 py-2 text-xs font-semibold text-surface-700 transition-colors dark:border-white/15 dark:text-surface-200 md:hidden"
+                          className="btn-glow mb-6 inline-flex w-full items-center justify-center rounded-full border border-white/80 px-4 py-2 text-xs font-semibold text-surface-700 transition-colors dark:border-white/15 dark:text-surface-200 md:hidden"
                         >
                           {expandedPrompts[img.id] ? 'Show less prompt' : 'Show full prompt'}
                         </button>
@@ -1321,7 +1321,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
       {/* How to use */}
       {showHowTo && (
-      <div className="mb-16 rounded-3xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 sm:p-8">
+      <div className="mb-16 rounded-3xl border border-white/80 bg-white/60 p-5 dark:border-white/10 dark:bg-white/[0.08] sm:p-8 backdrop-blur-xl backdrop-saturate-[120%]">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="mb-2 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">Quick workflow</p>
@@ -1335,7 +1335,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
           {howToSteps.map((step, index) => {
             const StepIcon = step.icon;
             return (
-              <div key={step.title} className="rounded-2xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-800 dark:bg-surface-950/60">
+              <div key={step.title} className="rounded-2xl border border-white/80 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500 text-white shadow-lg shadow-primary-500/20">
                     <StepIcon className="h-5 w-5" />
@@ -1365,7 +1365,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
               {renderExploreAllPromptsBlock()}
 
               {showYouMightAlsoLike && recommendedPosts.length > 0 && (
-                <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
+                <div className="rounded-2xl border border-white/80 bg-white/60 p-4 dark:border-white/10 dark:bg-white/[0.08] backdrop-blur-xl backdrop-saturate-[120%]">
                   <h3 className="mb-3 text-sm font-black text-surface-900 dark:text-white">You might also like</h3>
                   <div className="space-y-2">
                     {recommendedPosts.slice(0, 3).map(item => <SidebarCard key={item.id} item={item} />)}
@@ -1386,7 +1386,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             <Link
               key={tag}
               href={`/tag/${encodeURIComponent(tag)}`}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:bg-primary-500 hover:text-white dark:hover:bg-primary-500 dark:hover:text-white transition-all transform uppercase tracking-wider"
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-black/[0.04] dark:bg-white/[0.06] text-surface-600 dark:text-surface-300 hover:bg-primary-500 hover:text-white dark:hover:bg-primary-500 dark:hover:text-white transition-all transform uppercase tracking-wider"
             >
               #{tag}
             </Link>
@@ -1396,9 +1396,9 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       )}
 
       {settings.features?.comments && (
-        <div className="mb-16 border-t border-surface-200 dark:border-surface-800 pt-16">
+        <div className="mb-16 border-t border-white/80 dark:border-white/10 pt-16">
           <h3 className="text-xl md:text-2xl font-bold tracking-tight mb-8">Comments & Feedback</h3>
-          <div className="bg-surface-50 dark:bg-surface-800/30 rounded-2xl p-8 text-center border border-surface-200 dark:border-surface-800">
+          <div className="bg-white/40 dark:bg-white/5 rounded-2xl p-8 text-center border border-white/80 dark:border-white/10">
             {user ? (
                <div className="max-w-2xl mx-auto flex flex-col gap-4">
                  <textarea
@@ -1406,7 +1406,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                    value={commentText}
                    onChange={(event) => setCommentText(event.target.value)}
                    placeholder="Share your experience using these prompts, or post your own variations..."
-                   className="w-full px-4 py-3 rounded-xl bg-white dark:bg-surface-950 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none transition-colors text-sm resize-none"
+                   className="w-full px-4 py-3 rounded-xl bg-white/60 dark:bg-white/[0.08] border border-white/80 dark:border-white/10 focus:border-primary-500 outline-none transition-colors text-sm resize-none"
                  />
                  <div className="flex justify-end">
                    <button
@@ -1437,7 +1437,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   .filter(comment => comment.status === 'approved' || comment.userId === user?.id)
                   .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                   .map(comment => (
-                    <div key={comment.id} className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-950">
+                    <div key={comment.id} className="rounded-2xl border border-white/80 bg-white/60 p-4 dark:border-white/10 dark:bg-white/[0.08] backdrop-blur-xl backdrop-saturate-[120%]">
                       <div className="mb-2 flex items-center justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-3">
                           {comment.userAvatar ? (
@@ -1475,7 +1475,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
       {/* Related Posts */}
       {showRecommendedPosts && relatedPosts.length > 0 && (
-        <div className="border-t border-surface-200 dark:border-surface-800 pt-16">
+        <div className="border-t border-white/80 dark:border-white/10 pt-16">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <div className="w-1.5 h-8 bg-primary-500 rounded-full underline-offset-8" />
@@ -1501,7 +1501,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
       {/* Extended HTML / Article Description */}
       {showDetailedInsights && post.extendedDescription && (
-        <div className="mt-16 border-t border-surface-200 pt-10 dark:border-surface-800 sm:mt-20 sm:pt-16">
+        <div className="mt-16 border-t border-white/80 pt-10 dark:border-white/10 sm:mt-20 sm:pt-16">
           <div className="max-w-4xl mx-auto">
             <div className="mb-8 flex flex-col gap-3 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex items-center gap-3">
@@ -1511,10 +1511,10 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
                   <h2 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">Detailed Insights</h2>
                 </div>
               </div>
-              <div className="h-px flex-1 bg-surface-200 dark:bg-surface-800 sm:max-w-48" />
+              <div className="h-px flex-1 bg-black/[0.07] dark:bg-white/[0.09] sm:max-w-48" />
             </div>
             
-            <div className="relative overflow-hidden rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 sm:rounded-3xl sm:p-8 md:p-12">
+            <div className="relative overflow-hidden rounded-2xl border border-white/80 bg-white/60 p-5 dark:border-white/10 dark:bg-white/[0.08] sm:rounded-3xl sm:p-8 md:p-12 backdrop-blur-xl backdrop-saturate-[120%]">
               <div className="prose prose-sm max-w-none dark:prose-invert sm:prose-base lg:prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary-500 hover:prose-a:text-primary-600 prose-img:rounded-xl prose-img:shadow-md prose-p:text-surface-600 dark:prose-p:text-surface-300 prose-li:text-surface-600 dark:prose-li:text-surface-300">
                 <MarkdownRenderer>{post.extendedDescription}</MarkdownRenderer>
               </div>
@@ -1524,7 +1524,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
       )}
 
       {post.faqs?.length ? (
-        <div className="mt-16 border-t border-surface-200 pt-10 dark:border-surface-800 sm:mt-20 sm:pt-16">
+        <div className="mt-16 border-t border-white/80 pt-10 dark:border-white/10 sm:mt-20 sm:pt-16">
           <div className="mx-auto max-w-4xl">
             <div className="mb-8 flex items-center gap-3">
               <div className="h-9 w-1.5 rounded-full bg-primary-500" />
@@ -1535,7 +1535,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             </div>
             <div className="space-y-3">
               {post.faqs.map((faq, index) => (
-                <details key={`${faq.question}-${index}`} className="group rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
+                <details key={`${faq.question}-${index}`} className="group rounded-2xl border border-white/80 bg-white/60 p-5 dark:border-white/10 dark:bg-white/[0.08] backdrop-blur-xl backdrop-saturate-[120%]">
                   <summary className="cursor-pointer list-none text-base font-bold text-surface-900 dark:text-white">
                     {faq.question}
                   </summary>
@@ -1549,7 +1549,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
 
       {/* Recommended Posts */}
       {showRecommendedPosts && recommendedPosts.length > 0 && (
-        <div className="mt-16 border-t border-surface-200 pt-10 dark:border-surface-800 sm:mt-20 sm:pt-16">
+        <div className="mt-16 border-t border-white/80 pt-10 dark:border-white/10 sm:mt-20 sm:pt-16">
           <div className="mb-8 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-500">

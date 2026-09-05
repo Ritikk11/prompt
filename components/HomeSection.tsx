@@ -1,15 +1,17 @@
 'use client';
 import React, { useRef } from 'react';
 import type { Section, Post, SiteSettings } from '@/lib/types';
-import { ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { getGridClasses } from '@/lib/utils';
 import AdSlot from '@/components/AdSlot';
 import { getSectionPath } from '@/lib/sections';
 import FilterChipRail from '@/components/FilterChipRail';
+import ScrollReveal from '@/components/ScrollReveal';
 import MasonryGrid from './MasonryGrid';
 
 import PostCard from './PostCard';
+
+
 
 export default function HomeSection({ section, initialPosts, settings }: { section: Section, initialPosts: Post[], settings: SiteSettings }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -41,26 +43,29 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
   return (
     <section id={`section-${section.id}`} className="py-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <Link href={getSectionPath(section)} className="flex items-center gap-2">
-          <h2 className="text-xl md:text-2xl font-bold hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-            {section.name}
-          </h2>
-        </Link>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-surface-400 hidden sm:inline-block">
-            {isLatest ? `${allLatestPosts.length} posts` : `${sectionPosts.length} posts`}
-          </span>
-          {!isLatest && (
-            <Link 
-              href={getSectionPath(section)} 
-              className="btn-glow group flex items-center gap-1 text-sm font-semibold text-surface-700 dark:text-surface-200 transition-colors border border-surface-300 dark:border-white/15 px-3 py-1.5 rounded-full"
-            >
-              View All <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          )}
+      <ScrollReveal slide>
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <Link href={getSectionPath(section)} className="group flex min-w-0 items-center gap-3">
+            <span className="h-7 w-1.5 shrink-0 rounded-full bg-gradient-to-b from-primary-400 via-primary-500 to-primary-700" />
+            <h2 className="truncate text-xl font-black tracking-tight text-surface-950 transition-colors group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-300 md:text-2xl">
+              {section.name}
+            </h2>
+          </Link>
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="hidden text-xs font-semibold text-surface-500 dark:text-surface-400 sm:inline">
+              {isLatest ? `${allLatestPosts.length} posts` : `${sectionPosts.length} posts`}
+            </span>
+            {!isLatest && (
+              <Link
+                href={getSectionPath(section)}
+                className="group inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/75 px-4 py-2 text-xs font-bold text-surface-700 shadow-sm transition hover:border-primary-400/60 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.12] dark:text-surface-200 dark:hover:text-primary-300"
+              >
+                View All <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {sectionFilterTags.length > 0 ? (
         <FilterChipRail
@@ -74,65 +79,69 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
           renderGrid
         />
       ) : isLatest ? (
-        /* Latest — one batch of the masonry grid */
-        <MasonryGrid
-          posts={visibleLatest}
-          settings={settings}
-          cardStyleOverride={section.cardStyle}
-        />
+        /* Latest — one batch of the masonry grid. `plain`: the card mats are
+           glass, and the default content fade would flash their frost. */
+        <ScrollReveal plain>
+          <MasonryGrid
+            posts={visibleLatest}
+            settings={settings}
+            cardStyleOverride={section.cardStyle}
+          />
+        </ScrollReveal>
       ) : (
-        /* Other sections — Horizontal scroll */
-        <div className="relative group/section">
-          {/* Left arrow */}
+        /* Other sections — horizontal scroll with glass arrows */
+        <div className="group/section relative">
+          {/* Arrows — frosted glass pills, same position and reveal behavior on
+              every device: half-offset outside the row edge, hidden until the
+              section is hovered/focused. (Group-hover works from a touch tap
+              too — the first tap reveals them, the second scrolls.) */}
           <button
             onClick={() => scroll('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-9 h-9 rounded-full bg-surface-800/80 dark:bg-surface-200/80 text-white dark:text-surface-900 flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity shadow-lg backdrop-blur-sm"
+            className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 -translate-x-1/2 items-center justify-center rounded-full border border-white/70 bg-white/60 text-surface-900 shadow-lg backdrop-blur-xl backdrop-saturate-[120%] transition-all hover:bg-white/85 active:scale-90 dark:border-white/15 dark:bg-white/[0.12] dark:text-white dark:hover:bg-white/[0.2] opacity-0 group-hover/section:opacity-100"
             aria-label={`Scroll ${section.name} left`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            <ChevronLeft className="w-4 h-4" />
           </button>
 
           {/* Scrollable row. Fade-only stagger: the translateY variant would
               momentarily overflow this overflow-x-auto row vertically and
               flash a scrollbar that shifts the cards. */}
-          <div
+          <ScrollReveal
             ref={scrollRef}
-            data-reveal-stagger="fade"
-            className="flex gap-2 sm:gap-3 overflow-x-auto scroll-smooth pb-2 scrollbar-thin"
-            style={{ scrollbarWidth: 'thin' }}
+            staggerFade
+            className="flex gap-2 overflow-x-auto scroll-smooth pb-2 scrollbar-thin sm:gap-3"
           >
-              {sectionPosts.map((post, i) => (
-                <React.Fragment key={post.id}>
-                  <div className="flex-none w-56 sm:w-72 md:w-80 lg:w-96">
-                    <PostCard post={post} index={i} aspect="aspect-[3/4]" cardStyleOverride={section.cardStyle} />
-                  </div>
-                  <AdSlot placement="inFeed" inFeedIndex={i} className="flex-none w-56 sm:w-72 md:w-80 lg:w-96 bg-surface-50 dark:bg-surface-800/30 rounded-[18px]" />
-                </React.Fragment>
-              ))}
-          </div>
+            {sectionPosts.map((post, i) => (
+              <React.Fragment key={post.id}>
+                <div className="w-56 flex-none pr-1.5 sm:w-72 sm:pr-0 md:w-80 lg:w-96">
+                  <PostCard post={post} index={i} aspect="aspect-[3/4]" cardStyleOverride={section.cardStyle} />
+                </div>
+                <AdSlot placement="inFeed" inFeedIndex={i} className="w-56 flex-none rounded-[18px] bg-black/[0.03] dark:bg-white/[0.04] sm:w-72 md:w-80 lg:w-96" />
+              </React.Fragment>
+            ))}
+          </ScrollReveal>
 
-          {/* Right arrow */}
           <button
             onClick={() => scroll('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-9 h-9 rounded-full bg-surface-800/80 dark:bg-surface-200/80 text-white dark:text-surface-900 flex items-center justify-center opacity-0 group-hover/section:opacity-100 transition-opacity shadow-lg backdrop-blur-sm"
+            className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-white/70 bg-white/60 text-surface-900 shadow-lg backdrop-blur-xl backdrop-saturate-[120%] transition-all hover:bg-white/85 active:scale-90 dark:border-white/15 dark:bg-white/[0.12] dark:text-white dark:hover:bg-white/[0.2] opacity-0 group-hover/section:opacity-100"
             aria-label={`Scroll ${section.name} right`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Latest teaser CTA — the full, infinitely-scrollable feed lives on /explore */}
       {isLatest && (
-        <div className="flex justify-center mt-8">
+        <ScrollReveal className="mt-8 flex justify-center">
           <Link
             href="/explore"
-            className="btn-glow group inline-flex items-center gap-2 rounded-full border border-surface-300 px-6 py-2.5 text-sm font-semibold text-surface-800 transition-colors dark:border-white/15 dark:text-surface-200"
+            className="group inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/55 px-7 py-3 text-sm font-bold text-surface-800 shadow-lg backdrop-blur-xl transition hover:scale-[1.03] hover:border-primary-400/60 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:text-primary-300"
           >
             Explore All Prompts
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
-        </div>
+        </ScrollReveal>
       )}
     </section>
   );

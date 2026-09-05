@@ -1,17 +1,59 @@
 'use client';
-import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
+import { useState, useRef, useEffect, useCallback, Suspense, type FormEvent } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-import { Search, Sun, Moon, Menu, X, Shield, User as UserIcon, LogOut, Plus, ChevronRight, ChevronDown, Home, Compass, BookOpen, MessageSquare, Hash, Zap, LayoutGrid } from 'lucide-react';
-import Image from 'next/image';
+import { Search, Sun, Moon, X, User as UserIcon, LogOut, Plus, ChevronRight, ChevronDown, Compass, ArrowRight, Wand2 } from 'lucide-react';
 import { useTheme } from '@/components/context/ThemeContext';
 import { useData } from '@/components/context/DataContext';
 import { getSupabaseClient } from '@/lib/supabase-lazy';
 import type { User } from '@supabase/supabase-js';
+import type { Post } from '@/lib/types';
 import { getPostPath } from '@/lib/sections';
-import { buildHeaderNavItems, type HeaderNavItem } from '@/lib/header-nav';
+import { getToolInfo } from '@/lib/constants';
+import { buildHeaderNavItems } from '@/lib/header-nav';
 import SmartLink from '@/components/SmartLink';
+
+/* Shared chrome recipes. Module scope so they are not rebuilt per render. */
+
+/** 36px circular glass chip — search / theme / hamburger. */
+const iconChip =
+  'inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/[0.06] bg-black/[0.04] text-surface-700 transition-all duration-200 hover:border-primary-500/50 hover:bg-black/[0.08] hover:text-surface-900 dark:border-white/[0.08] dark:bg-white/[0.06] dark:text-surface-200 dark:hover:bg-white/[0.12] dark:hover:text-white';
+
+/** Desktop nav pill: no border until hover, then an accent hairline. */
+const navPill =
+  'rounded-full border border-transparent px-3.5 py-1.5 text-sm font-medium text-surface-700 transition-all duration-150 hover:border-primary-500/40 hover:bg-black/5 hover:text-primary-600 dark:text-surface-200 dark:hover:bg-white/10 dark:hover:text-white';
+
+const navPillActive =
+  'rounded-full border border-primary-500/40 bg-primary-500/10 px-3.5 py-1.5 text-sm font-semibold text-primary-600 dark:bg-primary-500/20 dark:text-primary-300';
+
+/** Tool chip in the mega menu / mobile accordion. */
+const toolChip =
+  'flex items-center gap-2 rounded-full border border-black/5 bg-black/[0.03] px-3 py-1.5 text-xs font-medium text-surface-700 transition-all duration-200 hover:border-primary-500/50 hover:bg-black/[0.06] hover:text-surface-900 dark:border-white/5 dark:bg-white/[0.05] dark:text-surface-300 dark:hover:bg-white/10 dark:hover:text-white';
+
+const toolChipActive =
+  'flex items-center gap-2 rounded-full border border-primary-500/40 bg-primary-500/[0.15] px-3 py-1.5 text-xs font-semibold text-surface-900 transition-all duration-200 dark:text-white';
+
+/** Full-width row in the mobile accordion. */
+const mobileRow =
+  'flex items-center justify-between rounded-2xl border border-transparent px-4 py-2.5 text-sm font-medium text-surface-700 transition-all duration-200 hover:border-primary-500/40 hover:bg-black/5 hover:text-surface-900 dark:text-surface-200 dark:hover:bg-white/10 dark:hover:text-white';
+
+const mobileRowActive =
+  'flex items-center justify-between rounded-2xl border border-primary-500/40 bg-primary-500/[0.15] px-4 py-2.5 text-sm font-semibold text-primary-600 dark:text-primary-300';
+
+/* Collapsible panel wrapper — grid-rows 0fr→1fr, the /test header's glide.
+   The panel animates at its ACTUAL content height, so a 60px search panel
+   glides over the full 300ms instead of finishing in the first 5% of it the
+   way a max-height→80vh cap does. Requires the grid's single child to be the
+   overflow-hidden wrapper (each call site below has it); with that child
+   present, an `fr` row resolves to the child's max-content height. */
+const panelShell = 'grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]';
+const panelOpen = 'grid-rows-[1fr] opacity-100 border-t border-black/5 dark:border-white/10';
+/* border-t-0, not border-transparent: three collapsed panels would otherwise add
+   3px to the fixed header's box, leaving an invisible strip across the top of
+   the page that swallows clicks. */
+const panelClosed = 'grid-rows-[0fr] opacity-0 border-t-0 pointer-events-none';
 
 /* useSearchParams() forces everything up to the nearest <Suspense> boundary
    into client-only rendering — with the whole Header inside that hook's
@@ -35,124 +77,38 @@ function RouteChangeComplete({ onRouteChange }: { onRouteChange: () => void }) {
   return null;
 }
 
-/* One desktop header dropdown: hover or click to open, animated enter/exit,
-   outside-click and Escape to close, closes on route change. The invisible
-   hover bridge below the trigger keeps it open while the pointer crosses
-   the gap to the panel (no flicker on diagonal movement). */
-function DesktopNavMenu({ label, items, pathname }: { label: string; items: HeaderNavItem[]; pathname: string }) {
-  const [open, setOpen] = useState(false);
-  const [closing, setClosing] = useState(false);
-  const closeTimerRef = useRef<number | null>(null);
-  const hoverTimerRef = useRef<number | null>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
+/** "Tools Prompts" → "Tools": the menu chips show the bare brand name. */
+const toolBrandName = (label: string) => label.replace(/Prompts/gi, '').trim() || label;
 
-  const cancelCloseTimer = () => {
-    if (closeTimerRef.current) { window.clearTimeout(closeTimerRef.current); closeTimerRef.current = null; }
-  };
-  const cancelHoverTimer = () => {
-    if (hoverTimerRef.current) { window.clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; }
-  };
-  const openNow = () => { cancelCloseTimer(); cancelHoverTimer(); setClosing(false); setOpen(true); };
-  const closeAnimated = () => {
-    if (!open) return;
-    cancelHoverTimer();
-    setClosing(true);
-    cancelCloseTimer();
-    closeTimerRef.current = window.setTimeout(() => { setOpen(false); setClosing(false); }, 200);
-  };
-  const closeNow = () => { cancelCloseTimer(); cancelHoverTimer(); setOpen(false); setClosing(false); };
-
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) closeNow();
-    };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeNow();
-    };
-    document.addEventListener('mousedown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open]);
-
-  useEffect(() => {
-    setOpen(false);
-    setClosing(false);
-  }, [pathname]);
-
-  useEffect(() => () => { cancelCloseTimer(); cancelHoverTimer(); }, []);
-
-  const visible = open && !closing;
+/**
+ * Two-tone brand lockup: the title in solid ink with its final segment in the
+ * blue gradient. Derived from settings.siteTitle rather than hardcoded, so a
+ * rename in admin still reads correctly — the accent is the last CamelCase
+ * segment of the last word when there is one ("AI PromptMatrix" → "Matrix"),
+ * otherwise the whole last word.
+ *
+ * Exported for the footer, which shows the same lockup.
+ */
+export function SiteTitle({ title, className = '' }: { title?: string; className?: string }) {
+  const text = (title || 'AI PromptMatrix').trim();
+  const lastSpace = text.lastIndexOf(' ');
+  const lastWord = text.slice(lastSpace + 1);
+  // Last capital inside the final word, e.g. the "M" of "PromptMatrix".
+  let splitAt = -1;
+  for (let i = lastWord.length - 1; i > 0; i -= 1) {
+    const ch = lastWord[i];
+    if (ch >= 'A' && ch <= 'Z') { splitAt = i; break; }
+  }
+  const head = splitAt > 0 ? text.slice(0, lastSpace + 1 + splitAt) : text.slice(0, lastSpace + 1);
+  const accent = splitAt > 0 ? lastWord.slice(splitAt) : lastWord;
 
   return (
-    <div
-      ref={rootRef}
-      className="relative"
-      onMouseEnter={openNow}
-      onMouseLeave={() => {
-        cancelHoverTimer();
-        hoverTimerRef.current = window.setTimeout(closeAnimated, 150);
-      }}
-    >
-      <button
-        type="button"
-        onClick={() => (open ? closeAnimated() : openNow())}
-        aria-expanded={visible}
-        aria-haspopup="true"
-        className={`px-3 py-2 rounded-full text-sm font-medium flex items-center gap-1 transition-colors hover:bg-surface-100 hover:text-primary-600 dark:hover:bg-surface-800 dark:hover:text-primary-400 ${visible ? 'bg-surface-100 dark:bg-surface-800' : ''}`}
-      >
-        {label}
-        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${visible ? 'rotate-180' : ''}`} />
-      </button>
-      {open && <div className="absolute left-0 top-full h-3 w-64" aria-hidden />}
-      {open && (
-        <div style={{ transformOrigin: 'top left' }} className={`absolute left-0 top-full z-50 mt-1.5 w-64 rounded-2xl border border-surface-200 bg-white py-2 shadow-2xl shadow-surface-900/10 dark:border-surface-800 dark:bg-surface-900 dark:shadow-black/50 ${closing ? 'header-dropdown-out' : 'header-dropdown-in'}`}>
-          <p className="px-4 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-surface-400 dark:text-surface-500">
-            {label}
-          </p>
-          <div className="px-2">
-            {items.map(item => {
-              const isActive = pathname === item.href;
-              const rowClass = `group flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${isActive
-                ? 'bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300'
-                : 'text-surface-600 hover:bg-primary-50 hover:text-primary-700 dark:text-surface-300 dark:hover:bg-primary-500/10 dark:hover:text-primary-200'}`;
-              const inner = (
-                <>
-                  <span className="flex items-center gap-2">
-                    {item.kind === 'builtin' && item.key === 'submit' && <Plus className="w-4 h-4 text-primary-500" />}
-                    {item.label}
-                  </span>
-                  <ChevronRight className="w-3.5 h-3.5 -translate-x-1 text-primary-400 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100" />
-                </>
-              );
-              return item.kind === 'link' ? (
-                <SmartLink key={item.navKey} href={item.href} onClick={closeNow} className={rowClass}>
-                  {inner}
-                </SmartLink>
-              ) : (
-                <Link key={item.navKey} href={item.href} prefetch={false} onClick={closeNow} className={rowClass}>
-                  {inner}
-                </Link>
-              );
-            })}
-          </div>
-          <div className="mt-1.5 border-t border-surface-100 px-2 pt-1.5 dark:border-surface-800">
-            <Link
-              href="/explore"
-              prefetch={false}
-              onClick={closeNow}
-              className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs font-bold text-primary-600 transition-colors hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-500/10"
-            >
-              Explore all prompts
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-      )}
-    </div>
+    <span className={`whitespace-nowrap font-bold tracking-tight text-surface-900 dark:text-white ${className}`}>
+      {head}
+      <span className="bg-gradient-to-r from-[#1a73e8] to-google-blue bg-clip-text text-transparent dark:from-[#669df6] dark:to-[#aecbfa]">
+        {accent}
+      </span>
+    </span>
   );
 }
 
@@ -169,18 +125,63 @@ export default function Header() {
 function SiteHeader() {
   const { theme, toggleTheme } = useTheme();
   const { settings, sections, posts, ensurePostsLoaded } = useData();
-  const accountFeaturesEnabled = Boolean(settings.features?.userProfiles);
-  const submissionsEnabled = Boolean(settings.features?.userProfiles && settings.features?.userSubmissions);
-  const headerSections = sections.filter(s => s.location === 'header' && s.visible).sort((a,b) => a.order - b.order);
-  // Single ordered nav list (built-ins + sections + custom links), honoring the
-  // saved header order and built-in hide/rename overrides. The Submit item is
-  // rendered with its Plus icon; everything else is a plain link.
   const navigate = useRouter();
   const pathname = usePathname();
+
+  const accountFeaturesEnabled = Boolean(settings.features?.userProfiles);
+  const submissionsEnabled = Boolean(settings.features?.userProfiles && settings.features?.userSubmissions);
+
+  const [isVisible, setIsVisible] = useState(true);
+  // Frost only once the page has moved: at the very top the bar is transparent
+  // so the hero reads as full-bleed. Driven by the same rAF scroll pass below,
+  // so it costs no extra listener.
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileAccordion, setMobileAccordion] = useState<Record<string, boolean>>({});
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [showLiveResults, setShowLiveResults] = useState(false);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [routeProgress, setRouteProgress] = useState(0);
+  // ThemeProvider starts at 'light' and only reads localStorage after mount, so
+  // on dark pages the toggle would flash the wrong icon for a frame. Hide both
+  // icons until the stored theme has hydrated.
+  const [themeMounted, setThemeMounted] = useState(false);
+
+  const searchPanelRef = useRef<HTMLDivElement>(null);
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const hoverTimerRef = useRef<number | null>(null);
+  const lastScrollYRef = useRef(0);
+  const scrollFrameRef = useRef<number | null>(null);
+  const routeTimerRef = useRef<number | null>(null);
+  const routeIntervalRef = useRef<number | null>(null);
+  const routeFallbackRef = useRef<number | null>(null);
+  // On mobile, a tap on the theme toggle can land while a scroll gesture is
+  // still settling (rubber-band/momentum). That produces a stray `scroll` event
+  // right after the tap, which the visibility logic reads as "user scrolled
+  // down" and hides the header immediately after it was shown — a
+  // hide-then-reappear flicker unrelated to the theme repaint. Suppress
+  // scroll-driven hiding for a short window around a deliberate toggle tap.
+  const suppressHideRef = useRef(false);
+  const suppressHideTimeoutRef = useRef<number | null>(null);
+
+  const isAnyDesktopMenuOpen = activeMenuId !== null;
+  const isHomepage = pathname === '/';
+  // The homepage hero owns a search bar of its own, so the header chip only
+  // appears once that hero has scrolled away. Every other route shows it.
+  const showSearchIcon = scrolled || !isHomepage || searchOpen;
+  const barExpanded = scrolled || menuOpen || searchOpen || isAnyDesktopMenuOpen;
+
+  const headerSections = sections.filter(s => s.location === 'header' && s.visible).sort((a, b) => a.order - b.order);
+  // Single ordered nav list (built-ins + sections + custom links), honoring the
+  // saved header order and built-in hide/rename overrides.
   const navItems = buildHeaderNavItems(settings, headerSections);
-  // Header dropdown menus: chosen nav items collapse behind labeled triggers
-  // so the header never overflows. Auto mode (no saved setting) groups all
-  // header sections under "Tools"; admin overrides come from settings.
+  // Header dropdown menus: chosen nav items collapse behind labeled triggers so
+  // the bar never overflows. Auto mode (no saved setting) groups all header
+  // sections under "Tools"; admin overrides come from settings.
   const menuDefs = (() => {
     const saved = settings.headerMenus;
     if (saved) {
@@ -202,31 +203,10 @@ function SiteHeader() {
       return { ...def, items: navItems.filter(i => keySet.has(i.navKey)) };
     })
     .filter(m => m.items.length > 0);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState<Record<string, boolean>>({});
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState('');
-  const [showLiveResults, setShowLiveResults] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const searchRef = useRef<HTMLDivElement>(null);
-  const mobileSearchRef = useRef<HTMLDivElement>(null);
-  const progressFillRef = useRef<HTMLDivElement>(null);
-  const lastScrollYRef = useRef(0);
-  const scrollFrameRef = useRef<number | null>(null);
-  const routeTimerRef = useRef<number | null>(null);
-  const routeIntervalRef = useRef<number | null>(null);
-  const routeFallbackRef = useRef<number | null>(null);
-  const [isVisible, setIsVisible] = useState(true);
-  const [routeProgress, setRouteProgress] = useState(0);
-  // On mobile, a tap on the theme toggle can land while a scroll gesture is
-  // still settling (rubber-band/momentum). That produces a stray `scroll`
-  // event right after the tap, which the visibility logic below reads as
-  // "user scrolled down" and hides the header immediately after it was
-  // shown — a hide-then-reappear flicker that has nothing to do with the
-  // theme repaint itself. Suppress scroll-driven hiding for a short window
-  // around a deliberate theme-toggle tap, same as menuOpen/searchOpen do.
-  const suppressHideRef = useRef(false);
-  const suppressHideTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setThemeMounted(true);
+  }, []);
 
   const stopRouteTimers = useCallback(() => {
     if (routeTimerRef.current) window.clearTimeout(routeTimerRef.current);
@@ -244,10 +224,10 @@ function SiteHeader() {
     routeIntervalRef.current = window.setInterval(() => {
       setRouteProgress(prev => (prev > 0 && prev < 88 ? Math.min(prev + 8, 88) : prev));
     }, 420);
-    // Soft-navigation rescue: on flaky mobile networks (or a stale build after
-    // a deploy) the router's RSC fetch can hang or reject, leaving the bar
-    // stuck and the page never changing. If the route hasn't changed after 8s,
-    // fall back to a full browser navigation, which always works.
+    // Soft-navigation rescue: on flaky mobile networks (or a stale build after a
+    // deploy) the router's RSC fetch can hang or reject, leaving the bar stuck
+    // and the page never changing. If the route hasn't changed after 8s, fall
+    // back to a full browser navigation, which always works.
     if (targetHref) {
       const from = window.location.pathname + window.location.search;
       routeFallbackRef.current = window.setTimeout(() => {
@@ -257,20 +237,24 @@ function SiteHeader() {
     }
   }, [stopRouteTimers]);
 
+  const finishRouteProgress = useCallback(() => {
+    stopRouteTimers();
+    setRouteProgress(100);
+    routeTimerRef.current = window.setTimeout(() => setRouteProgress(0), 320);
+  }, [stopRouteTimers]);
+
   useEffect(() => {
     const updateHeaderAndProgress = () => {
       scrollFrameRef.current = null;
       const currentScrollY = window.scrollY;
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = max > 0 ? Math.min(100, Math.max(0, (currentScrollY / max) * 100)) : 0;
 
-      if (progressFillRef.current) {
-        progressFillRef.current.style.width = `${progress}%`;
-      }
+      const isPastTop = currentScrollY > 15;
+      setScrolled(prev => (prev !== isPastTop ? isPastTop : prev));
 
+      const isAdmin = pathname?.startsWith('/admin');
       const delta = currentScrollY - lastScrollYRef.current;
-      const shouldHide = delta > 4 && currentScrollY > 64 && !menuOpen && !searchOpen && !showLiveResults && !suppressHideRef.current;
-      const shouldShow = delta < -4 || currentScrollY <= 16 || menuOpen || searchOpen || showLiveResults;
+      const shouldHide = !isAdmin && delta > 4 && currentScrollY > 64 && !menuOpen && !searchOpen && !showLiveResults && !suppressHideRef.current;
+      const shouldShow = isAdmin || delta < -4 || currentScrollY <= 16 || menuOpen || searchOpen || showLiveResults;
       if (shouldHide) {
         setIsVisible(false);
       } else if (shouldShow) {
@@ -298,10 +282,9 @@ function SiteHeader() {
     };
   }, [menuOpen, searchOpen, showLiveResults]);
 
-  useEffect(() => {
-    return () => {
-      if (suppressHideTimeoutRef.current) window.clearTimeout(suppressHideTimeoutRef.current);
-    };
+  useEffect(() => () => {
+    if (suppressHideTimeoutRef.current) window.clearTimeout(suppressHideTimeoutRef.current);
+    if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current);
   }, []);
 
   const handleThemeToggle = useCallback(() => {
@@ -315,12 +298,8 @@ function SiteHeader() {
     toggleTheme();
   }, [toggleTheme]);
 
-  const finishRouteProgress = useCallback(() => {
-    stopRouteTimers();
-    setRouteProgress(100);
-    routeTimerRef.current = window.setTimeout(() => setRouteProgress(0), 320);
-  }, [stopRouteTimers]);
-
+  // Any in-app anchor click starts the progress bar, not just the header's own
+  // links — the bar is the site-wide navigation indicator.
   useEffect(() => {
     const handleDocumentClick = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -342,13 +321,20 @@ function SiteHeader() {
 
   useEffect(() => stopRouteTimers, [stopRouteTimers]);
 
+  // Close both panels on route change.
   useEffect(() => {
-    // Globally skip loading Supabase auth client on every page if the feature is disabled
+    setMenuOpen(false);
+    setActiveMenuId(null);
+    setSearchOpen(false);
+    setShowLiveResults(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    // Skip loading the Supabase auth client entirely when accounts are off.
     if (!accountFeaturesEnabled) return;
 
     let subscription: { unsubscribe: () => void } | undefined;
     let cancelled = false;
-    let timeoutId: number;
 
     const initAuth = () => {
       getSupabaseClient().then(supabase => {
@@ -362,28 +348,17 @@ function SiteHeader() {
       });
     };
 
-    // Defer initialization to avoid blocking the main thread during hydration globally
-    timeoutId = window.setTimeout(initAuth, 2500);
+    // Deferred so it never blocks hydration.
+    const timeoutId = window.setTimeout(initAuth, 2500);
 
     return () => {
       cancelled = true;
-      clearTimeout(timeoutId);
+      window.clearTimeout(timeoutId);
       subscription?.unsubscribe();
     };
   }, [accountFeaturesEnabled]);
 
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node) && mobileSearchRef.current && !mobileSearchRef.current.contains(e.target as Node)) {
-        setShowLiveResults(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Post summaries load on demand the first time the search is used.
-  const [postsLoading, setPostsLoading] = useState(false);
+  // Search: post summaries load on demand the first time search is used.
   const activateSearch = useCallback(() => {
     setShowLiveResults(true);
     if (posts.length === 0) {
@@ -392,31 +367,97 @@ function SiteHeader() {
     }
   }, [posts.length, ensurePostsLoaded]);
 
-  const getLiveResults = () => {
-    if (!query.trim()) return [];
+  const openSearch = useCallback(() => {
+    setSearchOpen(true);
+    setActiveMenuId(null);
+    setMenuOpen(false);
+    activateSearch();
+  }, [activateSearch]);
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    setShowLiveResults(false);
+    setQuery('');
+  }, []);
+
+  // Outside click / Escape closes the search panel.
+  useEffect(() => {
+    if (!searchOpen) return;
+    const onMouseDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (searchPanelRef.current?.contains(target)) return;
+      if (searchButtonRef.current?.contains(target)) return;
+      closeSearch();
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeSearch();
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [searchOpen, closeSearch]);
+
+  // Focus the input only once the panel has finished expanding — focusing a
+  // still-collapsed input gets dropped by the browser.
+  useEffect(() => {
+    if (!searchOpen) return;
+    const t = window.setTimeout(() => searchInputRef.current?.focus(), 320);
+    return () => window.clearTimeout(t);
+  }, [searchOpen]);
+
+  const liveResults = (() => {
+    if (!searchOpen || !query.trim()) return [];
     const q = query.toLowerCase();
-    return posts.filter(p => {
-      if ((p.status && p.status !== 'published') || p.visibility === 'private') return false;
-      return (
-        p.title.toLowerCase().includes(q) ||
-        (p.tags && p.tags.some(t => t.toLowerCase().includes(q))) ||
-        (p.category && p.category.toLowerCase().includes(q)) ||
-        (p.images && p.images.some(img => img.aiTool?.toLowerCase().includes(q)))
-      );
-    }).slice(0, 5);
+    return posts
+      .filter(p => {
+        if ((p.status && p.status !== 'published') || p.visibility === 'private') return false;
+        return (
+          p.title.toLowerCase().includes(q) ||
+          (p.tags && p.tags.some(t => t.toLowerCase().includes(q))) ||
+          (p.category && p.category.toLowerCase().includes(q)) ||
+          (p.aiTools && p.aiTools.some(t => t.toLowerCase().includes(q))) ||
+          (p.images && p.images.some(img => img.aiTool?.toLowerCase().includes(q)))
+        );
+      })
+      .slice(0, 5);
+  })();
+
+  // Per-result context line: prefer whichever field actually matched the query,
+  // and fall back to general context so the line is never empty.
+  const resultMeta = (post: Post) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return '';
+    const parts: string[] = [];
+    if (post.category && post.category.toLowerCase().includes(q)) parts.push(post.category);
+    const tool =
+      post.aiTools?.find(t => t.toLowerCase().includes(q)) ||
+      post.images?.find(img => img.aiTool?.toLowerCase().includes(q))?.aiTool;
+    if (tool) parts.push(tool);
+    const tag = post.tags?.find(t => t.toLowerCase().includes(q));
+    if (tag) parts.push(`#${tag}`);
+    if (parts.length === 0) {
+      if (post.category) parts.push(post.category);
+      const anyTool = post.aiTools?.[0] || post.images?.find(img => img.aiTool)?.aiTool;
+      if (anyTool && anyTool !== post.category) parts.push(anyTool);
+    }
+    return parts.slice(0, 3).join(' · ');
   };
 
-  const handleSearch = (e: React.FormEvent) => {
+  const submitSearch = () => {
+    if (!query.trim()) return;
+    const target = `/search?q=${encodeURIComponent(query.trim())}`;
+    startRouteProgress(target);
+    navigate.push(target);
+    closeSearch();
+    setMenuOpen(false);
+  };
+
+  const handleSearchSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
-      const target = `/search?q=${encodeURIComponent(query.trim())}`;
-      startRouteProgress(target);
-      navigate.push(target);
-      setQuery('');
-      setSearchOpen(false);
-      setShowLiveResults(false);
-      setMenuOpen(false);
-    }
+    submitSearch();
   };
 
   const handleLogin = () => {
@@ -432,362 +473,421 @@ function SiteHeader() {
     }
   };
 
-  const renderLiveResults = () => {
-    const results = getLiveResults();
-    if (!query.trim() || !showLiveResults) return null;
-    return (
-      <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl shadow-lg overflow-hidden fade-in max-h-[60vh] overflow-y-auto z-50">
-        {results.length > 0 ? (
-          <div className="flex flex-col">
-            {results.map(post => (
-              <Link
-                key={post.id}
-                href={getPostPath(post)}
-                onClick={() => {
-                  setShowLiveResults(false);
-                  setSearchOpen(false);
-                  setQuery('');
-                }}
-                className="flex items-center gap-3 p-3 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors border-b border-surface-100 dark:border-surface-800 last:border-0"
-              >
-                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-surface-100 dark:bg-surface-800 relative">
-                  <Image src={post.images?.[0]?.url || ''} alt={post.title} fill sizes="40px" className="object-cover" referrerPolicy="no-referrer" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium truncate">{post.title}</h4>
-                  <div className="flex items-center mt-1">
-                    {post.images?.[0]?.aiTool && (
-                      <span className="text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded-md bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400">
-                        {post.images[0].aiTool}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : postsLoading ? (
-          <div className="p-4 flex items-center justify-center gap-2 text-sm text-surface-500">
-            <span className="w-4 h-4 rounded-full border-2 border-surface-300 border-t-primary-500 animate-spin" />
-            Searching…
-          </div>
-        ) : (
-          <div className="p-4 text-center text-sm text-surface-500">
-            No matches found for &quot;{query}&quot;
-          </div>
+  /** Tool chips shared by the desktop mega menu and the mobile accordion. */
+  const renderToolChip = (item: (typeof navItems)[number], onNavigate: () => void) => {
+    const isActive = pathname === item.href;
+    // Stripped name is for the LOGO LOOKUP only ("ChatGPT Prompts" → "ChatGPT");
+    // the visible label stays exactly as configured in admin.
+    const toolName = toolBrandName(item.label);
+    const info = getToolInfo(toolName, settings.toolDetails);
+    const inner = (
+      <>
+        {info?.logo && (
+          <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-md">
+            <Image
+              src={info.logo}
+              alt=""
+              fill
+              sizes="16px"
+              className={`object-contain ${toolName.toLowerCase().includes('chatgpt') ? 'dark:invert' : ''}`}
+              referrerPolicy="no-referrer"
+            />
+          </span>
         )}
-      </div>
+        <span className="truncate">{item.label}</span>
+      </>
+    );
+    const cls = isActive ? toolChipActive : toolChip;
+    return item.kind === 'link' ? (
+      <SmartLink key={item.navKey} href={item.href} onClick={onNavigate} className={cls}>{inner}</SmartLink>
+    ) : (
+      <Link key={item.navKey} href={item.href} prefetch={false} onClick={onNavigate} className={cls}>{inner}</Link>
     );
   };
 
   return (
     <>
-    <Suspense fallback={null}>
-      <RouteChangeComplete onRouteChange={finishRouteProgress} />
-    </Suspense>
-    <div className="fixed inset-x-0 top-0 z-[9999] h-[3px] bg-transparent pointer-events-none">
-      <div
-        className="h-full origin-left bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-purple-500 shadow-[0_0_14px_rgba(168,85,247,0.55)] transition-[transform,opacity] duration-200 ease-out"
-        style={{ transform: `scaleX(${routeProgress / 100})`, opacity: routeProgress > 0 ? 1 : 0 }}
-      />
-    </div>
-    <div
-      className="fixed inset-x-0 z-40 h-[6px] overflow-hidden rounded-b border-y border-surface-200 bg-surface-50 pointer-events-none transition-[top] duration-300 ease-in-out dark:border-surface-800 dark:bg-surface-900"
-      style={{ top: isVisible ? '48px' : '0px' }}
-    >
-      <div
-        ref={progressFillRef}
-        className="relative h-1 rounded-full bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-purple-500 transition-[width] duration-150 ease-linear after:absolute after:inset-0 after:bg-[linear-gradient(-45deg,rgba(255,255,255,.22)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.22)_50%,rgba(255,255,255,.22)_75%,transparent_75%,transparent)] after:bg-[length:50px_50px] after:content-[''] after:animate-[movePgrs_2s_linear_infinite]"
-        style={{ width: '0%' }}
-      />
-    </div>
-    <header
-      className={`sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-surface-950/80 border-b border-surface-200 dark:border-surface-800 transition-transform duration-300 ease-in-out ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}
-    >
-      <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between gap-4">
-        {/* Logo */}
-        <Link href="/" prefetch={false} className="flex items-center gap-2 shrink-0" onClick={() => setMenuOpen(false)}>
-          <div className="w-9 h-9 shrink-0 relative overflow-hidden rounded-xl">
-            <Image src={settings.siteLogo || '/icon-190x190.jpg'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-contain" referrerPolicy="no-referrer" priority />
-          </div>
-          <span className="text-xl font-bold gradient-text">{settings.siteTitle}</span>
-        </Link>
+      <Suspense fallback={null}>
+        <RouteChangeComplete onRouteChange={finishRouteProgress} />
+      </Suspense>
 
-        {/* Desktop Search */}
-        <div ref={searchRef} className="hidden md:flex flex-1 md:max-w-56 lg:max-w-xs xl:max-w-md relative">
-          <form onSubmit={handleSearch} className="w-full">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
-              <input
-                type="text"
-                value={query}
-                onChange={e => {
-                  setQuery(e.target.value);
-                  activateSearch();
-                }}
-                onFocus={activateSearch}
-                placeholder="Search prompts, categories, AI tools..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-100 dark:bg-surface-800 border border-transparent focus:border-primary-500 focus:bg-white dark:focus:bg-surface-900 focus:ring-4 focus:ring-primary-500/10 outline-none text-sm transition-all shadow-inner focus:"
-              />
-            </div>
-          </form>
-          {renderLiveResults()}
-        </div>
+      {/* Route-change indicator */}
+      <div className="fixed inset-x-0 top-0 z-[9999] h-[3px] bg-transparent pointer-events-none">
+        <div
+          className="h-full origin-left bg-gradient-to-r from-google-blue via-[#669df6] to-primary-500 shadow-[0_0_12px_rgba(66,133,244,0.55)] transition-[transform,opacity] duration-200 ease-out"
+          style={{ transform: `scaleX(${routeProgress / 100})`, opacity: routeProgress > 0 ? 1 : 0 }}
+        />
+      </div>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
-          {inlineNavItems.map((item, index) => {
-            const elements = [];
-            if (index > 0) {
-              elements.push(<div key={`div-${item.navKey}`} className="w-px h-4 bg-surface-200 dark:bg-surface-700 mx-1" />);
-            }
+      {/* Fixed, not sticky: the search / mobile / mega panels expand INSIDE the
+          bar, and in normal flow that growth would shove the page down instead
+          of overlaying it. The h-14 spacer in app/layout.tsx reserves the row. */}
+      <header
+        className={`fixed inset-x-0 top-0 z-50 w-full transition-[transform,background-color,border-color,box-shadow] duration-300 ease-in-out will-change-transform ${isVisible ? 'translate-y-0' : '-translate-y-full'} ${
+          barExpanded ? 'glass-bar shadow-md shadow-black/5 dark:shadow-black/40' : 'border-b border-transparent bg-transparent shadow-none'
+        }`}
+      >
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-3.5 sm:px-6">
+          {/* Brand */}
+          <Link href="/" prefetch={false} className="flex shrink-0 items-center gap-2" onClick={() => setMenuOpen(false)}>
+            <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xl sm:h-9 sm:w-9">
+              <Image src={settings.siteLogo || '/icon-190x190.jpg'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" priority />
+            </span>
+            <SiteTitle title={settings.siteTitle} className="text-base sm:text-xl" />
+          </Link>
 
-            if (item.kind === 'builtin' && item.key === 'submit') {
-              if (submissionsEnabled) {
-                elements.push(
-                  <Link key={item.navKey} href={item.href} prefetch={false} className="px-3 py-2 rounded-full text-sm font-medium flex items-center gap-1.5 transition-colors hover:bg-surface-100 hover:text-primary-600 dark:hover:bg-surface-800 dark:hover:text-primary-400">
-                    <Plus className="w-4 h-4 text-primary-500" />
+          {/* Desktop nav */}
+          <nav className="hidden items-center gap-1 lg:flex">
+            {inlineNavItems.map(item => {
+              const isActive = pathname === item.href;
+              const pill = isActive ? navPillActive : navPill;
+              if (item.kind === 'builtin' && item.key === 'submit') {
+                if (!submissionsEnabled) return null;
+                return (
+                  <Link key={item.navKey} href={item.href} prefetch={false} className={`inline-flex items-center gap-1.5 ${pill}`}>
+                    <Plus className="h-3.5 w-3.5" />
                     {item.label}
                   </Link>
                 );
               }
-            } else if (item.kind === 'link') {
-              elements.push(
-                <SmartLink key={item.navKey} href={item.href} className="px-3 py-2 rounded-full text-sm font-medium transition-colors hover:bg-surface-100 hover:text-primary-600 dark:hover:bg-surface-800 dark:hover:text-primary-400">
-                  {item.label}
-                </SmartLink>
-              );
-            } else {
-              elements.push(
-                <Link key={item.navKey} href={item.href} prefetch={false} className="px-3 py-2 rounded-full text-sm font-medium transition-colors hover:bg-surface-100 hover:text-primary-600 dark:hover:bg-surface-800 dark:hover:text-primary-400">
-                  {item.label}
-                </Link>
-              );
-            }
-            return elements;
-          })}
-
-          {headerMenus.map((menu, mi) => (
-            <div key={menu.id} className="flex items-center">
-              {(inlineNavItems.length > 0 || mi > 0) && <div className="w-px h-4 bg-surface-200 dark:bg-surface-700 mx-1" />}
-              <DesktopNavMenu label={menu.label} items={menu.items} pathname={pathname} />
-            </div>
-          ))}
-
-          {accountFeaturesEnabled && (
-            <div className="flex items-center ml-2 border-l border-surface-200 dark:border-surface-700 pl-4 gap-2">
-              {user ? (
-                <>
-                  <Link href="/profile" prefetch={false} className="px-3 py-2 rounded-full text-sm font-medium flex items-center gap-1.5 transition-colors hover:bg-surface-100 hover:text-primary-600 dark:hover:bg-surface-800 dark:hover:text-primary-400">
-                    <UserIcon className="w-4 h-4" /> Profile
-                  </Link>
-                  <button onClick={handleLogout} className="p-2 rounded-full text-surface-400 hover:text-red-500 hover:bg-surface-100 dark:hover:bg-surface-800" title="Logout">
-                    <LogOut className="w-4 h-4" />
-                  </button>
-                </>
+              return item.kind === 'link' ? (
+                <SmartLink key={item.navKey} href={item.href} className={pill}>{item.label}</SmartLink>
               ) : (
-                <button onClick={handleLogin} className="px-4 py-2 rounded-full text-sm font-medium bg-primary-500 text-white hover:bg-primary-600">
-                  Sign In
-                </button>
-              )}
-            </div>
-          )}
-
-          <div className="w-px h-6 bg-surface-200 dark:bg-surface-700 mx-1" />
-          <button
-            onClick={handleThemeToggle}
-            className="p-2.5 rounded-full hover:bg-surface-100 dark:hover:bg-surface-800"
-            aria-label="Toggle theme"
-          >
-            <span className="relative block w-5 h-5">
-              <Sun className={`absolute inset-0 w-5 h-5 text-yellow-400 transition-all duration-300 ease-out transform-gpu will-change-transform ${theme === 'dark' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-90 scale-50'}`} />
-              <Moon className={`absolute inset-0 w-5 h-5 text-surface-600 transition-all duration-300 ease-out transform-gpu will-change-transform ${theme === 'dark' ? 'opacity-0 -rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
-            </span>
-          </button>
-        </nav>
-
-        {/* Mobile buttons */}
-        <div className="flex md:hidden items-center gap-1">
-          <button
-            onClick={() => setSearchOpen(!searchOpen)}
-            className="p-2.5 rounded-full hover:bg-surface-100 dark:hover:bg-surface-800"
-            aria-label={searchOpen ? 'Close search' : 'Open search'}
-            aria-expanded={searchOpen}
-          >
-            <span className="relative block w-5 h-5">
-              <Search className={`absolute inset-0 w-5 h-5 transition-all duration-300 ease-out ${searchOpen ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
-              <X className={`absolute inset-0 w-5 h-5 transition-all duration-300 ease-out ${searchOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'}`} />
-            </span>
-          </button>
-          <button
-            onClick={handleThemeToggle}
-            className="p-2.5 rounded-full hover:bg-surface-100 dark:hover:bg-surface-800"
-            aria-label="Toggle theme"
-          >
-            <span className="relative block w-5 h-5">
-              <Sun className={`absolute inset-0 w-5 h-5 text-yellow-400 transition-all duration-300 ease-out transform-gpu will-change-transform ${theme === 'dark' ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-90 scale-50'}`} />
-              <Moon className={`absolute inset-0 w-5 h-5 text-surface-600 transition-all duration-300 ease-out transform-gpu will-change-transform ${theme === 'dark' ? 'opacity-0 -rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
-            </span>
-          </button>
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="p-2.5 rounded-full hover:bg-surface-100 dark:hover:bg-surface-800"
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={menuOpen}
-          >
-            <span className="relative block w-5 h-5">
-              <Menu className={`absolute inset-0 w-5 h-5 transition-all duration-300 ease-out ${menuOpen ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} />
-              <X className={`absolute inset-0 w-5 h-5 transition-all duration-300 ease-out ${menuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'}`} />
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile search bar */}
-      {searchOpen && (
-        <div ref={mobileSearchRef} className="absolute top-full left-0 right-0 z-50 md:hidden px-4 py-3 bg-white/95 dark:bg-surface-950/95 backdrop-blur-xl border-b border-surface-200 dark:border-surface-800 shadow-xl fade-in">
-          <form onSubmit={handleSearch}>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
-              <input
-                type="text"
-                value={query}
-                onChange={e => {
-                  setQuery(e.target.value);
-                  activateSearch();
-                }}
-                onFocus={activateSearch}
-                placeholder="Search prompts..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-100 dark:bg-surface-800 border border-transparent focus:border-primary-500 outline-none text-sm"
-                autoFocus
-              />
-            </div>
-          </form>
-          {renderLiveResults()}
-        </div>
-      )}
-
-      {/* Mobile search bar */}
-    </header>
-
-    {/* Mobile menu sidebar */}
-    {menuOpen && (
-      <div className="fixed inset-0 z-[100] md:hidden">
-        {/* Backdrop */}
-        <div 
-          className="absolute inset-0 bg-surface-900/40 dark:bg-black/60 backdrop-blur-sm animate-fade-in-overlay" 
-          onClick={() => setMenuOpen(false)}
-        />
-        
-        {/* Minimalist Sidebar Panel */}
-        <nav className="absolute right-0 top-0 bottom-0 w-[280px] max-w-[85vw] bg-white dark:bg-surface-950 shadow-2xl flex flex-col animate-slide-in-right border-l border-surface-200 dark:border-surface-800">
-          
-          {/* Sidebar Header */}
-          <div className="px-5 h-16 flex items-center justify-between border-b border-surface-100 dark:border-surface-800/50 shrink-0">
-            <Link href="/" prefetch={false} className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
-              <div className="w-8 h-8 shrink-0 relative overflow-hidden rounded-xl">
-                <Image src={settings.siteLogo || '/icon-190x190.jpg'} alt={settings.siteTitle || 'Site Logo'} fill sizes="32px" className="object-contain" referrerPolicy="no-referrer" />
-              </div>
-              <span className="text-lg font-bold text-surface-900 dark:text-white">{settings.siteTitle}</span>
-            </Link>
-            <button 
-              onClick={() => setMenuOpen(false)}
-              className="p-2 -mr-2 rounded-full text-surface-400 hover:text-surface-900 dark:hover:text-white hover:bg-surface-50 dark:hover:bg-surface-900 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          
-          {/* Sidebar Links */}
-          <div className="flex-1 overflow-y-auto py-4">
-            {inlineNavItems.map((item, index) => {
-              if (item.kind === 'builtin' && item.key === 'submit' && !submissionsEnabled) {
-                return null;
-              }
-
-              const isActive = pathname === item.href;
-              const activeClass = isActive 
-                ? "text-primary-600 dark:text-primary-400 bg-primary-50/50 dark:bg-primary-500/5"
-                : "text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-900/50 hover:text-surface-900 dark:hover:text-white";
-              
-              return (
-                <div key={item.navKey} className="flex flex-col">
-                  {index > 0 && <div className="h-[1px] bg-gradient-to-r from-transparent via-primary-500/50 to-transparent mx-6 my-1" />}
-                  <Link 
-                    href={item.href} 
-                    prefetch={false} 
-                    onClick={() => setMenuOpen(false)} 
-                    className={`flex items-center gap-4 px-6 py-3 text-[15px] font-medium transition-colors relative ${activeClass}`}
-                  >
-                    {isActive && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-500 rounded-r-full" />
-                    )}
-                    {item.label}
-                  </Link>
-                </div>
+                <Link key={item.navKey} href={item.href} prefetch={false} className={pill}>{item.label}</Link>
               );
             })}
 
-            {headerMenus.map(menu => (
-              <div key={menu.id} className="flex flex-col">
-                <div className="h-[1px] bg-gradient-to-r from-transparent via-primary-500/50 to-transparent mx-6 my-1" />
+            {headerMenus.map(menu => {
+              const isOpen = activeMenuId === menu.id;
+              return (
                 <button
-                  onClick={() => setMobileMenuOpen(prev => ({ ...prev, [menu.id]: !prev[menu.id] }))}
-                  aria-expanded={Boolean(mobileMenuOpen[menu.id])}
-                  className="flex items-center justify-between gap-4 px-6 py-3 text-[15px] font-medium text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-900/50 hover:text-surface-900 dark:hover:text-white transition-colors"
+                  key={menu.id}
+                  type="button"
+                  onClick={() => setActiveMenuId(isOpen ? null : menu.id)}
+                  onMouseEnter={() => {
+                    if (searchOpen) return;
+                    if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current);
+                    setActiveMenuId(menu.id);
+                  }}
+                  onMouseLeave={() => {
+                    hoverTimerRef.current = window.setTimeout(() => setActiveMenuId(null), 150);
+                  }}
+                  aria-expanded={isOpen}
+                  aria-haspopup="true"
+                  className={`inline-flex items-center gap-1.5 ${isOpen ? navPillActive : navPill}`}
                 >
-                  {menu.label}
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileMenuOpen[menu.id] ? 'rotate-180' : ''}`} />
+                  <span>{menu.label}</span>
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
-                {mobileMenuOpen[menu.id] && menu.items.map(item => {
-                  const isActive = pathname === item.href;
-                  const activeClass = isActive
-                    ? "text-primary-600 dark:text-primary-400 bg-primary-50/50 dark:bg-primary-500/5"
-                    : "text-surface-500 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-900/50 hover:text-surface-900 dark:hover:text-white";
-                  return (
-                    <Link
-                      key={item.navKey}
-                      href={item.href}
-                      prefetch={false}
-                      onClick={() => setMenuOpen(false)}
-                      className={`flex items-center gap-4 py-2.5 pl-10 pr-6 text-sm font-medium transition-colors relative ${activeClass}`}
-                    >
-                      {isActive && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-500 rounded-r-full" />
-                      )}
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            ))}
+              );
+            })}
+          </nav>
+
+          {/* Right cluster */}
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
+            {/* No backdrop-blur on this chip on purpose: it fades in and out,
+                and a frosted surface cannot be opacity-animated without
+                flashing its raw backdrop for a frame. */}
+            <button
+              ref={searchButtonRef}
+              type="button"
+              onClick={() => (searchOpen ? closeSearch() : openSearch())}
+              tabIndex={showSearchIcon ? 0 : -1}
+              aria-hidden={!showSearchIcon}
+              aria-label={searchOpen ? 'Close search' : 'Open search'}
+              aria-expanded={searchOpen}
+              className={`${iconChip} ${showSearchIcon ? 'scale-100 opacity-100' : 'pointer-events-none scale-75 opacity-0'} ${
+                searchOpen ? '!border-primary-500/50 !bg-primary-500/10 !text-primary-600 dark:!text-primary-300' : ''
+              }`}
+            >
+              <span className="relative block h-4 w-4">
+                <Search className={`absolute inset-0 h-4 w-4 transform-gpu transition-all duration-200 ${searchOpen ? 'rotate-90 scale-50 opacity-0' : 'rotate-0 scale-100 opacity-100'}`} />
+                <X className={`absolute inset-0 h-4 w-4 transform-gpu transition-all duration-200 ${searchOpen ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-50 opacity-0'}`} />
+              </span>
+            </button>
+
+            <button type="button" onClick={handleThemeToggle} className={iconChip} aria-label="Toggle theme">
+              <span className={`relative block h-4 w-4 transition-opacity duration-200 ${themeMounted ? 'opacity-100' : 'opacity-0'}`}>
+                <Sun className={`absolute inset-0 h-4 w-4 transform-gpu transition-all duration-200 ${theme === 'dark' ? 'rotate-0 scale-100 text-amber-400 opacity-100' : 'rotate-90 scale-50 opacity-0'}`} />
+                <Moon className={`absolute inset-0 h-4 w-4 transform-gpu transition-all duration-200 ${theme === 'dark' ? '-rotate-90 scale-50 opacity-0' : 'rotate-0 scale-100 text-surface-700 opacity-100'}`} />
+              </span>
+            </button>
 
             {accountFeaturesEnabled && (
-              <div className="mt-6 border-t border-surface-100 dark:border-surface-800">
+              <div className="ml-0.5 hidden items-center gap-1.5 border-l border-black/10 pl-2 dark:border-white/10 sm:ml-1 sm:pl-2.5 md:flex">
                 {user ? (
-                   <div className="py-2">
-                    <Link href="/profile" prefetch={false} onClick={() => setMenuOpen(false)} className="flex items-center gap-4 px-6 py-3 text-[15px] font-medium text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-900/50 hover:text-surface-900 dark:hover:text-white transition-colors">
-                      <UserIcon className="w-5 h-5 opacity-70" />
+                  <>
+                    <Link href="/profile" prefetch={false} className={`inline-flex h-9 items-center gap-1.5 ${navPill}`}>
+                      <UserIcon className="h-4 w-4" />
                       Profile
                     </Link>
-                    <button onClick={() => { handleLogout(); setMenuOpen(false); }} className="w-full text-left flex items-center gap-4 px-6 py-3 text-[15px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
-                      <LogOut className="w-5 h-5 opacity-70" />
-                      Sign Out
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      title="Log out"
+                      aria-label="Log out"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-transparent text-surface-500 transition-all duration-150 hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-500 dark:text-surface-400 dark:hover:text-red-400"
+                    >
+                      <LogOut className="h-4 w-4" />
                     </button>
-                   </div>
+                  </>
                 ) : (
-                  <div className="p-5">
-                    <button onClick={() => { handleLogin(); setMenuOpen(false); }} className="w-full text-center px-4 py-2.5 rounded-xl text-[15px] font-medium bg-surface-900 dark:bg-white text-white dark:text-surface-900 hover:opacity-90 active:scale-[0.98] transition-all">
-                      Sign In
-                    </button>
-                  </div>
+                  <button type="button" onClick={handleLogin} className="grad-shift inline-flex h-9 items-center rounded-full px-4 text-sm font-semibold text-white shadow-md shadow-primary-500/25 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary-500/40 active:scale-[0.98]">
+                    Sign In
+                  </button>
                 )}
               </div>
             )}
+
+            {/* Primary CTA — only once the full row actually fits */}
+            <Link
+              href="/explore"
+              prefetch={false}
+              className="grad-shift group relative hidden items-center gap-1.5 overflow-hidden rounded-full px-4 py-2 text-sm font-semibold text-white shadow-md shadow-primary-500/25 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary-500/40 active:scale-[0.98] sm:px-5 min-[1080px]:inline-flex"
+            >
+              <span className="relative z-10">Browse Prompts</span>
+              <ArrowRight className="relative z-10 h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+            </Link>
+
+            {/* Morphing hamburger */}
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(!menuOpen);
+                if (searchOpen) closeSearch();
+              }}
+              className={`relative lg:hidden ${iconChip}`}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+            >
+              <span className="relative flex h-3.5 w-4 flex-col items-center justify-between">
+                <span className={`h-0.5 w-full rounded-full bg-current transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${menuOpen ? 'translate-y-[6px] rotate-45' : ''}`} />
+                <span className={`h-0.5 w-full rounded-full bg-current transition-all duration-200 ${menuOpen ? 'scale-x-0 opacity-0' : 'opacity-100'}`} />
+                <span className={`h-0.5 w-full rounded-full bg-current transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${menuOpen ? '-translate-y-[6px] -rotate-45' : ''}`} />
+              </span>
+            </button>
           </div>
-        </nav>
-      </div>
-    )}
+        </div>
+
+        {/* Search panel. The panel itself carries no backdrop-filter — it
+            inherits the bar's frost, so its open/close fade can never flash. */}
+        <div ref={searchPanelRef} className={`${panelShell} ${searchOpen ? panelOpen : panelClosed}`}>
+          <div className="overflow-hidden">
+            <div className="mx-auto w-full max-w-2xl px-3.5 py-3.5 sm:px-6 sm:py-4">
+              <form onSubmit={handleSearchSubmit}>
+                <div className="group/search relative flex items-center">
+                  <Search className="pointer-events-none absolute left-4 h-4 w-4 text-surface-400 transition-colors group-focus-within/search:text-primary-600 dark:text-surface-500 dark:group-focus-within/search:text-primary-300" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={query}
+                    onChange={e => {
+                      setQuery(e.target.value);
+                      activateSearch();
+                    }}
+                    onFocus={activateSearch}
+                    placeholder="Search prompts, tools, categories…"
+                    aria-label="Search prompts"
+                    className="h-11 w-full rounded-full border border-black/10 bg-white/70 pl-10 pr-24 text-sm text-surface-900 outline-none transition-all duration-200 placeholder:text-surface-400 focus:border-primary-500/60 focus:bg-white/90 focus:shadow-lg focus:shadow-primary-500/10 dark:border-white/10 dark:bg-white/[0.08] dark:text-white dark:placeholder:text-surface-500 dark:focus:bg-white/[0.12]"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!query.trim()}
+                    className="grad-shift absolute right-1.5 inline-flex h-8 items-center rounded-full px-3.5 text-xs font-semibold text-white shadow-sm shadow-primary-500/25 hover:shadow-md hover:shadow-primary-500/40 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40"
+                  >
+                    Search
+                  </button>
+                </div>
+              </form>
+
+              {showLiveResults && query.trim() && (
+                <div className="mt-2.5 overflow-hidden rounded-2xl border border-black/5 bg-black/[0.03] dark:border-white/10 dark:bg-white/[0.05]">
+                  <div className="max-h-[45vh] overflow-y-auto">
+                    {liveResults.length > 0 ? (
+                      liveResults.map(post => (
+                        <Link
+                          key={post.id}
+                          href={getPostPath(post)}
+                          onClick={closeSearch}
+                          className="group/result flex items-center gap-3 border-b border-black/5 px-3 py-2.5 transition-colors last:border-b-0 hover:bg-black/[0.05] dark:border-white/5 dark:hover:bg-white/[0.08]"
+                        >
+                          <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-black/5 bg-black/[0.04] dark:border-white/10 dark:bg-white/[0.06]">
+                            {post.thumbnailUrl || post.images?.[0]?.url ? (
+                              <Image
+                                src={post.thumbnailUrl || post.images[0].url}
+                                alt=""
+                                fill
+                                sizes="44px"
+                                className="object-cover transition-transform duration-300 ease-out group-hover/result:scale-[1.08]"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <span className="flex h-full w-full items-center justify-center text-surface-400 dark:text-surface-500">
+                                <Wand2 className="h-4 w-4" />
+                              </span>
+                            )}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-medium text-surface-800 dark:text-surface-100">{post.title}</span>
+                            <span className="mt-0.5 block truncate text-xs text-surface-400 dark:text-surface-500">{resultMeta(post) || 'Prompt'}</span>
+                          </span>
+                          <ChevronRight className="h-4 w-4 shrink-0 text-surface-300 transition-all duration-200 group-hover/result:translate-x-0.5 group-hover/result:text-primary-600 dark:text-surface-600 dark:group-hover/result:text-primary-300" />
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="px-4 py-3 text-sm text-surface-500 dark:text-surface-400">
+                        {postsLoading ? 'Loading prompts…' : 'No matching prompts found.'}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={submitSearch}
+                    className="flex w-full items-center justify-between gap-2 border-t border-black/5 bg-black/[0.02] px-4 py-2.5 text-left text-xs font-semibold text-primary-600 transition-colors hover:bg-black/[0.05] dark:border-white/5 dark:bg-white/[0.03] dark:text-primary-300 dark:hover:bg-white/[0.08]"
+                  >
+                    <span className="truncate">See all results for &ldquo;{query.trim()}&rdquo;</span>
+                    <ArrowRight className="h-3.5 w-3.5 shrink-0" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile accordion menu */}
+        <div className={`lg:hidden ${panelShell} ${menuOpen ? panelOpen : panelClosed}`}>
+          <div className="overflow-hidden">
+            <div className="flex max-h-[calc(100vh-56px)] flex-col gap-2 overflow-y-auto px-4 pb-5 pt-3">
+              <div className="flex flex-col gap-1">
+                {inlineNavItems.map(item => {
+                  if (item.kind === 'builtin' && item.key === 'submit' && !submissionsEnabled) return null;
+                  const isActive = pathname === item.href;
+                  const cls = `${isActive ? mobileRowActive : mobileRow} ${menuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`;
+                  const inner = (
+                    <>
+                      <span className="flex items-center gap-2">
+                        {item.kind === 'builtin' && item.key === 'submit' && <Plus className="h-4 w-4 text-primary-500" />}
+                        {item.label}
+                      </span>
+                      <ChevronRight className="h-4 w-4 opacity-40" />
+                    </>
+                  );
+                  return item.kind === 'link' ? (
+                    <SmartLink key={item.navKey} href={item.href} onClick={() => setMenuOpen(false)} className={cls}>{inner}</SmartLink>
+                  ) : (
+                    <Link key={item.navKey} href={item.href} prefetch={false} onClick={() => setMenuOpen(false)} className={cls}>{inner}</Link>
+                  );
+                })}
+              </div>
+
+              {headerMenus.map(menu => (
+                <div key={menu.id} className="flex flex-col">
+                  <button
+                    type="button"
+                    onClick={() => setMobileAccordion(prev => ({ ...prev, [menu.id]: !prev[menu.id] }))}
+                    aria-expanded={Boolean(mobileAccordion[menu.id])}
+                    className={mobileRow}
+                  >
+                    <span>{menu.label}</span>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${mobileAccordion[menu.id] ? 'rotate-180 text-primary-500' : 'text-surface-400'}`} />
+                  </button>
+                  <div className={`grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${mobileAccordion[menu.id] ? 'mt-1 grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                    <div className="overflow-hidden">
+                      <div className="grid grid-cols-2 gap-1.5 px-1 py-1">
+                        {menu.items.map(item => renderToolChip(item, () => setMenuOpen(false)))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {accountFeaturesEnabled && (
+                <div className={`flex flex-col gap-1 pt-1 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${menuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}>
+                  {user ? (
+                    <>
+                      <Link href="/profile" prefetch={false} onClick={() => setMenuOpen(false)} className={mobileRow}>
+                        <span className="flex items-center gap-2"><UserIcon className="h-4 w-4" /> Profile</span>
+                        <ChevronRight className="h-4 w-4 opacity-40" />
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => { setMenuOpen(false); handleLogout(); }}
+                        className="flex items-center gap-2 rounded-2xl border border-transparent px-4 py-2.5 text-left text-sm font-medium text-surface-700 transition-all duration-200 hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-500 dark:text-surface-200 dark:hover:text-red-400"
+                      >
+                        <LogOut className="h-4 w-4" /> Log out
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setMenuOpen(false); handleLogin(); }}
+                      className="flex items-center justify-center gap-2 rounded-2xl border border-primary-500/30 bg-primary-500/10 px-4 py-2.5 text-sm font-semibold text-primary-600 transition-all duration-200 hover:bg-primary-500/[0.15] dark:text-primary-300"
+                    >
+                      <UserIcon className="h-4 w-4" /> Sign In
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div className={`pt-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${menuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}>
+                <Link
+                  href="/explore"
+                  prefetch={false}
+                  onClick={() => setMenuOpen(false)}
+                  className="grad-shift flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-white shadow-md shadow-primary-500/25 hover:shadow-lg hover:shadow-primary-500/40 active:scale-[0.98]"
+                >
+                  <span>Browse All Prompts</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop mega menu */}
+        <div
+          onMouseEnter={() => {
+            if (hoverTimerRef.current) window.clearTimeout(hoverTimerRef.current);
+          }}
+          onMouseLeave={() => {
+            hoverTimerRef.current = window.setTimeout(() => setActiveMenuId(null), 150);
+          }}
+          className={`hidden lg:grid ${panelShell} ${isAnyDesktopMenuOpen ? panelOpen : panelClosed}`}
+        >
+          <div className="overflow-hidden">
+            <div className="mx-auto max-w-7xl px-3.5 py-4 sm:px-6">
+              {headerMenus.map(menu => (
+                <div key={menu.id} className={`w-full flex-col items-center transition-all duration-300 ${activeMenuId === menu.id ? 'flex opacity-100' : 'hidden'}`}>
+                  <div className="flex w-full max-w-4xl flex-wrap justify-center gap-2">
+                    {menu.items.map(item => renderToolChip(item, () => setActiveMenuId(null)))}
+                  </div>
+                  <div className="mt-4 flex w-full justify-center border-t border-black/5 pt-3 dark:border-white/10">
+                    <Link
+                      href="/explore"
+                      prefetch={false}
+                      onClick={() => setActiveMenuId(null)}
+                      className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-bold text-primary-600 transition-colors hover:bg-black/[0.04] hover:text-primary-700 dark:text-primary-300 dark:hover:bg-white/5 dark:hover:text-white"
+                    >
+                      <Compass className="h-3.5 w-3.5" />
+                      <span>Explore all prompts</span>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Specular hairline along the bottom edge */}
+        {barExpanded && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary-500/30 to-transparent dark:via-primary-500/40" />
+        )}
+      </header>
     </>
   );
 }
+
+
+
+

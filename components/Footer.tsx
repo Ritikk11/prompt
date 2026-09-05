@@ -8,6 +8,7 @@ import { ChevronUp } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import type { FooterLinkGroup } from '@/lib/types';
 import { XLogo, InstagramLogo, YouTubeLogo, FacebookLogo, PinterestLogo } from '@/components/SocialLogos';
+import { SiteTitle } from '@/components/Header';
 
 const fallbackFooterGroups: FooterLinkGroup[] = [
   {
@@ -65,7 +66,7 @@ function FooterContent() {
   // posts yet), so link them all.
   const footerTools = (settings.aiTools || []).slice(0, 10);
   // w-fit keeps the clickable area on the text only, not the whole column width.
-  const footerLinkClass = 'block w-fit text-sm text-surface-500 dark:text-surface-400 hover:text-primary-500 transition-colors';
+  const footerLinkClass = 'block w-fit text-sm text-surface-600 dark:text-surface-300 hover:text-primary-600 dark:hover:text-primary-300 transition-colors';
   const social = settings.socialLinks || {};
   const socialItems = [
     { key: 'twitter', href: social.twitter, label: 'X (Twitter)', icon: <XLogo className="h-4 w-4" /> },
@@ -108,18 +109,23 @@ function FooterContent() {
   };
 
   return (
-    <footer className="border-t border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-900/50 mt-16 relative">
+    /* One static glass panel. Never opacity-animate or reveal-wrap it: a
+       backdrop-filter surface does not compute its frost while faded.
+       backdrop-blur-[14px] rather than -2xl: the 2xl utility is capped at 8px by
+       the blur budget in globals.css, which would leave the footer visibly
+       flatter than the header bar. */
+    <footer className="relative z-10 mt-16 border-t border-white/80 bg-white/50 backdrop-blur-[14px] backdrop-saturate-[120%] transition-colors duration-300 dark:border-white/10 dark:bg-[#090b1c]/50">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
           {/* Brand: logo, description, then social icons and AI tool chips (no headings) */}
           <div className="lg:col-span-4">
             <Link href="/" className="flex items-center gap-2 mb-4 w-fit">
-              <div className="w-9 h-9 shrink-0 relative overflow-hidden rounded-xl">
-                <Image src={settings.siteLogo || '/icon-190x190.jpg'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-contain" referrerPolicy="no-referrer" />
-              </div>
-              <span className="text-xl font-bold gradient-text">{settings.siteTitle}</span>
+              <span className="w-9 h-9 shrink-0 relative overflow-hidden rounded-xl">
+                <Image src={settings.siteLogo || '/icon-190x190.jpg'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" />
+              </span>
+              <SiteTitle title={settings.siteTitle} className="text-xl" />
             </Link>
-            <p className="text-sm text-surface-500 dark:text-surface-400 leading-relaxed">
+            <p className="text-sm leading-relaxed text-surface-600 dark:text-surface-300">
               {settings.footerDescription || settings.siteDescription || 'Curated prompts, prompt-writing guides, and model notes for AI image generation.'}
             </p>
             {socialItems.length > 0 && (
@@ -132,7 +138,7 @@ function FooterContent() {
                     rel="noreferrer"
                     aria-label={item.label}
                     title={item.label}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-100 text-surface-500 hover:bg-primary-500 hover:text-white dark:bg-surface-800 dark:text-surface-300"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 bg-white/60 text-surface-600 shadow-sm transition-all duration-200 ease-out hover:scale-110 hover:border-primary-500 hover:bg-primary-500 hover:text-white hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/10 dark:text-surface-300 dark:hover:border-primary-500 dark:hover:bg-primary-500 dark:hover:text-white"
                   >
                     {item.icon}
                   </a>
@@ -144,7 +150,7 @@ function FooterContent() {
                 <Link
                   key={tool}
                   href={`/tool/${encodeURIComponent(tool)}`}
-                  className="px-3 py-1 rounded-full text-xs font-medium bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+                  className="rounded-full border border-white/80 bg-white/60 px-3 py-1 text-xs font-medium text-surface-700 shadow-sm transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/80 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/12 dark:bg-white/[0.08] dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/[0.14] dark:hover:text-white"
                 >
                   {tool}
                 </Link>
@@ -176,7 +182,7 @@ function FooterContent() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-surface-200 dark:border-surface-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/80 pt-6 dark:border-white/10 sm:flex-row">
           <p className="text-sm text-surface-600 dark:text-surface-300">&copy; {new Date().getFullYear()} {settings.siteTitle}. All rights reserved.</p>
         </div>
       </div>
@@ -190,7 +196,7 @@ function FooterContent() {
           }}
           aria-label="Scroll to top"
         >
-          <span className="flex h-full w-full items-center justify-center rounded-full bg-white text-surface-700 transition-colors hover:text-primary-600 dark:bg-surface-900 dark:text-white dark:hover:text-primary-300">
+          <span className="flex h-full w-full items-center justify-center rounded-full bg-white/85 text-surface-700 backdrop-blur-xl transition-colors hover:text-primary-600 dark:bg-white/15 dark:text-white dark:hover:text-primary-300">
             <ChevronUp className="w-5 h-5" />
           </span>
         </button>

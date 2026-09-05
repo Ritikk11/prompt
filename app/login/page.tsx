@@ -1,5 +1,6 @@
 import { fetchSettings } from '@/lib/data';
 import Link from 'next/link';
+import { UserX, ArrowLeft } from 'lucide-react';
 import LoginClient from './LoginClient';
 
 export const metadata = {
@@ -9,21 +10,32 @@ export const metadata = {
 
 export default async function LoginPage() {
   const settings = await fetchSettings();
+
+  // /login is for public user accounts only.
+  // If userProfiles is disabled in admin settings, public accounts are closed.
   if (!settings.features?.userProfiles) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-        <div className="rounded-3xl border border-surface-200 bg-white p-8 dark:border-surface-800 dark:bg-surface-900">
-          <h1 className="text-2xl font-black text-surface-950 dark:text-white">Sign In is currently disabled</h1>
-          <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-surface-600 dark:text-surface-300">
-            User accounts have been disabled by the site admin.
+      <div className="flex min-h-[calc(100vh-56px)] w-full items-center justify-center px-4 py-8 sm:px-6">
+        <div className="relative w-full max-w-[420px] overflow-hidden rounded-3xl border border-white/80 bg-white/60 p-6 text-center shadow-xl backdrop-blur-xl backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.08] sm:p-8">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-600 dark:text-primary-400">
+            <UserX className="h-7 w-7 opacity-80" />
+          </div>
+          <h1 className="text-xl font-black text-surface-950 dark:text-white sm:text-2xl">Public Sign In is Disabled</h1>
+          <p className="mt-2 text-xs leading-relaxed text-surface-600 dark:text-surface-300">
+            User accounts and public registrations have been disabled by the site administrator.
           </p>
-          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/" className="rounded-xl bg-primary-500 px-5 py-3 text-sm font-bold text-white hover:bg-primary-600">Back to Home</Link>
+          <div className="mt-6">
+            <Link
+              href="/"
+              className="inline-flex h-9 items-center gap-2 rounded-full bg-primary-600 px-5 text-xs font-bold text-white shadow-sm transition hover:bg-primary-700 active:scale-95"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Return to homepage
+            </Link>
           </div>
         </div>
       </div>
     );
   }
-  
+
   return <LoginClient settings={settings} />;
 }
