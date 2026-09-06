@@ -61,26 +61,28 @@ body:has(#test-sandbox-root) [data-ad-slot] {
    opacity-faded (frost flash): the rail reveal fades the card's inner content
    instead (rules below) and the masonry uses the plain rise variant. */
 #test-sandbox-root .glm-post-card > a {
-  background: rgba(255, 255, 255, 0.6);
-  border-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.38);
+  border-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(6px) saturate(1.15);
+  -webkit-backdrop-filter: blur(6px) saturate(1.15);
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
   padding: 6px 6px 10px; /* thinner top/sides, kept bottom */
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 .dark #test-sandbox-root .glm-post-card > a {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
 }
 #test-sandbox-root .glm-post-card:hover > a {
+  background: rgba(255, 255, 255, 0.55);
   border-color: rgba(66, 133, 244, 0.5);
-  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.14);
 }
 .dark #test-sandbox-root .glm-post-card:hover > a {
+  background: rgba(255, 255, 255, 0.08);
   border-color: rgba(96, 165, 250, 0.5);
-  box-shadow: 0 8px 24px -4px rgba(2, 6, 23, 0.55);
+  box-shadow: 0 8px 24px -4px rgba(2, 6, 23, 0.5);
 }
 
 /* Rail reveal: the glass frame stays put; fade the card's inner content
@@ -105,24 +107,18 @@ body:has(#test-sandbox-root) [data-ad-slot] {
 #test-sandbox-root .glm-reveal.glm-stagger-fade.glm-revealed > .glm-post-card:nth-child(4) > a > * { animation-delay: calc(var(--glm-delay, 0ms) + 400ms); }
 #test-sandbox-root .glm-reveal.glm-stagger-fade.glm-revealed > .glm-post-card:nth-child(n+5) > a > * { animation-delay: calc(var(--glm-delay, 0ms) + 500ms); }
 
-/* Small glass controls — ToolBadge pills (a production component, overridden
-   here instead of edited) plus the remaining chips/CTAs/rail arrows that use
-   the backdrop-blur-xl utility. 24px blur on a pill-sized element is wasted
-   GPU work; 12px reads the same at that size. One scoped rule hits every
-   24px element inside the sandbox. */
-#test-sandbox-root .backdrop-blur-xl {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+/* Cap all element backdrop-blurs in sandbox to 4-8px (except slider) for buttery smooth scrolling */
+#test-sandbox-root :not([data-slider-surface]) .backdrop-blur-2xl,
+#test-sandbox-root :not([data-slider-surface]) .backdrop-blur-xl,
+#test-sandbox-root :not([data-slider-surface]) .backdrop-blur-lg {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
-/* Heavy glass panels & hero stats/search — 40px backdrop blur (backdrop-blur-2xl)
-   causes mobile GPU frame drops during scroll. Capped to 8px (<10px) to ensure
-   smooth 60fps scrolling while preserving the frosted glass refraction. Note that
-   the slider's background image uses standard element filter (blur-2xl), which
-   remains separate and unaffected. */
-#test-sandbox-root .backdrop-blur-2xl {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+#test-sandbox-root :not([data-slider-surface]) .backdrop-blur-md,
+#test-sandbox-root :not([data-slider-surface]) .backdrop-blur {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 /* Accent scrollbars — the site-wide scrollbar in globals.css is neutral

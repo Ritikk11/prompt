@@ -110,10 +110,10 @@ export default function GlmHowItWorks({ settings }: { settings?: SiteSettings })
                   onMouseEnter={() => setActiveIndex(index)}
                   onFocus={() => setActiveIndex(index)}
                   onClick={() => setActiveIndex(index)}
-                  className={`group grid w-full grid-cols-[auto_1fr_auto] items-start gap-4 rounded-2xl border p-5 text-left backdrop-blur-2xl backdrop-saturate-[120%] transition ${
+                  className={`group grid w-full grid-cols-[auto_1fr_auto] items-start gap-4 rounded-2xl border p-5 text-left backdrop-blur-md backdrop-saturate-[115%] transition ${
                     isActive
                       ? 'border-primary-500/70 bg-primary-500/10 shadow-[0_16px_44px_rgba(26,115,232,0.16)]'
-                      : 'border-white/80 bg-white/60 hover:border-primary-400/60 hover:bg-white/70 dark:border-white/10 dark:bg-white/[0.08] dark:hover:border-primary-400/50 dark:hover:bg-white/[0.12]'
+                      : 'border-white/70 bg-white/40 hover:border-primary-400/60 hover:bg-white/60 dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-primary-400/50 dark:hover:bg-white/[0.08]'
                   }`}
                 >
                   <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${step.color} text-sm font-black shadow-lg`}>

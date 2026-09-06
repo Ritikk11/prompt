@@ -108,7 +108,7 @@ export default function GlmFooter({ settings }: { settings?: SiteSettings }) {
   };
 
   return (
-    <footer className="relative z-10 mt-16 border-t border-white/80 bg-white/60 backdrop-blur-2xl backdrop-saturate-[120%] transition-colors duration-300 dark:border-white/10 dark:bg-white/[0.05]">
+    <footer className="relative z-10 mt-16 border-t border-white/70 bg-white/40 backdrop-blur-md backdrop-saturate-[115%] transition-colors duration-300 dark:border-white/10 dark:bg-white/[0.03]">
       <div className="mx-auto max-w-7xl px-4 py-12">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
           {/* Brand: logo, description, then social icons and AI tool chips (no headings) */}
@@ -187,7 +187,7 @@ export default function GlmFooter({ settings }: { settings?: SiteSettings }) {
           }}
           aria-label="Scroll to top"
         >
-          <span className="flex h-full w-full items-center justify-center rounded-full bg-white/85 text-surface-700 backdrop-blur-xl transition-colors hover:text-primary-600 dark:bg-white/15 dark:text-white dark:hover:text-primary-300">
+          <span className="flex h-full w-full items-center justify-center rounded-full bg-white/70 text-surface-700 backdrop-blur-md transition-colors hover:text-primary-600 dark:bg-white/10 dark:text-white dark:hover:text-primary-300">
             <ChevronUp className="h-5 w-5" />
           </span>
         </button>

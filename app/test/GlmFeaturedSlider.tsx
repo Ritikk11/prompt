@@ -81,11 +81,12 @@ export default function GlmFeaturedSlider({
   return (
     <section className="mx-auto w-full max-w-7xl px-1 py-8">
       <div
+        data-slider-surface="true"
         className={`relative flex min-h-[500px] w-full items-center justify-center overflow-hidden rounded-3xl px-4 pb-12 pt-6 md:px-10 md:py-12 ${glassCard}`}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
           {/* Frosted glow bleeding through the glass (small src — it is blurred
               anyway, so a 20vw asset is plenty). Pinned to a single image so the
               panel background does not re-tint on every slide change. */}

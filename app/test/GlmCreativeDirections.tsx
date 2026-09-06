@@ -64,7 +64,7 @@ export default function GlmCreativeDirections({ posts, settings }: { posts: Post
             <Link
               key={`${item.type}-${item.value}`}
               href={itemHref(item)}
-              className="group inline-flex items-center gap-2.5 rounded-full border border-white/80 bg-white/60 px-5 py-2.5 text-sm font-bold text-surface-700 shadow-sm backdrop-blur-xl transition-all duration-200 hover:scale-105 hover:border-primary-400 hover:bg-white/80 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/12 dark:bg-white/8 dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/14 dark:hover:text-white"
+              className="group inline-flex items-center gap-2.5 rounded-full border border-white/70 bg-white/40 px-5 py-2.5 text-sm font-bold text-surface-700 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-105 hover:border-primary-400 hover:bg-white/70 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/10 dark:hover:text-white"
             >
               {item.label}
               <span className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[11px] font-black text-primary-600 dark:bg-primary-400/15 dark:text-primary-300">

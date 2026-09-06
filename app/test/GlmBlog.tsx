@@ -55,7 +55,7 @@ export default function GlmBlog({ settings }: { settings?: SiteSettings }) {
         <GlmReveal slide delay={200} className="mt-8 text-center">
           <Link
             href={content.ctaHref || '/blog'}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/80 bg-white/60 px-6 py-2.5 text-sm font-bold text-surface-800 shadow-sm backdrop-blur-xl transition hover:scale-105 hover:border-primary-400 hover:text-primary-600 active:scale-95 dark:border-white/15 dark:bg-white/8 dark:text-surface-200 dark:hover:border-primary-400/60 dark:hover:text-white"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/70 bg-white/40 px-6 py-2.5 text-sm font-bold text-surface-800 shadow-sm backdrop-blur-md transition hover:scale-105 hover:border-primary-400 hover:text-primary-600 active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-surface-200 dark:hover:border-primary-400/60 dark:hover:text-white"
           >
             {content.ctaLabel || 'Read the blog'}
             <ArrowRight className="h-4 w-4" />

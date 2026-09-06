@@ -96,7 +96,7 @@ export default function GlmPromptSection({ section, posts, settings }: GlmPrompt
           <GlmReveal className="mt-8 flex justify-center">
             <Link
               href="/explore"
-              className="group inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/55 px-7 py-3 text-sm font-bold text-surface-800 shadow-lg backdrop-blur-xl transition hover:scale-[1.03] hover:border-primary-400/60 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:text-primary-300"
+              className="group inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/40 px-7 py-3 text-sm font-bold text-surface-800 shadow-lg backdrop-blur-md transition hover:scale-[1.03] hover:border-primary-400/60 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:text-primary-300"
             >
               Explore All Prompts
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -109,7 +109,7 @@ export default function GlmPromptSection({ section, posts, settings }: GlmPrompt
           <button
             onClick={() => scroll('left')}
             aria-label={`Scroll ${section.name} left`}
-            className="absolute left-0 top-1/2 z-10 flex h-10 w-10 -translate-x-2 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/70 text-surface-800 shadow-lg backdrop-blur-xl transition hover:bg-white dark:border-white/10 dark:bg-surface-900/70 dark:text-white lg:opacity-0 lg:group-hover/section:opacity-100"
+            className="absolute left-0 top-1/2 z-10 flex h-10 w-10 -translate-x-2 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/40 text-surface-800 shadow-lg backdrop-blur-md transition hover:bg-white/80 dark:border-white/10 dark:bg-surface-900/60 dark:text-white lg:opacity-0 lg:group-hover/section:opacity-100"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -132,7 +132,7 @@ export default function GlmPromptSection({ section, posts, settings }: GlmPrompt
           <button
             onClick={() => scroll('right')}
             aria-label={`Scroll ${section.name} right`}
-            className="absolute right-0 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 translate-x-2 items-center justify-center rounded-full border border-white/60 bg-white/70 text-surface-800 shadow-lg backdrop-blur-xl transition hover:bg-white dark:border-white/10 dark:bg-surface-900/70 dark:text-white lg:opacity-0 lg:group-hover/section:opacity-100"
+            className="absolute right-0 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 translate-x-2 items-center justify-center rounded-full border border-white/60 bg-white/40 text-surface-800 shadow-lg backdrop-blur-md transition hover:bg-white/80 dark:border-white/10 dark:bg-surface-900/60 dark:text-white lg:opacity-0 lg:group-hover/section:opacity-100"
           >
             <ChevronRight className="h-5 w-5" />
           </button>

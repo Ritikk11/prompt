@@ -19,7 +19,7 @@ import type { ReactNode } from 'react';
  * background-color for a frame before the blur kicks in — a flash that reads as
  * "background bleeds, then own-bg paints" in dark and the reverse in light. */
 export const glassSurface =
-  'border border-white/80 bg-white/60 backdrop-blur-lg backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.08] transform-gpu [backface-visibility:hidden]';
+  'border border-white/75 bg-white/40 backdrop-blur-md backdrop-saturate-[115%] dark:border-white/10 dark:bg-white/[0.04] transform-gpu [backface-visibility:hidden]';
 
 /** Shared glass-card recipe — matches the hero's frosted panels. */
 export const glassCard = `rounded-2xl shadow-lg shadow-slate-900/5 ${glassSurface}`;

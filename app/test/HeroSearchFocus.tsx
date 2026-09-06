@@ -52,7 +52,7 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
 
       <div className="mx-auto flex w-full max-w-5xl flex-col items-center justify-center text-center">
         {/* Kicker Pill — same glass recipe as the tag/tool pills below */}
-        <div className="mb-5 sm:mb-7 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/60 px-4 py-2 text-xs font-bold text-surface-700 shadow-sm backdrop-blur-xl dark:border-white/12 dark:bg-white/8 dark:text-white/85">
+        <div className="mb-5 sm:mb-7 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/40 px-4 py-2 text-xs font-bold text-surface-700 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/5 dark:text-white/85">
           <Flame className="h-4 w-4 text-amber-400" />
           <span>Curated prompts for {toolNames.slice(0, 4).join(', ') || 'ChatGPT, Gemini, Grok & Qwen'}</span>
         </div>
@@ -103,7 +103,7 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
                 window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
               }
             }}
-            className="group/search relative flex items-center rounded-full border border-white/80 bg-white/60 p-1.5 shadow-xl shadow-slate-900/5 backdrop-blur-2xl backdrop-saturate-[120%] transition-all duration-300 ease-out hover:border-primary-400 hover:shadow-2xl focus-within:scale-[1.02] focus-within:border-primary-500 focus-within:shadow-2xl focus-within:shadow-primary-500/20 focus-within:ring-4 focus-within:ring-primary-500/15 dark:border-white/15 dark:bg-white/10 dark:shadow-black/50 dark:hover:border-white/30"
+            className="group/search relative flex items-center rounded-full border border-white/70 bg-white/45 p-1.5 shadow-xl shadow-slate-900/5 backdrop-blur-md backdrop-saturate-[115%] transition-all duration-300 ease-out hover:border-primary-400 hover:shadow-2xl focus-within:scale-[1.02] focus-within:border-primary-500 focus-within:shadow-2xl focus-within:shadow-primary-500/20 focus-within:ring-4 focus-within:ring-primary-500/15 dark:border-white/10 dark:bg-white/5 dark:shadow-black/50 dark:hover:border-white/30"
           >
             <input
               type="text"
@@ -129,7 +129,7 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
               <Link
                 key={tag}
                 href={`/tag/${encodeURIComponent(tag.toLowerCase())}`}
-                className="rounded-full border border-white/80 bg-white/60 px-3.5 py-1.5 text-xs font-bold text-surface-700 shadow-sm backdrop-blur-xl transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/80 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/12 dark:bg-white/8 dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/14 dark:hover:text-white"
+                className="rounded-full border border-white/70 bg-white/40 px-3.5 py-1.5 text-xs font-bold text-surface-700 shadow-sm backdrop-blur-md transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/70 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/10 dark:hover:text-white"
               >
                 #{tag}
               </Link>
@@ -147,7 +147,7 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
             </Link>
             <a
               href="#how-it-works"
-              className="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-white/80 bg-white/60 px-8 text-base font-bold text-surface-700 shadow-sm backdrop-blur-xl transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/80 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/12 dark:bg-white/8 dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/14 dark:hover:text-white"
+              className="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-white/70 bg-white/40 px-8 text-base font-bold text-surface-700 shadow-sm backdrop-blur-md transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/70 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/10 dark:hover:text-white"
             >
               How It Works
             </a>
@@ -177,7 +177,7 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
             return (
               <div
                 key={item.label}
-                className="group relative overflow-hidden rounded-2xl border border-white/80 bg-white/55 p-3.5 text-left shadow-lg shadow-slate-900/5 backdrop-blur-2xl backdrop-saturate-[120%] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] transition-all duration-300 ease-out hover:scale-[1.03] hover:border-primary-400 hover:shadow-xl sm:p-4 dark:border-white/10 dark:bg-white/10 dark:hover:border-primary-400/60"
+                className="group relative overflow-hidden rounded-2xl border border-white/70 bg-white/40 p-3.5 text-left shadow-lg shadow-slate-900/5 backdrop-blur-md backdrop-saturate-[115%] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] transition-all duration-300 ease-out hover:scale-[1.03] hover:border-primary-400 hover:shadow-xl sm:p-4 dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-400/60"
               >
                 <div className="flex items-center gap-3">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-300 ease-out group-hover:scale-110 ${item.color}`}>
@@ -206,7 +206,7 @@ export default function HeroLandingSearchFocus({ featuredPosts = [], settings, p
                   <Link
                     key={tool}
                     href={`/tool/${encodeURIComponent(tool)}`}
-                    className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-white/80 bg-white/60 px-4 text-xs font-bold text-surface-700 shadow-sm backdrop-blur-xl origin-center transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/80 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/12 dark:bg-white/8 dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/14 dark:hover:text-white"
+                    className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-white/70 bg-white/40 px-4 text-xs font-bold text-surface-700 shadow-sm backdrop-blur-md origin-center transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/70 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/10 dark:hover:text-white"
                   >
                     {info?.logo ? (
                       <span className="relative flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-full">
