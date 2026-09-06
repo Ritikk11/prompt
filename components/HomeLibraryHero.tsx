@@ -14,7 +14,7 @@ type HomeLibraryHeroProps = {
 
 /** Shared pill recipe: kicker, tag chips, tool chips and the secondary CTA. */
 const glassPill =
-  'border border-white/60 bg-white/40 shadow-sm backdrop-blur-md transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/60 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/[0.10] dark:hover:text-white';
+  'border border-white/60 bg-white/25 shadow-sm backdrop-blur-md backdrop-saturate-150 transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/60 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/[0.10] dark:hover:text-white';
 
 /** Brand-blue gradient button, used by the search submit and the primary CTA. */
 const gradientButton =
@@ -99,7 +99,7 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
                 window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
               }
             }}
-            className="group/search relative flex items-center rounded-full border border-white/60 bg-white/45 p-1.5 shadow-xl shadow-slate-900/5 backdrop-blur-md backdrop-saturate-[120%] transition-all duration-300 ease-out hover:border-primary-400 hover:shadow-2xl focus-within:scale-[1.02] focus-within:border-primary-500 focus-within:shadow-2xl focus-within:shadow-primary-500/20 focus-within:ring-4 focus-within:ring-primary-500/15 dark:border-white/10 dark:bg-white/[0.06] dark:shadow-black/50 dark:hover:border-white/30"
+            className="group/search relative flex items-center rounded-full border border-white/60 bg-white/45 p-1.5 shadow-xl shadow-slate-900/5 backdrop-blur-md backdrop-saturate-150 transition-all duration-300 ease-out hover:border-primary-400 hover:shadow-2xl focus-within:scale-[1.02] focus-within:border-primary-500 focus-within:shadow-2xl focus-within:shadow-primary-500/20 focus-within:ring-4 focus-within:ring-primary-500/15 dark:border-white/10 dark:bg-white/[0.06] dark:shadow-black/50 dark:hover:border-white/30"
           >
             <input
               type="text"

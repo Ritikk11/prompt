@@ -118,6 +118,10 @@ export default function LoadingImage({
   }, [enabled, srcValue]);
 
   const settled = loaded || failed || timedOut;
+  const hasTransition = /\btransition\b|\btransition-/.test(className);
+  const transitionClass = enabled
+    ? `${hasTransition ? '' : 'transition-opacity duration-300 '}${settled ? 'opacity-100' : 'opacity-0'}`
+    : '';
   const image = (
     <Image
       {...props}
@@ -131,7 +135,7 @@ export default function LoadingImage({
         setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
         onError?.(event);
       }}
-      className={`${className} ${enabled ? `transition-opacity duration-300 ${settled ? 'opacity-100' : 'opacity-0'}` : ''} ${failed ? 'invisible' : ''}`}
+      className={`${className} ${transitionClass} ${failed ? 'invisible' : ''}`.trim()}
     />
   );
 
@@ -249,6 +253,10 @@ export function LoadingImg({
   }, [srcValue, enabled]);
 
   const settled = loaded || failed || timedOut;
+  const hasTransition = /\btransition\b|\btransition-/.test(className);
+  const transitionClass = enabled
+    ? `${hasTransition ? '' : 'transition-opacity duration-300 '}${settled ? 'opacity-100' : 'opacity-0'}`
+    : '';
   // On failure the image contributes no height (broken img has no natural
   // dimensions), which collapses the wrapper to a sliver and squashes the
   // fallback. Reserve real space so the placeholder stays readable.
@@ -276,7 +284,7 @@ export function LoadingImg({
           setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
           onError?.(event);
         }}
-        className={`${className} ${enabled ? `transition-opacity duration-300 ${settled ? 'opacity-100' : 'opacity-0'}` : ''} ${failed ? 'sr-only h-0 w-0' : ''}`}
+        className={`${className} ${transitionClass} ${failed ? 'sr-only h-0 w-0' : ''}`.trim()}
       />
     </span>
   );

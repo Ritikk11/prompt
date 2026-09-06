@@ -16,7 +16,7 @@ export default function ArticleCard({ article, thumbnailUrl }: { article: Articl
   return (
     <Link
       href={href}
-      className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-white/80 bg-white/60 p-3 shadow-[0_2px_10px_rgba(15,23,42,0.10)] backdrop-blur-[16px] backdrop-saturate-[120%] transition hover:border-primary-400/60 hover:shadow-[0_18px_38px_-18px_rgba(66,133,244,0.35)] dark:border-white/10 dark:bg-white/[0.08]"
+      className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-white/80 bg-white/60 p-3 shadow-[0_2px_10px_rgba(15,23,42,0.10)] backdrop-blur-[16px] backdrop-saturate-150 transition hover:border-primary-400/60 hover:shadow-[0_18px_38px_-18px_rgba(66,133,244,0.35)] dark:border-white/10 dark:bg-white/[0.08]"
     >
       <ArticleThumbnail article={article} compact thumbnailUrl={thumbnailUrl} />
       <div className="flex flex-1 flex-col p-2 pt-5">

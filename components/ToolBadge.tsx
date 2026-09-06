@@ -8,7 +8,7 @@ import Image from 'next/image';
 // rim, and the text-shadow keeps the label readable even when the pill body goes
 // faint over white posters. Tune the badge look here only.
 export const BADGE_BG =
-  'bg-white/15 backdrop-blur-xl backdrop-saturate-150 ring-1 ring-inset ring-white/30';
+  'bg-white/15 backdrop-blur-md backdrop-saturate-150 ring-1 ring-inset ring-white/30';
 
 type BadgeSize = 'sm' | 'md' | 'lg';
 

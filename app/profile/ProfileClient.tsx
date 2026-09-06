@@ -261,7 +261,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
         {/* Content */}
         <div className="flex-1 min-w-0">
           {isEditing ? (
-            <div className="mb-10 rounded-2xl border border-white/80 bg-white/60 backdrop-blur-[16px] backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.08] p-6 fade-in">
+            <div className="mb-10 rounded-2xl border border-white/80 bg-white/60 backdrop-blur-[16px] backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.08] p-6 fade-in">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-surface-900 dark:text-white flex items-center gap-2">
@@ -503,7 +503,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
               ) : (
                 <div className="space-y-3">
                   {comments.map(comment => (
-                    <div key={comment.id} className="rounded-2xl border border-white/80 bg-white/60 backdrop-blur-[16px] backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.08] p-4">
+                    <div key={comment.id} className="rounded-2xl border border-white/80 bg-white/60 backdrop-blur-[16px] backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.08] p-4">
                       <div className="flex flex-wrap items-center gap-2 text-xs text-surface-500">
                         <Link href={getPostPath({ id: comment.postId, slug: comment.postSlug })} className="font-bold text-primary-500 hover:text-primary-600">
                           {comment.postTitle}

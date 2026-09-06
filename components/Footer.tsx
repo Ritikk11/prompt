@@ -114,7 +114,7 @@ function FooterContent() {
        backdrop-blur-[14px] rather than -2xl: the 2xl utility is capped at 8px by
        the blur budget in globals.css, which would leave the footer visibly
        flatter than the header bar. */
-    <footer className="relative z-10 mt-16 border-t border-white/80 bg-white/50 backdrop-blur-[14px] backdrop-saturate-[120%] transition-colors duration-300 dark:border-white/10 dark:bg-[#090b1c]/50">
+    <footer className="relative z-10 mt-16 border-t border-white/80 bg-white/50 backdrop-blur-[14px] backdrop-saturate-150 transition-colors duration-300 dark:border-white/10 dark:bg-[#090b1c]/50">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
           {/* Brand: logo, description, then social icons and AI tool chips (no headings) */}

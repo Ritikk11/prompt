@@ -54,7 +54,7 @@ export default function DiscoveryPageHero({
             {stats.map(stat => (
               /* A tint, not a second frost: glass inside glass costs another
                  full-size blur pass for no visible gain. */
-              <div key={stat.label} className="rounded-2xl border border-white/60 bg-white/40 px-5 py-4 dark:border-white/10 dark:bg-white/5">
+              <div key={stat.label} className="rounded-2xl border border-white/60 bg-white/25 px-5 py-4 dark:border-white/10 dark:bg-white/5">
                 <p className="text-2xl font-black text-surface-950 dark:text-white">{stat.value}</p>
                 <p className="mt-1 text-xs font-bold text-surface-500 dark:text-surface-400">{stat.label}</p>
               </div>

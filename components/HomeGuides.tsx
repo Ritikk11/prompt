@@ -56,7 +56,7 @@ export default function HomeGuides({ settings }: { settings?: SiteSettings }) {
         <ScrollReveal slide delay={200} className="mt-8 text-center">
           <Link
             href={content.ctaHref || '/guides'}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/60 bg-white/40 px-6 py-2.5 text-sm font-bold text-surface-800 shadow-sm backdrop-blur-md transition hover:scale-105 hover:border-primary-400 hover:text-primary-600 active:scale-95 dark:border-white/10 dark:bg-white/[0.04] dark:text-surface-200 dark:hover:border-primary-400/60 dark:hover:text-white"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/60 bg-white/25 px-6 py-2.5 text-sm font-bold text-surface-800 shadow-sm backdrop-blur-md backdrop-saturate-150 transition hover:scale-105 hover:border-primary-400 hover:text-primary-600 active:scale-95 dark:border-white/10 dark:bg-white/[0.04] dark:text-surface-200 dark:hover:border-primary-400/60 dark:hover:text-white"
           >
             {content.ctaLabel || 'Browse all guides'}
             <ArrowRight className="h-4 w-4" />

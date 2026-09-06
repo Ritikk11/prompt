@@ -16,7 +16,7 @@ export default async function LoginPage() {
   if (!settings.features?.userProfiles) {
     return (
       <div className="flex min-h-[calc(100vh-56px)] w-full items-center justify-center px-4 py-8 sm:px-6">
-        <div className="relative w-full max-w-[420px] overflow-hidden rounded-3xl border border-white/80 bg-white/60 p-6 text-center shadow-xl backdrop-blur-xl backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.08] sm:p-8">
+        <div className="relative w-full max-w-[420px] overflow-hidden rounded-3xl border border-white/80 bg-white/60 p-6 text-center shadow-xl backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.08] sm:p-8">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-600 dark:text-primary-400">
             <UserX className="h-7 w-7 opacity-80" />
           </div>

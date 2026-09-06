@@ -33,7 +33,7 @@ export function TabBanner({ icon, title, text, action }: {
 /** Frosted glass panel card wrapping a group of related controls. */
 export function Panel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-3xl border border-white/80 bg-white/60 p-5 shadow-sm backdrop-blur-xl backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.06] sm:p-6 space-y-6 ${className}`}>
+    <div className={`rounded-3xl border border-white/80 bg-white/60 p-5 shadow-sm backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.06] sm:p-6 space-y-6 ${className}`}>
       {children}
     </div>
   );

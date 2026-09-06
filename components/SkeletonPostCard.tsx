@@ -31,7 +31,7 @@ export default function SkeletonPostCard({ cardStyle = 'v2' }: { cardStyle?: 'v1
   }
 
   return (
-    <div className="mb-3 w-full break-inside-avoid overflow-hidden rounded-[20px] border border-white/60 bg-white/40 px-1.5 pb-2.5 pt-1.5 shadow-[0_4px_12px_-2px_rgba(15,23,42,0.08)] backdrop-blur-md backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.35)] sm:mb-4">
+    <div className="mb-3 w-full break-inside-avoid overflow-hidden rounded-[20px] border border-white/60 bg-white/25 px-1.5 pb-2.5 pt-1.5 shadow-[0_4px_12px_-2px_rgba(15,23,42,0.08)] backdrop-blur-md backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.35)] sm:mb-4">
       {/* Thumbnail */}
       <div className={`relative w-full overflow-hidden rounded-[12px] ${block}`} style={{ paddingTop: '133%' }}>
         <div className={`absolute left-2.5 top-2.5 h-5 w-20 rounded-full ${chip}`} />

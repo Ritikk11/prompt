@@ -333,7 +333,7 @@ export default function FilterChipRail({
               onClick={() => setSortOpen(open => !open)}
               aria-haspopup="listbox"
               aria-expanded={sortOpen}
-              className={`inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-[13px] font-semibold backdrop-blur-xl backdrop-saturate-[120%] transition-colors duration-150 ${
+              className={`inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-[13px] font-semibold backdrop-blur-xl backdrop-saturate-150 transition-colors duration-150 ${
                 sortOpen
                   ? 'border-white/90 bg-white/80 text-surface-900 dark:border-white/20 dark:bg-white/[0.14] dark:text-white'
                   : 'border-white/80 bg-white/60 text-surface-700 hover:border-white/90 hover:bg-white/80 hover:text-surface-900 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-200 dark:hover:border-white/20 dark:hover:bg-white/[0.12] dark:hover:text-white'
@@ -359,7 +359,7 @@ export default function FilterChipRail({
             >
               <div
                 role="listbox"
-                className="overflow-hidden rounded-2xl border border-white/80 bg-white/92 shadow-[0_16px_40px_-8px_rgba(15,23,42,0.22)] backdrop-blur-xl backdrop-saturate-[130%] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] dark:border-white/12 dark:bg-[#0c1024]/92 dark:backdrop-blur-xl dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.7)]"
+                className="overflow-hidden rounded-2xl border border-white/80 bg-white/92 shadow-[0_16px_40px_-8px_rgba(15,23,42,0.22)] backdrop-blur-xl backdrop-saturate-150 transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] dark:border-white/12 dark:bg-[#0c1024]/92 dark:backdrop-blur-xl dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.7)]"
               >
                 <div className="border-b border-black/[0.06] px-4 pb-1.5 pt-2 text-[10px] font-black uppercase tracking-widest text-surface-400 dark:border-white/[0.08] dark:text-surface-500">
                   Sort by
@@ -448,7 +448,7 @@ export default function FilterChipRail({
                   className={`inline-flex h-8 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-medium outline-none transition-[background-color,border-color,color,transform,opacity] duration-150 ease-out transform-gpu active:scale-[0.98] active:opacity-85 ${
                     isActive
                       ? 'border-primary-600 bg-primary-600 text-white dark:border-primary-500 dark:bg-primary-500'
-                      : 'border-white/80 bg-white/60 text-surface-700 backdrop-blur-xl backdrop-saturate-[120%] hover:border-white/90 hover:bg-white/80 hover:text-surface-900 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-white/20 dark:hover:bg-white/[0.12] dark:hover:text-white'
+                      : 'border-white/80 bg-white/60 text-surface-700 backdrop-blur-xl backdrop-saturate-150 hover:border-white/90 hover:bg-white/80 hover:text-surface-900 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-white/20 dark:hover:bg-white/[0.12] dark:hover:text-white'
                   }`}
                 >
                   {showToolLogo ? (

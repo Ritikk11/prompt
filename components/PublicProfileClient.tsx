@@ -65,7 +65,7 @@ export default function PublicProfileClient({
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12">
       {/* Creator Header Card */}
-      <div className="relative mb-10 overflow-hidden rounded-3xl border border-white/80 bg-white/60 p-6 backdrop-blur-xl backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.08] sm:p-8">
+      <div className="relative mb-10 overflow-hidden rounded-3xl border border-white/80 bg-white/60 p-6 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.08] sm:p-8">
         {/* Ambient Top Glow */}
         <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary-500/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl" />
@@ -193,7 +193,7 @@ export default function PublicProfileClient({
       {activePosts.length > 0 ? (
         <MasonryGrid posts={activePosts as any} settings={settings} />
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-3xl border border-white/80 bg-white/40 py-16 text-center backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.04]">
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-white/80 bg-white/25 py-16 text-center backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.04]">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-500/10 text-primary-500">
             <Sparkles className="h-6 w-6 opacity-75" />
           </div>

@@ -17,7 +17,7 @@ const defaultToolNotes: Record<string, string[]> = {
 const accentBars = ['bg-google-blue', 'bg-google-green', 'bg-google-yellow', 'bg-google-red'];
 
 /** Tinted inset panel — glass inside glass would double the frost. */
-const insetPanel = 'border border-white/60 bg-white/40 dark:border-white/10 dark:bg-white/5';
+const insetPanel = 'border border-white/60 bg-white/25 dark:border-white/10 dark:bg-white/5';
 
 
 export default function HomeSupportedTools({ posts, settings }: { posts: Post[]; settings: SiteSettings }) {
@@ -118,7 +118,7 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
                     </div>
                   ))}
                 </div>
-                <div className="mt-7 inline-flex items-center justify-center gap-2 rounded-xl border border-white/70 bg-white/40 px-4 py-3 text-xs font-bold text-surface-800 transition group-hover:border-primary-500 group-hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-white dark:group-hover:border-primary-400 dark:group-hover:text-primary-300">
+                <div className="mt-7 inline-flex items-center justify-center gap-2 rounded-xl border border-white/70 bg-white/25 px-4 py-3 text-xs font-bold text-surface-800 transition group-hover:border-primary-500 group-hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-white dark:group-hover:border-primary-400 dark:group-hover:text-primary-300">
                   Explore Collection
                   <ArrowRight className="h-3.5 w-3.5" />
                 </div>

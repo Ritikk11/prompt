@@ -81,7 +81,7 @@ export function ConfirmDialogHost() {
         role="alertdialog"
         aria-modal="true"
         aria-label={dialog.title}
-        className="w-full max-w-sm rounded-2xl border border-white/80 bg-white/60 p-5 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-150 dark:border-white/10 dark:bg-white/[0.08] backdrop-blur-xl backdrop-saturate-[120%]"
+        className="w-full max-w-sm rounded-2xl border border-white/80 bg-white/60 p-5 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-150 dark:border-white/10 dark:bg-white/[0.08] backdrop-blur-xl backdrop-saturate-150"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-start gap-3">

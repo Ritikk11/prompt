@@ -3312,7 +3312,7 @@ function AdminInner() {
       {/* Main Grid Layout */}
       <div className="flex max-w-[1600px] mx-auto min-h-screen">
         {/* Desktop Sidebar (Floating frosted glass panel with rounded-3xl edges) */}
-        <aside className="hidden md:flex flex-col justify-between w-64 shrink-0 my-3 ml-3 md:my-4 md:ml-4 rounded-3xl border border-white/80 dark:border-white/12 bg-white/60 dark:bg-white/[0.05] backdrop-blur-2xl backdrop-saturate-[140%] p-4 sticky top-[4.5rem] h-[calc(100vh-5.5rem)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shadow-2xl shadow-black/5 dark:shadow-primary-500/5 z-30">
+        <aside className="hidden md:flex flex-col justify-between w-64 shrink-0 my-3 ml-3 md:my-4 md:ml-4 rounded-3xl border border-white/80 dark:border-white/12 bg-white/60 dark:bg-white/[0.05] backdrop-blur-2xl backdrop-saturate-150 p-4 sticky top-[4.5rem] h-[calc(100vh-5.5rem)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shadow-2xl shadow-black/5 dark:shadow-primary-500/5 z-30">
           <div>
             {/* Header Badge */}
             <div className="p-3 rounded-2xl bg-white/50 dark:bg-white/[0.06] border border-white/80 dark:border-white/10 flex items-center justify-between mb-6 shadow-sm">
@@ -3418,7 +3418,7 @@ function AdminInner() {
               ['Total Saves', totalSaves.toLocaleString(), 'text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-500/10'],
               ['Submissions Pending', pendingSubmissionCount, 'text-amber-600 dark:text-amber-400 border-amber-500/20 bg-amber-500/10'],
             ].map(([label, value, tone]) => (
-              <div key={label as string} className="rounded-3xl border border-white/80 bg-white/60 p-5 shadow-sm backdrop-blur-xl backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.06]">
+              <div key={label as string} className="rounded-3xl border border-white/80 bg-white/60 p-5 shadow-sm backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.06]">
                 <div className="flex items-center justify-between">
                   <p className="text-2xl font-black text-surface-950 dark:text-white tracking-tight">{value}</p>
                   <span className={`h-2.5 w-2.5 rounded-full border ${tone}`} />
@@ -3439,7 +3439,7 @@ function AdminInner() {
           )}
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-            <div className="rounded-3xl border border-white/80 bg-white/60 p-6 shadow-sm backdrop-blur-xl backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.06]">
+            <div className="rounded-3xl border border-white/80 bg-white/60 p-6 shadow-sm backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.06]">
               <h2 className="mb-4 text-sm font-bold text-surface-950 dark:text-white">Site Health Checklist</h2>
               <div className="space-y-3">
                 {siteHealthChecks.map(item => (
@@ -3453,12 +3453,12 @@ function AdminInner() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white/80 bg-white/60 p-6 shadow-sm backdrop-blur-xl backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.06]">
+            <div className="rounded-3xl border border-white/80 bg-white/60 p-6 shadow-sm backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.06]">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-sm font-bold text-surface-950 dark:text-white">Recent Posts</h2>
                 <button onClick={() => setTab('posts')} className="text-xs font-bold text-primary-600 hover:text-primary-700 dark:text-primary-400">View all</button>
               </div>
-              <div className="overflow-hidden rounded-2xl border border-black/[0.06] bg-white/40 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]">
+              <div className="overflow-hidden rounded-2xl border border-black/[0.06] bg-white/25 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]">
                 {recentPosts.length === 0 ? (
                   <p className="p-4 text-xs text-surface-500">No posts yet.</p>
                 ) : (
@@ -3537,7 +3537,7 @@ function AdminInner() {
                   <option value="title">Title A-Z</option>
                 </select>
               </div>
-              <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-3 text-xs backdrop-blur-xl backdrop-saturate-[120%] shadow-sm">
+              <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-3 text-xs backdrop-blur-xl backdrop-saturate-150 shadow-sm">
                 <label className="flex items-center gap-2 font-bold text-surface-600 dark:text-surface-200">
                   <input
                     type="checkbox"
@@ -3558,7 +3558,7 @@ function AdminInner() {
               {/* Posts list */}
               <div className="grid grid-cols-1 gap-3">
                 {filteredPosts.map(post => (
-                  <div key={post.id} className="group flex flex-wrap items-start gap-3 rounded-2xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-3.5 backdrop-blur-xl backdrop-saturate-[120%] shadow-sm transition-all hover:bg-white/80 dark:hover:bg-white/[0.09] hover:shadow-md sm:flex-nowrap sm:items-center sm:gap-4 sm:p-4">
+                  <div key={post.id} className="group flex flex-wrap items-start gap-3 rounded-2xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-3.5 backdrop-blur-xl backdrop-saturate-150 shadow-sm transition-all hover:bg-white/80 dark:hover:bg-white/[0.09] hover:shadow-md sm:flex-nowrap sm:items-center sm:gap-4 sm:p-4">
                     <input
                       type="checkbox"
                       checked={selectedPostIds.includes(post.id)}
@@ -4619,7 +4619,7 @@ function AdminInner() {
           />
 
           {/* Sub-tab container card matching frosted glass design */}
-          <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-4 backdrop-blur-xl backdrop-saturate-[120%] shadow-sm">
+          <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-4 backdrop-blur-xl backdrop-saturate-150 shadow-sm">
             <div className="flex flex-wrap gap-2">
               {[
                 { id: 'homepage', label: 'Homepage' },
@@ -4644,7 +4644,7 @@ function AdminInner() {
 
           {/* Add new section form (Shown only when toggled) */}
           {showNewSectionForm && (
-            <div id="add-section-form" className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-6 shadow-sm backdrop-blur-xl backdrop-saturate-[120%] space-y-6 animate-in slide-in-from-top-2 duration-200">
+            <div id="add-section-form" className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-6 shadow-sm backdrop-blur-xl backdrop-saturate-150 space-y-6 animate-in slide-in-from-top-2 duration-200">
               <PanelHeader
                 title="Create new section"
                 subtitle="Configure your custom layout block, tag rail, or category filter."

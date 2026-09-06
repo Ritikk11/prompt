@@ -921,14 +921,14 @@ body {
    first painted frame; without it a freshly painted panel shows its flat
    background-color for one frame before the blur lands. */
 .glass-surface {
-  @apply border border-white/60 bg-white/40 backdrop-blur-md backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.04] transform-gpu;
+  @apply border border-white/60 bg-white/25 backdrop-blur-md backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.04] transform-gpu;
   backface-visibility: hidden;
 }
 
 /* glass-surface + the default radius and shadow. Self-contained rather than
    composing .glass-surface, because Tailwind's @apply only takes utilities. */
 .glass-card {
-  @apply rounded-2xl shadow-lg shadow-slate-900/5 border border-white/60 bg-white/40 backdrop-blur-md backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.04] transform-gpu;
+  @apply rounded-2xl shadow-lg shadow-slate-900/5 border border-white/60 bg-white/25 backdrop-blur-md backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.04] transform-gpu;
   backface-visibility: hidden;
 }
 
@@ -936,18 +936,18 @@ body {
 .backdrop-blur-2xl,
 .backdrop-blur-xl,
 .backdrop-blur-lg {
-  backdrop-filter: blur(6px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(6px) saturate(120%) !important;
+  backdrop-filter: blur(6px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(6px) saturate(150%) !important;
 }
 
 .backdrop-blur-md {
-  backdrop-filter: blur(6px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(6px) saturate(120%) !important;
+  backdrop-filter: blur(6px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(6px) saturate(150%) !important;
 }
 
 .backdrop-blur-sm {
-  backdrop-filter: blur(4px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(4px) saturate(120%) !important;
+  backdrop-filter: blur(4px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(4px) saturate(150%) !important;
 }
 
 /* Full-width chrome bar (header, footer): a flatter frost than the panels, with
@@ -959,7 +959,7 @@ body {
    higher was a measurable scroll cost on mobile, since a sticky bar re-blurs
    whatever scrolls under it every frame. */
 .glass-bar {
-  @apply bg-white/50 backdrop-blur-[14px] backdrop-saturate-[120%];
+  @apply bg-white/50 backdrop-blur-[14px] backdrop-saturate-150;
   border-bottom: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow:
     0 4px 20px -2px rgba(0, 0, 0, 0.04),

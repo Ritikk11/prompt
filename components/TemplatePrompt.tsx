@@ -36,8 +36,8 @@ export default function TemplatePrompt({ originalPrompt }: Props) {
           </div>
           <CopyButton text={originalPrompt} />
         </div>
-        <div className="bg-white/40 dark:bg-white/5 rounded-2xl p-6 mb-6 border border-white/60 dark:border-white/10 group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
-          <p className="text-sm md:text-base leading-relaxed text-surface-700 dark:text-surface-300 font-mono">
+        <div className="rounded-2xl border border-primary-500/20 bg-primary-50/25 p-5 mb-6 group-hover:bg-primary-50/40 dark:border-primary-400/20 dark:bg-primary-950/25 dark:group-hover:bg-primary-900/30 transition-colors">
+          <p className="text-sm md:text-base leading-relaxed text-surface-800 dark:text-surface-200 font-mono selection:bg-primary-500/20">
             {originalPrompt}
           </p>
         </div>
@@ -68,14 +68,14 @@ export default function TemplatePrompt({ originalPrompt }: Props) {
               placeholder={`Enter ${v}...`}
               value={values[v] || ''}
               onChange={e => setValues(prev => ({ ...prev, [v]: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg bg-white/40 dark:bg-white/5 border border-white/80 dark:border-white/10 outline-none focus:border-primary-500 text-sm transition-colors"
+              className="w-full px-3 py-2 rounded-lg bg-white/25 dark:bg-white/5 border border-white/80 dark:border-white/10 outline-none focus:border-primary-500 text-sm transition-colors"
             />
           </div>
         ))}
       </div>
 
-      <div className="no-scrollbar max-h-[360px] overflow-y-auto bg-white/40 dark:bg-white/5 rounded-2xl p-5 mb-4 border border-white/60 dark:border-white/10 group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
-        <p className="text-sm md:text-base leading-relaxed text-surface-700 dark:text-surface-300 font-mono whitespace-pre-wrap">
+      <div className="no-scrollbar max-h-[360px] overflow-y-auto rounded-2xl border border-primary-500/20 bg-primary-50/25 p-5 mb-4 group-hover:bg-primary-50/40 dark:border-primary-400/20 dark:bg-primary-950/25 dark:group-hover:bg-primary-900/30 transition-colors">
+        <p className="text-sm md:text-base leading-relaxed text-surface-800 dark:text-surface-200 font-mono whitespace-pre-wrap selection:bg-primary-500/20">
           {generatedPrompt}
         </p>
       </div>

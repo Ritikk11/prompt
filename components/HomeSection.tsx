@@ -97,7 +97,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
               too — the first tap reveals them, the second scrolls.) */}
           <button
             onClick={() => scroll('left')}
-            className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 -translate-x-1/2 items-center justify-center rounded-full border border-white/60 bg-white/40 text-surface-900 shadow-lg backdrop-blur-md backdrop-saturate-[120%] transition-all hover:bg-white/60 active:scale-90 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.10] opacity-0 group-hover/section:opacity-100"
+            className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 -translate-x-1/2 items-center justify-center rounded-full border border-white/60 bg-white/25 text-surface-900 shadow-lg backdrop-blur-md backdrop-saturate-150 transition-all hover:bg-white/60 active:scale-90 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.10] opacity-0 group-hover/section:opacity-100"
             aria-label={`Scroll ${section.name} left`}
           >
             <ChevronLeft className="w-4 h-4" />
@@ -123,7 +123,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
 
           <button
             onClick={() => scroll('right')}
-            className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-white/60 bg-white/40 text-surface-900 shadow-lg backdrop-blur-md backdrop-saturate-[120%] transition-all hover:bg-white/60 active:scale-90 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.10] opacity-0 group-hover/section:opacity-100"
+            className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-white/60 bg-white/25 text-surface-900 shadow-lg backdrop-blur-md backdrop-saturate-150 transition-all hover:bg-white/60 active:scale-90 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.10] opacity-0 group-hover/section:opacity-100"
             aria-label={`Scroll ${section.name} right`}
           >
             <ChevronRight className="w-4 h-4" />
@@ -136,7 +136,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
         <ScrollReveal className="mt-8 flex justify-center">
           <Link
             href="/explore"
-            className="group inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/40 px-7 py-3 text-sm font-bold text-surface-800 shadow-lg backdrop-blur-md transition hover:scale-[1.03] hover:border-primary-400/60 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:text-primary-300"
+            className="group inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/25 px-7 py-3 text-sm font-bold text-surface-800 shadow-lg backdrop-blur-md backdrop-saturate-150 transition hover:scale-[1.03] hover:border-primary-400/60 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:text-primary-300"
           >
             Explore All Prompts
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />

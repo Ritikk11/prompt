@@ -23,7 +23,7 @@ export default async function PrivacyPolicy() {
           {page.subtitle}
         </p>
       </div>
-      <div className="bg-white/60 dark:bg-white/[0.08] shadow-xl shadow-surface-200/20 dark:shadow-none border border-white/80 dark:border-white/10 rounded-3xl p-8 md:p-12 relative overflow-hidden backdrop-blur-xl backdrop-saturate-[120%]">
+      <div className="bg-white/60 dark:bg-white/[0.08] shadow-xl shadow-surface-200/20 dark:shadow-none border border-white/80 dark:border-white/10 rounded-3xl p-8 md:p-12 relative overflow-hidden backdrop-blur-xl backdrop-saturate-150">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary-500 hover:prose-a:text-primary-600 prose-img:rounded-2xl relative z-10">
           <Markdown>{page.body}</Markdown>

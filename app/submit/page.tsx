@@ -45,7 +45,7 @@ export default function SubmitPage() {
   if (!settings.features?.userProfiles || !settings.features?.userSubmissions) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-        <div className="rounded-3xl border border-white/80 bg-white/60 backdrop-blur-[16px] backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.08] p-8">
+        <div className="rounded-3xl border border-white/80 bg-white/60 backdrop-blur-[16px] backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.08] p-8">
           <h1 className="text-2xl font-black text-surface-950 dark:text-white">Prompt submissions are currently closed</h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-surface-600 dark:text-surface-300">
             The submission form is disabled by the site admin right now. You can still contact the team if you want to suggest a prompt or request access.

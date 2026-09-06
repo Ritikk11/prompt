@@ -92,7 +92,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
            never on the image. Only border-color and box-shadow transition —
            animating the frame's opacity would drop its backdrop-filter for the
            duration and flash the raw background through. */
-        className={`group relative block break-inside-avoid overflow-hidden rounded-[20px] border border-white/60 bg-white/40 px-1.5 pb-2.5 pt-1.5 shadow-[0_4px_12px_-2px_rgba(15,23,42,0.08)] backdrop-blur-[6px] backdrop-saturate-[120%] transition-[border-color,box-shadow] duration-300 hover:border-primary-500/50 hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.16)] dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.35)] dark:hover:border-primary-400/50 dark:hover:shadow-[0_8px_24px_-4px_rgba(2,6,23,0.55)] ${aspect ? `${aspect} h-full` : ''}`}
+        className={`group relative block break-inside-avoid overflow-hidden rounded-[20px] border border-white/60 bg-white/25 px-1.5 pb-2.5 pt-1.5 shadow-[0_4px_12px_-2px_rgba(15,23,42,0.08)] backdrop-blur-[6px] backdrop-saturate-150 transition-[border-color,box-shadow] duration-300 hover:border-primary-500/50 hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.16)] dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.35)] dark:hover:border-primary-400/50 dark:hover:shadow-[0_8px_24px_-4px_rgba(2,6,23,0.55)] ${aspect ? `${aspect} h-full` : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
         {/* A tint, not an opaque slab: this only shows while the image loads,
