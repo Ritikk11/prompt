@@ -1,10 +1,14 @@
-// 1h TTL: on-demand revalidation (admin edits) refreshes pages instantly, so the
-// time-based fallback only bounds staleness of view/like counts, which update the
-// DB without revalidatePath. 300s caused a cold ~2.5s SSR miss every 5 minutes.
-export const revalidate = 3600;
+// 12h TTL: admin edits (posts, sections, and settings — which is also where the
+// articles live) call revalidatePath, and settings even revalidates the root
+// layout, so content never waits on this window. It only bounds staleness of
+// view/like counts and the trending order derived from them, because those are
+// written by /api/posts on nearly every page view and deliberately skip
+// revalidation. Shorter windows only bought cold SSR misses: 300s cost ~2.5s
+// every 5 minutes.
+export const revalidate = 43200;
 import type { ReactNode } from 'react';
+import { Fragment } from 'react';
 import type { Metadata } from 'next';
-import { preload } from 'react-dom';
 
 // Homepage canonical — points crawlers at the bare root, collapsing any
 // ?ref=/utm_/trailing-slash variants Google may discover into one indexed URL.
@@ -15,7 +19,6 @@ export const metadata: Metadata = {
 };
 
 import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } from '@/lib/data';
-import { getPromptImageUrl } from '@/lib/image-url';
 import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
 import HomeLinkBlocks from '@/components/HomeLinkBlocks';
@@ -28,7 +31,6 @@ import HomeSupportedTools from '@/components/HomeSupportedTools';
 import HomeGuides from '@/components/HomeGuides';
 import HomeBlog from '@/components/HomeBlog';
 import HomeCreatorFeedback from '@/components/HomeCreatorFeedback';
-import ScrollReveal from '@/components/ScrollReveal';
 
 const defaultHomepageBlockOrder = [
   'howTo',
@@ -55,13 +57,10 @@ export default async function Home() {
     fetchPostSummaries(),
   ]);
   const featuredPosts = allPosts.filter(p => p.featured && (p.status === 'published' || !p.status) && p.visibility !== 'private');
-  // Preload the first hero slide (the LCP image) so the browser fetches it
-  // before the client slider hydrates. Must match FeaturedSlider's URL params.
-  const firstSlide = featuredPosts[0];
-  if (settings.heroEnabled && firstSlide) {
-    const lcpImageUrl = getPromptImageUrl(firstSlide.thumbnailUrl || firstSlide.images[0]?.url || '', { width: 960, quality: 78 });
-    if (lcpImageUrl) preload(lcpImageUrl, { as: 'image', fetchPriority: 'high' });
-  }
+  // No hero-image preload: the LCP element is the landing hero's H1 (text), and
+  // the featured slider now sits below it. Preloading a below-fold image at high
+  // priority only competes with the critical path. The slider's frosted backdrop
+  // loads eagerly on its own; its slide images are lazy.
   const homepageSections = sections
     .filter(s => s.visible && (s.location || 'homepage') === 'homepage')
     .sort((a, b) => a.order - b.order);
@@ -106,41 +105,46 @@ export default async function Home() {
        scrollbar that shifts the whole page sideways on Windows. `clip` never
        creates a scroll container. */
     <div className="w-full overflow-x-clip">
-      {(settings.features?.showHomepageLibraryHero ?? true) && settings.heroStyle !== 'v9' && (
+      {(settings.features?.showHomepageLibraryHero ?? true) && (
         <HomeLibraryHero featuredPosts={featuredPosts} settings={settings} postCount={allPosts.length} />
       )}
 
       {/* Featured Slider — NOT wrapped in ScrollReveal: the reveal hides content
           at opacity 0 until hydration + IntersectionObserver run, which delays the
           LCP image paint by seconds on throttled mobile CPUs. Above-fold content
-          must be visible in the server-rendered HTML. */}
-      <section className="mx-auto max-w-7xl px-1 py-0">
-        <FeaturedSlider
-          featuredPosts={featuredPosts}
-          settings={settings}
-          stats={{ postCount: allPosts.length, sectionCount: homepageSections.length }}
-        />
-      </section>
+          must be visible in the server-rendered HTML. The wrapper is gated too so
+          a disabled slider leaves no empty padded section behind. */}
+      {settings.heroEnabled && featuredPosts.length > 0 && (
+        <section className="mx-auto w-full max-w-7xl px-2 py-8">
+          <FeaturedSlider
+            featuredPosts={featuredPosts}
+            settings={settings}
+            stats={{ postCount: allPosts.length, sectionCount: homepageSections.length }}
+          />
+        </section>
+      )}
 
-      <ScrollReveal delay={200}>
-        <div className="mx-auto max-w-7xl px-1 py-0">
-          <HomeLinkBlocks blocks={settings.homeLinkBlocks} />
-        </div>
-      </ScrollReveal>
+      {/* Each block below owns its own ScrollReveal entrances — do NOT wrap
+          them here. A wrapper reveal would nest inside the block's own,
+          compounding the transforms and holding the inner ones at opacity 0
+          until the outer one fires. */}
+      <div className="mx-auto max-w-7xl px-2 py-0">
+        <HomeLinkBlocks blocks={settings.homeLinkBlocks} />
+      </div>
 
       {homepageOrder.map(token => {
         if (token.startsWith('block:')) {
           const key = token.replace('block:', '');
           if (!homepageBlocks[key]) return null;
-          return <ScrollReveal key={token}>{homepageBlocks[key]}</ScrollReveal>;
+          return <Fragment key={token}>{homepageBlocks[key]}</Fragment>;
         }
         const sectionId = token.replace('section:', '');
         const section = homepageSectionsById.get(sectionId);
         if (!section) return null;
         return (
-          <ScrollReveal key={token} className="mx-auto max-w-7xl px-1 py-0">
+          <div key={token} className="mx-auto max-w-7xl px-2 py-0">
             <HomeSection section={section} initialPosts={homepageSectionPosts.get(sectionId) || []} settings={settings} />
-          </ScrollReveal>
+          </div>
         );
       })}
 

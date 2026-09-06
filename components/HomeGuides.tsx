@@ -3,6 +3,8 @@ import { ArrowRight, BookOpen } from 'lucide-react';
 import type { SiteSettings } from '@/lib/types';
 import { getArticlesForSettings, getFeaturedGuidesForSettings } from '@/lib/content';
 import ArticleThumbnail from '@/components/ArticleThumbnail';
+import ScrollReveal from '@/components/ScrollReveal';
+import SectionHeader from '@/components/SectionHeader';
 
 export default function HomeGuides({ settings }: { settings?: SiteSettings }) {
   const content = settings?.homepageContent?.guides || {};
@@ -15,51 +17,51 @@ export default function HomeGuides({ settings }: { settings?: SiteSettings }) {
     .filter(guide => !selectedSlugs.includes(guide.slug));
   const guides = [...selectedGuides, ...fallbackGuides].slice(0, 4);
 
+  if (guides.length === 0) return null;
+
   return (
-    <section className="relative w-full overflow-clip bg-surface-50 px-5 py-16 text-surface-950 dark:bg-surface-950 dark:text-white sm:px-8">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(139,92,246,0.16),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(56,189,248,0.14),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(248,250,252,0.96)_100%)] dark:bg-[radial-gradient(circle_at_20%_20%,rgba(139,92,246,0.23),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(56,189,248,0.1),transparent_30%),linear-gradient(180deg,#020617_0%,#0f172a_100%)]" />
-      <div className="relative mx-auto max-w-6xl">
-        <div className="mx-auto mb-10 max-w-2xl text-center">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-100/80 px-4 py-2 text-xs font-bold text-primary-700 backdrop-blur-md dark:border-white/10 dark:bg-white/10 dark:text-primary-200">
-            <BookOpen className="h-4 w-4" />
-            {content.badge || 'Learn the craft'}
-          </div>
-          <h2 className="text-3xl font-black tracking-normal sm:text-4xl">{content.title || 'Step-by-Step Prompt Guides'}</h2>
-          <p className="mt-4 text-sm leading-7 text-surface-600 dark:text-surface-300">
-            {content.description || 'Hands-on tutorials that take you from a blank prompt box to a finished image — trends, edits, and pro techniques included.'}
-          </p>
-        </div>
-        <div data-reveal-stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {guides.map(guide => {
-            return (
-              <Link
-                key={guide.slug}
-                href={`/guides/${guide.slug}`}
-                className="group overflow-hidden rounded-3xl border border-surface-200 bg-white/85 p-3 backdrop-blur-md transition hover:border-primary-300 hover:shadow-lg dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-500/50"
-              >
-                <ArticleThumbnail article={guide} compact />
-                <div className="p-2 pt-4">
-                  <h3 className="text-base font-black leading-snug text-surface-950 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-300">
-                    {guide.title}
-                  </h3>
-                  <p className="mt-2 line-clamp-3 text-xs leading-6 text-surface-600 dark:text-surface-400">{guide.description}</p>
-                  <p className="mt-4 text-[11px] font-bold uppercase tracking-wider text-surface-400 dark:text-surface-500">
-                    {guide.readMinutes} min read
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-        <div className="mt-8 text-center">
+    <section className="relative w-full overflow-clip px-5 py-16 sm:px-8">
+      <div className="mx-auto max-w-6xl">
+        <ScrollReveal slide>
+          <SectionHeader
+            icon={<BookOpen className="h-4 w-4" />}
+            badge={content.badge || 'Learn the craft'}
+            title={content.title || 'Step-by-Step Prompt Guides'}
+            accentWord="Prompt Guides"
+            description={content.description || 'Hands-on tutorials that take you from a blank prompt box to a finished image — trends, edits, and pro techniques included.'}
+          />
+        </ScrollReveal>
+
+        <ScrollReveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {guides.map(guide => (
+            <Link
+              key={guide.slug}
+              href={`/guides/${guide.slug}`}
+              className="group glass-card overflow-hidden p-3 transition hover:scale-[1.02] hover:border-primary-400/60 hover:shadow-xl dark:hover:border-primary-400/50"
+            >
+              <ArticleThumbnail article={guide} compact />
+              <div className="p-2 pt-4">
+                <h3 className="text-base font-black leading-snug text-surface-950 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-300">
+                  {guide.title}
+                </h3>
+                <p className="mt-2 line-clamp-3 text-xs leading-6 text-surface-600 dark:text-surface-400">{guide.description}</p>
+                <p className="mt-4 text-[11px] font-bold uppercase tracking-wider text-surface-400 dark:text-surface-500">
+                  {guide.readMinutes} min read
+                </p>
+              </div>
+            </Link>
+          ))}
+        </ScrollReveal>
+
+        <ScrollReveal slide delay={200} className="mt-8 text-center">
           <Link
             href={content.ctaHref || '/guides'}
-            className="btn-glow inline-flex items-center justify-center gap-2 rounded-full border border-surface-300 px-6 py-2.5 text-sm font-semibold text-surface-800 transition-colors dark:border-white/15 dark:text-surface-200"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/60 bg-white/40 px-6 py-2.5 text-sm font-bold text-surface-800 shadow-sm backdrop-blur-md transition hover:scale-105 hover:border-primary-400 hover:text-primary-600 active:scale-95 dark:border-white/10 dark:bg-white/[0.04] dark:text-surface-200 dark:hover:border-primary-400/60 dark:hover:text-white"
           >
             {content.ctaLabel || 'Browse all guides'}
             <ArrowRight className="h-4 w-4" />
           </Link>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

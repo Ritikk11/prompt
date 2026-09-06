@@ -45,14 +45,14 @@ export default function SubmitPage() {
   if (!settings.features?.userProfiles || !settings.features?.userSubmissions) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-        <div className="rounded-3xl border border-surface-200 bg-white p-8 dark:border-surface-800 dark:bg-surface-900">
+        <div className="rounded-3xl border border-white/80 bg-white/60 backdrop-blur-[16px] backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.08] p-8">
           <h1 className="text-2xl font-black text-surface-950 dark:text-white">Prompt submissions are currently closed</h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-surface-600 dark:text-surface-300">
             The submission form is disabled by the site admin right now. You can still contact the team if you want to suggest a prompt or request access.
           </p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/contact" className="rounded-xl bg-primary-500 px-5 py-3 text-sm font-bold text-white hover:bg-primary-600">Contact Us</Link>
-            <Link href="/explore" className="rounded-xl border border-surface-200 px-5 py-3 text-sm font-bold text-surface-700 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-200 dark:hover:bg-surface-800">Explore Prompts</Link>
+            <Link href="/explore" className="rounded-full border border-white/80 bg-white/60 px-5 py-3 text-sm font-bold text-surface-700 shadow-sm backdrop-blur-xl transition hover:border-primary-400/60 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-200 dark:hover:text-white">Explore Prompts</Link>
           </div>
         </div>
       </div>
@@ -173,7 +173,7 @@ export default function SubmitPage() {
               required
               value={title}
               onChange={e => setTitle(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none transition-colors text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-white/40 dark:bg-white/5 border border-white/80 dark:border-white/10 focus:border-primary-500 outline-none transition-colors text-sm"
               placeholder="e.g. Cyberpunk Cityscapes"
             />
           </div>
@@ -183,7 +183,7 @@ export default function SubmitPage() {
               value={description}
               onChange={e => setDescription(e.target.value)}
               rows={3}
-              className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none transition-colors text-sm resize-none"
+              className="w-full px-4 py-3 rounded-xl bg-white/40 dark:bg-white/5 border border-white/80 dark:border-white/10 focus:border-primary-500 outline-none transition-colors text-sm resize-none"
               placeholder="Describe what these prompts generate..."
             />
           </div>
@@ -193,7 +193,7 @@ export default function SubmitPage() {
               type="text"
               value={tags}
               onChange={e => setTags(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-surface-50 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 focus:border-primary-500 outline-none transition-colors text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-white/40 dark:bg-white/5 border border-white/80 dark:border-white/10 focus:border-primary-500 outline-none transition-colors text-sm"
               placeholder="cyberpunk, city, neon, future"
             />
           </div>
@@ -206,11 +206,11 @@ export default function SubmitPage() {
           </label>
           <div className="space-y-4">
             {images.map((img, idx) => (
-              <div key={idx} className="flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-950 relative group">
+              <div key={idx} className="flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.08] relative group">
                 <button type="button" onClick={() => removeImage(idx)} className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-100 text-red-500 border border-red-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-500 hover:text-white">
                   <X className="w-3 h-3" />
                 </button>
-                <div className="w-full sm:w-32 h-32 shrink-0 rounded-lg overflow-hidden relative bg-surface-100 dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
+                <div className="w-full sm:w-32 h-32 shrink-0 rounded-lg overflow-hidden relative border border-white/70 bg-black/[0.04] dark:border-white/10 dark:bg-white/[0.06]">
                   <Image src={img.url} alt="" fill sizes="128px" className="object-cover" referrerPolicy="no-referrer" />
                 </div>
                 <div className="flex-1 min-w-0 space-y-3">
@@ -218,7 +218,7 @@ export default function SubmitPage() {
                     {settings.aiTools.map(tool => {
                       const isSelected = img.aiTools ? img.aiTools.includes(tool) : img.aiTool === tool;
                       return (
-                        <label key={tool} className="flex items-center gap-1.5 cursor-pointer bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 px-2 py-1.5 rounded text-xs">
+                        <label key={tool} className="flex items-center gap-1.5 cursor-pointer bg-white/40 dark:bg-white/5 border border-white/80 dark:border-white/10 px-2 py-1.5 rounded text-xs">
                           <input 
                             type="checkbox" 
                             checked={isSelected}
@@ -245,7 +245,7 @@ export default function SubmitPage() {
                     onChange={e => updateImage(idx, { prompt: e.target.value })}
                     rows={3}
                     placeholder="Exact prompt text..."
-                    className="w-full px-3 py-2 rounded-lg text-sm border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900 outline-none focus:border-primary-500 resize-none font-mono"
+                    className="w-full px-3 py-2 rounded-lg text-sm border-white/80 dark:border-white/10 bg-white/40 dark:bg-white/5 outline-none focus:border-primary-500 resize-none font-mono"
                   />
                 </div>
               </div>

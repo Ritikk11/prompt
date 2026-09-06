@@ -49,7 +49,7 @@ export default function ArticleThumbnail({
   const canRenderImage = Boolean(imageUrl && imageUrl !== 'Uploading...');
 
   const thumbnailBackground = canRenderImage
-    ? 'bg-white dark:bg-surface-900'
+    ? 'bg-white/60 dark:bg-white/[0.08]'
     : `bg-gradient-to-br ${theme}`;
 
   return (

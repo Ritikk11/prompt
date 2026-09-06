@@ -65,7 +65,7 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
+    <div className="max-w-7xl mx-auto px-2 py-8 sm:py-12">
       <nav className="flex items-center gap-2 text-sm text-surface-400 mb-8 font-medium">
         <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
         <ChevronRight className="w-3.5 h-3.5 opacity-50" />
@@ -91,20 +91,20 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
             <span className="mr-1 text-xs font-medium uppercase tracking-wide text-surface-400">Sort:</span>
             <button
               onClick={() => setSortBy('latest')}
-              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'latest' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'latest' ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
             >
               Latest
             </button>
             <button
               onClick={() => setSortBy('popular')}
-              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'popular' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'popular' ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
             >
               Popular
             </button>
             {showTrending && (
               <button
                 onClick={() => setSortBy('trending')}
-                className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'trending' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+                className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'trending' ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
               >
                 Trending
               </button>
@@ -118,7 +118,7 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
                 <button
                   key={t}
                   onClick={() => setFilterTool(t)}
-                  className={`inline-flex h-8 shrink-0 items-center whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${filterTool === t ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+                  className={`inline-flex h-8 shrink-0 items-center whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${filterTool === t ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
                 >
                   {t === 'all' ? 'All Tools' : t}
                 </button>
@@ -129,7 +129,7 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
       )}
 
       {filtered.length === 0 ? (
-        <div className="text-center py-20 bg-surface-50 dark:bg-surface-900 rounded-[32px] border border-dashed border-surface-200 dark:border-surface-800">
+        <div className="rounded-[32px] border border-dashed border-white/70 bg-white/40 py-20 text-center backdrop-blur-xl dark:border-white/15 dark:bg-white/[0.05]">
           <p className="text-surface-500 font-medium">No prompts found in this section yet.</p>
           <Link href="/explore" className="mt-4 inline-block text-primary-500 font-bold hover:underline">
             Explore other prompts

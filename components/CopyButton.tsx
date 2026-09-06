@@ -39,7 +39,7 @@ export default function CopyButton({ text, eventName = 'prompt_copied' }: Props)
       className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow border border-transparent ${
         copied
           ? 'bg-green-500 text-white shadow-green-500/20 copy-pulse'
-          : 'bg-white dark:bg-surface-800 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-700 hover:border-surface-200 dark:hover:border-surface-600'
+          : 'border-white/80 bg-white/60 text-surface-600 backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:text-white'
       }`}
     >
       {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}

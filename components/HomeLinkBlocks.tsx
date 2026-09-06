@@ -1,6 +1,7 @@
 import { ArrowRight, ImageIcon, Layers, Search, Sparkles, Tag, Wand2 } from 'lucide-react';
 import type { HomeLinkBlock } from '@/lib/types';
 import SmartLink from '@/components/SmartLink';
+import ScrollReveal from '@/components/ScrollReveal';
 
 const iconMap = {
   sparkles: Sparkles,
@@ -11,50 +12,51 @@ const iconMap = {
   tag: Tag,
 };
 
+// Glass-friendly accents built on the Google brand quad. The KEY names are the
+// legacy ones stored in settings.homeLinkBlocks[].accent — only the colors they
+// resolve to changed, so existing admin picks keep working untouched.
 const accentMap = {
   violet: {
-    soft: 'bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-500/10 dark:text-violet-200 dark:ring-violet-500/25',
-    solid: 'bg-violet-500 text-white shadow-violet-500/20',
-    line: 'bg-violet-500',
-    border: 'hover:border-violet-300 dark:hover:border-violet-500/50',
-    text: 'group-hover:text-violet-700 dark:group-hover:text-violet-200',
+    soft: 'bg-primary-500/10 text-primary-700 dark:bg-primary-400/15 dark:text-primary-200',
+    solid: 'bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-primary-500/25',
+    line: 'bg-primary-500',
+    text: 'group-hover:text-primary-700 dark:group-hover:text-primary-200',
   },
   cyan: {
-    soft: 'bg-cyan-50 text-cyan-700 ring-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-200 dark:ring-cyan-500/25',
-    solid: 'bg-cyan-500 text-white shadow-cyan-500/20',
-    line: 'bg-cyan-500',
-    border: 'hover:border-cyan-300 dark:hover:border-cyan-500/50',
-    text: 'group-hover:text-cyan-700 dark:group-hover:text-cyan-200',
+    soft: 'bg-google-blue/10 text-primary-700 dark:bg-google-blue/15 dark:text-primary-200',
+    solid: 'bg-gradient-to-br from-google-blue to-primary-700 text-white shadow-primary-500/25',
+    line: 'bg-google-blue',
+    text: 'group-hover:text-primary-700 dark:group-hover:text-primary-200',
   },
   emerald: {
-    soft: 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:ring-emerald-500/25',
-    solid: 'bg-emerald-500 text-white shadow-emerald-500/20',
-    line: 'bg-emerald-500',
-    border: 'hover:border-emerald-300 dark:hover:border-emerald-500/50',
-    text: 'group-hover:text-emerald-700 dark:group-hover:text-emerald-200',
+    soft: 'bg-google-green/10 text-[#188038] dark:bg-google-green/15 dark:text-[#81c995]',
+    solid: 'bg-gradient-to-br from-google-green to-[#188038] text-white shadow-google-green/25',
+    line: 'bg-google-green',
+    text: 'group-hover:text-[#188038] dark:group-hover:text-[#81c995]',
   },
   amber: {
-    soft: 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-500/25',
-    solid: 'bg-amber-500 text-white shadow-amber-500/20',
-    line: 'bg-amber-500',
-    border: 'hover:border-amber-300 dark:hover:border-amber-500/50',
-    text: 'group-hover:text-amber-700 dark:group-hover:text-amber-200',
+    soft: 'bg-google-yellow/15 text-[#b26a00] dark:bg-google-yellow/15 dark:text-[#fdd663]',
+    solid: 'bg-gradient-to-br from-google-yellow to-[#ea8600] text-white shadow-google-yellow/25',
+    line: 'bg-google-yellow',
+    text: 'group-hover:text-[#b26a00] dark:group-hover:text-[#fdd663]',
   },
   rose: {
-    soft: 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-200 dark:ring-rose-500/25',
-    solid: 'bg-rose-500 text-white shadow-rose-500/20',
-    line: 'bg-rose-500',
-    border: 'hover:border-rose-300 dark:hover:border-rose-500/50',
-    text: 'group-hover:text-rose-700 dark:group-hover:text-rose-200',
+    soft: 'bg-google-red/10 text-[#c5221f] dark:bg-google-red/15 dark:text-[#f28b82]',
+    solid: 'bg-gradient-to-br from-google-red to-[#c5221f] text-white shadow-google-red/25',
+    line: 'bg-google-red',
+    text: 'group-hover:text-[#c5221f] dark:group-hover:text-[#f28b82]',
   },
   slate: {
-    soft: 'bg-surface-100 text-surface-800 ring-surface-200 dark:bg-surface-800 dark:text-surface-100 dark:ring-surface-700',
-    solid: 'bg-surface-900 text-white shadow-surface-500/10 dark:bg-white dark:text-surface-950',
-    line: 'bg-surface-700 dark:bg-surface-300',
-    border: 'hover:border-surface-300 dark:hover:border-surface-600',
+    soft: 'bg-black/[0.06] text-surface-700 dark:bg-white/10 dark:text-surface-200',
+    solid: 'bg-gradient-to-br from-surface-700 to-surface-900 text-white shadow-surface-500/25 dark:from-surface-200 dark:to-white dark:text-surface-950',
+    line: 'bg-surface-600 dark:bg-surface-300',
     text: 'group-hover:text-surface-950 dark:group-hover:text-white',
   },
 };
+
+/** Shared card chrome for all three block styles. */
+const blockCard =
+  'glass-card p-4 transition-all duration-200 hover:scale-[1.01] hover:border-primary-400/60 hover:shadow-xl dark:hover:border-primary-400/50';
 
 const fallbackAccents = ['violet', 'cyan', 'emerald', 'amber', 'rose', 'slate'] as const;
 const fallbackIcons = ['sparkles', 'image', 'wand', 'layers', 'search', 'tag'] as const;
@@ -66,13 +68,13 @@ export default function HomeLinkBlocks({ blocks }: { blocks?: HomeLinkBlock[] })
 
   return (
     <section className="py-4 sm:py-6">
-      <div className="flex items-end justify-between gap-4 px-2 sm:px-0 mb-4">
+      <ScrollReveal slide className="mb-4 flex items-end justify-between gap-4 px-2 sm:px-0">
         <div>
-          <p className="text-[11px] uppercase tracking-wider text-primary-500 dark:text-primary-400 font-bold mb-1">Start Here</p>
-          <h2 className="text-lg md:text-xl font-extrabold tracking-tight text-surface-950 dark:text-white">Quick Explore</h2>
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-primary-600 dark:text-primary-300">Start Here</p>
+          <h2 className="text-lg font-extrabold tracking-tight text-surface-950 dark:text-white md:text-xl">Quick Explore</h2>
         </div>
-      </div>
-      <div data-reveal-stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 px-2 sm:px-0">
+      </ScrollReveal>
+      <ScrollReveal stagger className="grid grid-cols-1 gap-3 px-2 sm:grid-cols-2 sm:px-0 lg:grid-cols-3">
         {visibleBlocks.map((block, index) => {
           const accent = accentMap[block.accent || fallbackAccents[index % fallbackAccents.length]];
           const Icon = iconMap[block.icon || fallbackIcons[index % fallbackIcons.length]];
@@ -83,9 +85,9 @@ export default function HomeLinkBlocks({ blocks }: { blocks?: HomeLinkBlock[] })
               <SmartLink
                 key={`${block.href}-${block.title}`}
                 href={block.href}
-                className={`group flex min-h-[96px] items-center gap-3 rounded-lg border border-surface-200 bg-white p-4 transition-all duration-200 hover:shadow-md dark:border-surface-800 dark:bg-surface-900 ${accent.border}`}
+                className={`group flex min-h-[96px] items-center gap-3 ${blockCard}`}
               >
-                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ring-1 ${accent.soft}`}>
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${accent.soft}`}>
                   <Icon className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -108,7 +110,7 @@ export default function HomeLinkBlocks({ blocks }: { blocks?: HomeLinkBlock[] })
               <SmartLink
                 key={`${block.href}-${block.title}`}
                 href={block.href}
-                className={`group relative min-h-[132px] overflow-hidden rounded-lg border border-surface-200 bg-white p-4 transition-all duration-200 hover:shadow-md dark:border-surface-800 dark:bg-surface-900 ${accent.border}`}
+                className={`group relative min-h-[132px] overflow-hidden ${blockCard}`}
               >
                 <span className={`absolute inset-x-0 top-0 h-1 ${accent.line}`} />
                 <div className="flex h-full flex-col justify-between gap-5">
@@ -137,24 +139,24 @@ export default function HomeLinkBlocks({ blocks }: { blocks?: HomeLinkBlock[] })
             <SmartLink
               key={`${block.href}-${block.title}`}
               href={block.href}
-              className={`group relative min-h-[150px] overflow-hidden rounded-lg border border-surface-200 bg-white p-4 transition-all duration-200 hover:shadow-lg dark:border-surface-800 dark:bg-surface-900 ${accent.border}`}
+              className={`group relative min-h-[150px] overflow-hidden ${blockCard}`}
             >
               <div className="absolute inset-x-0 top-0 flex h-12 items-start gap-1.5 px-4 pt-3 opacity-80">
                 <span className={`h-2 w-10 rounded-full ${accent.line}`} />
-                <span className="h-2 w-4 rounded-full bg-surface-200 dark:bg-surface-700" />
-                <span className="h-2 w-7 rounded-full bg-surface-100 dark:bg-surface-800" />
+                <span className="h-2 w-4 rounded-full bg-black/15 dark:bg-white/15" />
+                <span className="h-2 w-7 rounded-full bg-black/10 dark:bg-white/10" />
               </div>
               <div className="relative flex h-full flex-col justify-between gap-6 pt-5">
                 <div className="flex items-start justify-between gap-3">
                   <span className={`flex h-12 w-12 items-center justify-center rounded-lg shadow-lg ${accent.solid}`}>
                     <Icon className="h-6 w-6" />
                   </span>
-                  <span className="rounded-full border border-surface-200 bg-white/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-surface-500 transition-colors group-hover:text-surface-800 dark:border-surface-700 dark:bg-surface-950/60 dark:text-surface-400 dark:group-hover:text-white">
+                  <span className="rounded-full border border-white/70 bg-white/50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-surface-500 transition-colors group-hover:text-surface-800 dark:border-white/10 dark:bg-white/5 dark:text-surface-400 dark:group-hover:text-white">
                     Open
                   </span>
                 </div>
                 <div>
-                  <h3 className={`text-base md:text-lg font-extrabold leading-snug text-surface-950 transition-colors dark:text-white ${accent.text}`}>
+                  <h3 className={`text-base font-extrabold leading-snug text-surface-950 transition-colors dark:text-white md:text-lg ${accent.text}`}>
                     {block.title}
                   </h3>
                   {block.description && (
@@ -167,7 +169,7 @@ export default function HomeLinkBlocks({ blocks }: { blocks?: HomeLinkBlock[] })
             </SmartLink>
           );
         })}
-      </div>
+      </ScrollReveal>
     </section>
   );
 }

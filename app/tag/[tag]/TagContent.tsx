@@ -58,7 +58,7 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-1 py-6 sm:py-8 fade-in">
+    <div className="max-w-7xl mx-auto px-2 py-6 sm:py-8 fade-in">
       {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-surface-500 mb-6">
           <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
@@ -81,20 +81,20 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
           <span className="mr-1 text-xs font-medium uppercase tracking-wide text-surface-400">Sort:</span>
           <button
             onClick={() => setSortBy('latest')}
-            className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'latest' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+            className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'latest' ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
           >
             Latest
           </button>
           <button
             onClick={() => setSortBy('popular')}
-            className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'popular' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+            className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'popular' ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
           >
             Popular
           </button>
           {showTrending && (
             <button
               onClick={() => setSortBy('trending')}
-              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'trending' ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'trending' ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
             >
               Trending
             </button>
@@ -108,7 +108,7 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
               <button
                 key={t}
                 onClick={() => setFilterTool(t)}
-                className={`inline-flex h-8 shrink-0 items-center whitespace-nowrap rounded-xl px-3 text-[13px] font-medium transition-colors duration-150 ${filterTool === t ? 'bg-primary-600 text-white dark:bg-primary-500' : 'border border-surface-200 text-surface-600 hover:border-surface-300 hover:bg-surface-50 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-600 dark:hover:bg-surface-800'}`}
+                className={`inline-flex h-8 shrink-0 items-center whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${filterTool === t ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
               >
                 {t === 'all' ? 'All Tools' : t}
               </button>

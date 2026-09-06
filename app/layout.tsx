@@ -9,6 +9,7 @@ import { ToastContainer } from '@/components/ui/ToastContainer';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AdSlot from '@/components/AdSlot';
+import SiteBackground from '@/components/SiteBackground';
 import MaintenanceBouncer from '@/components/MaintenanceBouncer';
 import { fetchSections, fetchSettings } from '@/lib/data';
 
@@ -134,6 +135,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   };
 
   const adsensePublisherId = initialSettings.ads?.publisherId || process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
+  // Site-wide animated glass canvas. Admin-switchable so the redesign can be
+  // rolled back without a deploy. Defaults ON: the homepage blocks are glass
+  // now, and glass with nothing behind it reads as flat white.
+  const animatedBackground = initialSettings.features?.showAnimatedBackground ?? true;
+  // The canvas paints its own base color, but html/body still show through in
+  // the overscroll gutter — keep the two in step.
+  const bodySurface = animatedBackground
+    ? 'bg-[#f8fafc] dark:bg-[#05060f]'
+    : 'bg-white dark:bg-surface-950';
   // Preconnect to the uploads/Supabase hosts only when edge resizing is OFF.
   // With resizing on, all images load from aipromptmatrix.in/cdn-cgi/... (same
   // origin) — Lighthouse flagged both preconnects as unused connections.
@@ -147,6 +157,33 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${outfit.variable}`}>
       <head>
+        {/* Blocking theme guard — must stay the first node in <head>.
+            ThemeProvider applies the stored theme in useEffect, i.e. AFTER the
+            first paint, so dark-mode users saw the whole page flash light and
+            then transition to dark. This runs at HTML parse time, before any
+            content below is even parsed. Mirrors ThemeProvider exactly
+            (key 'pv-theme', default = light). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('pv-theme');if(t==='dark'){document.documentElement.classList.add('dark')}else if(t==='light'){document.documentElement.classList.remove('dark')}}catch(e){}})();`,
+          }}
+        />
+        {/* Arms the scroll-reveal hidden states. The reveal CSS ships in
+            globals.css so `.reveal` content is hidden from the first paint,
+            but only JS ever clears it (.revealed) — so a load where the
+            chunk is blocked, fails, or is merely very slow would leave every
+            section painted but empty. Gating those rules behind this class
+            means they apply only while JS is alive to undo them: no script,
+            nothing hidden. The timer is the bounded escape hatch — if hydration
+            hasn't registered a single reveal node by then, drop the class and
+            show everything. ScrollReveal notices it is gone and adopts the
+            content in place rather than animating it, so there is no second
+            reveal. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var d=document.documentElement;d.classList.add('reveal-armed');setTimeout(function(){if(!window.__revealReady){d.classList.remove('reveal-armed')}},4000)})();`,
+          }}
+        />
         {/* Favicons, apple-touch-icon and manifest are declared once via the
             Metadata `icons`/`manifest` fields in generateMetadata — do not add
             manual <link> tags here or the same sizes get emitted twice. */}
@@ -196,7 +233,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       {/* overflow-x-clip on body (not -hidden): `hidden` turns body into a
           scroll container, so any transient vertical overflow (scroll-reveal
           translateY) flashes a second scrollbar and shifts the layout. */}
-      <body className="antialiased min-h-screen flex flex-col bg-white text-surface-950 dark:bg-surface-950 dark:text-surface-50 selection:bg-primary-500/30 selection:text-primary-900 dark:selection:bg-primary-500/40 dark:selection:text-white" suppressHydrationWarning>
+      <body className={`antialiased min-h-screen flex flex-col ${bodySurface} text-surface-950 dark:text-surface-50 selection:bg-primary-500/30 selection:text-primary-900 dark:selection:bg-primary-500/40 dark:selection:text-white`} suppressHydrationWarning>
+        {animatedBackground && <SiteBackground />}
         <ToastContainer />
         <MaintenanceBouncer isMaintenanceMode={initialSettings.maintenanceMode} />
         <ThemeProvider>
@@ -210,6 +248,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 whole page down. The useSearchParams() call that once required
                 a boundary is isolated inside Header (RouteChangeComplete). */}
             <Header />
+            {/* Reserves the fixed bar's row. The header has to be `fixed` so its
+                search / mobile / mega panels overlay the page instead of pushing
+                it down when they expand — keep this height in step with the
+                h-14 bar and the progress strip's top offset in Header.tsx. */}
+            <div className="h-14 shrink-0" aria-hidden />
             <AdSlot placement="header" className="max-w-7xl mx-auto w-full px-4" />
             <main className="flex-1 w-full min-h-[80vh]">
               {children}

@@ -87,6 +87,7 @@ const defaultSettings: SiteSettings = {
     "publicProfileLikes": false,
     "showPublicProfiles": true,
     "showScrollProgress": true,
+    "showAnimatedBackground": true,
     "infiniteScrollItems": 20,
     "trendingLikesWeight": 2,
     "trendingViewsWeight": 1,
@@ -98,7 +99,6 @@ const defaultSettings: SiteSettings = {
   },
   "siteLogo": "",
   "cardStyle": "v2",
-  "heroStyle": "v3",
   "heroTitle": "Discover AI Prompt Masterpieces",
   "siteTitle": "AI PromptMatrix",
   "badgeStyle": "v1",
@@ -208,6 +208,21 @@ const defaultSettings: SiteSettings = {
   "heroAutoPlay": true,
   "heroSubtitle": "Explore a curated collection of breathtaking AI-generated imagery and their full prompts. Learn, inspire, and create.",
   "heroHideStats": false,
+  "heroContent": {
+    "kickerPrefix": "Curated prompts for",
+    "accentPattern": "(ai\\s+prompts?|image\\s+prompts?)",
+    "searchPlaceholder": "Search prompts by style, tool or subject...",
+    "searchButtonLabel": "Search",
+    "popularLabel": "Popular:",
+    "popularTags": ["Portraits", "Cinematic", "Anime", "Wallpaper", "Architecture", "Logos"],
+    "primaryCtaLabel": "Browse All Prompts",
+    "primaryCtaHref": "/explore",
+    "secondaryCtaLabel": "How It Works",
+    "secondaryCtaHref": "#how-it-works",
+    "trustBadges": ["100% Free to Copy", "Tested & Verified Outputs", "Exact Model Parameters Included"],
+    "statLabels": { "prompts": "Prompts", "featured": "Featured", "likes": "Likes", "saves": "Saves" },
+    "toolsRowLabel": "Browse Prompts by AI Tools:"
+  },
   "imageProvider": "cloudflare",
   "keepExploring": {
     "links": [

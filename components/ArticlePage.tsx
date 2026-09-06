@@ -132,7 +132,7 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
       </Link>
       <h1 className="mt-4 text-3xl font-black tracking-tight text-surface-950 dark:text-white md:text-4xl">{article.title}</h1>
       <p className="mt-4 text-base leading-8 text-surface-600 dark:text-surface-400">{article.description}</p>
-      <div className="mt-5 flex flex-wrap items-center gap-3 border-b border-surface-200 pb-6 text-xs font-bold uppercase tracking-wider text-surface-400 dark:border-surface-800 dark:text-surface-500">
+      <div className="mt-5 flex flex-wrap items-center gap-3 border-b border-white/80 pb-6 text-xs font-bold uppercase tracking-wider text-surface-400 dark:border-white/10 dark:text-surface-500">
         <span>{formatArticleDate(article.datePublished)}</span>
         <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {article.readMinutes} min read</span>
         <span className="rounded-full bg-primary-50 px-3 py-1 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300">{isGuide ? 'Guide' : 'Blog'}</span>

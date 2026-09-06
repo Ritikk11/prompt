@@ -153,14 +153,14 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
         }
       />
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto p-1.5 rounded-2xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl shadow-sm">
         {(Object.keys(textareas) as Array<keyof typeof textareas>).map(key => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`px-4 py-2 rounded-xl border text-xs font-bold whitespace-nowrap transition-all ${activeTab === key
-              ? 'border-primary-500/50 bg-primary-50/10 dark:bg-primary-950/10 text-primary-600 dark:text-primary-400 shadow-md'
-              : 'border-surface-200 dark:border-surface-800 bg-surface-50/70 dark:bg-surface-800/40 text-surface-600 dark:text-surface-300 hover:border-surface-300 dark:hover:border-surface-700'}`}
+            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === key
+              ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20'
+              : 'border border-black/[0.08] dark:border-white/10 bg-white/50 dark:bg-white/[0.04] text-surface-600 hover:bg-white/80 hover:text-surface-950 dark:text-surface-300 dark:hover:bg-white/[0.08] dark:hover:text-white'}`}
           >
             {textareas[key].label}
           </button>
@@ -296,18 +296,18 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
               >
                 Reset to default
               </button>
-              <div className="grid grid-cols-2 rounded-xl bg-surface-100 dark:bg-surface-800 p-1 text-xs font-bold">
+              <div className="grid grid-cols-2 rounded-xl border border-black/[0.08] dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-1 text-xs font-bold backdrop-blur-md shadow-sm">
                 <button
                   type="button"
                   onClick={() => setMode('edit')}
-                  className={`rounded-lg px-3 py-1.5 transition-colors ${mode === 'edit' ? 'bg-primary-500 text-white' : 'text-surface-500'}`}
+                  className={`rounded-lg px-3 py-1.5 transition-all ${mode === 'edit' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white'}`}
                 >
                   Edit
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode('preview')}
-                  className={`rounded-lg px-3 py-1.5 transition-colors ${mode === 'preview' ? 'bg-primary-500 text-white' : 'text-surface-500'}`}
+                  className={`rounded-lg px-3 py-1.5 transition-all ${mode === 'preview' ? 'bg-primary-500 text-white shadow-sm' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white'}`}
                 >
                   Preview
                 </button>

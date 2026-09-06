@@ -51,7 +51,7 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
   );
 };
 
-export default function PostCard({ post: initialPost, index, aspect, cardStyleOverride, badgeStyleOverride }: { post: Post; index?: number; aspect?: string; cardStyleOverride?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8'; badgeStyleOverride?: string }) {
+export default function PostCard({ post: initialPost, index, aspect, cardStyleOverride, badgeStyleOverride }: { post: Post; index?: number; aspect?: string; cardStyleOverride?: 'v1' | 'v2'; badgeStyleOverride?: string }) {
   const { settings, posts } = useData();
   const post = posts.find(p => p.id === initialPost.id) || initialPost;
   
@@ -59,7 +59,12 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
   const primaryTool = allTools.length > 0 ? allTools[0] : (post.images[0]?.aiTool || '');
   const toolInfo = getToolInfo(primaryTool, settings?.toolDetails);
   
-  const cardStyle = cardStyleOverride || settings?.cardStyle || 'v1';
+  // v2 is the site's card design; v1 stays available as the flat alternative.
+  // Normalize anything else to v2: sections saved with a since-removed style
+  // (v3–v8) carry that string in the DB, and it must resolve to the redesign,
+  // not fall through to the v1 tail branch below.
+  const rawCardStyle = cardStyleOverride || settings?.cardStyle || 'v2';
+  const cardStyle = rawCardStyle === 'v1' ? 'v1' : 'v2';
   const badgeStyle = badgeStyleOverride || settings?.badgeStyle || 'v1';
   const showSkeleton = settings.features?.skeletonLoaders ?? true;
   const showLikeCount = settings.features?.showLikeCount ?? true;
@@ -79,182 +84,20 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
     </div>
   );
 
-  if (cardStyle === 'v4') { // Social Card Layout
-    return (
-      <Link
-        href={`/${post.slug || post.id}`}
-        className={`group block bg-white p-3 dark:bg-surface-900 rounded-[24px] border border-surface-200 dark:border-surface-800 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary-500/50 break-inside-avoid mb-4 ${aspect ? aspect : ''}`}
-        style={{ animationDelay: `${(index || 0) * 80}ms` }}
-      >
-        <div className="px-1 pb-3 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-surface-100 dark:bg-surface-800 animate-pulse flex items-center justify-center shrink-0">
-             <div className="w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-700" />
-          </div>
-          <div>
-            <div className="h-4 w-24 bg-surface-200 dark:bg-surface-700 rounded mb-1" />
-            <div className="h-3 w-16 bg-surface-100 dark:bg-surface-800 rounded" />
-          </div>
-        </div>
-        <div className="relative aspect-square overflow-hidden rounded-[12px]">
-           <LoadingImage
-            src={imageUrl}
-            alt={post.title}
-            fill
-            showSkeleton={showSkeleton}
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            referrerPolicy="no-referrer" skeleton={showSkeleton} />
-           <div className="absolute top-3 right-3">{renderBadges()}</div>
-        </div>
-        <div className="px-1 pt-4 pb-1">
-          <h3 className="font-bold text-surface-900 dark:text-white text-base leading-snug line-clamp-2 mb-3">
-            {post.title}
-          </h3>
-          {(showLikeCount || showViewCount) && <div className="flex items-center gap-4 text-surface-500 dark:text-surface-400">
-             {showLikeCount && <span className="flex items-center gap-1 text-xs font-bold"><Heart className="w-4 h-4 text-red-500" />{post.likes}</span>}
-             {showViewCount && <span className="flex items-center gap-1 text-xs font-bold"><Eye className="w-4 h-4 text-blue-500" />{post.views}</span>}
-          </div>}
-        </div>
-      </Link>
-    );
-  }
-
-  if (cardStyle === 'v5') { // Brutalist Outline
-    return (
-      <Link
-        href={`/${post.slug || post.id}`}
-        className={`group block bg-white dark:bg-surface-900 border-4 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,0.2)] transition-all hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none break-inside-avoid mb-6 ${aspect ? aspect : ''}`}
-        style={{ animationDelay: `${(index || 0) * 80}ms` }}
-      >
-        <div className="relative h-48 sm:h-64 border-b-4 border-black dark:border-white">
-           <LoadingImage
-            src={imageUrl}
-            alt={post.title}
-            fill
-            showSkeleton={showSkeleton}
-            className="object-cover"
-            referrerPolicy="no-referrer" skeleton={showSkeleton} />
-           <div className="absolute top-0 right-0 p-2">{renderBadges()}</div>
-        </div>
-        <div className="p-4">
-          <h3 className="font-black text-black dark:text-white text-lg uppercase tracking-tighter mb-4 leading-none">
-            {post.title}
-          </h3>
-          <div className="flex justify-between items-center border-t-2 border-black dark:border-white pt-3">
-             <span className="font-black text-[10px] uppercase">By PromptHub</span>
-             {(showLikeCount || showViewCount) && <div className="flex gap-3">
-                {showViewCount && <span className="text-xs font-black italic">{post.views} VWS</span>}
-                {showLikeCount && <span className="text-xs font-black italic text-primary-500">{post.likes} LKS</span>}
-             </div>}
-          </div>
-        </div>
-      </Link>
-    );
-  }
-
-  if (cardStyle === 'v6') { // Gradient Overlay
-    return (
-      <Link
-        href={`/${post.slug || post.id}`}
-        className={`group block relative aspect-[4/5] rounded-[2rem] overflow-hidden transition-all duration-500 hover:scale-[1.02] break-inside-avoid mb-6 ${aspect ? aspect : ''}`}
-        style={{ animationDelay: `${(index || 0) * 80}ms` }}
-      >
-        <LoadingImage
-          src={imageUrl}
-          alt={post.title}
-          fill
-          showSkeleton={showSkeleton}
-          className="object-cover transition-transform duration-700 group-hover:scale-110"
-          referrerPolicy="no-referrer" skeleton={showSkeleton} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
-        <div className="absolute inset-0 p-6 flex flex-col justify-between">
-           <div className="flex justify-end">{renderBadges()}</div>
-           <div>
-             <h3 className="font-bold text-white text-xl mb-4 leading-tight drop-shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform">
-               {post.title}
-             </h3>
-             {(showLikeCount || showViewCount) && <div className="flex items-center gap-4 text-white/80 opacity-0 group-hover:opacity-100 transition-opacity delay-100">
-                {showLikeCount && <span className="flex items-center gap-1 text-xs font-bold bg-white/10 backdrop-blur-md px-2 py-1 rounded-full"><Heart className="w-3.5 h-3.5" /> {post.likes}</span>}
-                {showViewCount && <span className="flex items-center gap-1 text-xs font-bold bg-white/10 backdrop-blur-md px-2 py-1 rounded-full"><Eye className="w-3.5 h-3.5" /> {post.views}</span>}
-             </div>}
-           </div>
-        </div>
-      </Link>
-    );
-  }
-
-  if (cardStyle === 'v7') { // Minimalist Polaroid
-    return (
-      <div className="break-inside-avoid mb-6">
-        <Link
-          href={`/${post.slug || post.id}`}
-          className={`group block bg-white dark:bg-surface-800 p-3 sm:p-4 rounded-lg shadow-xl border border-surface-200 dark:border-surface-700 transition-all hover:-rotate-1 hover:scale-105 ${aspect ? aspect : ''}`}
-          style={{ animationDelay: `${(index || 0) * 80}ms` }}
-        >
-          <div className="relative aspect-square rounded-sm overflow-hidden mb-4 bg-surface-100 dark:bg-surface-900">
-             <LoadingImage
-              src={imageUrl}
-              alt={post.title}
-              fill
-              showSkeleton={showSkeleton}
-              className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-              referrerPolicy="no-referrer" skeleton={showSkeleton} />
-             <div className="absolute top-2 left-2">{renderBadges("scale-75 origin-top-left")}</div>
-          </div>
-          <div className="px-2 pb-2">
-            <h3 className="font-serif italic text-lg text-surface-900 dark:text-white leading-tight mb-3">
-              {post.title}
-            </h3>
-            <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-tighter text-surface-400">
-               <span>ID: {post.id.slice(0, 8)}</span>
-               {showLikeCount && <span className="text-primary-500 font-bold">{post.likes} LIKES</span>}
-            </div>
-          </div>
-        </Link>
-      </div>
-    );
-  }
-
-  if (cardStyle === 'v8') { // Glassmorphism Flat
-    return (
-       <Link
-        href={`/${post.slug || post.id}`}
-        className={`group block relative aspect-video rounded-[24px] overflow-hidden border border-white/20 dark:border-white/10 break-inside-avoid mb-6 ${aspect ? aspect : ''}`}
-        style={{ animationDelay: `${(index || 0) * 80}ms` }}
-      >
-        <LoadingImage
-          src={imageUrl}
-          alt={post.title}
-          fill
-          showSkeleton={showSkeleton}
-          className="object-cover blur-[2px] group-hover:blur-0 transition-all duration-500"
-          referrerPolicy="no-referrer" skeleton={showSkeleton} />
-        <div className="absolute inset-0 bg-white/10 dark:bg-black/20 backdrop-blur-[2px] group-hover:backdrop-blur-none transition-all" />
-        <div className="absolute inset-x-0 bottom-0 p-4 bg-white/40 dark:bg-black/60 backdrop-blur-xl border-t border-white/20">
-           <div className="flex justify-between items-start gap-3">
-             <h3 className="font-bold text-surface-900 dark:text-white text-sm line-clamp-1 truncate flex-1">
-               {post.title}
-             </h3>
-             {renderBadges("scale-90")}
-           </div>
-           <div className="flex items-center gap-3 mt-2">
-              <div className="flex -space-x-2">
-                {[1,2,3].map(i => <div key={i} className="w-5 h-5 rounded-full border-2 border-white bg-surface-200 dark:bg-surface-800 overflow-hidden text-[8px] flex items-center justify-center font-bold">U{i}</div>)}
-              </div>
-              {showLikeCount && <span className="text-[10px] text-surface-700 dark:text-surface-300 font-medium">Liked by {post.likes} users</span>}
-           </div>
-        </div>
-      </Link>
-    );
-  }
-
   if (cardStyle === 'v2') {
     return (
       <Link
         href={`/${post.slug || post.id}`}
-        className={`group block relative rounded-[20px] overflow-hidden bg-surface-50 p-2 dark:bg-surface-900 border border-surface-200 dark:border-surface-800 transition-all duration-300 hover:border-primary-500 break-inside-avoid hover:shadow-lg ${aspect ? `${aspect} h-full` : ''}`}
+        /* Glass frame around an opaque thumbnail: the frost lives on the mat,
+           never on the image. Only border-color and box-shadow transition —
+           animating the frame's opacity would drop its backdrop-filter for the
+           duration and flash the raw background through. */
+        className={`group relative block break-inside-avoid overflow-hidden rounded-[20px] border border-white/60 bg-white/40 px-1.5 pb-2.5 pt-1.5 shadow-[0_4px_12px_-2px_rgba(15,23,42,0.08)] backdrop-blur-[6px] backdrop-saturate-[120%] transition-[border-color,box-shadow] duration-300 hover:border-primary-500/50 hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.16)] dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.35)] dark:hover:border-primary-400/50 dark:hover:shadow-[0_8px_24px_-4px_rgba(2,6,23,0.55)] ${aspect ? `${aspect} h-full` : ''}`}
         style={{ animationDelay: `${(index || 0) * 80}ms` }}
       >
-        <div className={`relative overflow-hidden rounded-[12px] bg-white dark:bg-surface-950 ${aspect ? 'h-full' : ''}`}>
+        {/* A tint, not an opaque slab: this only shows while the image loads,
+            and white-on-glass reads as a hole in the card. */}
+        <div className={`relative overflow-hidden rounded-[12px] bg-black/[0.04] dark:bg-white/[0.06] ${aspect ? 'h-full' : ''}`}>
           {aspect ? (
             <LoadingImage
               src={imageUrl}
@@ -302,88 +145,84 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
     );
   }
 
-  if (cardStyle === 'v3') {
-    return (
-      <Link
-        href={`/${post.slug || post.id}`}
-        className={`group flex items-center gap-3 p-2 rounded-xl overflow-hidden bg-white/50 dark:bg-surface-900/50 hover:bg-white dark:hover:bg-surface-800 border border-surface-200/50 dark:border-surface-700/50 transition-all duration-300 break-inside-avoid hover:shadow-md ${aspect ? aspect : ''}`}
-        style={{ animationDelay: `${(index || 0) * 80}ms` }}
-      >
-        <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-lg overflow-hidden flex-none">
-          <LoadingImage
-            src={imageUrl}
-            alt={post.title}
-            fill
-            sizes="100px"
-            showSkeleton={showSkeleton}
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
-           referrerPolicy="no-referrer" skeleton={showSkeleton} />
-        </div>
-        <div className="flex flex-col min-w-0 py-1">
-          <div className="flex items-center gap-1 mb-1">
-             <div className={`w-2 h-2 rounded-full ${toolInfo.color}`} />
-             <span className="text-[9px] uppercase tracking-wider font-bold text-surface-500 dark:text-surface-400 truncate">{primaryTool}</span>
-          </div>
-          <h3 className="font-bold text-surface-900 dark:text-white text-xs sm:text-sm leading-snug line-clamp-2 mb-1.5 group-hover:text-primary-500 transition-colors">
-            {post.title}
-          </h3>
-          {(showLikeCount || showViewCount) && <div className="flex items-center gap-2 mb-0.5 text-surface-400 dark:text-surface-500">
-             {showViewCount && <span className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium"><Eye className="w-3 h-3" />{post.views}</span>}
-             {showLikeCount && <span className="flex items-center gap-0.5 text-[9px] sm:text-[10px] font-medium"><Heart className="w-3 h-3" />{post.likes}</span>}
-          </div>}
-        </div>
-      </Link>
-    );
-  }
-
   // cardStyle === 'v1'
+  // Pinterest-style: on touch devices the card is a bare image + the count
+  // pill — no overlay, no title (tap is the reveal). Desktop keeps the hover
+  // overlay with title/stats.
+  const titleBlock = (
+    <div className="absolute bottom-0 left-0 right-0 p-3 z-20 flex flex-col justify-end pointer-events-none">
+      <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+        <h3 className="font-bold text-white text-[13px] sm:text-[14px] leading-tight line-clamp-3 drop-shadow-md">
+          {post.title}
+        </h3>
+
+        {(showLikeCount || showViewCount) && <div className="flex items-center gap-3 mt-2">
+          {showViewCount && <span className="flex items-center gap-1 font-bold text-[10px] sm:text-[11px] text-white/90 drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+            <Eye className="w-3 h-3 opacity-90" /> {post.views}
+          </span>}
+          {showLikeCount && <span className="flex items-center gap-1 font-bold text-[10px] sm:text-[11px] text-white/90 drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+            <Heart className="w-3 h-3 opacity-90" /> {post.likes}
+          </span>}
+        </div>}
+      </div>
+    </div>
+  );
+
   return (
     <Link
       href={`/${post.slug || post.id}`}
-      className={`group block relative rounded-2xl overflow-hidden bg-surface-100 dark:bg-surface-800 transition-all duration-300 hover:shadow-xl break-inside-avoid ${aspect ? aspect : ''}`}
+      className={`group block relative rounded-2xl overflow-hidden bg-black/[0.04] dark:bg-white/[0.06] transition-all duration-300 hover:shadow-xl active:scale-[0.98] active:shadow-md break-inside-avoid ${aspect ? aspect : ''}`}
       style={{ animationDelay: `${(index || 0) * 80}ms` }}
     >
-      <LoadingImage
-        src={imageUrl}
-        alt={post.title}
-        width={500}
-        height={700}
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        showSkeleton={showSkeleton}
-        className={`w-full transition-transform duration-700 ease-in-out group-hover:scale-105 block ${aspect ? 'h-full object-cover' : 'h-auto'}`}
-       referrerPolicy="no-referrer" skeleton={showSkeleton} />
-      
-      {/* Overlay Gradient (appears on hover) */}
-      <div className="absolute inset-x-0 bottom-0 top-1/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      {/* When the caller forces a frame (aspect-[3/4] in the section rows), the
+          image uses `fill` so it is sized by the frame instead of its own
+          intrinsic width/height — a source with a different natural ratio then
+          covers the frame exactly rather than overflowing it and making the row
+          look ragged. Without a forced frame (masonry) it keeps intrinsic flow
+          sizing so heights stay varied. */}
+      {aspect ? (
+        <LoadingImage
+          src={imageUrl}
+          alt={post.title}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          showSkeleton={showSkeleton}
+          className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
+          referrerPolicy="no-referrer"
+          skeleton={showSkeleton}
+        />
+      ) : (
+        <LoadingImage
+          src={imageUrl}
+          alt={post.title}
+          width={500}
+          height={700}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          showSkeleton={showSkeleton}
+          className="block h-auto w-full transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
+          referrerPolicy="no-referrer"
+          skeleton={showSkeleton}
+        />
+      )}
 
-      {/* Top Left AI Tool Badge - Hidden on Hover */}
-      <div className="absolute top-3 left-3 z-10 pointer-events-none transition-opacity duration-300 group-hover:opacity-0">
+      {/* Overlay gradient + hover title: desktop only. `hidden` on touch keeps
+          the card a bare image there (Pinterest-style). */}
+      <div className="hidden [@media(hover:hover)]:block">
+        <div className="absolute inset-x-0 bottom-0 top-1/3 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        {titleBlock}
+      </div>
+
+      {/* Top Left AI Tool Badge — stays visible on hover; the gradient behind
+          it keeps the badges readable, so hiding them was never needed. */}
+      <div className="absolute top-2.5 left-2.5 z-10 pointer-events-none">
         {renderBadges()}
       </div>
 
-      {/* Bottom Left Prompt Count - Hidden on Hover */}
-      <div className="absolute bottom-2.5 left-2.5 z-10 pointer-events-none transition-opacity duration-300 group-hover:opacity-0">
-        <span className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[9px] font-bold bg-black/40 text-white backdrop-blur-md italic border border-white/10">
+      {/* Bottom-left prompt count — the one always-on cue on every device. */}
+      <div className="absolute bottom-2.5 left-2.5 z-10 pointer-events-none transition-opacity duration-300 [@media(hover:hover)]:group-hover:opacity-0">
+        <span className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[9px] font-bold bg-black/40 text-white backdrop-blur-md italic border border-white/10">
           {post.images.length} {post.images.length === 1 ? 'PROMPT' : 'PROMPTS'}
         </span>
-      </div>
-
-      {/* Bottom Info Section (Title & Stats) - Visible on Hover */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 z-20 flex flex-col justify-end pointer-events-none">
-        <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-          <h3 className="font-bold text-white text-[13px] sm:text-[14px] leading-tight line-clamp-3 drop-shadow-md">
-            {post.title}
-          </h3>
-          
-          {(showLikeCount || showViewCount) && <div className="flex items-center gap-3 mt-2">
-            {showViewCount && <span className="flex items-center gap-1 font-bold text-[10px] sm:text-[11px] text-white/90 drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
-              <Eye className="w-3 h-3 opacity-90" /> {post.views}
-            </span>}
-            {showLikeCount && <span className="flex items-center gap-1 font-bold text-[10px] sm:text-[11px] text-white/90 drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
-              <Heart className="w-3 h-3 opacity-90" /> {post.likes}
-            </span>}
-          </div>}
-        </div>
       </div>
     </Link>
   );

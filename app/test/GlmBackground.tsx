@@ -202,7 +202,7 @@ export default function GlmBackground() {
   }, []);
 
   return (
-    <div id="animated-background-canvas" className="pointer-events-none fixed inset-x-0 -top-16 bottom-[-140px] -z-10 overflow-hidden bg-[#f8fafc] dark:bg-[#05060f] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)]">
+    <div id="animated-background-canvas" className="pointer-events-none fixed inset-x-0 -top-16 h-[calc(100svh+204px)] -z-10 overflow-hidden bg-[#f8fafc] dark:bg-[#05060f] transform-gpu [backface-visibility:hidden] [transform:translateZ(0)]">
       {/* Base radial wash (Light & Dark) */}
       <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(168,85,247,0.18),transparent_60%)] dark:bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(124,58,237,0.3),transparent_55%)]" />
 

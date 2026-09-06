@@ -10,7 +10,7 @@ import {
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload, Copy,
   Settings, Check, Filter, Search, RotateCcw, GripVertical, Image as ImageIcon,
   Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass, Menu, Mail,
-  Ban, Shield, Flag, CheckCircle, Cpu, BookOpen, Newspaper, Share2, Loader2, KeyRound
+  Ban, Shield, Flag, CheckCircle, Cpu, BookOpen, Newspaper, Share2, Loader2, KeyRound, LogOut
 } from 'lucide-react';
 import { showToast } from '@/components/ui/ToastContainer';
 import { ConfirmDialogHost, confirmAction } from '@/components/ui/ConfirmDialog';
@@ -404,14 +404,8 @@ function countRailMatches(posts: Post[], item: FilterRailItem) {
 
 function cardStyleName(value: string) {
   const names: Record<string, string> = {
-    v1: 'Hover Overlay',
-    v2: 'Floating Image with Border',
-    v3: 'Compact Editorial',
-    v4: 'Social Card',
-    v5: 'Brutalist',
-    v6: 'Gradient Overlay',
-    v7: 'Polaroid',
-    v8: 'Glass Panel',
+    v1: 'Flat Hover Overlay',
+    v2: 'Glass Frame',
   };
   return names[value] || 'Global card style';
 }
@@ -605,7 +599,6 @@ function AdminInner() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [passwordRecoveryOpen, setPasswordRecoveryOpen] = useState(false);
   const [recoveryPassword, setRecoveryPassword] = useState('');
@@ -781,17 +774,10 @@ function AdminInner() {
     }
     try {
       const supabase = createSupabaseClient();
-      let error = null;
-      if (authMode === 'login') {
-        const res = await supabase.auth.signInWithPassword({ email, password });
-        error = res.error;
-      } else {
-        const res = await supabase.auth.signUp({ email, password });
-        error = res.error;
-        if (!error && res.data.user && !res.data.session) {
-          showToast("Signup successful! Please check your email to confirm your account.");
-        }
-      }
+      // Admin sign-in only — the signup path was removed: accounts are provisioned
+      // by invitation, so the public admin screen must never offer registration.
+      const res = await supabase.auth.signInWithPassword({ email, password });
+      const error = res.error;
       if (error) throw error;
     } catch (e: any) {
       setAuthError(e.message || 'Authentication failed');
@@ -1276,9 +1262,9 @@ function AdminInner() {
   const [heroEnabled, setHeroEnabled] = useState(settings.heroEnabled);
   const [heroHideStats, setHeroHideStats] = useState(settings.heroHideStats || false);
   const [heroAutoPlay, setHeroAutoPlay] = useState(settings.heroAutoPlay);
-  const [heroStyle, setHeroStyle] = useState(settings.heroStyle || 'v1');
+  const [heroContent, setHeroContent] = useState<NonNullable<SiteSettings['heroContent']>>(settings.heroContent || {});
   const [postHeroStyle, setPostHeroStyle] = useState(settings.postHeroStyle || 'v1');
-  const [cardStyle, setCardStyle] = useState(settings.cardStyle || 'v1');
+  const [cardStyle, setCardStyle] = useState(settings.cardStyle || 'v2');
   const [badgeStyle, setBadgeStyle] = useState(settings.badgeStyle || 'v1');
   const [adminEmailsStr, setAdminEmailsStr] = useState((settings.adminEmails || []).join(', '));
   const [headerLinks, setHeaderLinks] = useState<NavLink[]>(() => withHeaderLinkIds(settings.headerLinks || []));
@@ -1367,6 +1353,7 @@ function AdminInner() {
       showHomepageBlog: true,
       showHomepageCreatorFeedback: true,
       showScrollProgress: true,
+      showAnimatedBackground: true,
       showFaqSchema: true,
       showPublicProfiles: true,
       publicProfileLikes: false,
@@ -1493,7 +1480,7 @@ function AdminInner() {
     if (settings.heroEnabled !== undefined) setHeroEnabled(settings.heroEnabled);
     if (settings.heroHideStats !== undefined) setHeroHideStats(settings.heroHideStats);
     if (settings.heroAutoPlay !== undefined) setHeroAutoPlay(settings.heroAutoPlay);
-    if (settings.heroStyle !== undefined) setHeroStyle(settings.heroStyle);
+    if (settings.heroContent !== undefined) setHeroContent(settings.heroContent);
     if (settings.postHeroStyle !== undefined) setPostHeroStyle(settings.postHeroStyle);
     if (settings.cardStyle !== undefined) setCardStyle(settings.cardStyle);
     if (settings.badgeStyle !== undefined) setBadgeStyle(settings.badgeStyle);
@@ -2647,7 +2634,7 @@ function AdminInner() {
       heroEnabled,
       heroHideStats,
       heroAutoPlay,
-      heroStyle,
+      heroContent,
       postHeroStyle,
       cardStyle,
       badgeStyle,
@@ -2924,7 +2911,7 @@ function AdminInner() {
     return (
       <div className="flex flex-col justify-center min-h-[70vh] max-w-sm mx-auto px-4">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mx-auto mb-6">
+          <div className="w-16 h-16 rounded-2xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.08] backdrop-blur-xl shadow-sm flex items-center justify-center mx-auto mb-6">
             <Settings className="w-8 h-8 text-primary-500" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Admin Panel</h1>
@@ -2947,7 +2934,7 @@ function AdminInner() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50 focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+              className="w-full px-4 py-2 rounded-xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.08] backdrop-blur-xl placeholder:text-surface-400 focus:border-primary-500/60 focus:bg-white/90 dark:focus:bg-white/[0.12] focus:ring-2 focus:ring-primary-500/20 outline-none transition-all"
               placeholder="admin@example.com"
             />
           </div>
@@ -2959,16 +2946,15 @@ function AdminInner() {
               onChange={e => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-4 py-2 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50 focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+              className="w-full px-4 py-2 rounded-xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.08] backdrop-blur-xl placeholder:text-surface-400 focus:border-primary-500/60 focus:bg-white/90 dark:focus:bg-white/[0.12] focus:ring-2 focus:ring-primary-500/20 outline-none transition-all"
               placeholder="Password"
             />
           </div>
           <button
             type="submit"
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+            className="w-full flex justify-center py-3 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-br from-primary-600 to-primary-500 shadow-md shadow-primary-500/25 hover:shadow-lg hover:shadow-primary-500/40 hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all active:scale-[0.99]"
           >
-            {authMode === 'login' ? 'Sign in with Email' : 'Sign up with Email'}
-          </button>
+            Sign in with Email          </button>
         </form>
 
         <div className="text-center mb-6">
@@ -2981,30 +2967,24 @@ function AdminInner() {
           </button>
         </div>
 
-        <div className="relative mb-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-surface-200 dark:border-surface-700" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white dark:bg-surface-900 text-surface-500">Or continue with</span>
-          </div>
+        <div className="flex items-center gap-3 mb-6 text-sm text-surface-500">
+          <div className="flex-1 border-t border-black/10 dark:border-white/10" />
+          <span>Or continue with</span>
+          <div className="flex-1 border-t border-black/10 dark:border-white/10" />
         </div>
 
         <button
           onClick={handleGoogleLogin}
-          className="w-full flex justify-center py-3 px-4 border border-surface-200 dark:border-surface-700 rounded-xl text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors mb-6"
+          className="w-full flex justify-center items-center gap-2.5 py-3 px-4 rounded-xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.08] backdrop-blur-xl text-sm font-semibold hover:bg-white/80 dark:hover:bg-white/[0.12] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all mb-6"
         >
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden>
+            <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.57 5.57 0 0 1-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82Z" />
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A11.99 11.99 0 0 0 12 24Z" />
+            <path fill="#FBBC05" d="M5.27 14.29A7.2 7.2 0 0 1 4.89 12c0-.8.14-1.57.38-2.29V6.62H1.29a11.97 11.97 0 0 0 0 10.76l3.98-3.09Z" />
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.7 0 3.99 2.47 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75Z" />
+          </svg>
           Google
         </button>
-
-        <div className="text-center">
-          <button
-            onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-            className="text-sm text-primary-600 hover:text-primary-500 dark:text-primary-400"
-          >
-            {authMode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-          </button>
-        </div>
       </div>
     );
   }
@@ -3083,13 +3063,13 @@ function AdminInner() {
   ];
 
   const renderNavigationList = () => (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {navGroups.map(group => (
-        <div key={group.title} className="space-y-1.5">
-          <h4 className="text-[10px] font-mono tracking-widest text-surface-400 dark:text-surface-500 uppercase px-2">
-            {group.title}
+        <div key={group.title} className="space-y-1">
+          <h4 className="text-[10px] font-mono font-bold tracking-wider text-surface-500 dark:text-surface-400 uppercase px-3 py-1 flex items-center gap-1.5">
+            <span>{group.title}</span>
           </h4>
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             {group.items.map(item => {
               const isActive = tab === item.key;
               return (
@@ -3099,27 +3079,27 @@ function AdminInner() {
                     setTab(item.key);
                     setMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                  className={`w-full group flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold tracking-tight transition-all active:scale-[0.98] ${
                     isActive
-                      ? 'bg-primary-500 text-white shadow-primary-500/10'
-                      : 'text-surface-600 hover:text-surface-900 dark:text-surface-400 dark:hover:text-surface-100 hover:bg-surface-50 dark:hover:bg-surface-800/50'
+                      ? 'bg-gradient-to-r from-primary-600 via-primary-500 to-indigo-600 text-white shadow-lg shadow-primary-500/30 border border-white/20 font-bold'
+                      : 'text-surface-700 hover:text-surface-950 dark:text-surface-300 dark:hover:text-white hover:bg-black/[0.04] dark:hover:bg-white/[0.08]'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <span className={isActive ? 'text-white' : 'text-surface-400 dark:text-surface-500 group-hover:text-surface-600'}>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className={`shrink-0 transition-colors ${isActive ? 'text-white' : 'text-surface-500 dark:text-surface-400 group-hover:text-primary-500 dark:group-hover:text-primary-400'}`}>
                       {item.icon}
                     </span>
-                    <span>{item.label}</span>
+                    <span className="truncate">{item.label}</span>
                   </div>
                   {item.count !== undefined && item.count > 0 && (
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    <span className={`shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full border ${
                       isActive
-                        ? 'bg-white/25 text-white'
+                        ? 'bg-white/20 text-white border-white/30'
                         : item.key === 'submissions'
-                          ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                          ? 'border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-300'
                           : item.key === 'comments'
-                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-                            : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-400'
+                            ? 'border-blue-500/30 bg-blue-500/15 text-blue-700 dark:text-blue-300'
+                            : 'border-black/[0.08] bg-black/[0.05] text-surface-700 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-200'
                     }`}>
                       {item.count}
                     </span>
@@ -3134,17 +3114,20 @@ function AdminInner() {
   );
 
   const renderProfileSection = () => (
-    <div className="border-t border-surface-200 dark:border-surface-800 pt-4 mt-auto">
-      <div className="flex items-center justify-between gap-2 px-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-9 h-9 rounded-full bg-primary-500/10 flex items-center justify-center font-bold text-sm text-primary-600 dark:text-primary-400 shrink-0">
-            {user?.email ? user.email[0].toUpperCase() : 'A'}
+    <div className="border-t border-black/[0.06] dark:border-white/[0.08] pt-3.5 mt-auto shrink-0">
+      <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-2xl bg-white/50 dark:bg-white/[0.06] border border-white/80 dark:border-white/10 backdrop-blur-md shadow-sm">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="relative shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary-600 to-indigo-500 flex items-center justify-center font-black text-xs text-white shadow-sm shadow-primary-500/25">
+              {user?.email ? user.email[0].toUpperCase() : 'A'}
+            </div>
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#0a0c1d]" />
           </div>
           <div className="min-w-0 leading-tight">
-            <p className="text-xs font-semibold text-surface-900 dark:text-white truncate">
+            <p className="text-xs font-bold text-surface-950 dark:text-white truncate">
               {user?.email?.split('@')[0] || 'Administrator'}
             </p>
-            <p className="text-[10px] text-surface-400 dark:text-surface-500 truncate">
+            <p className="text-[10px] text-surface-500 dark:text-surface-400 truncate mt-0.5">
               {user?.email || 'admin@site.com'}
             </p>
           </div>
@@ -3156,24 +3139,30 @@ function AdminInner() {
             setUser(null);
           }}
           title="Sign Out"
-          className="p-1.5 rounded-lg bg-surface-50 dark:bg-surface-800/40 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-500 text-surface-400 transition-colors"
+          className="p-2 rounded-xl text-surface-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all active:scale-95 shrink-0"
         >
-          <X className="w-4 h-4" />
+          <LogOut className="w-4 h-4" />
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-surface-50/40 dark:bg-surface-950 text-surface-900 dark:text-surface-50">
+    <div className="relative min-h-screen text-surface-900 dark:text-surface-50">
+      {/* Ambient background glows */}
+      <div className="pointer-events-none fixed -top-24 -left-24 h-[600px] w-[550px] rounded-full bg-purple-600/20 blur-[130px] dark:bg-purple-600/25" />
+      <div className="pointer-events-none fixed top-1/3 -left-20 h-[500px] w-[450px] rounded-full bg-indigo-600/20 blur-[130px] dark:bg-indigo-600/25" />
+      <div className="pointer-events-none fixed -top-40 left-1/3 h-[550px] w-[550px] rounded-full bg-primary-500/10 blur-[130px]" />
+      <div className="pointer-events-none fixed top-1/2 -right-40 h-[500px] w-[500px] rounded-full bg-indigo-500/10 blur-[130px]" />
+
       <ConfirmDialogHost />
 
       {/* Password recovery modal (Supabase PASSWORD_RECOVERY event) */}
       {passwordRecoveryOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-surface-950/60 p-4 backdrop-blur-sm animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4 backdrop-blur-md animate-in fade-in duration-150">
           <form
             onSubmit={handleRecoveryPasswordSubmit}
-            className="w-full max-w-sm rounded-2xl border border-surface-200 bg-white p-5 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-150 dark:border-surface-800 dark:bg-surface-900"
+            className="w-full max-w-sm rounded-3xl border border-white/80 bg-white/80 p-6 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-150 dark:border-white/10 dark:bg-white/[0.08]"
           >
             <h3 className="text-sm font-bold text-surface-950 dark:text-white">Set a new password</h3>
             <p className="mt-1 text-xs text-surface-500 dark:text-surface-400">Enter the new password for your account.</p>
@@ -3191,14 +3180,14 @@ function AdminInner() {
               <button
                 type="button"
                 onClick={() => setPasswordRecoveryOpen(false)}
-                className="rounded-xl px-4 py-2 text-xs font-bold text-surface-600 transition-colors hover:bg-surface-100 dark:text-surface-300 dark:hover:bg-surface-800"
+                className="rounded-xl px-4 py-2 text-xs font-bold text-surface-600 transition-colors hover:bg-white/80 dark:text-surface-300 dark:hover:bg-white/[0.08]"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isUpdatingPassword || recoveryPassword.length < 6}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-primary-600 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-primary-700 active:scale-95 disabled:opacity-50"
               >
                 {isUpdatingPassword ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
                 Update password
@@ -3208,56 +3197,110 @@ function AdminInner() {
         </div>
       )}
 
-      {/* Mobile Top Header */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-white dark:bg-surface-900 border-b border-surface-200 dark:border-surface-800 sticky top-0 z-40">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
-            <Settings className="w-4 h-4" />
+      {/* Mobile Top Header & Quick Switcher */}
+      <div className="md:hidden sticky top-14 z-40 bg-white/70 dark:bg-white/[0.06] border-b border-white/80 dark:border-white/10 backdrop-blur-2xl shadow-sm">
+        {/* Top bar with active workspace title and menu trigger */}
+        <div className="flex items-center justify-between px-4 py-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-primary-500/10 dark:bg-primary-500/15 border border-primary-500/25 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0 shadow-inner">
+              {tabs.find(t => t.key === tab)?.icon || <Settings className="w-4 h-4" />}
+            </div>
+            <div className="min-w-0 leading-tight">
+              <span className="text-xs font-bold text-surface-950 dark:text-white truncate block">
+                {tabs.find(t => t.key === tab)?.label || 'Console'}
+              </span>
+              <span className="text-[9px] font-mono text-surface-500 dark:text-surface-400 uppercase tracking-wider block">
+                Workspace
+              </span>
+            </div>
           </div>
-          <span className="font-bold text-sm">Admin Console</span>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => loadAdminData()}
+              title="Refresh state"
+              className="p-2 rounded-xl border border-white/80 dark:border-white/10 bg-white/50 dark:bg-white/[0.05] text-surface-500 dark:text-surface-400 hover:text-surface-950 dark:hover:text-white transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-primary-500/30 bg-primary-500/10 dark:bg-primary-500/15 text-primary-600 dark:text-primary-400 text-xs font-bold shadow-sm active:scale-95 transition-all"
+            >
+              <Menu className="w-4 h-4" />
+              <span>Menu</span>
+              {(tabs.find(t => t.key === 'submissions')?.count || 0) > 0 && (
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              )}
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setMobileMenuOpen(prev => !prev)}
-            className="p-2 rounded-lg bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-300"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+
+        {/* Quick Tab Chip Rail (Swipeable on phone) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto px-4 py-2 border-t border-black/[0.04] dark:border-white/[0.06] bg-white/40 dark:bg-white/[0.03] backdrop-blur-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {tabs.map(item => {
+            const isActive = tab === item.key;
+            return (
+              <button
+                key={item.key}
+                onClick={() => setTab(item.key)}
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap active:scale-95 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-primary-600 via-primary-500 to-indigo-600 text-white shadow-md shadow-primary-500/25 border border-white/20 font-bold'
+                    : 'border border-white/80 dark:border-white/10 bg-white/70 dark:bg-white/[0.06] text-surface-700 dark:text-surface-200 hover:bg-white dark:hover:bg-white/[0.12]'
+                }`}
+              >
+                <span className={isActive ? 'text-white' : 'text-surface-400 dark:text-surface-400'}>
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+                {item.count !== undefined && item.count > 0 && (
+                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-primary-500/10 text-primary-500 dark:text-primary-400'
+                  }`}>
+                    {item.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Mobile Drawer Overlay */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
+        <div className="fixed inset-0 z-[100] md:hidden flex animate-in fade-in duration-200">
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="relative w-64 max-w-xs bg-white dark:bg-surface-900 h-full p-5 flex flex-col justify-between shadow-2xl animate-in slide-in-from-left duration-200">
-            <div>
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
-                    <Settings className="w-4 h-4 animate-spin-slow" style={{ animationDuration: '8s' }} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-xs">Admin Console</h3>
-                    <span className="text-[9px] text-primary-500 font-mono">System</span>
+          <div className="relative w-[85vw] max-w-[320px] my-3 ml-3 rounded-3xl border border-white/80 dark:border-white/15 bg-white/95 dark:bg-[#0e122b]/90 backdrop-blur-3xl h-[calc(100%-1.5rem)] p-4 sm:p-5 flex flex-col justify-between shadow-2xl animate-in slide-in-from-left duration-250 z-10">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-black/[0.06] dark:border-white/[0.08] shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-primary-500/25">
+                  <Settings className="w-4 h-4 animate-spin-slow" style={{ animationDuration: '10s' }} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xs text-surface-950 dark:text-white">Admin Console</h3>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 uppercase font-semibold">Production</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-1 rounded-lg bg-surface-100 dark:bg-surface-800 text-surface-500"
-                >
-                  <X className="w-4 h-4" />
-                </button>
               </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-xl text-surface-400 hover:text-surface-950 dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/[0.08] transition-colors"
+                aria-label="Close menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-              {/* Navigation list */}
-              <div className="space-y-6">
-                {renderNavigationList()}
-              </div>
+            {/* Scrollable Navigation List */}
+            <div className="flex-1 overflow-y-auto py-4 space-y-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pr-0.5">
+              {renderNavigationList()}
             </div>
 
             {/* Profile/Signout on mobile */}
@@ -3268,17 +3311,22 @@ function AdminInner() {
 
       {/* Main Grid Layout */}
       <div className="flex max-w-[1600px] mx-auto min-h-screen">
-        {/* Desktop Sidebar (Sticky left) */}
-        <aside className="hidden md:flex flex-col justify-between w-64 shrink-0 border-r border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-5 sticky top-0 h-screen overflow-y-auto">
+        {/* Desktop Sidebar (Floating frosted glass panel with rounded-3xl edges) */}
+        <aside className="hidden md:flex flex-col justify-between w-64 shrink-0 my-3 ml-3 md:my-4 md:ml-4 rounded-3xl border border-white/80 dark:border-white/12 bg-white/60 dark:bg-white/[0.05] backdrop-blur-2xl backdrop-saturate-[140%] p-4 sticky top-[4.5rem] h-[calc(100vh-5.5rem)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shadow-2xl shadow-black/5 dark:shadow-primary-500/5 z-30">
           <div>
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-8 px-2">
-              <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500">
-                <Settings className="w-5 h-5 animate-spin-slow" style={{ animationDuration: '8s' }} />
-              </div>
-              <div>
-                <h2 className="font-bold text-sm tracking-tight text-surface-900 dark:text-white leading-tight">Admin Console</h2>
-                <span className="text-[10px] font-mono tracking-widest text-primary-500 dark:text-primary-400 uppercase font-semibold">System Panel</span>
+            {/* Header Badge */}
+            <div className="p-3 rounded-2xl bg-white/50 dark:bg-white/[0.06] border border-white/80 dark:border-white/10 flex items-center justify-between mb-6 shadow-sm">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-primary-500/25">
+                  <Settings className="w-4 h-4 animate-spin-slow" style={{ animationDuration: '10s' }} />
+                </div>
+                <div>
+                  <h2 className="font-bold text-xs tracking-tight text-surface-950 dark:text-white leading-tight">Admin Console</h2>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[9px] font-mono tracking-wider text-emerald-600 dark:text-emerald-400 uppercase font-semibold">Live System</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -3293,23 +3341,23 @@ function AdminInner() {
         </aside>
 
         {/* Main Area */}
-        <main className="flex-1 min-w-0 p-4 md:p-8 space-y-6 overflow-y-auto">
+        <main className="flex-1 min-w-0 p-4 md:p-8 space-y-6">
           {/* Top Info Header Bar */}
           {tab !== 'sections' && (
-            <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-surface-100 dark:border-surface-800">
+            <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-black/[0.06] dark:border-white/[0.08]">
             <div>
-              <div className="flex items-center gap-2 text-xs text-surface-500 font-mono uppercase tracking-wider mb-1">
+              <div className="flex items-center gap-2 text-xs text-surface-500 dark:text-surface-400 font-mono uppercase tracking-wider mb-1">
                 <span>Production Environment</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               </div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-surface-900 dark:text-white">
+              <h1 className="text-2xl font-black tracking-tight text-surface-950 dark:text-white">
                 {tabs.find(t => t.key === tab)?.label || 'Console'} Workspace
               </h1>
             </div>
 
             <div className="flex items-center gap-3">
               {/* Quick status badge */}
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-100 dark:bg-surface-800 text-xs font-medium text-surface-600 dark:text-surface-300">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-xs font-semibold text-emerald-700 dark:text-emerald-300 backdrop-blur-md">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 <span>Sync Active</span>
               </div>
@@ -3317,7 +3365,7 @@ function AdminInner() {
               <button
                 onClick={() => loadAdminData()}
                 title="Force refresh database state"
-                className="p-2 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 transition-colors"
+                className="p-2 rounded-xl border border-white/80 dark:border-white/10 bg-white/70 dark:bg-white/[0.06] text-surface-600 dark:text-surface-300 hover:bg-white dark:hover:bg-white/[0.12] hover:text-surface-950 dark:hover:text-white shadow-sm backdrop-blur-md transition-all active:scale-95"
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
@@ -3334,7 +3382,7 @@ function AdminInner() {
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <button
               onClick={openNewPost}
-              className="flex items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-primary-500/25 hover:bg-primary-600"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-primary-600 px-4 py-3 text-xs font-bold text-white shadow-md shadow-primary-500/25 hover:bg-primary-700 transition-all active:scale-[0.98]"
             >
               <Plus className="h-4 w-4" /> New Post
             </button>
@@ -3344,19 +3392,19 @@ function AdminInner() {
                 setSectionLocationFilter('homepage');
                 startNewSection('homepage');
               }}
-              className="flex items-center justify-center gap-2 rounded-xl border border-surface-200 bg-white px-4 py-3 text-sm font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-surface-800 dark:bg-surface-900 dark:text-surface-200"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-white/80 bg-white/70 px-4 py-3 text-xs font-bold text-surface-800 shadow-sm backdrop-blur-xl hover:bg-white hover:text-surface-950 dark:border-white/10 dark:bg-white/[0.06] dark:text-surface-200 dark:hover:bg-white/[0.12] dark:hover:text-white transition-all active:scale-[0.98]"
             >
               <Layers className="h-4 w-4" /> New Section
             </button>
             <button
               onClick={() => window.open('/', '_blank')}
-              className="flex items-center justify-center gap-2 rounded-xl border border-surface-200 bg-white px-4 py-3 text-sm font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-surface-800 dark:bg-surface-900 dark:text-surface-200"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-white/80 bg-white/70 px-4 py-3 text-xs font-bold text-surface-800 shadow-sm backdrop-blur-xl hover:bg-white hover:text-surface-950 dark:border-white/10 dark:bg-white/[0.06] dark:text-surface-200 dark:hover:bg-white/[0.12] dark:hover:text-white transition-all active:scale-[0.98]"
             >
               <Eye className="h-4 w-4" /> View Site
             </button>
             <button
               onClick={() => loadAdminData()}
-              className="flex items-center justify-center gap-2 rounded-xl border border-surface-200 bg-white px-4 py-3 text-sm font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-surface-800 dark:bg-surface-900 dark:text-surface-200"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-white/80 bg-white/70 px-4 py-3 text-xs font-bold text-surface-800 shadow-sm backdrop-blur-xl hover:bg-white hover:text-surface-950 dark:border-white/10 dark:bg-white/[0.06] dark:text-surface-200 dark:hover:bg-white/[0.12] dark:hover:text-white transition-all active:scale-[0.98]"
             >
               <RotateCcw className="h-4 w-4" /> Clear Cache
             </button>
@@ -3364,15 +3412,18 @@ function AdminInner() {
 
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
             {[
-              ['Total Posts', posts.length, 'text-primary-600 bg-primary-50 border-primary-200 dark:bg-primary-900/20 dark:border-primary-800'],
-              ['Total Views', totalViews.toLocaleString(), 'text-sky-600 bg-sky-50 border-sky-200 dark:bg-sky-900/20 dark:border-sky-800'],
-              ['Total Likes', totalLikes.toLocaleString(), 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800'],
-              ['Total Saves', totalSaves.toLocaleString(), 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800'],
-              ['Submissions Pending', pendingSubmissionCount, 'text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800'],
+              ['Total Posts', posts.length, 'text-primary-600 dark:text-primary-400 border-primary-500/20 bg-primary-500/10'],
+              ['Total Views', totalViews.toLocaleString(), 'text-sky-600 dark:text-sky-400 border-sky-500/20 bg-sky-500/10'],
+              ['Total Likes', totalLikes.toLocaleString(), 'text-rose-600 dark:text-rose-400 border-rose-500/20 bg-rose-500/10'],
+              ['Total Saves', totalSaves.toLocaleString(), 'text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-500/10'],
+              ['Submissions Pending', pendingSubmissionCount, 'text-amber-600 dark:text-amber-400 border-amber-500/20 bg-amber-500/10'],
             ].map(([label, value, tone]) => (
-              <div key={label as string} className={`rounded-xl border p-4 ${tone}`}>
-                <p className="text-2xl font-black">{value}</p>
-                <p className="mt-1 text-xs text-surface-500">{label}</p>
+              <div key={label as string} className="rounded-3xl border border-white/80 bg-white/60 p-5 shadow-sm backdrop-blur-xl backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.06]">
+                <div className="flex items-center justify-between">
+                  <p className="text-2xl font-black text-surface-950 dark:text-white tracking-tight">{value}</p>
+                  <span className={`h-2.5 w-2.5 rounded-full border ${tone}`} />
+                </div>
+                <p className="mt-2 text-xs font-medium text-surface-500 dark:text-surface-400">{label}</p>
               </div>
             ))}
           </div>
@@ -3380,20 +3431,20 @@ function AdminInner() {
           {pendingSubmissionCount > 0 && (
             <button
               onClick={() => setTab('submissions')}
-              className="flex w-full items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-left text-sm font-bold text-amber-700 hover:bg-amber-100 dark:border-amber-800/60 dark:bg-amber-900/20 dark:text-amber-300"
+              className="flex w-full items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-3.5 text-left text-xs font-bold text-amber-700 backdrop-blur-xl hover:bg-amber-500/15 dark:text-amber-300 transition-all shadow-sm"
             >
               <span>{pendingSubmissionCount} submissions waiting for review</span>
-              <span className="inline-flex items-center gap-1">Go to Submissions <ArrowRight className="h-4 w-4" /></span>
+              <span className="inline-flex items-center gap-1">Go to Submissions <ArrowRight className="h-3.5 w-3.5" /></span>
             </button>
           )}
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-            <div className="rounded-xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
-              <h2 className="mb-4 text-sm font-bold">Site Health Checklist</h2>
+            <div className="rounded-3xl border border-white/80 bg-white/60 p-6 shadow-sm backdrop-blur-xl backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.06]">
+              <h2 className="mb-4 text-sm font-bold text-surface-950 dark:text-white">Site Health Checklist</h2>
               <div className="space-y-3">
                 {siteHealthChecks.map(item => (
-                  <div key={item.label} className="flex items-center gap-3 text-sm">
-                    <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-black ${item.ok ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'}`}>
+                  <div key={item.label} className="flex items-center gap-3 text-xs">
+                    <span className={`flex h-6 w-6 items-center justify-center rounded-xl text-xs font-black border ${item.ok ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
                       {item.ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
                     </span>
                     <span className="text-surface-700 dark:text-surface-200">{item.label}</span>
@@ -3402,29 +3453,29 @@ function AdminInner() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
+            <div className="rounded-3xl border border-white/80 bg-white/60 p-6 shadow-sm backdrop-blur-xl backdrop-saturate-[120%] dark:border-white/10 dark:bg-white/[0.06]">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-sm font-bold">Recent Posts</h2>
-                <button onClick={() => setTab('posts')} className="text-xs font-bold text-primary-600 dark:text-primary-300">View all</button>
+                <h2 className="text-sm font-bold text-surface-950 dark:text-white">Recent Posts</h2>
+                <button onClick={() => setTab('posts')} className="text-xs font-bold text-primary-600 hover:text-primary-700 dark:text-primary-400">View all</button>
               </div>
-              <div className="overflow-hidden rounded-xl border border-surface-200 dark:border-surface-800">
+              <div className="overflow-hidden rounded-2xl border border-black/[0.06] bg-white/40 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]">
                 {recentPosts.length === 0 ? (
-                  <p className="p-4 text-sm text-surface-500">No posts yet.</p>
+                  <p className="p-4 text-xs text-surface-500">No posts yet.</p>
                 ) : (
-                  <div className="divide-y divide-surface-200 dark:divide-surface-800">
+                  <div className="divide-y divide-black/[0.06] dark:divide-white/[0.08]">
                     {recentPosts.map(post => (
-                      <div key={post.id} className="flex flex-wrap items-center gap-2 px-3 py-3 text-xs sm:flex-nowrap sm:gap-3 sm:px-4">
+                      <div key={post.id} className="flex flex-wrap items-center gap-2 px-3.5 py-3 text-xs transition-colors hover:bg-white/80 dark:hover:bg-white/[0.08] sm:flex-nowrap sm:gap-3 sm:px-4">
                         <div className="min-w-0 basis-full sm:flex-1">
-                          <p className="truncate text-sm font-semibold">{post.title}</p>
-                          <p className="truncate text-surface-500">{getAllTools(post).join(', ') || 'No tool'}</p>
+                          <p className="truncate text-xs font-bold text-surface-900 dark:text-white">{post.title}</p>
+                          <p className="truncate text-[11px] text-surface-500 dark:text-surface-400">{getAllTools(post).join(', ') || 'No tool'}</p>
                         </div>
-                        <span className="text-surface-500">{(post.views || 0).toLocaleString()} views</span>
-                        <span className={`rounded-full px-2 py-1 font-bold ${post.featured ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' : 'bg-surface-100 text-surface-500 dark:bg-surface-800'}`}>
+                        <span className="text-surface-500 text-[11px]">{(post.views || 0).toLocaleString()} views</span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${post.featured ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'border-black/[0.06] bg-black/[0.04] text-surface-500 dark:border-white/10 dark:bg-white/[0.06] dark:text-surface-400'}`}>
                           {post.featured ? 'Featured' : 'Normal'}
                         </span>
                         <button
                           onClick={() => openEditPost(post)}
-                          className="rounded-lg px-2 py-1 font-bold text-primary-600 hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-900/20"
+                          className="rounded-lg px-2.5 py-1 text-xs font-bold text-primary-600 hover:bg-primary-500/10 dark:text-primary-400 dark:hover:bg-primary-500/15 transition-colors"
                         >
                           Edit
                         </button>
@@ -3486,7 +3537,7 @@ function AdminInner() {
                   <option value="title">Title A-Z</option>
                 </select>
               </div>
-              <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-surface-200 bg-white p-3 text-xs dark:border-surface-800 dark:bg-surface-900">
+              <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-3 text-xs backdrop-blur-xl backdrop-saturate-[120%] shadow-sm">
                 <label className="flex items-center gap-2 font-bold text-surface-600 dark:text-surface-200">
                   <input
                     type="checkbox"
@@ -3507,14 +3558,14 @@ function AdminInner() {
               {/* Posts list */}
               <div className="grid grid-cols-1 gap-3">
                 {filteredPosts.map(post => (
-                  <div key={post.id} className="flex flex-wrap items-start gap-3 rounded-xl border border-surface-200 bg-white p-3 transition-shadow hover:shadow-md dark:border-surface-800 dark:bg-surface-900 sm:flex-nowrap sm:items-center sm:gap-4 sm:p-4">
+                  <div key={post.id} className="group flex flex-wrap items-start gap-3 rounded-2xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-3.5 backdrop-blur-xl backdrop-saturate-[120%] shadow-sm transition-all hover:bg-white/80 dark:hover:bg-white/[0.09] hover:shadow-md sm:flex-nowrap sm:items-center sm:gap-4 sm:p-4">
                     <input
                       type="checkbox"
                       checked={selectedPostIds.includes(post.id)}
                       onChange={() => togglePostSelection(post.id)}
                       className="h-4 w-4 shrink-0 rounded text-primary-500"
                     />
-                    <div className="relative w-20 h-16 rounded-lg overflow-hidden shrink-0 bg-surface-100 dark:bg-surface-800">
+                    <div className="relative w-20 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-100 dark:bg-white/[0.05] border border-black/5 dark:border-white/10">
                       {post.images[0]?.url && (
                         <Image src={post.images[0].url} alt="" fill className="object-cover" sizes="80px" referrerPolicy="no-referrer" />
                       )}
@@ -3534,7 +3585,7 @@ function AdminInner() {
                         )}
                       </div>
                     </div>
-                    <div className="ml-7 flex basis-full flex-wrap items-center justify-end gap-1 border-t border-surface-100 pt-2 dark:border-surface-800 sm:ml-0 sm:basis-auto sm:flex-nowrap sm:border-t-0 sm:pt-0">
+                    <div className="ml-7 flex basis-full flex-wrap items-center justify-end gap-1 border-t border-black/[0.06] dark:border-white/[0.08] pt-2 sm:ml-0 sm:basis-auto sm:flex-nowrap sm:border-t-0 sm:pt-0">
                       <button
                         onClick={(e) => {
                           e.preventDefault(); e.stopPropagation();
@@ -3542,41 +3593,41 @@ function AdminInner() {
                           navigator.clipboard.writeText(url);
                           showToast('Link copied to clipboard!');
                         }}
-                        className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                        className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                         title="Copy Post Link"
                       >
                         <svg className="w-4 h-4 text-surface-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                       </button>
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); updatePost({ ...post, visibility: post.visibility === 'private' ? 'public' : 'private' }); }}
-                        className={`p-2 rounded-lg transition-colors ${post.visibility === 'private' ? 'bg-red-50 dark:bg-red-900/20' : 'hover:bg-surface-100 dark:hover:bg-surface-800'}`}
+                        className={`p-2 rounded-xl transition-colors ${post.visibility === 'private' ? 'bg-red-500/10 text-red-500' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
                         title={post.visibility === 'private' ? 'Make Public' : 'Make Private'}
                       >
                         {post.visibility === 'private' ? <EyeOff className="w-4 h-4 text-red-500" /> : <Eye className="w-4 h-4 text-surface-400" />}
                       </button>
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); updatePost({ ...post, featured: !post.featured }); }}
-                        className={`p-2 rounded-lg transition-colors ${post.featured ? 'bg-yellow-50 dark:bg-yellow-900/20' : 'hover:bg-surface-100 dark:hover:bg-surface-800'}`}
+                        className={`p-2 rounded-xl transition-colors ${post.featured ? 'bg-amber-500/10 text-amber-500' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
                         title={post.featured ? 'Remove from hero' : 'Add to hero'}
                       >
                         {post.featured ? <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> : <StarOff className="w-4 h-4 text-surface-400" />}
                       </button>
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); duplicatePost(post); }}
-                        className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                        className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                         title="Duplicate as private draft"
                       >
                         <FileText className="w-4 h-4 text-surface-400" />
                       </button>
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); openEditPost(post); }}
-                        className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                        className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                       >
                         <Edit3 className="w-4 h-4 text-primary-500" />
                       </button>
                       <button
                         onClick={async (e) => { e.preventDefault(); e.stopPropagation(); if (await confirmAction({ title: 'Delete this post?', message: `"${post.title}" will be permanently removed.`, confirmLabel: 'Delete' })) deletePost(post.id); }}
-                        className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        className="p-2 rounded-xl hover:bg-red-500/10 text-red-500 transition-colors"
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </button>
@@ -3598,7 +3649,7 @@ function AdminInner() {
                 </button>
               </div>
 
-              <div className="mb-8 p-5 bg-primary-50 dark:bg-primary-900/10 border border-primary-200 dark:border-primary-800/30 rounded-xl space-y-4">
+              <div className="mb-8 p-5 bg-primary-500/10 dark:bg-primary-500/[0.08] border border-primary-500/25 dark:border-primary-400/20 rounded-2xl backdrop-blur-xl shadow-sm space-y-4">
                 <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400 font-medium">
                   <Zap className="w-5 h-5" />
                   <h3>Auto-Generate Post Details with AI</h3>
@@ -3610,7 +3661,7 @@ function AdminInner() {
                   value={aiPromptInstruction}
                   onChange={e => setAiPromptInstruction(e.target.value)}
                   placeholder="(Optional) E.g., 'Make the title sound very poetic', 'Keep descriptions under 100 words', etc."
-                  className="w-full min-h-20 px-4 py-2.5 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
+                  className="w-full min-h-20 px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-sm resize-y placeholder:text-surface-400"
                 />
                 <ActionButton onClick={handleGenerateAiDetails} disabled={isGeneratingAi}>
                   {isGeneratingAi ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Zap className="w-4 h-4" />}
@@ -3645,7 +3696,7 @@ function AdminInner() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
+                <div className="rounded-3xl border border-white/80 bg-white/60 p-5 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06]">
                   <div className="mb-4 flex flex-col gap-3">
                     <label className="text-xs font-bold uppercase tracking-wider text-surface-500">Schema Type</label>
                     <select
@@ -3661,7 +3712,7 @@ function AdminInner() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
+                <div className="rounded-3xl border border-white/80 bg-white/60 p-5 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06]">
                   <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h4 className="text-sm font-bold">FAQs</h4>
@@ -3705,7 +3756,7 @@ function AdminInner() {
                       {faqs.map((faq, index) => {
                         const duplicate = faq.question.trim() && faqs.some((item, itemIndex) => itemIndex !== index && item.question.trim().toLowerCase() === faq.question.trim().toLowerCase());
                         return (
-                          <div key={index} className="rounded-xl border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/50">
+                          <div key={index} className="rounded-2xl border border-white/70 bg-white/40 p-3.5 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]">
                             <div className="mb-2 flex items-center justify-between gap-3">
                               <span className="text-xs font-black uppercase tracking-wide text-surface-400">FAQ #{index + 1}</span>
                               <button
@@ -3754,7 +3805,7 @@ function AdminInner() {
                         setTitle(e.target.value);
                         if (!editingPost) setSlug(slugify(e.target.value));
                       }}
-                      className="resize-y w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className="resize-y w-full px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-sm placeholder:text-surface-400"
                       placeholder="Enter post title..."
                     />
                     <CharCount value={title} recommended={60} />
@@ -3764,7 +3815,7 @@ function AdminInner() {
                     <input
                       value={slug}
                       onChange={e => setSlug(slugify(e.target.value))}
-                      className="w-full px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-sm placeholder:text-surface-400"
                       placeholder="beautiful-modern-landscape"
                     />
                   </div>
@@ -3784,7 +3835,7 @@ function AdminInner() {
                     value={description}
                     onChange={e => setDescription(e.target.value)}
                     rows={3}
-                    className="w-full min-h-[96px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
+                    className="w-full min-h-[96px] px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-sm resize-y placeholder:text-surface-400"
                     placeholder="Describe this prompt collection..."
                   />
                   <CharCount value={description} recommended={160} />
@@ -3796,19 +3847,19 @@ function AdminInner() {
                     <input
                       value={thumbnailUrl}
                       onChange={e => setThumbnailUrl(e.target.value)}
-                      className="flex-1 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm min-w-0"
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-sm min-w-0 placeholder:text-surface-400"
                       placeholder="https://..."
                     />
                     <div className="flex gap-2 shrink-0">
                       <button 
                         type="button" 
                         onClick={() => setMediaLibraryCallback(() => setThumbnailUrl)}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] cursor-pointer hover:border-primary-500 transition-colors shrink-0"
                       >
                         <ImageIcon className="w-4 h-4 text-surface-400 shrink-0" />
                         <span className="text-sm">Library</span>
                       </button>
-                      <label className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0">
+                      <label className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] cursor-pointer hover:border-primary-500 transition-colors shrink-0">
                         <Upload className="w-4 h-4 text-surface-400 shrink-0" />
                         <span className="text-sm">Upload</span>
                       <input
@@ -3834,7 +3885,7 @@ function AdminInner() {
                     </div>
                   </div>
                   {thumbnailUrl && !thumbnailUrl.startsWith('Uploading') && (
-                    <div className="mt-2 w-32 h-32 relative rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700 group">
+                    <div className="mt-2 w-32 h-32 relative rounded-xl overflow-hidden border border-black/10 dark:border-white/10 group shadow-sm">
                       <Image src={thumbnailUrl} alt="Thumbnail preview" fill className="object-cover" unoptimized />
                       <button
                         type="button"
@@ -3851,7 +3902,7 @@ function AdminInner() {
                 <div>
                   <label className="block text-sm font-medium mb-1.5">Reference Images (Optional)</label>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <label className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 cursor-pointer hover:border-primary-500 transition-colors shrink-0">
+                    <label className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] cursor-pointer hover:border-primary-500 transition-colors shrink-0">
                       <Upload className="w-4 h-4 text-surface-400 shrink-0" />
                       <span className="text-sm">Upload Reference Images</span>
                       <input
@@ -3885,9 +3936,9 @@ function AdminInner() {
                   {referenceImages.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {referenceImages.map((url, idx) => (
-                        <div key={idx} className="w-32 h-32 relative rounded-lg overflow-hidden border border-surface-200 dark:border-surface-700 group">
+                        <div key={idx} className="w-32 h-32 relative rounded-xl overflow-hidden border border-black/10 dark:border-white/10 group shadow-sm">
                           {url === 'Uploading...' ? (
-                            <div className="w-full h-full flex items-center justify-center bg-surface-100 dark:bg-surface-800 text-xs">Uploading...</div>
+                            <div className="w-full h-full flex items-center justify-center bg-surface-100 dark:bg-white/[0.05] text-xs">Uploading...</div>
                           ) : (
                             <>
                               <Image src={url} alt={`Reference ${idx + 1}`} fill className="object-cover" unoptimized />
@@ -3908,8 +3959,8 @@ function AdminInner() {
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900 sm:p-4">
-                  <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="rounded-3xl border border-white/80 bg-white/60 p-5 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06] space-y-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <label className="text-sm font-medium">Extended Description / Content (Optional, useful for AdSense)</label>
                     <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                       <WandButton
@@ -3918,18 +3969,18 @@ function AdminInner() {
                         onChange={setExtendedDescription}
                         prompt={() => postPrompts.extendedDescription(title)}
                       />
-                      <div className="grid grid-cols-2 rounded-xl bg-surface-100 p-1 text-xs font-semibold dark:bg-surface-800">
+                      <div className="grid grid-cols-2 rounded-xl bg-black/[0.04] p-1 text-xs font-semibold dark:bg-white/[0.06]">
                         <button
                           type="button"
                           onClick={() => setMarkdownMode('edit')}
-                          className={`rounded-lg px-3 py-1.5 transition-colors ${markdownMode === 'edit' ? 'bg-white text-surface-900 dark:bg-surface-950 dark:text-white' : 'text-surface-500'}`}
+                          className={`rounded-lg px-3 py-1.5 transition-colors ${markdownMode === 'edit' ? 'bg-white text-surface-900 shadow-sm dark:bg-white/10 dark:text-white' : 'text-surface-500'}`}
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => setMarkdownMode('preview')}
-                          className={`rounded-lg px-3 py-1.5 transition-colors ${markdownMode === 'preview' ? 'bg-white text-surface-900 dark:bg-surface-950 dark:text-white' : 'text-surface-500'}`}
+                          className={`rounded-lg px-3 py-1.5 transition-colors ${markdownMode === 'preview' ? 'bg-white text-surface-900 shadow-sm dark:bg-white/10 dark:text-white' : 'text-surface-500'}`}
                         >
                           Preview
                         </button>
@@ -3937,7 +3988,7 @@ function AdminInner() {
                       <button
                         type="button"
                         onClick={() => setShowMarkdownHelp(prev => !prev)}
-                        className="inline-flex items-center gap-2 rounded-xl border border-surface-200 px-3 py-2 text-xs font-bold text-surface-600 transition-colors hover:border-primary-400 hover:text-primary-600 dark:border-surface-700 dark:text-surface-300"
+                        className="inline-flex items-center gap-2 rounded-xl border border-black/[0.08] dark:border-white/10 px-3 py-2 text-xs font-bold text-surface-600 transition-colors hover:border-primary-400 hover:text-primary-600 dark:text-surface-300"
                       >
                         <Info className="h-3.5 w-3.5" />
                         Formatting
@@ -3946,8 +3997,8 @@ function AdminInner() {
                   </div>
 
                   {showMarkdownHelp && (
-                    <div className="mb-3 grid grid-cols-1 gap-3 rounded-xl border border-primary-200 bg-primary-50/60 p-3 text-xs dark:border-primary-800/40 dark:bg-primary-950/20 md:grid-cols-2">
-                      <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg bg-surface-950 p-3 font-mono text-[11px] leading-relaxed text-surface-50">{MARKDOWN_HELP_EXAMPLE}</pre>
+                    <div className="mb-3 grid grid-cols-1 gap-3 rounded-2xl border border-primary-500/25 bg-primary-500/10 p-4 text-xs dark:border-primary-400/20 dark:bg-primary-500/[0.08] backdrop-blur-md md:grid-cols-2">
+                      <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-xl bg-surface-950 p-3 font-mono text-[11px] leading-relaxed text-surface-50">{MARKDOWN_HELP_EXAMPLE}</pre>
                       <div className="prose prose-sm max-w-none dark:prose-invert">
                         <MarkdownRenderer>{MARKDOWN_HELP_EXAMPLE}</MarkdownRenderer>
                       </div>
@@ -3959,11 +4010,11 @@ function AdminInner() {
                       value={extendedDescription}
                       onChange={e => setExtendedDescription(e.target.value)}
                       rows={8}
-                      className="w-full min-h-[240px] resize-y rounded-xl border border-surface-200 bg-surface-50 px-4 py-3 font-mono text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800"
+                      className="w-full min-h-[240px] resize-y rounded-2xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] px-4 py-3 font-mono text-sm outline-none focus:border-primary-500"
                       placeholder="Write a longer article or detailed description here to display at the bottom of the post page..."
                     />
                   ) : (
-                    <div className="min-h-[240px] rounded-xl border border-surface-200 bg-surface-50 p-4 dark:border-surface-700 dark:bg-surface-950 sm:p-6">
+                    <div className="min-h-[240px] rounded-2xl border border-black/[0.06] bg-white/40 dark:border-white/10 dark:bg-white/[0.04] p-4 sm:p-6">
                       {extendedDescription.trim() ? (
                         <div className="prose prose-sm max-w-none dark:prose-invert sm:prose-base prose-p:text-surface-600 dark:prose-p:text-surface-300 prose-li:text-surface-600 dark:prose-li:text-surface-300">
                           <MarkdownRenderer>{extendedDescription}</MarkdownRenderer>
@@ -3990,7 +4041,7 @@ function AdminInner() {
                       value={seoTitle}
                       onChange={e => setSeoTitle(e.target.value)}
                       rows={2}
-                      className="w-full min-h-[72px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
+                      className="w-full min-h-[72px] px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-sm resize-y placeholder:text-surface-400"
                       placeholder="Title for Google search..."
                     />
                     <CharCount value={seoTitle} recommended={60} />
@@ -4009,7 +4060,7 @@ function AdminInner() {
                       value={seoDescription}
                       onChange={e => setSeoDescription(e.target.value)}
                       rows={3}
-                      className="w-full min-h-[96px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
+                      className="w-full min-h-[96px] px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-sm resize-y placeholder:text-surface-400"
                       placeholder="Short snippet for search results..."
                     />
                     <CharCount value={seoDescription} recommended={160} />
@@ -4031,7 +4082,7 @@ function AdminInner() {
                       value={tagsStr}
                       onChange={e => setTagsStr(e.target.value)}
                       rows={2}
-                      className="w-full min-h-[72px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
+                      className="w-full min-h-[72px] px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-sm resize-y placeholder:text-surface-400"
                       placeholder="fantasy, landscape, magical"
                     />
                   </div>
@@ -4049,7 +4100,7 @@ function AdminInner() {
                       value={categoriesStr}
                       onChange={e => setCategoriesStr(e.target.value)}
                       rows={2}
-                      className="w-full min-h-[72px] px-4 py-2.5 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-sm resize-y"
+                      className="w-full min-h-[72px] px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-sm resize-y placeholder:text-surface-400"
                       placeholder="e.g. UI, Characters"
                     />
                   </div>
@@ -4059,7 +4110,7 @@ function AdminInner() {
                   <label className="block text-sm font-medium mb-1.5">AI Tools</label>
                   <div className="flex flex-wrap gap-3">
                     {(settings.aiTools || []).map(tool => (
-                      <label key={tool} className="flex items-center gap-2 cursor-pointer bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 px-3 py-2 rounded-xl text-sm">
+                      <label key={tool} className="flex items-center gap-2 cursor-pointer border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] px-3.5 py-2 rounded-xl text-sm transition-all hover:bg-white dark:hover:bg-white/10 shadow-sm">
                         <input
                           type="checkbox"
                           checked={selectedAiTools.includes(tool)}
@@ -4076,7 +4127,7 @@ function AdminInner() {
                 </div>
 
                 {/* Featured checkbox */}
-                <div className="p-4 rounded-xl border border-yellow-200 dark:border-yellow-800 bg-yellow-50/50 dark:bg-yellow-900/10">
+                <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 dark:border-amber-400/20 dark:bg-amber-500/[0.08] backdrop-blur-xl shadow-sm">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
@@ -4095,7 +4146,7 @@ function AdminInner() {
 
                 {/* Section Assignment */}
                 {customSections.length > 0 && (
-                  <div className="p-4 rounded-xl border border-primary-200 dark:border-primary-800 bg-primary-50/30 dark:bg-primary-900/10">
+                  <div className="p-4 rounded-2xl border border-primary-500/30 bg-primary-500/10 dark:border-primary-400/20 dark:bg-primary-500/[0.08] backdrop-blur-xl shadow-sm">
                     <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
                       <Layers className="w-4 h-4 text-primary-500" />
                       Add to Custom Sections
@@ -4105,10 +4156,10 @@ function AdminInner() {
                       {customSections.map(section => (
                         <label
                           key={section.id}
-                          className={`flex items-center gap-2.5 p-2.5 rounded-lg cursor-pointer transition-all border ${
+                          className={`flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all border ${
                             assignedSections.includes(section.id)
-                              ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700'
-                              : 'bg-white dark:bg-surface-900 border-surface-200 dark:border-surface-700 hover:border-primary-300'
+                              ? 'bg-primary-500/15 border-primary-500/40 text-primary-900 dark:text-primary-100 shadow-sm'
+                              : 'bg-white/60 dark:bg-white/[0.04] border-black/[0.08] dark:border-white/10 hover:border-primary-500/40'
                           }`}
                         >
                           <input
@@ -4135,7 +4186,7 @@ function AdminInner() {
                     </label>
                     <button
                       onClick={addImageField}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 text-xs font-medium hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-500/10 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400 text-xs font-bold hover:bg-primary-500/20 transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" /> Add Image
                     </button>
@@ -4143,7 +4194,7 @@ function AdminInner() {
 
                   <div className="space-y-4">
                     {images.map((img, idx) => (
-                      <div key={img.id} className="p-4 rounded-xl border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50">
+                      <div key={img.id} className="p-5 rounded-2xl border border-white/80 dark:border-white/10 bg-white/50 dark:bg-white/[0.05] backdrop-blur-md shadow-sm space-y-3">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-xs font-semibold text-surface-400 flex items-center gap-1.5">
                             <ImageIcon className="w-3 h-3" /> Image #{idx + 1}
@@ -4166,18 +4217,18 @@ function AdminInner() {
                                     addPromptImageUrl(idx, img.url);
                                   }
                                 }}
-                                className="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs"
+                                className="flex-1 px-3 py-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-xs"
                                 placeholder="https://... (Press Enter to add)"
                               />
                               <button 
                                 type="button" 
                                 onClick={() => setMediaLibraryCallback(() => (url: string) => addPromptImageUrl(idx, url))}
-                                className="p-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 cursor-pointer hover:border-primary-500 transition-colors shrink-0"
+                                className="p-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] cursor-pointer hover:border-primary-500 transition-colors shrink-0"
                                 title="Choose from Library"
                               >
                                 <ImageIcon className="w-3.5 h-3.5 text-surface-400" />
                               </button>
-                              <label className="p-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 cursor-pointer hover:border-primary-500 transition-colors shrink-0 flex items-center gap-1">
+                              <label className="p-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] cursor-pointer hover:border-primary-500 transition-colors shrink-0 flex items-center gap-1">
                                 <Upload className="w-3.5 h-3.5 text-surface-400" />
                                 <input
                                   type="file"
@@ -4199,7 +4250,7 @@ function AdminInner() {
                                 {(settings.aiTools || []).map(tool => {
                                   const isSelected = img.aiTools ? img.aiTools.includes(tool) : img.aiTool === tool;
                                   return (
-                                    <label key={tool} className="flex items-center gap-1.5 cursor-pointer bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 px-2 py-1.5 rounded text-xs">
+                                    <label key={tool} className="flex items-center gap-1.5 cursor-pointer border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] px-2.5 py-1.5 rounded-xl text-xs hover:bg-white dark:hover:bg-white/10 transition-colors">
                                       <input
                                         type="checkbox"
                                         checked={isSelected}
@@ -4227,7 +4278,7 @@ function AdminInner() {
                                 <select
                                   value={getModelSelectValue(img.model)}
                                   onChange={e => handleModelSelect(idx, img, e.target.value)}
-                                  className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-600 dark:bg-surface-900"
+                                  className="w-full rounded-xl border border-black/[0.08] bg-white/80 px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-white/10 dark:bg-white/[0.06]"
                                 >
                                   <option value={AUTO_MODEL_VALUE}>Auto default</option>
                                   {DEFAULT_MODEL_OPTIONS.map(model => (
@@ -4240,7 +4291,7 @@ function AdminInner() {
                                     value={img.model || ''}
                                     onChange={e => updateImage(idx, 'model', e.target.value)}
                                     placeholder="Custom model"
-                                    className="w-full rounded-lg border border-surface-200 bg-white px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-surface-600 dark:bg-surface-900"
+                                    className="w-full rounded-xl border border-black/[0.08] bg-white/80 px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-white/10 dark:bg-white/[0.06]"
                                   />
                                 )}
                               </div>
@@ -4254,7 +4305,7 @@ function AdminInner() {
                             value={img.prompt}
                             onChange={e => updateImage(idx, 'prompt', e.target.value)}
                             rows={2}
-                            className="w-full min-h-[80px] px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-600 outline-none focus:border-primary-500 text-xs resize-y"
+                            className="w-full min-h-[80px] px-3.5 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-xs resize-y placeholder:text-surface-400"
                             placeholder="Enter the AI prompt..."
                           />
                         </div>
@@ -4352,7 +4403,7 @@ function AdminInner() {
             )}
           />
 
-          <div className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900">
+          <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-4 backdrop-blur-xl shadow-sm">
             <div className="flex flex-wrap gap-2.5">
               {([
                 ['all', 'All Articles'],
@@ -4365,8 +4416,8 @@ function AdminInner() {
                   onClick={() => setArticleManagerFilter(filter)}
                   className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
                     articleManagerFilter === filter
-                      ? 'bg-primary-500 text-white'
-                      : 'border border-surface-200 bg-transparent text-surface-600 hover:bg-surface-50 hover:text-surface-900 dark:border-surface-800 dark:text-surface-400 dark:hover:bg-surface-800 dark:hover:text-surface-100'
+                      ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20'
+                      : 'border border-black/[0.08] dark:border-white/10 bg-white/50 dark:bg-white/[0.04] text-surface-600 hover:bg-white/80 hover:text-surface-900 dark:text-surface-300 dark:hover:bg-white/[0.08] dark:hover:text-white'
                   }`}
                 >
                   {label}
@@ -4375,9 +4426,9 @@ function AdminInner() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-            <div className="rounded-2xl border border-surface-200 bg-white p-3 dark:border-surface-800 dark:bg-surface-900">
-              <div className="max-h-[72vh] space-y-2 overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_minmax(0,1fr)] items-start">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-3 backdrop-blur-xl shadow-sm xl:sticky xl:top-20 self-start">
+              <div className="max-h-[calc(100vh-7.5rem)] space-y-2 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {filteredManagedArticles.map(article => {
                   const active = selectedArticle?.slug === article.slug;
                   const isCustom = customArticles.some(item => item.slug === article.slug);
@@ -4386,14 +4437,14 @@ function AdminInner() {
                     <button
                       key={article.slug}
                       onClick={() => setSelectedArticleSlug(article.slug)}
-                      className={`w-full rounded-xl border p-3 text-left transition ${active ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10' : 'border-surface-200 hover:border-primary-300 hover:bg-surface-50 dark:border-surface-800 dark:hover:bg-surface-800/60'}`}
+                      className={`w-full rounded-2xl border p-3 text-left transition ${active ? 'border-primary-500/60 bg-primary-500/10 dark:bg-primary-500/15 shadow-sm' : 'border-black/[0.06] dark:border-white/10 bg-white/40 dark:bg-white/[0.03] hover:border-primary-500/30 hover:bg-white/70 dark:hover:bg-white/[0.07]'}`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="line-clamp-2 text-sm font-black text-surface-950 dark:text-white">{article.title}</p>
                           <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-surface-400">{article.category} · {article.readMinutes} min</p>
                         </div>
-                        <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black ${isCustom ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : isEdited ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300' : 'bg-surface-100 text-surface-500 dark:bg-surface-800'}`}>
+                        <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black ${isCustom ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20' : isEdited ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20' : 'bg-surface-100 text-surface-500 dark:bg-white/[0.08] dark:text-surface-400'}`}>
                           {isCustom ? 'Custom' : isEdited ? 'Edited' : 'Default'}
                         </span>
                       </div>
@@ -4401,7 +4452,7 @@ function AdminInner() {
                   );
                 })}
                 {filteredManagedArticles.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-surface-300 p-4 text-center text-xs font-semibold text-surface-500 dark:border-surface-700">
+                  <div className="rounded-2xl border border-dashed border-black/10 dark:border-white/10 p-4 text-center text-xs font-semibold text-surface-500">
                     No {articleManagerFilter === 'all' ? 'articles' : articleManagerFilter === 'blog' ? 'blogs' : 'guides'} yet.
                   </div>
                 )}
@@ -4410,31 +4461,31 @@ function AdminInner() {
 
             {selectedArticle && (
               <div className="space-y-5">
-                <div className="rounded-2xl border border-primary-200 bg-primary-50 p-5 space-y-4 dark:border-primary-800/30 dark:bg-primary-900/10">
+                <div className="rounded-3xl border border-primary-500/30 bg-primary-500/10 dark:bg-primary-500/[0.08] p-5 space-y-4 backdrop-blur-xl shadow-sm">
                   <div className="flex items-center gap-2 font-medium text-primary-600 dark:text-primary-400">
                     <Zap className="h-5 w-5" />
-                    <h3>Auto-Generate Article with AI</h3>
+                    <h3 className="font-bold text-surface-950 dark:text-white">Auto-Generate Article with AI</h3>
                   </div>
-                  <p className="text-sm text-surface-600 dark:text-surface-400">
+                  <p className="text-sm text-surface-600 dark:text-surface-300">
                     Set a working title above (or describe the article below) and the AI writes the title, description, tags, and full body in your site&apos;s style. Mention a specific field (e.g. &quot;rewrite the body&quot;) to regenerate only that field.
                   </p>
                   <textarea
                     value={articleAiInstruction}
                     onChange={e => setArticleAiInstruction(e.target.value)}
                     placeholder="(Optional) E.g., 'A beginner guide to negative prompts in ChatGPT', 'Keep it under 1000 words', 'Only rewrite the body', etc."
-                    className="w-full min-h-20 resize-y rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                    className="w-full min-h-20 resize-y rounded-2xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-white/[0.05] px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:text-white backdrop-blur-md"
                   />
                   <ActionButton onClick={handleGenerateArticleDetails} disabled={isGeneratingArticleAi}>
                     {isGeneratingArticleAi ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Zap className="h-4 w-4" />}
                     {isGeneratingArticleAi ? 'Generating article...' : 'Generate article'}
                   </ActionButton>
                 </div>
-                <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
+                <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-5 backdrop-blur-xl shadow-sm">
                   <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <label className="space-y-1 sm:col-span-2">
                         <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Title</span>
-                        <textarea rows={2} value={selectedArticle.title} onChange={e => updateManagedArticle(selectedArticle.slug, { title: e.target.value })} className="resize-y w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800" />
+                        <textarea rows={2} value={selectedArticle.title} onChange={e => updateManagedArticle(selectedArticle.slug, { title: e.target.value })} className="resize-y w-full rounded-2xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-white/[0.05] px-3 py-2 text-sm outline-none focus:border-primary-500 dark:text-white backdrop-blur-md" />
                         <CharCount value={selectedArticle.title} recommended={60} />
                       </label>
                       <label className="space-y-1">
@@ -4477,7 +4528,7 @@ function AdminInner() {
                       <label className="space-y-1">
                         <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Thumbnail URL</span>
                         <input value={selectedArticle.thumbnailUrl || ''} onChange={e => updateManagedArticle(selectedArticle.slug, { thumbnailUrl: e.target.value })} className={adminInputOnCard} placeholder="https://..." />
-                        <label className="mt-2 inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-primary-300 bg-primary-50 px-3 text-xs font-bold text-primary-600 hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-500/10 dark:text-primary-300">
+                        <label className="mt-2 inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-primary-500/40 bg-primary-500/10 px-3 text-xs font-bold text-primary-600 hover:bg-primary-500/20 dark:text-primary-300">
                           <Upload className="h-3.5 w-3.5" /> Upload thumbnail
                           <input
                             type="file"
@@ -4499,7 +4550,7 @@ function AdminInner() {
                         <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Publish date</span>
                         <input type="date" value={selectedArticle.datePublished} onChange={e => updateManagedArticle(selectedArticle.slug, { datePublished: e.target.value })} className={adminInputOnCard} />
                       </label>
-                      <label className="flex items-center gap-2 rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm font-bold dark:border-surface-700 dark:bg-surface-800">
+                      <label className="flex items-center gap-2 rounded-2xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-white/[0.05] px-3 py-2 text-sm font-bold dark:text-white backdrop-blur-md">
                         <input type="checkbox" checked={Boolean(selectedArticle.featured)} onChange={e => updateManagedArticle(selectedArticle.slug, { featured: e.target.checked })} className="h-4 w-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500" />
                         Featured article
                       </label>
@@ -4510,14 +4561,14 @@ function AdminInner() {
                     <div>
                       <p className="mb-2 text-xs font-bold uppercase tracking-wide text-surface-500">Thumbnail preview</p>
                       <ArticleThumbnail article={selectedArticle} />
-                      <button type="button" onClick={() => resetManagedArticle(selectedArticle.slug)} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-300">
+                      <button type="button" onClick={() => resetManagedArticle(selectedArticle.slug)} className="mt-3 inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-500/20 dark:text-red-300">
                         <RotateCcw className="h-4 w-4" /> {selectedArticleIsCustom ? 'Delete custom article' : 'Reset overrides'}
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900">
+                <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-5 backdrop-blur-xl shadow-sm">
                   <label className="space-y-2 block">
                     <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Article body markdown</span>
                     <textarea value={selectedArticle.body} onChange={e => updateManagedArticle(selectedArticle.slug, { body: e.target.value })} rows={22} className={`${adminInputOnCard} resize-y font-mono leading-6`} />
@@ -4526,14 +4577,14 @@ function AdminInner() {
               </div>
             )}
             {!selectedArticle && (
-              <div className="flex min-h-[420px] items-center justify-center rounded-2xl border border-dashed border-surface-300 bg-white p-6 text-center dark:border-surface-700 dark:bg-surface-900">
+              <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-dashed border-black/15 dark:border-white/15 bg-white/60 dark:bg-white/[0.06] p-6 text-center backdrop-blur-xl shadow-sm">
                 <div className="max-w-sm">
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-500 dark:bg-primary-500/10">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-500/15 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400">
                     <BookOpen className="h-6 w-6" />
                   </div>
                   <h3 className="mt-4 text-lg font-black text-surface-950 dark:text-white">Choose an article to edit</h3>
                   <p className="mt-2 text-sm leading-6 text-surface-500">Select a blog or guide from the list, or add a new one. The editor stays closed until you choose something.</p>
-                  <button onClick={addManagedArticle} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-primary-600">
+                  <button onClick={addManagedArticle} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-primary-600 shadow-md shadow-primary-500/20 transition-all">
                     <Plus className="h-4 w-4" /> Add Article
                   </button>
                 </div>
@@ -4567,9 +4618,9 @@ function AdminInner() {
             )}
           />
 
-          {/* Sub-tab container card matching screenshot */}
-          <div className="border border-surface-200 dark:border-surface-800 rounded-2xl p-4 bg-white dark:bg-surface-900">
-            <div className="flex flex-wrap gap-2.5">
+          {/* Sub-tab container card matching frosted glass design */}
+          <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-4 backdrop-blur-xl backdrop-saturate-[120%] shadow-sm">
+            <div className="flex flex-wrap gap-2">
               {[
                 { id: 'homepage', label: 'Homepage' },
                 { id: 'header', label: 'Header menu' },
@@ -4579,10 +4630,10 @@ function AdminInner() {
                 <button
                   key={item.id}
                   onClick={() => setSectionLocationFilter(item.id as SectionLocationFilter)}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     sectionLocationFilter === item.id
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-transparent text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:bg-surface-50 dark:hover:bg-surface-800 border border-surface-200 dark:border-surface-800'
+                      ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25'
+                      : 'text-surface-600 dark:text-surface-300 hover:bg-white/80 dark:hover:bg-white/[0.08]'
                   }`}
                 >
                   {item.label}
@@ -4593,7 +4644,7 @@ function AdminInner() {
 
           {/* Add new section form (Shown only when toggled) */}
           {showNewSectionForm && (
-            <div id="add-section-form" className="p-5 rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 space-y-6 animate-in slide-in-from-top-2 duration-200">
+            <div id="add-section-form" className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-6 shadow-sm backdrop-blur-xl backdrop-saturate-[120%] space-y-6 animate-in slide-in-from-top-2 duration-200">
               <PanelHeader
                 title="Create new section"
                 subtitle="Configure your custom layout block, tag rail, or category filter."
@@ -4713,14 +4764,8 @@ function AdminInner() {
                       className={adminInput}
                     >
                       <option value="">Use global card style</option>
-                      <option value="v1">v1 - Hover Overlay</option>
-                      <option value="v2">v2 - Floating Image with Border</option>
-                      <option value="v3">v3 - Compact Editorial</option>
-                      <option value="v4">v4 - Social Card</option>
-                      <option value="v5">v5 - Brutalist</option>
-                      <option value="v6">v6 - Gradient Overlay</option>
-                      <option value="v7">v7 - Polaroid</option>
-                      <option value="v8">v8 - Glass Panel</option>
+                      <option value="v2">v2 - Glass Frame (default)</option>
+                      <option value="v1">v1 - Flat Hover Overlay</option>
                     </select>
                     <p className="text-[11px] text-surface-400 mt-1">
                       {newSectionCardStyle ? 'This section will ignore the global card style.' : `Using global card style: ${cardStyleName(cardStyle)}`}
@@ -4905,14 +4950,14 @@ function AdminInner() {
                                 className={adminInput}
                               >
                                 <option value="">Use global card style</option>
-                                <option value="v1">v1 Hover Overlay</option>
-                                <option value="v2">v2 Floating Image with Border</option>
-                                <option value="v3">v3 Compact Editorial</option>
-                                <option value="v4">v4 Social Card</option>
-                                <option value="v5">v5 Brutalist</option>
-                                <option value="v6">v6 Gradient Overlay</option>
-                                <option value="v7">v7 Polaroid</option>
-                                <option value="v8">v8 Glass Panel</option>
+                                <option value="v2">v2 Glass Frame (default)</option>
+                                <option value="v1">v1 Flat Hover Overlay</option>
+                                
+                                
+                                
+                                
+                                
+                                
                               </select>
                               <p className="text-[11px] text-surface-400 mt-1">Override default grid styling</p>
                             </Field>
@@ -5382,9 +5427,9 @@ function AdminInner() {
           <div className="grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)] gap-8 items-start">
 
             {/* Settings navigation: horizontal chips on mobile, sticky sidebar on desktop. */}
-            <div className="min-w-0 rounded-2xl border border-surface-200 bg-white p-2 dark:border-surface-800 dark:bg-surface-900 lg:sticky lg:top-6 lg:p-4">
-              <h3 className="mb-3 hidden px-3 text-xs font-mono uppercase tracking-widest text-surface-400 dark:text-surface-500 lg:block">Settings Categories</h3>
-              <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] [&::-webkit-scrollbar]:hidden lg:block lg:space-y-1 lg:overflow-visible lg:pb-0 lg:[mask-image:none]">
+            <div className="min-w-0 rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-2.5 backdrop-blur-xl shadow-sm lg:sticky lg:top-20 self-start lg:p-3.5 max-h-[calc(100vh-6rem)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <h3 className="mb-2.5 hidden px-3 text-[10px] font-mono font-bold uppercase tracking-widest text-surface-400 dark:text-surface-500 lg:block">Settings Categories</h3>
+              <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
                 {[
                   { id: 'general', label: 'General', icon: <Settings className="w-4 h-4" /> },
                   { id: 'homepage', label: 'Homepage Blocks', icon: <Layers className="w-4 h-4" /> },
@@ -5402,10 +5447,10 @@ function AdminInner() {
                     <button
                       key={cat.id}
                       onClick={() => setSettingsSubTab(cat.id as any)}
-                      className={`flex w-auto shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all lg:w-full lg:gap-3 lg:text-sm ${
+                      className={`flex w-auto shrink-0 items-center gap-2.5 rounded-2xl px-3.5 py-2.5 text-xs font-medium transition-all lg:w-full lg:text-xs ${
                         isActive
-                          ? 'bg-primary-500 text-white shadow-primary-500/10'
-                          : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900 dark:text-surface-400 dark:hover:bg-surface-800/50 dark:hover:text-surface-100'
+                          ? 'bg-primary-600 text-white shadow-md shadow-primary-500/25 font-bold'
+                          : 'text-surface-600 hover:text-surface-950 dark:text-surface-400 dark:hover:text-surface-100 hover:bg-white/80 dark:hover:bg-white/[0.08]'
                       }`}
                     >
                       <span className={isActive ? 'text-white' : 'text-surface-400 dark:text-surface-500'}>
@@ -5576,39 +5621,16 @@ function AdminInner() {
                 </div>
               </div>
               <SectionEyebrow>3. Homepage appearance</SectionEyebrow>
-              <div className="flex flex-wrap gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={heroEnabled}
-                    onChange={e => setHeroEnabled(e.target.checked)}
-                    className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                  />
-                  <span className="text-xs font-bold text-surface-700 dark:text-surface-300">Show hero slideshow</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={heroAutoPlay}
-                    onChange={e => setHeroAutoPlay(e.target.checked)}
-                    className="w-4 h-4 rounded border-surface-300 text-primary-500 focus:ring-primary-500"
-                  />
-                  <span className="text-xs font-bold text-surface-700 dark:text-surface-300">Hero auto-play</span>
-                </label>
-              </div>
-              <div className="mt-3">
-                <label className={adminLabel}>Hero style</label>
-                <select
-                  value={heroStyle}
-                  onChange={e => setHeroStyle(e.target.value as any)}
-                  className={`${adminInput} sm:w-1/2`}
-                >
-                  <option value="v1">Default: Classic Slider</option>
-                  <option value="v9">Library Landing</option>
-                  <option value="v3">Current: Diagonal Cards</option>
-                  <option value="v4">Bento Feature Grid</option>
-                  <option value="v8">Cinematic Edge</option>
-                </select>
+              <div className="rounded-xl border border-surface-200 p-3 dark:border-surface-800">
+                <Toggle
+                  checked={features.showAnimatedBackground ?? true}
+                  onChange={(checked) => setFeatures(prev => ({ ...prev, showAnimatedBackground: checked }))}
+                  label="Animated glass background"
+                />
+                <p className="mt-1 text-xs text-surface-500">
+                  Site-wide frosted canvas behind every page: drifting grid, glow orbs and a
+                  desktop cursor spotlight. Off keeps the flat white / dark surfaces.
+                </p>
               </div>
               <div className="mt-3">
                 <label className={adminLabel}>Post hero style</label>
@@ -5632,14 +5654,8 @@ function AdminInner() {
                       onChange={e => setCardStyle(e.target.value as any)}
                       className={adminInput}
                     >
-                      <option value="v1">v1 - Hover Overlay</option>
-                      <option value="v2">v2 - Floating Image with Border</option>
-                      <option value="v3">v3 - Compact Editorial</option>
-                      <option value="v4">v4 - Social Card</option>
-                      <option value="v5">v5 - Brutalist</option>
-                      <option value="v6">v6 - Gradient Overlay</option>
-                      <option value="v7">v7 - Polaroid</option>
-                      <option value="v8">v8 - Glass Panel</option>
+                      <option value="v2">v2 - Glass Frame (default)</option>
+                      <option value="v1">v1 - Flat Hover Overlay</option>
                     </select>
                   </div>
                   <div>
@@ -6464,41 +6480,90 @@ function AdminInner() {
                   ))}
                 </div>
 
-                {/* Visual style cards */}
+                {/* Landing-hero copy. Every field is optional — blank falls
+                    back to the built-in default, so clearing one restores the
+                    shipped wording rather than emptying the hero. */}
                 <div>
-                  <span className="block text-xs font-bold uppercase tracking-wider text-surface-400 mb-3">Choose Hero Visual Style</span>
+                  <span className="mb-3 block text-xs font-bold uppercase tracking-wider text-surface-400">Landing Hero Copy</span>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {[
-                      { value: 'v3', label: 'Diagonal Cards (Current)', desc: 'Overlapping responsive perspective layout with quick action tabs' },
-                      { value: 'v1', label: 'Classic Slider', desc: 'Minimal swiper carousel showcasing standard prompt cards' },
-                      { value: 'v4', label: 'Bento Feature Grid', desc: 'Modern asymmetrical visual grid of featured items and sections' },
-                      { value: 'v8', label: 'Cinematic Edge', desc: 'Wide-angle immersive header with floating cards and subtle gradients' },
-                      { value: 'v9', label: 'Library Landing', desc: 'Compact content-focused launchpad layout for fast exploration' },
-                    ].map((styleOpt) => {
-                      const isSelected = heroStyle === styleOpt.value;
-                      return (
-                        <button
-                          key={styleOpt.value}
-                          type="button"
-                          onClick={() => setHeroStyle(styleOpt.value as any)}
-                          className={`flex flex-col items-start rounded-xl border p-4 text-left transition-all ${
-                            isSelected
-                              ? 'border-primary-500 bg-primary-500/5 ring-1 ring-primary-500 dark:border-primary-400 dark:bg-primary-500/10'
-                              : 'border-surface-200 bg-white hover:border-primary-300 dark:border-surface-800 dark:bg-surface-900 dark:hover:border-surface-700'
-                          }`}
-                        >
-                          <div className="flex w-full items-center justify-between">
-                            <span className="text-sm font-bold text-surface-900 dark:text-white">{styleOpt.label}</span>
-                            {isSelected && (
-                              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-white dark:bg-primary-400 dark:text-surface-950">
-                                <Check className="w-3.5 h-3.5 font-bold" />
-                              </span>
-                            )}
-                          </div>
-                          <p className="mt-1.5 text-xs text-surface-500 dark:text-surface-400 leading-relaxed">{styleOpt.desc}</p>
-                        </button>
-                      );
-                    })}
+                    {([
+                      { key: 'title', label: 'Hero title', placeholder: 'Better Image Prompts Start Here', hint: 'The accent pattern below gradients the first matching phrase.', span: true },
+                      { key: 'subtitle', label: 'Hero subtitle', placeholder: 'Discover tested prompts for ChatGPT, Gemini, Grok, Qwen, and other image tools.', hint: 'One or two lines under the headline.', span: true },
+                      { key: 'kickerPrefix', label: 'Kicker prefix', placeholder: 'Curated prompts for', hint: 'The tool names are appended automatically.' },
+                      { key: 'accentPattern', label: 'Accent phrase pattern', placeholder: '(ai\\s+prompts?|image\\s+prompts?)', hint: 'Case-insensitive regex; the first match in the title gets the serif gradient.' },
+                      { key: 'searchPlaceholder', label: 'Search placeholder', placeholder: 'Search prompts by style, tool or subject...' },
+                      { key: 'searchButtonLabel', label: 'Search button', placeholder: 'Search' },
+                      { key: 'popularLabel', label: 'Popular-tags label', placeholder: 'Popular:' },
+                      { key: 'toolsRowLabel', label: 'Tools row label', placeholder: 'Browse Prompts by AI Tools:' },
+                      { key: 'primaryCtaLabel', label: 'Primary CTA label', placeholder: 'Browse All Prompts' },
+                      { key: 'primaryCtaHref', label: 'Primary CTA link', placeholder: '/explore' },
+                      { key: 'secondaryCtaLabel', label: 'Secondary CTA label', placeholder: 'How It Works' },
+                      { key: 'secondaryCtaHref', label: 'Secondary CTA link', placeholder: '#how-it-works' },
+                    ] as const).map(field => (
+                      <div key={field.key} className={'span' in field && field.span ? 'sm:col-span-2' : undefined}>
+                        <label className={adminLabel}>{field.label}</label>
+                        <input
+                          type="text"
+                          value={heroContent[field.key] || ''}
+                          onChange={e => setHeroContent(prev => ({ ...prev, [field.key]: e.target.value }))}
+                          placeholder={field.placeholder}
+                          className={adminInput}
+                        />
+                        {'hint' in field && field.hint && (
+                          <p className="mt-1 text-[11px] text-surface-500">{field.hint}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {([
+                      { key: 'popularTags', label: 'Popular tags', placeholder: 'Portraits, Cinematic, Anime, Wallpaper, Architecture, Logos', hint: 'Comma separated. Each links to /tag/<lowercased>.' },
+                      { key: 'trustBadges', label: 'Trust badges', placeholder: '100% Free to Copy, Tested & Verified Outputs, Exact Model Parameters Included', hint: 'Comma separated. Each gets a green check.' },
+                    ] as const).map(field => (
+                      <div key={field.key}>
+                        <label className={adminLabel}>{field.label}</label>
+                        <input
+                          type="text"
+                          value={(heroContent[field.key] || []).join(', ')}
+                          onChange={e => setHeroContent(prev => ({
+                            ...prev,
+                            [field.key]: e.target.value.split(',').map(v => v.trim()).filter(Boolean),
+                          }))}
+                          placeholder={field.placeholder}
+                          className={adminInput}
+                        />
+                        <p className="mt-1 text-[11px] text-surface-500">{field.hint}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-3">
+                    <label className={adminLabel}>Stat tile captions</label>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      {([
+                        { key: 'prompts', placeholder: 'Prompts' },
+                        { key: 'featured', placeholder: 'Featured' },
+                        { key: 'likes', placeholder: 'Likes' },
+                        { key: 'saves', placeholder: 'Saves' },
+                      ] as const).map(field => (
+                        <input
+                          key={field.key}
+                          type="text"
+                          value={heroContent.statLabels?.[field.key] || ''}
+                          onChange={e => setHeroContent(prev => ({
+                            ...prev,
+                            statLabels: { ...prev.statLabels, [field.key]: e.target.value },
+                          }))}
+                          placeholder={field.placeholder}
+                          className={adminInput}
+                        />
+                      ))}
+                    </div>
+                    <p className="mt-1 text-[11px] text-surface-500">
+                      The numbers are live counts — only the captions are editable. Hide the whole
+                      row with the &ldquo;Show Stat Cards&rdquo; toggle above.
+                    </p>
                   </div>
                 </div>
               </Panel>
@@ -6794,14 +6859,14 @@ function AdminInner() {
                                 <Field label="Card style override">
                                   <select value={editSectionCardStyle} onChange={e => setEditSectionCardStyle(e.target.value as Section['cardStyle'] | '')} className={adminInput}>
                                     <option value="">Use global card style</option>
-                                    <option value="v1">v1 Hover Overlay</option>
-                                    <option value="v2">v2 Floating Image with Border</option>
-                                    <option value="v3">v3 Compact Editorial</option>
-                                    <option value="v4">v4 Social Card</option>
-                                    <option value="v5">v5 Brutalist</option>
-                                    <option value="v6">v6 Gradient Overlay</option>
-                                    <option value="v7">v7 Polaroid</option>
-                                    <option value="v8">v8 Glass Panel</option>
+                                    <option value="v2">v2 Glass Frame (default)</option>
+                                    <option value="v1">v1 Flat Hover Overlay</option>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
                                   </select>
                                   <p className="mt-1 text-[11px] text-surface-500">
                                     {editSectionCardStyle ? 'This section will ignore the global card style.' : `Using global card style: ${cardStyleName(cardStyle)}`}
@@ -8307,19 +8372,6 @@ function AdminInner() {
 
                               <label className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 cursor-pointer">
                                 <div>
-                                  <span className="text-xs font-bold block text-surface-900 dark:text-white">Homepage Hero Pill</span>
-                                  <span className="text-[10px] text-surface-500">Quick filter chip</span>
-                                </div>
-                                <input
-                                  type="checkbox"
-                                  checked={editAiToolShowInHero}
-                                  onChange={e => setEditAiToolShowInHero(e.target.checked)}
-                                  className="w-4 h-4 rounded text-primary-500 focus:ring-primary-500"
-                                />
-                              </label>
-
-                              <label className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 cursor-pointer">
-                                <div>
                                   <span className="text-xs font-bold block text-surface-900 dark:text-white">Footer Links</span>
                                   <span className="text-[10px] text-surface-500">Show in footer column</span>
                                 </div>
@@ -8851,65 +8903,65 @@ function AdminInner() {
 
           {/* Submissions Stats Cards */}
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-5 backdrop-blur-xl shadow-sm flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localSubmissions.filter(s => s.status === 'pending').length}
                 </span>
                 <p className="text-xs font-semibold text-surface-400 mt-1">Pending</p>
               </div>
-              <span className="p-3 rounded-xl bg-amber-500/10 text-amber-500">
+              <span className="p-3 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                 <Upload className="w-5 h-5 animate-pulse" />
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-5 backdrop-blur-xl shadow-sm flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localSubmissions.filter(s => s.status === 'published').length}
                 </span>
                 <p className="text-xs font-semibold text-surface-400 mt-1">Approved</p>
               </div>
-              <span className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500">
+              <span className="p-3 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 <CheckCircle className="w-5 h-5" />
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-5 backdrop-blur-xl shadow-sm flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localSubmissions.filter(s => s.status === 'rejected').length}
                 </span>
                 <p className="text-xs font-semibold text-surface-400 mt-1">Rejected</p>
               </div>
-              <span className="p-3 rounded-xl bg-red-500/10 text-red-500">
+              <span className="p-3 rounded-2xl bg-rose-500/10 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                 <X className="w-5 h-5" />
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-5 backdrop-blur-xl shadow-sm flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localSubmissions.length}
                 </span>
                 <p className="text-xs font-semibold text-surface-400 mt-1">Total</p>
               </div>
-              <span className="p-3 rounded-xl bg-violet-500/10 text-violet-500">
+              <span className="p-3 rounded-2xl bg-violet-500/10 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/20">
                 <FileText className="w-5 h-5" />
               </span>
             </div>
           </div>
 
           {/* Submissions Filter Tabs */}
-          <div className="flex gap-2 overflow-x-auto border-b border-surface-200 pb-px dark:border-surface-800">
+          <div className="flex gap-2 overflow-x-auto p-1.5 rounded-2xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl shadow-sm">
             {(['pending', 'approved', 'rejected', 'all'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setSubmissionFilter(f)}
-                className={`shrink-0 border-b-2 px-4 pb-3 text-xs font-bold capitalize transition-all ${
+                className={`shrink-0 rounded-xl px-4 py-2 text-xs font-bold capitalize transition-all ${
                   submissionFilter === f
-                    ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                    : 'border-transparent text-surface-400 hover:text-surface-900 dark:hover:text-surface-100'
+                    ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20'
+                    : 'text-surface-600 hover:text-surface-950 dark:text-surface-400 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/[0.06]'
                 }`}
               >
                 {f}
@@ -8920,30 +8972,30 @@ function AdminInner() {
           {/* Submissions List */}
           <div className="space-y-4">
             {localSubmissions.filter(s => submissionFilter === 'all' || s.status === (submissionFilter === 'approved' ? 'published' : submissionFilter)).length === 0 ? (
-              <div className="text-center py-16 border border-dashed border-surface-200 rounded-2xl dark:border-surface-800 bg-white dark:bg-surface-900">
-                <Upload className="w-8 h-8 text-surface-300 mx-auto mb-3" />
+              <div className="text-center py-16 border border-dashed border-black/15 dark:border-white/15 rounded-3xl bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl shadow-sm">
+                <Upload className="w-8 h-8 text-surface-400 mx-auto mb-3" />
                 <p className="text-sm text-surface-500 font-medium">No submissions in this category.</p>
               </div>
             ) : (
               localSubmissions
                 .filter(s => submissionFilter === 'all' || s.status === (submissionFilter === 'approved' ? 'published' : submissionFilter))
                 .map(sub => (
-                  <div key={sub.id} className="p-5 rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900 space-y-4">
+                  <div key={sub.id} className="p-5 rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl shadow-sm space-y-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-50 text-xs font-bold text-surface-600 dark:bg-surface-800 dark:text-surface-300 border border-surface-200/60 dark:border-surface-700/60">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-500/10 text-xs font-bold text-primary-600 dark:bg-primary-500/20 dark:text-primary-400 border border-primary-500/20 shadow-inner">
                           {sub.authorName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
                         </div>
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
                             <h4 className="text-sm font-bold text-surface-950 dark:text-white leading-tight">{sub.title}</h4>
-                            <span className="rounded bg-primary-500/10 text-primary-600 dark:text-primary-300 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
+                            <span className="rounded-lg bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
                               {sub.aiTool}
                             </span>
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                              sub.status === 'pending' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
-                              sub.status === 'published' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
-                              'bg-red-500/10 text-red-600 dark:text-red-400'
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${
+                              sub.status === 'pending' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20' :
+                              sub.status === 'published' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20' :
+                              'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20'
                             }`}>
                               {sub.status === 'published' ? 'Approved' : sub.status}
                             </span>
@@ -8958,13 +9010,13 @@ function AdminInner() {
                         <div className="flex gap-2 sm:self-start">
                           <button
                             onClick={() => handleApproveSubmission(sub.id)}
-                            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all"
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 transition-all active:scale-95"
                           >
                             <Check className="w-3.5 h-3.5" /> Approve
                           </button>
                           <button
                             onClick={() => handleRejectSubmission(sub.id)}
-                            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-red-50 dark:bg-red-950/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-950/40 transition-all"
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 dark:text-rose-300 transition-all active:scale-95"
                           >
                             <X className="w-3.5 h-3.5" /> Reject
                           </button>
@@ -8972,7 +9024,7 @@ function AdminInner() {
                       )}
                     </div>
 
-                    <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950/40 border border-surface-200/50 dark:border-surface-800/60 font-mono text-xs text-surface-700 dark:text-surface-300 leading-relaxed break-words whitespace-pre-wrap">
+                    <div className="p-4 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.06] dark:border-white/[0.08] font-mono text-xs text-surface-700 dark:text-surface-300 leading-relaxed break-words whitespace-pre-wrap">
                       {sub.prompt}
                     </div>
                   </div>
@@ -8992,54 +9044,54 @@ function AdminInner() {
 
           {/* Comments Stats Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-5 backdrop-blur-xl shadow-sm flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localComments.filter(c => c.status === 'pending').length}
                 </span>
                 <p className="text-xs font-semibold text-surface-400 mt-1">Pending</p>
               </div>
-              <span className="p-3 rounded-xl bg-amber-500/10 text-amber-500">
+              <span className="p-3 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                 <MessageCircle className="w-5 h-5 animate-pulse" />
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-5 backdrop-blur-xl shadow-sm flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localComments.filter(c => c.status === 'approved').length}
                 </span>
                 <p className="text-xs font-semibold text-surface-400 mt-1">Approved</p>
               </div>
-              <span className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500">
+              <span className="p-3 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 <Check className="w-5 h-5" />
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-5 backdrop-blur-xl shadow-sm flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localComments.filter(c => c.status === 'spam').length}
                 </span>
                 <p className="text-xs font-semibold text-surface-400 mt-1">Spam</p>
               </div>
-              <span className="p-3 rounded-xl bg-red-500/10 text-red-500">
+              <span className="p-3 rounded-2xl bg-rose-500/10 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                 <Ban className="w-5 h-5" />
               </span>
             </div>
           </div>
 
           {/* Comments Filter and Search panel */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-surface-900 p-4 rounded-xl border border-surface-200 dark:border-surface-800">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl p-4 rounded-3xl border border-white/80 dark:border-white/10 shadow-sm">
             <div className="flex flex-wrap gap-2">
               {(['all', 'pending', 'approved', 'spam'] as const).map(f => (
                 <button
                   key={f}
                   onClick={() => setCommentFilter(f)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all capitalize ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all capitalize ${
                     commentFilter === f
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-surface-50 text-surface-600 hover:bg-surface-100 dark:bg-surface-800 dark:text-surface-300'
+                      ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20'
+                      : 'border border-black/[0.08] dark:border-white/10 bg-white/50 dark:bg-white/[0.04] text-surface-600 hover:bg-white/80 hover:text-surface-950 dark:text-surface-300 dark:hover:bg-white/[0.08] dark:hover:text-white'
                   }`}
                 >
                   {f}
@@ -9048,7 +9100,7 @@ function AdminInner() {
             </div>
 
             <div className="relative max-w-xs w-full">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-surface-400" />
+              <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-surface-400" />
               <input
                 value={commentSearch}
                 onChange={e => setCommentSearch(e.target.value)}
@@ -9063,8 +9115,8 @@ function AdminInner() {
             {localComments
               .filter(c => commentFilter === 'all' || c.status === commentFilter)
               .filter(c => !commentSearch || c.userName.toLowerCase().includes(commentSearch.toLowerCase()) || c.text.toLowerCase().includes(commentSearch.toLowerCase()) || c.postTitle.toLowerCase().includes(commentSearch.toLowerCase())).length === 0 ? (
-                <div className="text-center py-16 border border-dashed border-surface-200 rounded-2xl dark:border-surface-800 bg-white dark:bg-surface-900">
-                  <MessageCircle className="w-8 h-8 text-surface-300 mx-auto mb-3" />
+                <div className="text-center py-16 border border-dashed border-black/15 dark:border-white/15 rounded-3xl bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl shadow-sm">
+                  <MessageCircle className="w-8 h-8 text-surface-400 mx-auto mb-3" />
                   <p className="text-sm text-surface-500 font-medium">No comments match the selected filters.</p>
                 </div>
               ) : (
@@ -9072,10 +9124,10 @@ function AdminInner() {
                   .filter(c => commentFilter === 'all' || c.status === commentFilter)
                   .filter(c => !commentSearch || c.userName.toLowerCase().includes(commentSearch.toLowerCase()) || c.text.toLowerCase().includes(commentSearch.toLowerCase()) || c.postTitle.toLowerCase().includes(commentSearch.toLowerCase()))
                   .map(comment => (
-                    <div key={comment.id} className="rounded-2xl border border-surface-200 bg-white p-4 dark:border-surface-800 dark:bg-surface-900 sm:p-5 space-y-3">
+                    <div key={comment.id} className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-4 sm:p-5 backdrop-blur-xl shadow-sm space-y-3">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="flex gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-50 text-xs font-bold text-surface-600 dark:bg-surface-800 dark:text-surface-300 border border-surface-200/60 dark:border-surface-700/60">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-500/10 text-xs font-bold text-primary-600 dark:bg-primary-500/20 dark:text-primary-400 border border-primary-500/20 shadow-inner">
                             {comment.userAvatar}
                           </div>
                           <div>
@@ -9083,10 +9135,10 @@ function AdminInner() {
                               <span className="text-xs font-bold text-surface-950 dark:text-white leading-none">{comment.userName}</span>
                               <span className="text-xs text-surface-400">on</span>
                               <span className="text-xs font-bold text-primary-500 leading-none">{comment.postTitle}</span>
-                              <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
-                                comment.status === 'pending' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
-                                comment.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
-                                'bg-red-500/10 text-red-600 dark:text-red-400'
+                              <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold border ${
+                                comment.status === 'pending' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20' :
+                                comment.status === 'approved' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20' :
+                                'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20'
                               }`}>
                                 {comment.status}
                               </span>
@@ -9099,7 +9151,7 @@ function AdminInner() {
                           {comment.status !== 'approved' && (
                             <button
                               onClick={() => handleApproveComment(comment.id)}
-                              className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-colors"
+                              className="p-2 rounded-xl text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-all active:scale-95"
                               title="Approve Comment"
                             >
                               <Check className="w-4 h-4" />
@@ -9108,7 +9160,7 @@ function AdminInner() {
                           {comment.status !== 'spam' && (
                             <button
                               onClick={() => handleFlagCommentAsSpam(comment.id)}
-                              className="p-1.5 rounded-lg text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors"
+                              className="p-2 rounded-xl text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-all active:scale-95"
                               title="Mark as Spam"
                             >
                               <Flag className="w-4 h-4" />
@@ -9116,7 +9168,7 @@ function AdminInner() {
                           )}
                           <button
                             onClick={() => handleRejectComment(comment.id)}
-                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                            className="p-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-all active:scale-95"
                             title="Delete Comment"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -9124,7 +9176,7 @@ function AdminInner() {
                         </div>
                       </div>
 
-                      <p className="text-xs text-surface-600 dark:text-surface-300 leading-relaxed bg-surface-50/50 dark:bg-surface-950/20 p-3.5 rounded-xl border border-surface-200/50 dark:border-surface-800/40">
+                      <p className="text-xs text-surface-600 dark:text-surface-300 leading-relaxed bg-black/[0.02] dark:bg-white/[0.03] p-3.5 rounded-2xl border border-black/[0.06] dark:border-white/[0.08]">
                         {comment.text}
                       </p>
                     </div>
@@ -9149,64 +9201,64 @@ function AdminInner() {
 
           {/* User Stats Cards */}
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-5 backdrop-blur-xl shadow-sm flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">{localUsers.length}</span>
                 <p className="text-xs font-semibold text-surface-400 mt-1">Members</p>
               </div>
-              <span className="p-3 rounded-xl bg-primary-500/10 text-primary-500">
+              <span className="p-3 rounded-2xl bg-primary-500/10 dark:bg-primary-500/15 text-primary-600 dark:text-primary-400 border border-primary-500/20">
                 <Users className="w-5 h-5" />
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-5 backdrop-blur-xl shadow-sm flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localUsers.filter(u => u.role === 'Admin').length}
                 </span>
                 <p className="text-xs font-semibold text-surface-400 mt-1">Admins</p>
               </div>
-              <span className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500">
+              <span className="p-3 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 <Shield className="w-5 h-5" />
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-5 backdrop-blur-xl shadow-sm flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localUsers.filter(u => u.role === 'Editor').length}
                 </span>
                 <p className="text-xs font-semibold text-surface-400 mt-1">Editors</p>
               </div>
-              <span className="p-3 rounded-xl bg-amber-500/10 text-amber-500">
+              <span className="p-3 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                 <Shield className="w-5 h-5" />
               </span>
             </div>
 
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 dark:border-surface-800 dark:bg-surface-900 flex items-center justify-between">
+            <div className="rounded-3xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-5 backdrop-blur-xl shadow-sm flex items-center justify-between">
               <div>
                 <span className="text-2xl font-bold text-surface-950 dark:text-white">
                   {localUsers.filter(u => u.status === 'suspended').length}
                 </span>
                 <p className="text-xs font-semibold text-surface-400 mt-1">Suspended</p>
               </div>
-              <span className="p-3 rounded-xl bg-red-500/10 text-red-500">
+              <span className="p-3 rounded-2xl bg-rose-500/10 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                 <Ban className="w-5 h-5" />
               </span>
             </div>
           </div>
 
           {/* Users Filter Panel */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-surface-900 p-4 rounded-xl border border-surface-200 dark:border-surface-800">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl p-4 rounded-3xl border border-white/80 dark:border-white/10 shadow-sm">
             <div className="flex flex-wrap gap-1.5">
               {(['all', 'Admin', 'Editor', 'Author', 'Subscriber'] as const).map(r => (
                 <button
                   key={r}
                   onClick={() => setUserRoleFilter(r)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                     userRoleFilter === r
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-surface-50 text-surface-600 hover:bg-surface-100 dark:bg-surface-800 dark:text-surface-300'
+                      ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20'
+                      : 'border border-black/[0.08] dark:border-white/10 bg-white/50 dark:bg-white/[0.04] text-surface-600 hover:bg-white/80 hover:text-surface-950 dark:text-surface-300 dark:hover:bg-white/[0.08] dark:hover:text-white'
                   }`}
                 >
                   {r === 'all' ? 'All' : r}
@@ -9215,7 +9267,7 @@ function AdminInner() {
             </div>
 
             <div className="relative max-w-xs w-full">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-surface-400" />
+              <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-surface-400" />
               <input
                 value={userSearch}
                 onChange={e => setUserSearch(e.target.value)}
@@ -9226,10 +9278,10 @@ function AdminInner() {
           </div>
 
           {/* Users Grid Table */}
-          <div className="border border-surface-200 dark:border-surface-800 rounded-2xl bg-white dark:bg-surface-900 overflow-hidden">
+          <div className="border border-white/80 dark:border-white/10 rounded-3xl bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[680px] divide-y divide-surface-200 dark:divide-surface-800">
-                <thead className="bg-surface-50/50 dark:bg-surface-950/20 text-[10px] font-black uppercase tracking-wider text-surface-400">
+              <table className="w-full min-w-[680px]">
+                <thead className="bg-black/[0.02] dark:bg-white/[0.02] border-b border-black/[0.06] dark:border-white/[0.08] text-[10px] font-black uppercase tracking-wider text-surface-400">
                   <tr>
                     <th scope="col" className="px-4 py-3 text-left">Member</th>
                     <th scope="col" className="px-4 py-3 text-left">Role</th>
@@ -9238,15 +9290,15 @@ function AdminInner() {
                     <th scope="col" className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-surface-200 dark:divide-surface-800">
+                <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.04]">
                   {localUsers
                     .filter(u => userRoleFilter === 'all' || u.role === userRoleFilter)
                     .filter(u => !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase()))
                     .map(member => (
-                      <tr key={member.id} className="hover:bg-surface-50/30 dark:hover:bg-surface-950/10 transition-colors">
+                      <tr key={member.id} className="hover:bg-white/50 dark:hover:bg-white/[0.04] transition-colors">
                         <td className="whitespace-nowrap px-4 py-3 text-xs">
                           <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 overflow-hidden items-center justify-center rounded-xl bg-surface-100 text-xs font-bold text-surface-600 dark:bg-surface-800 dark:text-surface-300 border border-surface-200/60 dark:border-surface-700/60">
+                            <div className="flex h-9 w-9 overflow-hidden items-center justify-center rounded-2xl bg-primary-500/10 text-xs font-bold text-primary-600 dark:bg-primary-500/20 dark:text-primary-400 border border-primary-500/20 shadow-inner">
                               {member.avatar?.startsWith('http') ? (
                                 <Image src={member.avatar} alt={member.name} width={36} height={36} className="h-full w-full object-cover" referrerPolicy="no-referrer" unoptimized />
                               ) : (
@@ -9263,7 +9315,7 @@ function AdminInner() {
                           <select
                             value={member.role}
                             onChange={e => handleUpdateUserRole(member.id, e.target.value)}
-                            className="cursor-pointer rounded-xl border border-surface-200 bg-white px-2.5 py-1 text-xs font-semibold outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900"
+                            className="cursor-pointer rounded-xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-white/[0.05] px-2.5 py-1 text-xs font-semibold outline-none focus:border-primary-500 dark:text-white backdrop-blur-md"
                           >
                             <option value="Admin">Admin</option>
                             <option value="Editor">Editor</option>
@@ -9275,12 +9327,12 @@ function AdminInner() {
                           {member.posts}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-center text-xs">
-                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
                             member.status === 'active'
-                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
-                              : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300'
+                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
+                              : 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20'
                           }`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${member.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+                            <span className={`h-1.5 w-1.5 rounded-full ${member.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
                             {member.status}
                           </span>
                         </td>
@@ -9300,17 +9352,17 @@ function AdminInner() {
                                   }));
                                 }
                               }}
-                              className="p-1.5 rounded-lg text-surface-500 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
+                              className="p-1.5 rounded-xl text-surface-500 hover:bg-white/80 dark:hover:bg-white/[0.08] transition-all"
                               title="Edit Member"
                             >
                               <Edit3 className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleToggleUserStatus(member.id)}
-                              className={`p-1.5 rounded-lg transition-colors ${
+                              className={`p-1.5 rounded-xl transition-all ${
                                 member.status === 'active'
-                                  ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20'
-                                  : 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/20'
+                                  ? 'text-rose-500 hover:bg-rose-500/10'
+                                  : 'text-emerald-500 hover:bg-emerald-500/10'
                               }`}
                               title={member.status === 'active' ? 'Suspend Member' : 'Activate Member'}
                             >
@@ -9327,15 +9379,15 @@ function AdminInner() {
 
           {/* Invite User Modal Overlay */}
           {showInviteModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/60 backdrop-blur-sm p-4">
-              <div className="w-full max-w-md rounded-2xl border border-surface-200 bg-white p-4 shadow-xl dark:border-surface-800 dark:bg-surface-900 animate-in fade-in duration-200 sm:p-6">
-                <div className="flex items-center justify-between border-b border-surface-100 dark:border-surface-800 pb-3">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 animate-in fade-in duration-200">
+              <div className="w-full max-w-md rounded-3xl border border-white/80 bg-white/90 p-5 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-[#090b1c]/90 animate-in fade-in zoom-in-95 duration-150 sm:p-6">
+                <div className="flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.08] pb-3">
                   <h3 className="text-sm font-bold text-surface-950 dark:text-white flex items-center gap-2">
                     <Users className="w-5 h-5 text-primary-500" /> Invite New Member
                   </h3>
                   <button
                     onClick={() => setShowInviteModal(false)}
-                    className="p-1.5 rounded-lg text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800"
+                    className="p-1.5 rounded-xl text-surface-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -9379,7 +9431,7 @@ function AdminInner() {
                     </select>
                   </div>
 
-                  <div className="mt-6 flex justify-end gap-2 border-t border-surface-100 pt-2 dark:border-surface-800">
+                  <div className="mt-6 flex justify-end gap-2 border-t border-black/[0.06] dark:border-white/[0.08] pt-3">
                     <ActionButton variant="ghost" onClick={() => setShowInviteModal(false)}>
                       Cancel
                     </ActionButton>
@@ -9394,13 +9446,13 @@ function AdminInner() {
 
           {/* Ban User Modal Overlay matching Supabase design */}
           {banModalUser && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-              <div className="w-full max-w-md rounded-2xl border border-surface-200 bg-white p-4 shadow-2xl dark:border-surface-800 dark:bg-surface-900 sm:p-6">
-                <div className="flex items-center justify-between border-b border-surface-100 pb-4 dark:border-surface-800">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 animate-in fade-in duration-200">
+              <div className="w-full max-w-md rounded-3xl border border-white/80 bg-white/90 p-5 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-[#090b1c]/90 animate-in fade-in zoom-in-95 duration-150 sm:p-6">
+                <div className="flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.08] pb-4">
                   <h3 className="text-base font-extrabold text-surface-900 dark:text-white">Confirm to ban user</h3>
                   <button
                     onClick={() => setBanModalUser(null)}
-                    className="p-1.5 rounded-lg text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                    className="p-1.5 rounded-xl text-surface-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -9438,7 +9490,7 @@ function AdminInner() {
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-surface-50 dark:bg-surface-800/60 border border-surface-200/60 dark:border-surface-700/60">
+                  <div className="p-3.5 rounded-2xl bg-black/[0.02] dark:bg-white/[0.03] border border-black/[0.06] dark:border-white/[0.08]">
                     <p className="text-[11px] text-surface-500 dark:text-surface-400">
                       This user will not be able to log in until:
                     </p>
@@ -9457,7 +9509,7 @@ function AdminInner() {
                     </p>
                   </div>
 
-                  <div className="mt-6 flex items-center justify-end gap-2 pt-2">
+                  <div className="mt-6 flex items-center justify-end gap-2 border-t border-black/[0.06] dark:border-white/[0.08] pt-3">
                     <ActionButton variant="ghost" onClick={() => setBanModalUser(null)}>
                       Cancel
                     </ActionButton>

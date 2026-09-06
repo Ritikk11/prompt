@@ -48,7 +48,7 @@ export default function MaintenanceBouncer({ isMaintenanceMode }: { isMaintenanc
 
   // Still checking or confirmed not admin: show full screen block
   return (
-    <div className="fixed inset-0 z-[10000] bg-surface-50 dark:bg-surface-950 flex flex-col items-center justify-center p-6">
+    <div className="fixed inset-0 z-[10000] bg-white/40 dark:bg-white/[0.08] flex flex-col items-center justify-center p-6 backdrop-blur-xl backdrop-saturate-[120%]">
       <AlertTriangle className="w-16 h-16 text-red-500 mb-6" />
       <h1 className="text-3xl font-bold text-surface-900 dark:text-white mb-3 text-center">Site Under Maintenance</h1>
       <p className="text-surface-600 dark:text-surface-400 text-center max-w-md text-lg">

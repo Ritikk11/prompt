@@ -112,7 +112,7 @@ export interface Section {
   order: number;
   visible: boolean;
   limit: number;
-  cardStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
+  cardStyle?: 'v1' | 'v2';
 }
 
 export interface SiteFeatures {
@@ -142,6 +142,9 @@ export interface SiteFeatures {
   showHomepageBlog?: boolean;
   showHomepageCreatorFeedback?: boolean;
   showScrollProgress?: boolean;
+  /** Site-wide animated glass background canvas (components/SiteBackground).
+   *  Off = today's flat surfaces. */
+  showAnimatedBackground?: boolean;
   showFaqSchema?: boolean;
   showPublicProfiles?: boolean;
   publicProfileLikes?: boolean;
@@ -326,9 +329,36 @@ export interface SiteSettings {
   heroEnabled: boolean;
   heroHideStats?: boolean;
   heroAutoPlay: boolean;
-  heroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'custom';
+  /** Landing-hero copy. Every field falls back to the built-in default when
+   *  blank, so an untouched install looks the same as before it was editable. */
+  heroContent?: {
+    /** Hero headline. Takes priority over the legacy top-level heroTitle;
+     *  blank falls back to that, then to the built-in default. */
+    title?: string;
+    /** Hero paragraph under the headline. Same fallback chain as title. */
+    subtitle?: string;
+    /** Prefix before the tool list in the kicker pill, e.g. "Curated prompts for" */
+    kickerPrefix?: string;
+    /** Case-insensitive regex source matched against heroTitle; the first match
+     *  gets the italic-serif gradient. Invalid patterns are ignored. */
+    accentPattern?: string;
+    searchPlaceholder?: string;
+    searchButtonLabel?: string;
+    /** Label before the popular-tag pills */
+    popularLabel?: string;
+    popularTags?: string[];
+    primaryCtaLabel?: string;
+    primaryCtaHref?: string;
+    secondaryCtaLabel?: string;
+    secondaryCtaHref?: string;
+    /** Short check-marked reassurance lines under the CTAs */
+    trustBadges?: string[];
+    /** Overrides for the four stat tile captions, in order */
+    statLabels?: { prompts?: string; featured?: string; likes?: string; saves?: string };
+    toolsRowLabel?: string;
+  };
   postHeroStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
-  cardStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
+  cardStyle?: 'v1' | 'v2';
   badgeStyle?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10';
   aiTools: string[];
   toolDetails?: Record<string, {
