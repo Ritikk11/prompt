@@ -14,11 +14,11 @@ type HomeLibraryHeroProps = {
 
 /** Shared pill recipe: kicker, tag chips, tool chips and the secondary CTA. */
 const glassPill =
-  'border border-white/60 bg-white/40 shadow-sm backdrop-blur-md transition-[transform,colors,background-color,border-color,box-shadow] duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/60 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/[0.10] dark:hover:text-white';
+  'border border-white/60 bg-white/40 shadow-sm backdrop-blur-md transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/60 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/[0.10] dark:hover:text-white';
 
 /** Brand-blue gradient button, used by the search submit and the primary CTA. */
 const gradientButton =
-  'bg-gradient-to-r from-google-blue to-[#1a73e8] text-white shadow-md shadow-primary-500/25 transition-[transform,box-shadow,filter] duration-200 ease-out hover:scale-105 hover:shadow-lg hover:shadow-primary-500/40 hover:brightness-[1.06] active:scale-95';
+  'bg-gradient-to-r from-google-blue to-[#1a73e8] text-white shadow-md shadow-primary-500/25 transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg hover:shadow-primary-500/40 hover:brightness-[1.06] active:scale-95';
 
 /**
  * Landing hero: kicker, headline, instant search, popular tags, CTAs, trust
