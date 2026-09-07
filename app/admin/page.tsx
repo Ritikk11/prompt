@@ -1628,14 +1628,16 @@ function AdminInner() {
   const allCategoryOptions = useMemo(() => {
     const map = new Map<string, { label: string; value: string; count: number; description?: string }>();
     categoryPresets.forEach(preset => {
-      const key = preset.name.trim().toLowerCase();
-      const count = posts.filter(p =>
-        (p.category && p.category.toLowerCase() === key) ||
-        (p.categories && p.categories.some(c => c.toLowerCase() === key))
-      ).length;
-      map.set(key, {
-        label: preset.name.trim(),
-        value: preset.slug || slugify(preset.name),
+      const name = preset.name.trim();
+      const slug = (preset.slug || slugify(name)).trim().toLowerCase();
+      if (!slug || map.has(slug)) return;
+      const count = posts.filter(p => {
+        const cats = [p.category, ...(p.categories || [])].filter(Boolean) as string[];
+        return cats.some(c => c.trim().toLowerCase() === name.toLowerCase() || slugify(c.trim()) === slug);
+      }).length;
+      map.set(slug, {
+        label: name,
+        value: slug,
         count,
         description: preset.description,
       });
@@ -1644,18 +1646,18 @@ function AdminInner() {
     posts.forEach(p => {
       const cats = [p.category, ...(p.categories || [])].filter(Boolean) as string[];
       cats.forEach(c => {
-        const key = c.trim().toLowerCase();
-        if (!map.has(key)) {
-          const count = posts.filter(post =>
-            (post.category && post.category.toLowerCase() === key) ||
-            (post.categories && post.categories.some(cat => cat.toLowerCase() === key))
-          ).length;
-          map.set(key, {
-            label: c.trim(),
-            value: slugify(c.trim()),
-            count,
-          });
-        }
+        const trimmed = c.trim();
+        const slug = slugify(trimmed).toLowerCase();
+        if (!slug || map.has(slug)) return;
+        const count = posts.filter(post => {
+          const pCats = [post.category, ...(post.categories || [])].filter(Boolean) as string[];
+          return pCats.some(cat => slugify(cat.trim()) === slug || cat.trim().toLowerCase() === trimmed.toLowerCase());
+        }).length;
+        map.set(slug, {
+          label: trimmed,
+          value: slug,
+          count,
+        });
       });
     });
 
@@ -1663,25 +1665,38 @@ function AdminInner() {
   }, [categoryPresets, posts]);
 
   const allTagOptions = useMemo(() => {
-    const counts = new Map<string, number>();
+    const counts = new Map<string, { label: string; value: string; count: number }>();
     posts.forEach(p => {
       (p.tags || []).forEach(t => {
         if (!t) return;
-        const key = t.trim();
-        counts.set(key, (counts.get(key) || 0) + 1);
+        const trimmed = t.trim();
+        if (!trimmed) return;
+        const key = trimmed.toLowerCase();
+        const existing = counts.get(key);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          counts.set(key, { label: trimmed, value: trimmed, count: 1 });
+        }
       });
     });
-    return Array.from(counts.entries())
-      .map(([tag, count]) => ({ label: tag, value: tag, count }))
+    return Array.from(counts.values())
       .sort((a, b) => b.count - a.count);
   }, [posts]);
 
   const allToolOptions = useMemo(() => {
-    const tools = Array.from(new Set([...(settings.aiTools || []), ...posts.flatMap(p => getAllTools(p)).filter(Boolean)]));
-    return tools.map(t => {
-      const count = posts.filter(p => getAllTools(p).includes(t)).length;
-      return { label: t, value: t, count };
+    const toolMap = new Map<string, { label: string; value: string; count: number }>();
+    const tools = [...(settings.aiTools || []), ...posts.flatMap(p => getAllTools(p)).filter(Boolean)];
+    tools.forEach(t => {
+      const trimmed = t.trim();
+      if (!trimmed) return;
+      const key = trimmed.toLowerCase();
+      if (!toolMap.has(key)) {
+        const count = posts.filter(p => getAllTools(p).some(tool => tool.toLowerCase() === key)).length;
+        toolMap.set(key, { label: trimmed, value: trimmed, count });
+      }
     });
+    return Array.from(toolMap.values()).sort((a, b) => b.count - a.count);
   }, [settings.aiTools, posts]);
   const getHomepageBlockDetail = (key: string) => {
     if (key === 'howTo') return 'Fixed 3-step guidance block with clickable preview cards';
@@ -5378,11 +5393,10 @@ function AdminInner() {
                                         }
                                       }}
                                       className="inline-flex items-center gap-1 rounded-lg border border-surface-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-surface-700 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200"
-                                      placeholder="+ Add Category..."
                                     >
                                       <option value="">+ Add Category...</option>
-                                      {allCategoryOptions.map(cat => (
-                                        <option key={cat.value} value={cat.value}>
+                                      {allCategoryOptions.map((cat, idx) => (
+                                        <option key={`${cat.value}-${idx}`} value={cat.value}>
                                           {cat.label} {cat.count > 0 ? `(${cat.count})` : ''}
                                         </option>
                                       ))}

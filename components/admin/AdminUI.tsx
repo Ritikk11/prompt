@@ -730,31 +730,40 @@ export function PresetPills({
   const [showAll, setShowAll] = useState(false);
   if (!items || items.length === 0) return null;
 
+  // Deduplicate items by normalized value so duplicate pills/keys never render
+  const seen = new Set<string>();
+  const uniqueItems = items.filter(item => {
+    const key = (item.value || item.label || '').trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
   const normalizedSelected = new Set(selectedValues.map(v => v.trim().toLowerCase()));
-  const visibleItems = showAll ? items : items.slice(0, maxVisible);
+  const visibleItems = showAll ? uniqueItems : uniqueItems.slice(0, maxVisible);
 
   return (
     <div className={`space-y-1.5 ${className}`}>
       {title && (
         <div className="flex items-center justify-between text-[11px] font-bold text-surface-500 dark:text-surface-400">
           <span>{title}</span>
-          {items.length > maxVisible && (
+          {uniqueItems.length > maxVisible && (
             <button
               type="button"
               onClick={() => setShowAll(s => !s)}
               className="text-primary-600 dark:text-primary-400 hover:underline font-semibold"
             >
-              {showAll ? 'Show less' : `+${items.length - maxVisible} more`}
+              {showAll ? 'Show less' : `+${uniqueItems.length - maxVisible} more`}
             </button>
           )}
         </div>
       )}
       <div className="flex flex-wrap gap-1.5">
-        {visibleItems.map(item => {
+        {visibleItems.map((item, idx) => {
           const isSelected = normalizedSelected.has(item.value.toLowerCase()) || normalizedSelected.has(item.label.toLowerCase());
           return (
             <button
-              key={item.value}
+              key={`${item.value}-${idx}`}
               type="button"
               onClick={() => onToggle(item.value, item.label)}
               className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
