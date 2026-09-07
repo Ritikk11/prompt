@@ -235,6 +235,15 @@ export interface HomeLinkBlock {
   style?: 'showcase' | 'clean' | 'compact';
 }
 
+export interface CategoryPreset {
+  id?: string;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+}
+
 export interface FilterRailItem {
   label: string;
   type: 'tool' | 'tag' | 'category';
@@ -319,6 +328,7 @@ export interface SiteSettings {
   siteDescription: string;
   authors?: any;
   categories?: any;
+  categoryPresets?: CategoryPreset[];
   imgbbApiKey?: string;
   defaultAuthorId?: string;
   cloudinaryCloudName?: string;

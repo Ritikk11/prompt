@@ -1,6 +1,6 @@
 import { Children, isValidElement, useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, ReactElement, ReactNode } from 'react';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, Plus, Sparkles, Tag, X } from 'lucide-react';
 
 // Shared admin design language with GLM frosted glass aesthetics.
 // Used across every settings tab so panels, headers, labels, and
@@ -435,3 +435,348 @@ export function AdminSelect({
     </div>
   );
 }
+
+// ---- AdminCombobox ---------------------------------------------------------
+// An editable text input with an interactive floating suggestions dropdown.
+// Used for match targets/values (tags, tools, categories) in filter rails,
+// creative directions, and section targets. Allows freely typing custom values
+// while offering 1-click autocomplete from all existing taxonomy and presets.
+
+export interface ComboboxOption {
+  value: string;
+  label: string;
+  count?: number;
+  hint?: string;
+  type?: string;
+}
+
+export function AdminCombobox({
+  value,
+  onChange,
+  options = [],
+  placeholder = 'Type or select...',
+  className = '',
+  wrapperClassName = '',
+  disabled = false,
+  onSelectSuggestion,
+  showAllOnFocus = true,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: Array<ComboboxOption | string>;
+  placeholder?: string;
+  className?: string;
+  wrapperClassName?: string;
+  disabled?: boolean;
+  onSelectSuggestion?: (item: ComboboxOption) => void;
+  showAllOnFocus?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState(-1);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const normalizedOptions: ComboboxOption[] = options.map(opt =>
+    typeof opt === 'string' ? { value: opt, label: opt } : opt
+  );
+
+  const query = value.trim().toLowerCase();
+  const filtered = query
+    ? normalizedOptions.filter(o =>
+        o.label.toLowerCase().includes(query) ||
+        o.value.toLowerCase().includes(query)
+      )
+    : (showAllOnFocus ? normalizedOptions : []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocPointer = (e: Event) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', onDocPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onDocPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const choose = (item: ComboboxOption) => {
+    onChange(item.value);
+    if (onSelectSuggestion) onSelectSuggestion(item);
+    setOpen(false);
+  };
+
+  const handleKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (disabled) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!open) {
+        setOpen(true);
+        setHighlighted(0);
+      } else {
+        setHighlighted(prev => (prev + 1 < filtered.length ? prev + 1 : 0));
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (open) {
+        setHighlighted(prev => (prev - 1 >= 0 ? prev - 1 : filtered.length - 1));
+      }
+    } else if (e.key === 'Enter') {
+      if (open && highlighted >= 0 && filtered[highlighted]) {
+        e.preventDefault();
+        choose(filtered[highlighted]);
+      }
+    } else if (e.key === 'Escape') {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div ref={rootRef} className={`relative ${wrapperClassName}`}>
+      <input
+        type="text"
+        value={value}
+        disabled={disabled}
+        onChange={e => {
+          onChange(e.target.value);
+          setOpen(true);
+          setHighlighted(-1);
+        }}
+        onFocus={() => {
+          if (filtered.length > 0) setOpen(true);
+        }}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        className={className || adminInput}
+      />
+      {open && filtered.length > 0 && (
+        <div
+          ref={listRef}
+          role="listbox"
+          className="absolute left-0 top-full z-[120] mt-1 max-h-60 w-full min-w-[220px] overflow-auto rounded-xl border border-black/10 bg-white/95 p-1 shadow-xl backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-surface-900/95"
+        >
+          {filtered.map((item, idx) => {
+            const isSelected = item.value.toLowerCase() === value.trim().toLowerCase();
+            const isHighlighted = idx === highlighted;
+            return (
+              <button
+                key={`${item.value}-${idx}`}
+                type="button"
+                onMouseEnter={() => setHighlighted(idx)}
+                onClick={() => choose(item)}
+                className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors ${
+                  isHighlighted
+                    ? 'bg-primary-500/10 text-primary-600 dark:text-primary-300'
+                    : 'text-surface-700 dark:text-surface-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.05]'
+                } ${isSelected ? 'font-bold' : ''}`}
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="truncate">{item.label}</span>
+                  {item.value !== item.label && (
+                    <span className="text-[10px] text-surface-400 font-mono">({item.value})</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {item.count !== undefined && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-surface-100 dark:bg-surface-800 text-surface-500 font-semibold">
+                      {item.count}
+                    </span>
+                  )}
+                  {isSelected && <Check className="h-3.5 w-3.5 text-primary-500" />}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- AdminTagInput ---------------------------------------------------------
+// Comma-separated tag/category textarea with intelligent autocomplete suggestions
+// for the token currently being typed after the last comma.
+
+export function AdminTagInput({
+  value,
+  onChange,
+  suggestions = [],
+  placeholder = 'tag1, tag2...',
+  rows = 2,
+  className = '',
+  disabled = false,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  suggestions: Array<ComboboxOption | string>;
+  placeholder?: string;
+  rows?: number;
+  className?: string;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const normalized: ComboboxOption[] = suggestions.map(s =>
+    typeof s === 'string' ? { value: s, label: s } : s
+  );
+
+  const parts = value.split(',');
+  const currentToken = (parts[parts.length - 1] || '').trim().toLowerCase();
+
+  const filtered = currentToken
+    ? normalized.filter(s =>
+        s.label.toLowerCase().includes(currentToken) ||
+        s.value.toLowerCase().includes(currentToken)
+      ).slice(0, 15)
+    : [];
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocPointer = (e: Event) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', onDocPointer);
+    return () => document.removeEventListener('pointerdown', onDocPointer);
+  }, [open]);
+
+  const insertToken = (item: ComboboxOption) => {
+    const list = value.split(',').map(s => s.trim()).filter(Boolean);
+    if (list.length > 0 && currentToken) {
+      list[list.length - 1] = item.value;
+    } else {
+      list.push(item.value);
+    }
+    onChange(list.join(', ') + ', ');
+    setOpen(false);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  };
+
+  return (
+    <div ref={rootRef} className="relative w-full">
+      <textarea
+        ref={textareaRef}
+        rows={rows}
+        value={value}
+        disabled={disabled}
+        onChange={e => {
+          onChange(e.target.value);
+          setOpen(true);
+        }}
+        placeholder={placeholder}
+        className={className || adminInput}
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute left-0 top-full z-[120] mt-1 max-h-48 w-full overflow-auto rounded-xl border border-black/10 bg-white/95 p-1 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-surface-900/95">
+          <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-surface-400">
+            Suggested matches:
+          </div>
+          {filtered.map((item, idx) => (
+            <button
+              key={`${item.value}-${idx}`}
+              type="button"
+              onClick={() => insertToken(item)}
+              className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs text-surface-700 hover:bg-primary-500/10 hover:text-primary-600 dark:text-surface-200 dark:hover:text-primary-300 transition-colors"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium">{item.label}</span>
+                {item.value !== item.label && (
+                  <span className="text-[10px] text-surface-400 font-mono">({item.value})</span>
+                )}
+              </div>
+              {item.count !== undefined && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-surface-100 dark:bg-surface-800 text-surface-500">
+                  {item.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- PresetPills -----------------------------------------------------------
+// Clickable pill chips for fast 1-click toggling of category presets or popular
+// tags in post editors and filters.
+
+export function PresetPills({
+  title,
+  items,
+  selectedValues = [],
+  onToggle,
+  className = '',
+  maxVisible = 20,
+}: {
+  title?: string;
+  items: Array<{ value: string; label: string; count?: number }>;
+  selectedValues?: string[];
+  onToggle: (value: string, label: string) => void;
+  className?: string;
+  maxVisible?: number;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  if (!items || items.length === 0) return null;
+
+  const normalizedSelected = new Set(selectedValues.map(v => v.trim().toLowerCase()));
+  const visibleItems = showAll ? items : items.slice(0, maxVisible);
+
+  return (
+    <div className={`space-y-1.5 ${className}`}>
+      {title && (
+        <div className="flex items-center justify-between text-[11px] font-bold text-surface-500 dark:text-surface-400">
+          <span>{title}</span>
+          {items.length > maxVisible && (
+            <button
+              type="button"
+              onClick={() => setShowAll(s => !s)}
+              className="text-primary-600 dark:text-primary-400 hover:underline font-semibold"
+            >
+              {showAll ? 'Show less' : `+${items.length - maxVisible} more`}
+            </button>
+          )}
+        </div>
+      )}
+      <div className="flex flex-wrap gap-1.5">
+        {visibleItems.map(item => {
+          const isSelected = normalizedSelected.has(item.value.toLowerCase()) || normalizedSelected.has(item.label.toLowerCase());
+          return (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => onToggle(item.value, item.label)}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                isSelected
+                  ? 'bg-primary-600 text-white shadow-sm ring-1 ring-primary-600'
+                  : 'border border-black/[0.08] bg-white/70 text-surface-700 hover:bg-white hover:border-primary-300 dark:border-white/10 dark:bg-white/[0.05] dark:text-surface-300 dark:hover:bg-white/10'
+              }`}
+            >
+              {isSelected ? <Check className="w-3 h-3 text-white" /> : <Plus className="w-3 h-3 text-surface-400" />}
+              <span>{item.label}</span>
+              {item.count !== undefined && item.count > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-normal ${
+                  isSelected ? 'bg-primary-700 text-white' : 'bg-surface-100 dark:bg-surface-800 text-surface-400'
+                }`}>
+                  {item.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+

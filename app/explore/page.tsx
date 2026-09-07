@@ -33,9 +33,20 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function ExplorePage() {
+interface Props {
+  searchParams?: Promise<{ category?: string }>;
+}
+
+export default async function ExplorePage({ searchParams }: Props) {
+  const resolved = searchParams ? await searchParams : {};
   const posts = await fetchPostSummaries();
   const settings = await fetchSettings();
   
-  return <ExploreClient posts={posts} settings={settings} />;
+  return (
+    <ExploreClient
+      posts={posts}
+      settings={settings}
+      initialCategory={resolved.category ? decodeURIComponent(resolved.category) : undefined}
+    />
+  );
 }

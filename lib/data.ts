@@ -57,6 +57,17 @@ const defaultSettings: SiteSettings = {
     "Grok",
     "Qwen Image"
   ],
+  "categoryPresets": [
+    { "id": "cat-anime", "name": "Anime & Manga", "slug": "anime", "description": "Anime portraits, stylized illustrations, and Japanese comic aesthetics." },
+    { "id": "cat-photography", "name": "Photography & Portraits", "slug": "photography", "description": "Hyper-realistic portraits, candid street photos, and studio lighting." },
+    { "id": "cat-3d", "name": "3D & CGI Renders", "slug": "3d-art", "description": "Octane renders, isometric scenes, claymation, and Pixar-style characters." },
+    { "id": "cat-digital-art", "name": "Digital Art & Fantasy", "slug": "digital-art", "description": "Concept art, mythical creatures, fantasy landscapes, and surreal paintings." },
+    { "id": "cat-logos", "name": "Logos & Vector Icons", "slug": "logos", "description": "Minimalist vector logos, emblem badges, app icons, and branding kits." },
+    { "id": "cat-ui-ux", "name": "UI/UX & Web Design", "slug": "ui-ux", "description": "Landing page hero sections, mobile dashboard concepts, and web UI components." },
+    { "id": "cat-cinematic", "name": "Cinematic & Film", "slug": "cinematic", "description": "Wide-angle cinematic stills, movie scenes, anamorphic lens flares, and mood lighting." },
+    { "id": "cat-architecture", "name": "Architecture & Interiors", "slug": "architecture", "description": "Modern minimalist interiors, futuristic facades, and architectural renderings." },
+    { "id": "cat-creative", "name": "Creative & Conceptual", "slug": "creative", "description": "Abstract compositions, creative directions, posters, and experimental designs." }
+  ],
   "authors": [
     {
       "id": "editorial-team",

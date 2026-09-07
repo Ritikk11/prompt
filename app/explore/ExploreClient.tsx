@@ -8,13 +8,22 @@ import MasonryGrid from '@/components/MasonryGrid';
 import FilterChipRail from '@/components/FilterChipRail';
 import { getFilterTagsFromPosts } from '@/lib/filter-tags';
 import { getAllTools } from '@/lib/constants';
-import { Clock, Flame } from 'lucide-react';
+import { Clock, Flame, X } from 'lucide-react';
 import DiscoveryPageHero from '@/components/DiscoveryPageHero';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
 import ScrollReveal from '@/components/ScrollReveal';
 
-export default function ExploreClient({ posts, settings }: { posts: Post[], settings: SiteSettings }) {
+export default function ExploreClient({
+  posts,
+  settings,
+  initialCategory,
+}: {
+  posts: Post[];
+  settings: SiteSettings;
+  initialCategory?: string;
+}) {
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'trending'>('latest');
+  const [activeCategory, setActiveCategory] = useState<string | null>(initialCategory || null);
 
   const itemsPerLoad = settings.features?.infiniteScrollItems || 20;
   const [displayedCount, setDisplayedCount] = useState(itemsPerLoad);
@@ -38,6 +47,14 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
   ];
 
   let filtered = [...publicPosts];
+  if (activeCategory) {
+    const target = activeCategory.toLowerCase();
+    filtered = filtered.filter(p =>
+      (p.category && p.category.toLowerCase() === target) ||
+      (p.categories && p.categories.some(c => c.toLowerCase() === target))
+    );
+  }
+
   if (sortBy === 'latest') {
     filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   } else if (sortBy === 'popular') {
@@ -80,35 +97,67 @@ export default function ExploreClient({ posts, settings }: { posts: Post[], sett
         ] : []}
       />
 
+      {/* Active Category Filter Pill */}
+      {activeCategory && (
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-surface-400 select-none">Category:</span>
+          <button
+            type="button"
+            onClick={() => setActiveCategory(null)}
+            className="inline-flex h-8 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border border-primary-600 bg-primary-600 px-3.5 text-[13px] font-medium text-white shadow-sm outline-none transition-[background-color,border-color,color,transform,opacity] duration-150 ease-out transform-gpu hover:opacity-90 active:scale-[0.98] dark:border-primary-500 dark:bg-primary-500"
+            title="Clear category filter"
+          >
+            <span className="capitalize">{activeCategory}</span>
+            <X className="w-3.5 h-3.5 opacity-80" />
+          </button>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="mb-7 space-y-4">
         {/* Sort — standalone only when the rail isn't rendering its own control */}
         {!showCustomRail && (
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+            <span className="mr-1 text-xs font-semibold uppercase tracking-wider text-surface-400 select-none">Sort:</span>
             <button
+              type="button"
               onClick={() => setSortBy('latest')}
-              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'latest' ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
+              className={`inline-flex h-8 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-medium outline-none transition-[background-color,border-color,color,transform,opacity] duration-150 ease-out transform-gpu active:scale-[0.98] active:opacity-85 ${
+                sortBy === 'latest'
+                  ? 'border-primary-600 bg-primary-600 text-white dark:border-primary-500 dark:bg-primary-500 shadow-sm'
+                  : 'border-white/80 bg-white/60 text-surface-700 backdrop-blur-xl backdrop-saturate-150 hover:border-white/90 hover:bg-white/80 hover:text-surface-900 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-white/20 dark:hover:bg-white/[0.12] dark:hover:text-white'
+              }`}
             >
-              <Clock className="h-3.5 w-3.5" />
+              <Clock className="h-3.5 w-3.5 opacity-70" />
               Latest
             </button>
             <button
+              type="button"
               onClick={() => setSortBy('popular')}
-              className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'popular' ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
+              className={`inline-flex h-8 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-medium outline-none transition-[background-color,border-color,color,transform,opacity] duration-150 ease-out transform-gpu active:scale-[0.98] active:opacity-85 ${
+                sortBy === 'popular'
+                  ? 'border-primary-600 bg-primary-600 text-white dark:border-primary-500 dark:bg-primary-500 shadow-sm'
+                  : 'border-white/80 bg-white/60 text-surface-700 backdrop-blur-xl backdrop-saturate-150 hover:border-white/90 hover:bg-white/80 hover:text-surface-900 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-white/20 dark:hover:bg-white/[0.12] dark:hover:text-white'
+              }`}
             >
-              <Flame className="h-3.5 w-3.5" />
+              <Flame className="h-3.5 w-3.5 opacity-70" />
               Popular
             </button>
             {showTrending && (
               <button
+                type="button"
                 onClick={() => setSortBy('trending')}
-                className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-150 ${sortBy === 'trending' ? 'border border-primary-500/40 bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300' : 'border border-white/80 bg-white/60 text-surface-700 shadow-sm backdrop-blur-xl hover:border-primary-400/60 hover:bg-white/80 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:text-white'}`}
+                className={`inline-flex h-8 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-medium outline-none transition-[background-color,border-color,color,transform,opacity] duration-150 ease-out transform-gpu active:scale-[0.98] active:opacity-85 ${
+                  sortBy === 'trending'
+                    ? 'border-primary-600 bg-primary-600 text-white dark:border-primary-500 dark:bg-primary-500 shadow-sm'
+                    : 'border-white/80 bg-white/60 text-surface-700 backdrop-blur-xl backdrop-saturate-150 hover:border-white/90 hover:bg-white/80 hover:text-surface-900 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-white/20 dark:hover:bg-white/[0.12] dark:hover:text-white'
+                }`}
               >
-                <Flame className="h-3.5 w-3.5" />
+                <Flame className="h-3.5 w-3.5 opacity-70" />
                 Trending
               </button>
             )}
-        </div>
+          </div>
         )}
 
         {showCustomRail && (

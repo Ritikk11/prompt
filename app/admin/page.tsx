@@ -2,14 +2,14 @@
 import { useState, useEffect, useRef, useMemo, useCallback, Suspense } from 'react';
 import { useData } from '@/components/context/DataContext';
 
-import type { Post, Section, ImagePrompt, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, CreativeDirectionItem, ShareTarget, DiscoveryPageSettings, ArticleSettingsOverride } from '@/lib/types';
+import type { Post, Section, ImagePrompt, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, CreativeDirectionItem, ShareTarget, DiscoveryPageSettings, ArticleSettingsOverride, CategoryPreset } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
   Plus, Trash2, Edit3, Eye, EyeOff, ChevronUp, ChevronDown,
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload, Copy,
   Settings, Check, Filter, Search, RotateCcw, GripVertical, Image as ImageIcon,
-  Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass, Menu, Mail,
+  Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass, Menu, Mail, FolderTree,
   Ban, Shield, Flag, CheckCircle, Cpu, BookOpen, Newspaper, Share2, Loader2, KeyRound, LogOut
 } from 'lucide-react';
 import { showToast } from '@/components/ui/ToastContainer';
@@ -23,7 +23,7 @@ import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
 import AiStudioTab from '@/components/admin/AiStudioTab';
 import { MagicWandProvider, WandButton, useMagicWand } from '@/components/admin/MagicWand';
-import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, FieldTextarea, EditableCard, CharCount, Toggle, ActionButton, AdminSelect, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
+import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, FieldTextarea, EditableCard, CharCount, Toggle, ActionButton, AdminSelect, AdminCombobox, AdminTagInput, PresetPills, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
 import { askAi } from '@/lib/admin/ai';
 import { postPrompts, articlePrompts, generalPrompts, discoveryPrompts, homepagePrompts, aiToolPrompts, featurePrompts, TOOLS_MODELS_RULES, aiStudioSystemContext } from '@/lib/admin/wandPrompts';
 import { filterPostsForSection, getSectionPath } from '@/lib/sections';
@@ -47,11 +47,11 @@ import MediaLibraryModal from '@/components/admin/MediaLibraryModal';
 type AdminTab = 'dashboard' | 'posts' | 'sections' | 'articles' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages' | 'ai-studio';
 const DiscoveryPageIds = ['explore', 'tool', 'tag'] as const;
 export type DiscoveryPageId = typeof DiscoveryPageIds[number];
-type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share';
+type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share' | 'categories';
 type SectionLocationFilter = 'homepage' | 'header' | 'footer' | 'all';
 
 const adminTabKeys: AdminTab[] = ['dashboard', 'posts', 'sections', 'articles', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages', 'ai-studio'];
-const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'discovery', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share'];
+const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'discovery', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share', 'categories'];
 const sectionLocationKeys: SectionLocationFilter[] = ['homepage', 'header', 'footer', 'all'];
 
 function parseAdminTab(value: string | null): AdminTab {
@@ -363,6 +363,23 @@ function cleanCreativeDirectionItems(items: CreativeDirectionItem[] = []): Creat
       };
     })
     .filter(item => item.label && item.value);
+}
+
+function cleanCategoryPresets(items: CategoryPreset[] = []): CategoryPreset[] {
+  return items
+    .map(item => {
+      const name = (item.name || '').trim();
+      const slug = item.slug ? slugify(item.slug) : slugify(name);
+      return {
+        id: item.id || `cat-${slug}`,
+        name,
+        slug,
+        ...(item.description?.trim() ? { description: item.description.trim() } : {}),
+        ...(item.icon?.trim() ? { icon: item.icon.trim() } : {}),
+        ...(item.color?.trim() ? { color: item.color.trim() } : {}),
+      };
+    })
+    .filter(item => item.name && item.slug);
 }
 
 function getPublicPosts(posts: Post[]) {
@@ -1315,6 +1332,16 @@ function AdminInner() {
     settings.creativeDirectionItems || []
   );
   const [expandedCreativeIndex, setExpandedCreativeIndex] = useState<number | null>(null);
+  const [categoryPresets, setCategoryPresets] = useState<CategoryPreset[]>(
+    settings.categoryPresets || []
+  );
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategorySlug, setNewCategorySlug] = useState('');
+  const [newCategoryDesc, setNewCategoryDesc] = useState('');
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editCategoryName, setEditCategoryName] = useState('');
+  const [editCategorySlug, setEditCategorySlug] = useState('');
+  const [editCategoryDesc, setEditCategoryDesc] = useState('');
   const [footerLinkGroups, setFooterLinkGroups] = useState<FooterLinkGroup[]>(settings.footerLinkGroups || defaultFooterLinkGroups);
   const [socialLinks, setSocialLinks] = useState<NonNullable<SiteSettings['socialLinks']>>(settings.socialLinks || {});
   const [imageProvider, setImageProvider] = useState<UploadProvider>(
@@ -1518,6 +1545,7 @@ function AdminInner() {
     if (settings.discoveryPages?.tagRailItems !== undefined) setTagRailItems(settings.discoveryPages.tagRailItems || []);
     if (settings.discoveryPages?.sectionRailItems !== undefined) setSectionRailItems(settings.discoveryPages.sectionRailItems || []);
     if (settings.creativeDirectionItems !== undefined) setCreativeDirectionItems(settings.creativeDirectionItems || []);
+    if (settings.categoryPresets !== undefined) setCategoryPresets(settings.categoryPresets || []);
     if (settings.footerLinkGroups !== undefined) setFooterLinkGroups(settings.footerLinkGroups || defaultFooterLinkGroups);
     if (settings.socialLinks !== undefined) setSocialLinks(settings.socialLinks || {});
     if (settings.imageProvider !== undefined) {
@@ -1596,6 +1624,65 @@ function AdminInner() {
   const savedCreativeItems = cleanCreativeDirectionItems(creativeDirectionItems);
   const liveCreativeItems = savedCreativeItems.length > 0 ? savedCreativeItems : autoCreativeItems;
   const supportedTools = Array.from(new Set(publicPosts.flatMap(post => getAllTools(post)).filter(Boolean)));
+
+  const allCategoryOptions = useMemo(() => {
+    const map = new Map<string, { label: string; value: string; count: number; description?: string }>();
+    categoryPresets.forEach(preset => {
+      const key = preset.name.trim().toLowerCase();
+      const count = posts.filter(p =>
+        (p.category && p.category.toLowerCase() === key) ||
+        (p.categories && p.categories.some(c => c.toLowerCase() === key))
+      ).length;
+      map.set(key, {
+        label: preset.name.trim(),
+        value: preset.slug || slugify(preset.name),
+        count,
+        description: preset.description,
+      });
+    });
+
+    posts.forEach(p => {
+      const cats = [p.category, ...(p.categories || [])].filter(Boolean) as string[];
+      cats.forEach(c => {
+        const key = c.trim().toLowerCase();
+        if (!map.has(key)) {
+          const count = posts.filter(post =>
+            (post.category && post.category.toLowerCase() === key) ||
+            (post.categories && post.categories.some(cat => cat.toLowerCase() === key))
+          ).length;
+          map.set(key, {
+            label: c.trim(),
+            value: slugify(c.trim()),
+            count,
+          });
+        }
+      });
+    });
+
+    return Array.from(map.values());
+  }, [categoryPresets, posts]);
+
+  const allTagOptions = useMemo(() => {
+    const counts = new Map<string, number>();
+    posts.forEach(p => {
+      (p.tags || []).forEach(t => {
+        if (!t) return;
+        const key = t.trim();
+        counts.set(key, (counts.get(key) || 0) + 1);
+      });
+    });
+    return Array.from(counts.entries())
+      .map(([tag, count]) => ({ label: tag, value: tag, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [posts]);
+
+  const allToolOptions = useMemo(() => {
+    const tools = Array.from(new Set([...(settings.aiTools || []), ...posts.flatMap(p => getAllTools(p)).filter(Boolean)]));
+    return tools.map(t => {
+      const count = posts.filter(p => getAllTools(p).includes(t)).length;
+      return { label: t, value: t, count };
+    });
+  }, [settings.aiTools, posts]);
   const getHomepageBlockDetail = (key: string) => {
     if (key === 'howTo') return 'Fixed 3-step guidance block with clickable preview cards';
     if (key === 'reviewProcess') return 'Fixed trust block about prompt checks and public quality';
@@ -2676,6 +2763,7 @@ function AdminInner() {
       exploreFilterTags: cleanCommaList(exploreFilterTags),
       exploreFilterItems: cleanRailItems(exploreFilterItems),
       creativeDirectionItems: cleanCreativeDirectionItems(creativeDirectionItems),
+      categoryPresets: cleanCategoryPresets(categoryPresets),
       footerLinkGroups: cleanFooterGroups(footerLinkGroups),
       socialLinks: {
         twitter: socialLinks.twitter?.trim() || undefined,
@@ -2827,6 +2915,102 @@ function AdminInner() {
       showToast('Failed to process image', 'error');
       setEditAiToolLogo('');
     }
+  };
+
+  // Category Presets Management
+  const addCategoryPreset = () => {
+    if (!newCategoryName.trim()) return;
+    const name = newCategoryName.trim();
+    const slug = newCategorySlug.trim() ? slugify(newCategorySlug) : slugify(name);
+    if (categoryPresets.some(c => c.name.toLowerCase() === name.toLowerCase() || c.slug === slug)) {
+      showToast('Category already exists in presets', 'error');
+      return;
+    }
+    const newCat: CategoryPreset = {
+      id: `cat-${Date.now()}-${slug}`,
+      name,
+      slug,
+      description: newCategoryDesc.trim() || undefined,
+    };
+    const updated = [...categoryPresets, newCat];
+    setCategoryPresets(updated);
+    updateSettings({ ...settings, categoryPresets: cleanCategoryPresets(updated) });
+    setNewCategoryName('');
+    setNewCategorySlug('');
+    setNewCategoryDesc('');
+    showToast(`Added category preset "${name}"`);
+  };
+
+  const startEditCategory = (cat: CategoryPreset) => {
+    setEditingCategoryId(cat.id || cat.slug);
+    setEditCategoryName(cat.name);
+    setEditCategorySlug(cat.slug || slugify(cat.name));
+    setEditCategoryDesc(cat.description || '');
+  };
+
+  const saveEditCategory = (id: string) => {
+    if (!editCategoryName.trim()) return;
+    const updated = categoryPresets.map(c => {
+      if ((c.id || c.slug) === id) {
+        return {
+          ...c,
+          name: editCategoryName.trim(),
+          slug: editCategorySlug.trim() ? slugify(editCategorySlug) : slugify(editCategoryName),
+          description: editCategoryDesc.trim() || undefined,
+        };
+      }
+      return c;
+    });
+    setCategoryPresets(updated);
+    updateSettings({ ...settings, categoryPresets: cleanCategoryPresets(updated) });
+    setEditingCategoryId(null);
+    showToast('Updated category preset');
+  };
+
+  const deleteCategoryPreset = (id: string) => {
+    const updated = categoryPresets.filter(c => (c.id || c.slug) !== id);
+    setCategoryPresets(updated);
+    updateSettings({ ...settings, categoryPresets: cleanCategoryPresets(updated) });
+    showToast('Category preset removed');
+  };
+
+  const moveCategoryPreset = (index: number, delta: number) => {
+    const next = [...categoryPresets];
+    const target = index + delta;
+    if (target < 0 || target >= next.length) return;
+    const temp = next[index];
+    next[index] = next[target];
+    next[target] = temp;
+    setCategoryPresets(next);
+    updateSettings({ ...settings, categoryPresets: cleanCategoryPresets(next) });
+  };
+
+  const importCategoriesFromPosts = () => {
+    const existingSet = new Set(categoryPresets.map(c => c.name.toLowerCase()));
+    const imported: CategoryPreset[] = [];
+    posts.forEach(p => {
+      const list = [p.category, ...(p.categories || [])].filter(Boolean) as string[];
+      list.forEach(item => {
+        const trimmed = item.trim();
+        if (trimmed && !existingSet.has(trimmed.toLowerCase())) {
+          existingSet.add(trimmed.toLowerCase());
+          imported.push({
+            id: `cat-${Date.now()}-${slugify(trimmed)}`,
+            name: trimmed,
+            slug: slugify(trimmed),
+            description: `Curated prompts for ${trimmed}.`,
+          });
+        }
+      });
+    });
+    if (imported.length === 0) {
+      showToast('No new categories found in posts', 'info');
+      return;
+    }
+    const updated = [...categoryPresets, ...imported];
+    setCategoryPresets(updated);
+    updateSettings({ ...settings, categoryPresets: cleanCategoryPresets(updated) });
+    showToast(`Imported ${imported.length} categories from posts!`);
   };
 
   // Custom Sections Management
@@ -4091,12 +4275,28 @@ function AdminInner() {
                         prompt={() => postPrompts.tags(title)}
                       />
                     </div>
-                    <textarea
+                    <AdminTagInput
                       value={tagsStr}
-                      onChange={e => setTagsStr(e.target.value)}
+                      onChange={setTagsStr}
+                      suggestions={allTagOptions}
                       rows={2}
                       className="w-full min-h-[72px] px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-sm resize-y placeholder:text-surface-400"
                       placeholder="fantasy, landscape, magical"
+                    />
+                    <PresetPills
+                      title="Popular Tags (Click to toggle)"
+                      items={allTagOptions.slice(0, 20)}
+                      selectedValues={tagsStr.split(',').map(s => s.trim()).filter(Boolean)}
+                      onToggle={(val, lbl) => {
+                        const current = tagsStr.split(',').map(s => s.trim()).filter(Boolean);
+                        const exists = current.some(t => t.toLowerCase() === val.toLowerCase() || t.toLowerCase() === lbl.toLowerCase());
+                        if (exists) {
+                          setTagsStr(current.filter(t => t.toLowerCase() !== val.toLowerCase() && t.toLowerCase() !== lbl.toLowerCase()).join(', '));
+                        } else {
+                          setTagsStr([...current, lbl].join(', '));
+                        }
+                      }}
+                      className="mt-2"
                     />
                   </div>
                   <div>
@@ -4109,12 +4309,34 @@ function AdminInner() {
                         prompt={() => postPrompts.category(title)}
                       />
                     </div>
-                    <textarea
+                    <AdminTagInput
                       value={categoriesStr}
-                      onChange={e => setCategoriesStr(e.target.value)}
+                      onChange={setCategoriesStr}
+                      suggestions={allCategoryOptions}
                       rows={2}
                       className="w-full min-h-[72px] px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-sm resize-y placeholder:text-surface-400"
                       placeholder="e.g. UI, Characters"
+                    />
+                    <PresetPills
+                      title="Category Presets (Click to toggle)"
+                      items={allCategoryOptions}
+                      selectedValues={categoriesStr.split(',').map(s => s.trim()).filter(Boolean)}
+                      onToggle={(val, lbl) => {
+                        const current = categoriesStr.split(',').map(s => s.trim()).filter(Boolean);
+                        const exists = current.some(c => c.toLowerCase() === val.toLowerCase() || c.toLowerCase() === lbl.toLowerCase());
+                        if (exists) {
+                          const next = current.filter(c => c.toLowerCase() !== val.toLowerCase() && c.toLowerCase() !== lbl.toLowerCase());
+                          setCategoriesStr(next.join(', '));
+                          if (category && (category.toLowerCase() === val.toLowerCase() || category.toLowerCase() === lbl.toLowerCase())) {
+                            setCategory(next[0] || '');
+                          }
+                        } else {
+                          const next = [...current, lbl];
+                          setCategoriesStr(next.join(', '));
+                          if (!category) setCategory(lbl);
+                        }
+                      }}
+                      className="mt-2"
                     />
                   </div>
                 </div>
@@ -4736,9 +4958,10 @@ function AdminInner() {
                 )}
                 {newSectionType === 'tag' && (
                   <Field label="Tag value">
-                    <input
+                    <AdminCombobox
                       value={newSectionTag}
-                      onChange={e => setNewSectionTag(e.target.value)}
+                      onChange={setNewSectionTag}
+                      options={allTagOptions}
                       className={adminInput}
                       placeholder="e.g., character, anime"
                     />
@@ -4746,11 +4969,12 @@ function AdminInner() {
                 )}
                 {newSectionType === 'category' && (
                   <Field label="Category value">
-                    <input
+                    <AdminCombobox
                       value={newSectionCategory}
-                      onChange={e => setNewSectionCategory(e.target.value)}
+                      onChange={setNewSectionCategory}
+                      options={allCategoryOptions}
                       className={adminInput}
-                      placeholder="e.g., UI, Game"
+                      placeholder="e.g., UI, Anime"
                     />
                   </Field>
                 )}
@@ -4982,9 +5206,10 @@ function AdminInner() {
                             )}
                             {editSectionType === 'tag' && (
                               <Field label="Tag value" className="md:col-span-2">
-                                <input
+                                <AdminCombobox
                                   value={editSectionTag}
-                                  onChange={e => setEditSectionTag(e.target.value)}
+                                  onChange={setEditSectionTag}
+                                  options={allTagOptions}
                                   className={adminInput}
                                   placeholder="e.g. realistic, photorealistic"
                                 />
@@ -4992,9 +5217,10 @@ function AdminInner() {
                             )}
                             {editSectionType === 'category' && (
                               <Field label="Category name" className="md:col-span-2">
-                                <input
+                                <AdminCombobox
                                   value={editSectionCategory}
-                                  onChange={e => setEditSectionCategory(e.target.value)}
+                                  onChange={setEditSectionCategory}
+                                  options={allCategoryOptions}
                                   className={adminInput}
                                   placeholder="e.g. Photography, Art"
                                 />
@@ -5138,6 +5364,30 @@ function AdminInner() {
                                   >
                                     <RotateCcw className="w-3 h-3" /> Clear custom chips
                                   </button>
+                                  <div className="relative inline-block">
+                                    <AdminSelect
+                                      value=""
+                                      onChange={(val) => {
+                                        if (!val) return;
+                                        const opt = allCategoryOptions.find(c => c.value === val);
+                                        if (opt) {
+                                          setEditSectionRailItems(prev => [
+                                            ...prev,
+                                            { label: opt.label, type: 'category', value: opt.value }
+                                          ]);
+                                        }
+                                      }}
+                                      className="inline-flex items-center gap-1 rounded-lg border border-surface-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-surface-700 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-200"
+                                      placeholder="+ Add Category..."
+                                    >
+                                      <option value="">+ Add Category...</option>
+                                      {allCategoryOptions.map(cat => (
+                                        <option key={cat.value} value={cat.value}>
+                                          {cat.label} {cat.count > 0 ? `(${cat.count})` : ''}
+                                        </option>
+                                      ))}
+                                    </AdminSelect>
+                                  </div>
                                 </div>
 
                                 <div className="space-y-2">
@@ -5162,13 +5412,25 @@ function AdminInner() {
                                         <option value="tool">AI Tool</option>
                                         <option value="category">Category</option>
                                       </AdminSelect>
-                                      <input
+                                      <AdminCombobox
                                         value={item.value}
-                                        onChange={e => {
-                                          setEditSectionRailItems(prev => prev.map((chip, idx) => idx === index ? { ...chip, value: e.target.value } : chip));
+                                        onChange={val => {
+                                          setEditSectionRailItems(prev => prev.map((chip, idx) => idx === index ? { ...chip, value: val } : chip));
                                         }}
+                                        options={
+                                          item.type === 'category'
+                                            ? allCategoryOptions
+                                            : item.type === 'tool'
+                                              ? allToolOptions
+                                              : allTagOptions
+                                        }
+                                        placeholder={item.type === 'category' ? 'Select or type category...' : item.type === 'tool' ? 'Select AI tool...' : 'Select or type tag...'}
                                         className={adminInput}
-                                        placeholder="Match value, e.g. anime"
+                                        onSelectSuggestion={(opt) => {
+                                          if (!item.label || item.label === item.value) {
+                                            setEditSectionRailItems(prev => prev.map((chip, idx) => idx === index ? { ...chip, label: opt.label } : chip));
+                                          }
+                                        }}
                                       />
                                       <button
                                         type="button"
@@ -5446,6 +5708,7 @@ function AdminInner() {
                   { id: 'features', label: 'Feature Flags', icon: <Sparkles className="w-4 h-4" /> },
                   { id: 'ads', label: 'Ads & Scripts', icon: <BarChart2 className="w-4 h-4" /> },
                   { id: 'ai-tools', label: 'AI Tools', icon: <Wand2 className="w-4 h-4" /> },
+                  { id: 'categories', label: 'Categories Preset', icon: <FolderTree className="w-4 h-4" /> },
                   { id: 'comments', label: 'Comments', icon: <MessageCircle className="w-4 h-4" /> },
                   { id: 'share', label: 'Share Targets', icon: <ArrowRight className="w-4 h-4" /> },
                 ].map(cat => {
@@ -6202,6 +6465,31 @@ function AdminInner() {
                             <button type="button" onClick={() => activeRailConfig.setItems([])} className="inline-flex items-center gap-2 rounded-lg bg-surface-100 px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-100">
                               <RotateCcw className="h-3.5 w-3.5" /> Clear custom chips
                             </button>
+                            <div className="relative inline-block">
+                              <AdminSelect
+                                value=""
+                                onChange={(val) => {
+                                  if (!val) return;
+                                  const opt = allCategoryOptions.find(c => c.value === val);
+                                  if (opt) {
+                                    activeRailConfig.setItems([
+                                      ...activeRailConfig.items,
+                                      { label: opt.label, type: 'category', value: opt.value }
+                                    ]);
+                                    showToast(`Added category chip: ${opt.label}`);
+                                  }
+                                }}
+                                className="inline-flex items-center gap-2 rounded-lg border border-surface-200 bg-white px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100"
+                                placeholder="+ Add Category from Presets..."
+                              >
+                                <option value="">+ Add Category from Presets...</option>
+                                {allCategoryOptions.map(cat => (
+                                  <option key={cat.value} value={cat.value}>
+                                    {cat.label} {cat.count > 0 ? `(${cat.count})` : ''}
+                                  </option>
+                                ))}
+                              </AdminSelect>
+                            </div>
                           </div>
                           <div className="space-y-3">
                             {activeRailConfig.items.map((item, index) => (
@@ -6216,7 +6504,24 @@ function AdminInner() {
                                   <option value="tool">AI Tool</option>
                                   <option value="category">Category</option>
                                 </AdminSelect>
-                                <input value={item.value} onChange={e => updateRailItem(activeRailConfig.key, index, 'value', e.target.value)} className={adminInputOnCard} placeholder="Match value, e.g. anime" />
+                                <AdminCombobox
+                                  value={item.value}
+                                  onChange={val => updateRailItem(activeRailConfig.key, index, 'value', val)}
+                                  options={
+                                    item.type === 'category'
+                                      ? allCategoryOptions
+                                      : item.type === 'tool'
+                                        ? allToolOptions
+                                        : allTagOptions
+                                  }
+                                  placeholder={item.type === 'category' ? 'Select or type category...' : item.type === 'tool' ? 'Select AI tool...' : 'Select or type tag...'}
+                                  className={adminInputOnCard}
+                                  onSelectSuggestion={(opt) => {
+                                    if (!item.label || item.label === item.value) {
+                                      updateRailItem(activeRailConfig.key, index, 'label', opt.label);
+                                    }
+                                  }}
+                                />
                                 <ActionButton variant="danger" onClick={() => removeRailItem(activeRailConfig.key, index)}>Remove</ActionButton>
                               </div>
                             ))}
@@ -6876,7 +7181,29 @@ function AdminInner() {
                                 <CardStylePreview style={editSectionCardStyle || cardStyle} badgeStyle={badgeStyle} label={editSectionCardStyle ? 'Section override preview' : 'Global style preview'} />
                               </div>
                               <Field label="Filter rail tags" className="sm:col-span-2">
-                                <input value={editSectionFilterTags} onChange={e => setEditSectionFilterTags(e.target.value)} className={adminInput} placeholder="anime, realistic" />
+                                <AdminTagInput
+                                  value={editSectionFilterTags}
+                                  onChange={setEditSectionFilterTags}
+                                  suggestions={allTagOptions}
+                                  rows={1}
+                                  className={adminInput}
+                                  placeholder="anime, realistic"
+                                />
+                                <PresetPills
+                                  title="Quick add tags"
+                                  items={allTagOptions.slice(0, 16)}
+                                  selectedValues={editSectionFilterTags.split(',').map(s => s.trim()).filter(Boolean)}
+                                  onToggle={(val, lbl) => {
+                                    const current = editSectionFilterTags.split(',').map(s => s.trim()).filter(Boolean);
+                                    const exists = current.some(t => t.toLowerCase() === val.toLowerCase() || t.toLowerCase() === lbl.toLowerCase());
+                                    if (exists) {
+                                      setEditSectionFilterTags(current.filter(t => t.toLowerCase() !== val.toLowerCase() && t.toLowerCase() !== lbl.toLowerCase()).join(', '));
+                                    } else {
+                                      setEditSectionFilterTags([...current, lbl].join(', '));
+                                    }
+                                  }}
+                                  className="mt-1.5"
+                                />
                               </Field>
                               <Field label="Hero title" className="sm:col-span-2">
                                 <input value={editSectionHeroTitle} onChange={e => setEditSectionHeroTitle(e.target.value)} className={adminInput} placeholder="Blank = section name" />
@@ -7368,6 +7695,31 @@ function AdminInner() {
                     >
                       <Check className="h-3.5 w-3.5" /> Use current auto cards
                     </button>
+                    <div className="relative inline-block">
+                      <AdminSelect
+                        value=""
+                        onChange={(val) => {
+                          if (!val) return;
+                          const opt = allCategoryOptions.find(c => c.value === val);
+                          if (opt) {
+                            setCreativeDirectionItems(prev => [
+                              ...prev,
+                              { label: opt.label, type: 'category', value: opt.value }
+                            ]);
+                            showToast(`Added creative card: ${opt.label}`);
+                          }
+                        }}
+                        className="inline-flex items-center gap-2 rounded-lg border border-surface-200 bg-white px-3 py-2 text-xs font-bold text-surface-700 hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100"
+                        placeholder="+ Add Card from Category Presets..."
+                      >
+                        <option value="">+ Add Card from Category Presets...</option>
+                        {allCategoryOptions.map(cat => (
+                          <option key={cat.value} value={cat.value}>
+                            {cat.label} {cat.count > 0 ? `(${cat.count})` : ''}
+                          </option>
+                        ))}
+                      </AdminSelect>
+                    </div>
                     {savedCreativeItems.length > 0 && (
                       <button
                         onClick={() => setCreativeDirectionItems([])}
@@ -7438,13 +7790,40 @@ function AdminInner() {
                       </div>
                       <div className="space-y-1">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Slug/Value to Match</span>
-                        <input
+                        <AdminCombobox
                           value={item.value}
-                          onChange={e => updateRailItem('creative', index, 'value', e.target.value)}
+                          onChange={v => updateRailItem('creative', index, 'value', v)}
+                          options={
+                            item.type === 'category'
+                              ? allCategoryOptions
+                              : item.type === 'tool'
+                                ? allToolOptions
+                                : allTagOptions
+                          }
+                          placeholder={item.type === 'category' ? 'Select or type category...' : item.type === 'tool' ? 'Select AI tool...' : 'Select or type tag...'}
                           className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs"
-                          placeholder="Match value, e.g. anime"
+                          onSelectSuggestion={(opt) => {
+                            if (!item.label || item.label === item.value) {
+                              updateRailItem('creative', index, 'label', opt.label);
+                            }
+                          }}
                         />
                       </div>
+                      {item.type === 'category' && allCategoryOptions.length > 0 && (
+                        <div className="sm:col-span-3 pt-1">
+                          <PresetPills
+                            title="Quick pick from category presets:"
+                            items={allCategoryOptions}
+                            selectedValues={[item.value]}
+                            onToggle={(val, lbl) => {
+                              updateRailItem('creative', index, 'value', val);
+                              if (!item.label || item.label === item.value) {
+                                updateRailItem('creative', index, 'label', lbl);
+                              }
+                            }}
+                          />
+                        </div>
+                      )}
                       <div className="grid grid-cols-1 gap-3 sm:col-span-3 sm:grid-cols-[140px_minmax(0,1fr)]">
                         <div className="space-y-1">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Icon</span>
@@ -8439,6 +8818,256 @@ function AdminInner() {
               </div>
             </div>
           </div>
+          )}
+
+          {settingsSubTab === 'categories' && (
+            <div className="space-y-6">
+              <TabBanner
+                icon={<FolderTree />}
+                title="Categories Preset Registry"
+                text="Define custom categories manually. Category presets power 1-click pills in post editors, browse cards, sections, and filter rails throughout the admin."
+                action={(
+                  <div className="flex flex-wrap items-center gap-2">
+                    <ActionButton
+                      variant="outline"
+                      onClick={importCategoriesFromPosts}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" /> Import from current posts
+                    </ActionButton>
+                    <ActionButton onClick={handleSaveSettings}>
+                      <Save className="w-3.5 h-3.5" /> Save Categories
+                    </ActionButton>
+                  </div>
+                )}
+              />
+
+              <Panel>
+                <PanelHeader
+                  title="Manage Category Presets"
+                  count={categoryPresets.length}
+                  subtitle="Custom categories available across your site. Click any preset to edit, reorder, or remove it."
+                  actions={(
+                    <div className="flex flex-wrap items-center gap-2">
+                      <ActionButton
+                        variant="outline"
+                        onClick={importCategoriesFromPosts}
+                        title="Scan all posts and add any categories not yet in presets"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-primary-500" />
+                        Sync from posts
+                      </ActionButton>
+                    </div>
+                  )}
+                />
+
+                {/* Add new preset form */}
+                <div className="p-4 sm:p-5 rounded-2xl border border-primary-500/20 bg-primary-500/[0.04] dark:border-primary-400/20 dark:bg-primary-500/[0.03] space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Plus className="w-4 h-4 text-primary-500" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-surface-900 dark:text-white">
+                      Add New Category Preset
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div>
+                      <label className={adminLabel}>Category Name</label>
+                      <input
+                        value={newCategoryName}
+                        onChange={e => {
+                          setNewCategoryName(e.target.value);
+                          if (!newCategorySlug || newCategorySlug === slugify(newCategoryName)) {
+                            setNewCategorySlug(slugify(e.target.value));
+                          }
+                        }}
+                        onKeyDown={e => e.key === 'Enter' && addCategoryPreset()}
+                        className={adminInput}
+                        placeholder="e.g. Cyberpunk, 3D Art, Anime"
+                      />
+                    </div>
+                    <div>
+                      <label className={adminLabel}>Identifier Slug</label>
+                      <div className="flex items-center rounded-xl border border-black/[0.08] dark:border-white/10 bg-white/80 dark:bg-white/[0.06] overflow-hidden">
+                        <span className="px-2.5 py-2 bg-black/[0.03] dark:bg-white/[0.04] text-[11px] text-surface-400 font-mono border-r border-black/[0.06] dark:border-white/[0.08]">#</span>
+                        <input
+                          value={newCategorySlug}
+                          onChange={e => setNewCategorySlug(slugify(e.target.value))}
+                          onKeyDown={e => e.key === 'Enter' && addCategoryPreset()}
+                          className="flex-1 px-3 py-2 bg-transparent text-xs font-mono outline-none text-surface-900 dark:text-white"
+                          placeholder="cyberpunk"
+                        />
+                      </div>
+                    </div>
+                    <div className="sm:col-span-2 lg:col-span-1">
+                      <label className={adminLabel}>Description (Optional)</label>
+                      <input
+                        value={newCategoryDesc}
+                        onChange={e => setNewCategoryDesc(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addCategoryPreset()}
+                        className={adminInput}
+                        placeholder="Short summary for SEO & cards..."
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end pt-1">
+                    <ActionButton
+                      onClick={addCategoryPreset}
+                      disabled={!newCategoryName.trim()}
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Add Category Preset
+                    </ActionButton>
+                  </div>
+                </div>
+
+                {/* Presets List */}
+                <div className="space-y-3">
+                  {categoryPresets.length === 0 && (
+                    <div className="rounded-2xl border border-dashed border-black/10 dark:border-white/10 p-8 text-center space-y-3">
+                      <FolderTree className="w-8 h-8 text-surface-400 mx-auto" />
+                      <div>
+                        <p className="text-sm font-bold text-surface-800 dark:text-surface-200">No category presets yet</p>
+                        <p className="text-xs text-surface-500 mt-1">Add your first custom category above, or import all existing categories from your posts.</p>
+                      </div>
+                      <ActionButton onClick={importCategoriesFromPosts}>
+                        <Sparkles className="w-3.5 h-3.5" /> Import from posts
+                      </ActionButton>
+                    </div>
+                  )}
+
+                  {categoryPresets.map((cat, index) => {
+                    const isEditing = editingCategoryId === (cat.id || cat.slug);
+                    const usageCount = posts.filter(p =>
+                      (p.category && p.category.toLowerCase() === cat.name.toLowerCase()) ||
+                      (p.categories && p.categories.some(c => c.toLowerCase() === cat.name.toLowerCase()))
+                    ).length;
+
+                    return (
+                      <EditableCard key={cat.id || cat.slug || index} isEditing={isEditing}>
+                        {isEditing ? (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.08] pb-3">
+                              <h4 className="text-xs font-bold uppercase tracking-wider text-surface-900 dark:text-white">
+                                Editing Preset: {cat.name}
+                              </h4>
+                              <div className="flex items-center gap-2">
+                                <ActionButton variant="ghost" onClick={() => setEditingCategoryId(null)}>
+                                  Cancel
+                                </ActionButton>
+                                <ActionButton onClick={() => saveEditCategory(cat.id || cat.slug)}>
+                                  <Save className="w-3.5 h-3.5" /> Save
+                                </ActionButton>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                              <div>
+                                <label className={adminLabel}>Category Name</label>
+                                <input
+                                  value={editCategoryName}
+                                  onChange={e => setEditCategoryName(e.target.value)}
+                                  className={adminInput}
+                                  placeholder="Category name"
+                                />
+                              </div>
+                              <div>
+                                <label className={adminLabel}>Identifier Slug</label>
+                                <div className="flex items-center rounded-xl border border-black/[0.08] dark:border-white/10 bg-white/80 dark:bg-white/[0.06] overflow-hidden">
+                                  <span className="px-2.5 py-2 bg-black/[0.03] dark:bg-white/[0.04] text-[11px] text-surface-400 font-mono border-r border-black/[0.06] dark:border-white/[0.08]">#</span>
+                                  <input
+                                    value={editCategorySlug}
+                                    onChange={e => setEditCategorySlug(slugify(e.target.value))}
+                                    className="flex-1 px-3 py-2 bg-transparent text-xs font-mono outline-none text-surface-900 dark:text-white"
+                                  />
+                                </div>
+                              </div>
+                              <div className="sm:col-span-2 lg:col-span-1">
+                                <label className={adminLabel}>Description</label>
+                                <input
+                                  value={editCategoryDesc}
+                                  onChange={e => setEditCategoryDesc(e.target.value)}
+                                  className={adminInput}
+                                  placeholder="Description..."
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="flex flex-col shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => moveCategoryPreset(index, -1)}
+                                  disabled={index === 0}
+                                  className="p-1 rounded text-surface-500 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] disabled:opacity-20 disabled:cursor-not-allowed"
+                                  title="Move up"
+                                >
+                                  <ChevronUp className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => moveCategoryPreset(index, 1)}
+                                  disabled={index === categoryPresets.length - 1}
+                                  className="p-1 rounded text-surface-500 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] disabled:opacity-20 disabled:cursor-not-allowed"
+                                  title="Move down"
+                                >
+                                  <ChevronDown className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                              <div className="w-9 h-9 rounded-xl border border-primary-500/20 bg-primary-500/10 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0">
+                                <FolderTree className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="font-extrabold text-sm text-surface-900 dark:text-white truncate">
+                                    {cat.name}
+                                  </h4>
+                                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-black/[0.04] dark:bg-white/[0.06] text-surface-500">
+                                    #{cat.slug}
+                                  </span>
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                    usageCount > 0
+                                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                      : 'bg-surface-100 dark:bg-surface-800 text-surface-400'
+                                  }`}>
+                                    {usageCount} {usageCount === 1 ? 'prompt' : 'prompts'}
+                                  </span>
+                                </div>
+                                {cat.description && (
+                                  <p className="text-xs text-surface-500 mt-0.5 truncate">{cat.description}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                              <ActionButton
+                                variant="outline"
+                                onClick={() => startEditCategory(cat)}
+                              >
+                                <Edit3 className="w-3.5 h-3.5" /> Edit
+                              </ActionButton>
+                              <ActionButton
+                                variant="danger"
+                                onClick={() => deleteCategoryPreset(cat.id || cat.slug)}
+                                title="Remove preset"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </ActionButton>
+                            </div>
+                          </div>
+                        )}
+                      </EditableCard>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-4 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between">
+                  <p className="text-xs text-surface-500">
+                    Category presets automatically appear as selectable chips in posts, browse cards, sections, and filter rails.
+                  </p>
+                  <ActionButton onClick={handleSaveSettings}>
+                    <Save className="w-4 h-4" /> Save Categories
+                  </ActionButton>
+                </div>
+              </Panel>
+            </div>
           )}
 
           {settingsSubTab === 'features' && (
