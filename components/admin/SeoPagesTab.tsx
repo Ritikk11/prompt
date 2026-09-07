@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-client';
 import type { SeoSettings, SiteSettings } from '@/lib/types';
 import { WandButton } from '@/components/admin/MagicWand';
 import { seoPrompts } from '@/lib/admin/wandPrompts';
-import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, CharCount, Toggle, adminInput } from '@/components/admin/AdminUI';
+import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, CharCount, Toggle, AdminSelect, adminInput } from '@/components/admin/AdminUI';
 import { showToast } from '@/components/ui/ToastContainer';
 import { confirmAction } from '@/components/ui/ConfirmDialog';
 
@@ -249,12 +249,12 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
               <p className="mt-1 text-xs text-surface-500">Shows a horizontal tag selector above this page grid. Tags must match post tags.</p>
             </Field>
             <Field label="Card style (optional)">
-              <select value={cardStyle} onChange={e => setCardStyle(e.target.value)} className={adminInput}>
+              <AdminSelect value={cardStyle} onChange={setCardStyle} className={adminInput}>
                 <option value="">Use global card style</option>
                 {['v1','v2','v3','v4','v5','v6','v7','v8'].map(style => (
                   <option key={style} value={style}>{style}</option>
                 ))}
-              </select>
+              </AdminSelect>
               <p className="mt-1 text-xs text-surface-500">Use this when you want this page to show a different card design than the rest of the site.</p>
             </Field>
           </div>
@@ -433,15 +433,15 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                 <Toggle checked={seoSettings.enableBreadcrumbList ?? true} onChange={checked => updateSeoSettings({ enableBreadcrumbList: checked })} />
               </div>
               <Field label="Schema type">
-                <select
+                <AdminSelect
                   value={seoSettings.schemaType || 'HowTo'}
-                  onChange={e => updateSeoSettings({ schemaType: e.target.value as SeoSettings['schemaType'] })}
+                  onChange={v => updateSeoSettings({ schemaType: v as SeoSettings['schemaType'] })}
                   className={adminInput}
                 >
                   <option value="Article">Article</option>
                   <option value="CreativeWork">CreativeWork</option>
                   <option value="HowTo">HowTo</option>
-                </select>
+                </AdminSelect>
               </Field>
             </div>
           </div>
@@ -462,14 +462,14 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                       redirects[index] = { ...redirect, to: e.target.value };
                       updateSeoSettings({ redirects });
                     }} className={adminInput} placeholder="/new-path" />
-                    <select value={redirect.status} onChange={e => {
+                    <AdminSelect value={redirect.status} onChange={v => {
                       const redirects = [...(seoSettings.redirects || [])];
-                      redirects[index] = { ...redirect, status: Number(e.target.value) as 301 | 302 };
+                      redirects[index] = { ...redirect, status: Number(v) as 301 | 302 };
                       updateSeoSettings({ redirects });
                     }} className={adminInput}>
                       <option value={301}>301</option>
                       <option value={302}>302</option>
-                    </select>
+                    </AdminSelect>
                     <button type="button" onClick={() => updateSeoSettings({ redirects: (seoSettings.redirects || []).filter((_, itemIndex) => itemIndex !== index) })} className="rounded-xl px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">Remove</button>
                   </div>
                 ))}

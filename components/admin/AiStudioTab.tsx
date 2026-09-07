@@ -13,6 +13,7 @@ import { showToast } from '@/components/ui/ToastContainer';
 import {
   type ChatMessage, newId, conversationToMarkdown,
 } from '@/lib/admin/aistudio-store';
+import { AdminSelect } from '@/components/admin/AdminUI';
 import { useConversations } from '@/components/admin/aistudio/useConversations';
 import ChatSidebar from '@/components/admin/aistudio/ChatSidebar';
 import MessageBubble from '@/components/admin/aistudio/MessageBubble';
@@ -268,13 +269,14 @@ export default function AiStudioTab({ posts, onCreateArticleFromAi, onCreatePost
             <div className="flex min-w-0 items-center gap-2">
               <h1 className="shrink-0 text-sm font-extrabold tracking-tight text-surface-900 dark:text-white sm:text-base">AI Studio</h1>
               <div className="relative inline-block">
-                <select
+                <AdminSelect
                   value={selectedModel}
-                  onChange={e => setSelectedModel(e.target.value as GeminiModelId)}
+                  onChange={v => setSelectedModel(v as GeminiModelId)}
+                  noChevron
                   className="cursor-pointer appearance-none rounded-full border border-primary-200 bg-primary-100 py-1 pl-7 pr-7 text-[11px] font-bold text-primary-600 outline-none transition-colors hover:border-primary-400 dark:border-primary-800 dark:bg-primary-950/60 dark:text-primary-400"
                 >
                   {models.map(m => <option key={m.id} value={m.id}>{m.emoji} {m.label}</option>)}
-                </select>
+                </AdminSelect>
                 <Sparkles className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-primary-500" />
                 <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-primary-500" />
               </div>

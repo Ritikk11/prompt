@@ -23,7 +23,7 @@ import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
 import AiStudioTab from '@/components/admin/AiStudioTab';
 import { MagicWandProvider, WandButton, useMagicWand } from '@/components/admin/MagicWand';
-import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, FieldTextarea, EditableCard, CharCount, Toggle, ActionButton, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
+import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, FieldTextarea, EditableCard, CharCount, Toggle, ActionButton, AdminSelect, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
 import { askAi } from '@/lib/admin/ai';
 import { postPrompts, articlePrompts, generalPrompts, discoveryPrompts, homepagePrompts, aiToolPrompts, featurePrompts, TOOLS_MODELS_RULES, aiStudioSystemContext } from '@/lib/admin/wandPrompts';
 import { filterPostsForSection, getSectionPath } from '@/lib/sections';
@@ -806,6 +806,10 @@ function AdminInner() {
   const [sectionLocationFilter, setSectionLocationFilterState] = useState<SectionLocationFilter>(() => parseSectionLocation(searchParams.get('loc')));
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [showPostForm, setShowPostForm] = useState(false);
+  // Remembers where the user was (the tapped post card) when the inline editor
+  // opens, so closing it can return the viewport there instead of leaving the
+  // user stranded at the bottom of the tall form on mobile.
+  const postFormScrollYRef = useRef(0);
   const [postSearch, setPostSearch] = useState('');
   const [postToolFilter, setPostToolFilter] = useState('');
   const [postTagFilter, setPostTagFilter] = useState('');
@@ -1623,8 +1627,15 @@ function AdminInner() {
   };
 
   const closePostForm = () => {
+    const restoreY = postFormScrollYRef.current;
     resetForm();
     router.push('/admin?tab=posts', { scroll: false });
+    // The editor is tall and its Save/Cancel sit at the bottom, so on mobile
+    // the viewport is left far down when it closes. Wait a frame for the list
+    // to remount, then return the viewport to the card the user was editing.
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: restoreY, behavior: 'auto' });
+    });
   };
 
   const startEdit = (post: Post) => {
@@ -1659,6 +1670,7 @@ function AdminInner() {
   };
 
   const openNewPost = () => {
+    postFormScrollYRef.current = window.scrollY;
     resetForm();
     setShowPostForm(true);
     setTabState('posts');
@@ -1666,6 +1678,7 @@ function AdminInner() {
   };
 
   const openEditPost = (post: Post) => {
+    postFormScrollYRef.current = window.scrollY;
     startEdit(post);
     setTabState('posts');
     router.push(`/admin?tab=posts&action=edit&id=${encodeURIComponent(post.id)}`, { scroll: false });
@@ -3509,33 +3522,33 @@ function AdminInner() {
                 </div>
               </div>
               <div className="mb-4 grid grid-cols-1 gap-2 md:grid-cols-5">
-                <select value={postToolFilter} onChange={e => setPostToolFilter(e.target.value)} className={adminInputOnCard}>
+                <AdminSelect value={postToolFilter} onChange={setPostToolFilter} className={adminInputOnCard}>
                   <option value="">All tools</option>
                   {postToolOptions.map(tool => <option key={tool} value={tool}>{tool}</option>)}
-                </select>
-                <select value={postTagFilter} onChange={e => setPostTagFilter(e.target.value)} className={adminInputOnCard}>
+                </AdminSelect>
+                <AdminSelect value={postTagFilter} onChange={setPostTagFilter} className={adminInputOnCard}>
                   <option value="">All tags</option>
                   {postTagOptions.map(tag => <option key={tag} value={tag}>{tag}</option>)}
-                </select>
-                <select value={postStatusFilter} onChange={e => setPostStatusFilter(e.target.value)} className={adminInputOnCard}>
+                </AdminSelect>
+                <AdminSelect value={postStatusFilter} onChange={setPostStatusFilter} className={adminInputOnCard}>
                   <option value="">All status</option>
                   <option value="published">Published</option>
                   <option value="draft">Draft</option>
                   <option value="pending">Pending</option>
-                </select>
-                <select value={postFeaturedFilter} onChange={e => setPostFeaturedFilter(e.target.value)} className={adminInputOnCard}>
+                </AdminSelect>
+                <AdminSelect value={postFeaturedFilter} onChange={setPostFeaturedFilter} className={adminInputOnCard}>
                   <option value="">All visibility</option>
                   <option value="featured">Featured</option>
                   <option value="not-featured">Not featured</option>
                   <option value="private">Private</option>
-                </select>
-                <select value={postSort} onChange={e => setPostSort(e.target.value as typeof postSort)} className={adminInputOnCard}>
+                </AdminSelect>
+                <AdminSelect value={postSort} onChange={(v) => setPostSort(v as typeof postSort)} className={adminInputOnCard}>
                   <option value="newest">Newest first</option>
                   <option value="oldest">Oldest first</option>
                   <option value="views">Most views</option>
                   <option value="likes">Most likes</option>
                   <option value="title">Title A-Z</option>
-                </select>
+                </AdminSelect>
               </div>
               <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] p-3 text-xs backdrop-blur-xl backdrop-saturate-150 shadow-sm">
                 <label className="flex items-center gap-2 font-bold text-surface-600 dark:text-surface-200">
@@ -3673,41 +3686,41 @@ function AdminInner() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Status</label>
-                    <select
+                    <AdminSelect
                       value={status}
-                      onChange={e => setStatus(e.target.value as any)}
+                      onChange={(v) => setStatus(v as any)}
                       className={adminInputOnCard}
                     >
                       <option value="published">Published</option>
                       <option value="draft">Draft</option>
                       <option value="pending">Pending</option>
-                    </select>
+                    </AdminSelect>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Visibility</label>
-                    <select
+                    <AdminSelect
                       value={visibility}
-                      onChange={e => setVisibility(e.target.value as any)}
+                      onChange={(v) => setVisibility(v as any)}
                       className={adminInputOnCard}
                     >
                       <option value="public">Public</option>
                       <option value="private">Private</option>
-                    </select>
+                    </AdminSelect>
                   </div>
                 </div>
 
                 <div className="rounded-3xl border border-white/80 bg-white/60 p-5 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06]">
                   <div className="mb-4 flex flex-col gap-3">
                     <label className="text-xs font-bold uppercase tracking-wider text-surface-500">Schema Type</label>
-                    <select
+                    <AdminSelect
                       value={schemaType || 'HowTo'}
-                      onChange={e => setSchemaType(e.target.value as any)}
+                      onChange={(v) => setSchemaType(v as any)}
                       className={adminInputOnCard}
                     >
                       <option value="Article">Article</option>
                       <option value="CreativeWork">CreativeWork</option>
                       <option value="HowTo">HowTo</option>
-                    </select>
+                    </AdminSelect>
                     <p className="mt-1 text-xs text-surface-500">Tells Google how to display this post in search results.</p>
                   </div>
                 </div>
@@ -4275,9 +4288,9 @@ function AdminInner() {
                             <div className="col-span-2">
                               <label className="block text-xs text-surface-400 mb-1">Model</label>
                               <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                                <select
+                                <AdminSelect
                                   value={getModelSelectValue(img.model)}
-                                  onChange={e => handleModelSelect(idx, img, e.target.value)}
+                                  onChange={v => handleModelSelect(idx, img, v)}
                                   className="w-full rounded-xl border border-black/[0.08] bg-white/80 px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-white/10 dark:bg-white/[0.06]"
                                 >
                                   <option value={AUTO_MODEL_VALUE}>Auto default</option>
@@ -4285,7 +4298,7 @@ function AdminInner() {
                                     <option key={model} value={model}>{model}</option>
                                   ))}
                                   <option value={CUSTOM_MODEL_VALUE}>Custom</option>
-                                </select>
+                                </AdminSelect>
                                 {getModelSelectValue(img.model) === CUSTOM_MODEL_VALUE && (
                                   <input
                                     value={img.model || ''}
@@ -4503,10 +4516,10 @@ function AdminInner() {
                       </label>
                       <label className="space-y-1">
                         <span className="text-xs font-bold uppercase tracking-wide text-surface-500">Category</span>
-                        <select value={selectedArticle.category} onChange={e => updateManagedArticle(selectedArticle.slug, { category: e.target.value as 'blog' | 'guide' })} className={adminInputOnCard}>
+                        <AdminSelect value={selectedArticle.category} onChange={v => updateManagedArticle(selectedArticle.slug, { category: v as 'blog' | 'guide' })} className={adminInputOnCard}>
                           <option value="blog">Blog</option>
                           <option value="guide">Guide</option>
-                        </select>
+                        </AdminSelect>
                       </label>
                       <label className="space-y-1 sm:col-span-2">
                         <div className="flex items-center justify-between">
@@ -4680,20 +4693,20 @@ function AdminInner() {
                   />
                 </Field>
                 <Field label="Location">
-                  <select
+                  <AdminSelect
                     value={newSectionLocation}
-                    onChange={e => setNewSectionLocation(e.target.value as 'homepage' | 'header' | 'footer')}
+                    onChange={v => setNewSectionLocation(v as 'homepage' | 'header' | 'footer')}
                     className={adminInput}
                   >
                     <option value="homepage">Homepage</option>
                     <option value="header">Header Menu Link</option>
                     <option value="footer">Footer Section</option>
-                  </select>
+                  </AdminSelect>
                 </Field>
                 <Field label="Data source type">
-                  <select
+                  <AdminSelect
                     value={newSectionType}
-                    onChange={e => setNewSectionType(e.target.value as Section['type'])}
+                    onChange={v => setNewSectionType(v as Section['type'])}
                     className={adminInput}
                   >
                     <option value="latest">Latest Prompts</option>
@@ -4703,7 +4716,7 @@ function AdminInner() {
                     <option value="tag">Tag (auto-filter by tag)</option>
                     <option value="category">Category (auto-filter by category)</option>
                     <option value="custom">Custom (pick posts manually)</option>
-                  </select>
+                  </AdminSelect>
                 </Field>
               </div>
 
@@ -4711,14 +4724,14 @@ function AdminInner() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {newSectionType === 'ai-tool' && (
                   <Field label="AI tool">
-                    <select
+                    <AdminSelect
                       value={newSectionTool}
-                      onChange={e => setNewSectionTool(e.target.value)}
+                      onChange={setNewSectionTool}
                       className={adminInput}
                     >
                       <option value="">Select AI tool...</option>
                       {(settings.aiTools || []).map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
+                    </AdminSelect>
                   </Field>
                 )}
                 {newSectionType === 'tag' && (
@@ -4758,15 +4771,15 @@ function AdminInner() {
                 )}
                 <div className="sm:col-span-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
                   <Field label="Card style override">
-                    <select
+                    <AdminSelect
                       value={newSectionCardStyle}
-                      onChange={e => setNewSectionCardStyle(e.target.value as Section['cardStyle'] | '')}
+                      onChange={v => setNewSectionCardStyle(v as Section['cardStyle'] | '')}
                       className={adminInput}
                     >
                       <option value="">Use global card style</option>
                       <option value="v2">v2 - Glass Frame (default)</option>
                       <option value="v1">v1 - Flat Hover Overlay</option>
-                    </select>
+                    </AdminSelect>
                     <p className="text-[11px] text-surface-400 mt-1">
                       {newSectionCardStyle ? 'This section will ignore the global card style.' : `Using global card style: ${cardStyleName(cardStyle)}`}
                     </p>
@@ -4901,9 +4914,9 @@ function AdminInner() {
                               <p className="text-[11px] text-surface-400 mt-1">URL preview: /section/{editSectionSlug || 'slug'}</p>
                             </Field>
                             <Field label="Type">
-                              <select
+                              <AdminSelect
                                 value={editSectionType}
-                                onChange={e => setEditSectionType(e.target.value as any)}
+                                onChange={v => setEditSectionType(v as any)}
                                 className={adminInput}
                               >
                                 <option value="custom">Custom (Manually Picked)</option>
@@ -4913,19 +4926,19 @@ function AdminInner() {
                                 <option value="ai-tool">AI Tool Prompts</option>
                                 <option value="tag">Tag Prompts</option>
                                 <option value="category">Category Prompts</option>
-                              </select>
+                              </AdminSelect>
                               <p className="text-[11px] text-surface-400 mt-1">How this section selects its posts</p>
                             </Field>
                             <Field label="Location">
-                              <select
+                              <AdminSelect
                                 value={editSectionLocation}
-                                onChange={e => setEditSectionLocation(e.target.value as any)}
+                                onChange={v => setEditSectionLocation(v as any)}
                                 className={adminInput}
                               >
                                 <option value="homepage">Homepage Block</option>
                                 <option value="header">Header Link</option>
                                 <option value="footer">Footer Section</option>
-                              </select>
+                              </AdminSelect>
                               <p className="text-[11px] text-surface-400 mt-1">Where this section appears</p>
                             </Field>
                             {/* Post limit only affects the homepage block; header/footer sections
@@ -4944,21 +4957,15 @@ function AdminInner() {
                               </Field>
                             )}
                             <Field label="Card style">
-                              <select
+                              <AdminSelect
                                 value={editSectionCardStyle}
-                                onChange={e => setEditSectionCardStyle(e.target.value as any)}
+                                onChange={v => setEditSectionCardStyle(v as any)}
                                 className={adminInput}
                               >
                                 <option value="">Use global card style</option>
                                 <option value="v2">v2 Glass Frame (default)</option>
                                 <option value="v1">v1 Flat Hover Overlay</option>
-                                
-                                
-                                
-                                
-                                
-                                
-                              </select>
+                              </AdminSelect>
                               <p className="text-[11px] text-surface-400 mt-1">Override default grid styling</p>
                             </Field>
 
@@ -5144,17 +5151,17 @@ function AdminInner() {
                                         className={adminInput}
                                         placeholder="Visible title, e.g. Anime"
                                       />
-                                      <select
+                                      <AdminSelect
                                         value={item.type}
-                                        onChange={e => {
-                                          setEditSectionRailItems(prev => prev.map((chip, idx) => idx === index ? { ...chip, type: e.target.value as any } : chip));
+                                        onChange={v => {
+                                          setEditSectionRailItems(prev => prev.map((chip, idx) => idx === index ? { ...chip, type: v as any } : chip));
                                         }}
                                         className={adminInput}
                                       >
                                         <option value="tag">Tag</option>
                                         <option value="tool">AI Tool</option>
                                         <option value="category">Category</option>
-                                      </select>
+                                      </AdminSelect>
                                       <input
                                         value={item.value}
                                         onChange={e => {
@@ -5634,42 +5641,42 @@ function AdminInner() {
               </div>
               <div className="mt-3">
                 <label className={adminLabel}>Post hero style</label>
-                <select
+                <AdminSelect
                   value={postHeroStyle}
-                  onChange={e => setPostHeroStyle(e.target.value as any)}
+                  onChange={v => setPostHeroStyle(v as any)}
                   className={`${adminInput} sm:w-1/2`}
                 >
                   <option value="v1">Default: Natural Display</option>
                   <option value="v7">Current: Full Screen Hero</option>
                   <option value="v2">Immersive Blur Background</option>
                   <option value="v8">Floating Card</option>
-                </select>
+                </AdminSelect>
               </div>
               <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
                 <div className="space-y-3">
                   <div>
                     <label className={adminLabel}>Card style</label>
-                    <select
+                    <AdminSelect
                       value={cardStyle}
-                      onChange={e => setCardStyle(e.target.value as any)}
+                      onChange={v => setCardStyle(v as any)}
                       className={adminInput}
                     >
                       <option value="v2">v2 - Glass Frame (default)</option>
                       <option value="v1">v1 - Flat Hover Overlay</option>
-                    </select>
+                    </AdminSelect>
                   </div>
                   <div>
                     <label className={adminLabel}>Badge style</label>
-                    <select
+                    <AdminSelect
                       value={badgeStyle}
-                      onChange={e => setBadgeStyle(e.target.value as any)}
+                      onChange={v => setBadgeStyle(v as any)}
                       className={adminInput}
                     >
                       <option value="v1">Default: Subtle & Clean</option>
                       <option value="v2">Glass Blur</option>
                       <option value="v5">Minimalist Tag</option>
                       <option value="v10">Angled Accent</option>
-                    </select>
+                    </AdminSelect>
                   </div>
                 </div>
                 <CardStylePreview style={cardStyle} badgeStyle={badgeStyle} label="Global card preview" />
@@ -6204,11 +6211,11 @@ function AdminInner() {
                                   <button type="button" onClick={() => moveRailItem(activeRailConfig.key, index, 1)} disabled={index === activeRailConfig.items.length - 1} className="p-1 rounded text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-30 disabled:cursor-not-allowed" title="Move down"><ChevronDown className="w-3.5 h-3.5" /></button>
                                 </div>
                                 <input value={item.label} onChange={e => updateRailItem(activeRailConfig.key, index, 'label', e.target.value)} className={adminInputOnCard} placeholder="Visible title, e.g. Anime" />
-                                <select value={item.type} onChange={e => updateRailItem(activeRailConfig.key, index, 'type', e.target.value)} className={adminInputOnCard}>
+                                <AdminSelect value={item.type} onChange={v => updateRailItem(activeRailConfig.key, index, 'type', v)} className={adminInputOnCard}>
                                   <option value="tag">Tag</option>
                                   <option value="tool">AI Tool</option>
                                   <option value="category">Category</option>
-                                </select>
+                                </AdminSelect>
                                 <input value={item.value} onChange={e => updateRailItem(activeRailConfig.key, index, 'value', e.target.value)} className={adminInputOnCard} placeholder="Match value, e.g. anime" />
                                 <ActionButton variant="danger" onClick={() => removeRailItem(activeRailConfig.key, index)}>Remove</ActionButton>
                               </div>
@@ -6857,17 +6864,11 @@ function AdminInner() {
                               </Field>
                               <div className="grid grid-cols-1 gap-3 sm:col-span-2 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
                                 <Field label="Card style override">
-                                  <select value={editSectionCardStyle} onChange={e => setEditSectionCardStyle(e.target.value as Section['cardStyle'] | '')} className={adminInput}>
+                                  <AdminSelect value={editSectionCardStyle} onChange={v => setEditSectionCardStyle(v as Section['cardStyle'] | '')} className={adminInput}>
                                     <option value="">Use global card style</option>
                                     <option value="v2">v2 Glass Frame (default)</option>
                                     <option value="v1">v1 Flat Hover Overlay</option>
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                  </select>
+                                  </AdminSelect>
                                   <p className="mt-1 text-[11px] text-surface-500">
                                     {editSectionCardStyle ? 'This section will ignore the global card style.' : `Using global card style: ${cardStyleName(cardStyle)}`}
                                   </p>
@@ -6965,9 +6966,9 @@ function AdminInner() {
                                     className={`${adminInput} sm:flex-1`}
                                     placeholder="Search published posts..."
                                   />
-                                  <select
+                                  <AdminSelect
                                     value=""
-                                    onChange={e => addPostToCustomSection(section, e.target.value)}
+                                    onChange={v => addPostToCustomSection(section, v)}
                                     className={`${adminInput} sm:w-80`}
                                   >
                                     <option value="">Choose a post to add...</option>
@@ -6976,7 +6977,7 @@ function AdminInner() {
                                       .filter(post => !sectionPostSearch || post.title.toLowerCase().includes(sectionPostSearch.toLowerCase()))
                                       .slice(0, 20)
                                       .map(post => <option key={post.id} value={post.id}>{post.title}</option>)}
-                                  </select>
+                                  </AdminSelect>
                                 </div>
                                 <p className="mt-2 text-[11px] text-surface-500">{section.postIds?.length || 0} posts selected. Use the section picker in the Sections tab for detailed ordering.</p>
                               </div>
@@ -7425,15 +7426,15 @@ function AdminInner() {
                       </div>
                       <div className="space-y-1">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Match Type</span>
-                        <select
+                        <AdminSelect
                           value={item.type}
-                          onChange={e => updateRailItem('creative', index, 'type', e.target.value)}
+                          onChange={v => updateRailItem('creative', index, 'type', v)}
                           className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs"
                         >
                           <option value="tag">Tag</option>
                           <option value="tool">AI Tool</option>
                           <option value="category">Category</option>
-                        </select>
+                        </AdminSelect>
                       </div>
                       <div className="space-y-1">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Slug/Value to Match</span>
@@ -7447,9 +7448,9 @@ function AdminInner() {
                       <div className="grid grid-cols-1 gap-3 sm:col-span-3 sm:grid-cols-[140px_minmax(0,1fr)]">
                         <div className="space-y-1">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Icon</span>
-                          <select
+                          <AdminSelect
                             value={item.icon || ''}
-                            onChange={e => updateRailItem('creative', index, 'icon', e.target.value)}
+                            onChange={v => updateRailItem('creative', index, 'icon', v)}
                             className="w-full px-3 py-2 rounded-lg bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 outline-none focus:border-primary-500 text-xs"
                           >
                             <option value="">Auto</option>
@@ -7465,7 +7466,7 @@ function AdminInner() {
                             <option value="users">Users</option>
                             <option value="sparkles">Sparkles</option>
                             <option value="settings">Settings</option>
-                          </select>
+                          </AdminSelect>
                         </div>
                         <div className="space-y-1">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-surface-400">Custom Logo URL (optional, overrides icon)</span>
@@ -8596,15 +8597,15 @@ function AdminInner() {
                           className={adminInputOnCard}
                           placeholder="/tag/poster"
                         />
-                        <select
+                        <AdminSelect
                           value={link.icon || 'image'}
-                          onChange={e => updateKeepExploringLink(index, 'icon', e.target.value)}
+                          onChange={v => updateKeepExploringLink(index, 'icon', v)}
                           className={adminInputOnCard}
                         >
                           <option value="image">Image</option>
                           <option value="layers">Layers</option>
                           <option value="clipboard">Clipboard</option>
-                        </select>
+                        </AdminSelect>
                       </div>
                     ))}
                   </div>
@@ -8740,14 +8741,14 @@ function AdminInner() {
                   </div>
                 </div>
                 <div className="pl-8 pt-2">
-                  <select
+                  <AdminSelect
                     value={features.mobileColumns || 2}
-                    onChange={(e) => setFeatures(prev => ({ ...prev, mobileColumns: parseInt(e.target.value) as 1 | 2 }))}
+                    onChange={(v) => setFeatures(prev => ({ ...prev, mobileColumns: parseInt(v) as 1 | 2 }))}
                     className={`${adminInput} max-w-48`}
                   >
                     <option value={1}>1 Column</option>
                     <option value={2}>2 Columns</option>
-                  </select>
+                  </AdminSelect>
                 </div>
               </div>
 
@@ -8763,9 +8764,9 @@ function AdminInner() {
                   </div>
                 </div>
                 <div className="pl-8 pt-2">
-                  <select
+                  <AdminSelect
                     value={features.desktopColumns || 4}
-                    onChange={(e) => setFeatures(prev => ({ ...prev, desktopColumns: parseInt(e.target.value) as 3 | 4 | 5 | 6 | 7 | 8 }))}
+                    onChange={(v) => setFeatures(prev => ({ ...prev, desktopColumns: parseInt(v) as 3 | 4 | 5 | 6 | 7 | 8 }))}
                     className={`${adminInput} max-w-48`}
                   >
                     <option value={3}>3 Columns</option>
@@ -8774,7 +8775,7 @@ function AdminInner() {
                     <option value={6}>6 Columns</option>
                     <option value={7}>7 Columns</option>
                     <option value={8}>8 Columns</option>
-                  </select>
+                  </AdminSelect>
                 </div>
               </div>
             </div>
@@ -8806,9 +8807,9 @@ function AdminInner() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-surface-400 mb-1">Comment provider</label>
-                  <select className={adminInputOnCard} value="custom" disabled>
+                  <AdminSelect className={adminInputOnCard} value="custom" disabled onChange={() => {}}>
                     <option value="custom">Custom built-in comments</option>
-                  </select>
+                  </AdminSelect>
                   <p className="mt-1 text-xs text-surface-500">This site currently renders the built-in comment system. Disqus can be added later without changing this route.</p>
                 </div>
               </div>
@@ -8863,13 +8864,13 @@ function AdminInner() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-surface-400 mb-1">Position</label>
-                  <select
+                  <AdminSelect
                     value={settings.shareSettings?.position || 'floating-sidebar'}
-                    onChange={e => updateSettings({
+                    onChange={v => updateSettings({
                       ...settings,
                       shareSettings: {
                         targets: settings.shareSettings?.targets?.length ? settings.shareSettings.targets : ['whatsapp', 'x', 'instagram', 'copy'],
-                        position: e.target.value as 'below-prompt' | 'bottom' | 'floating-sidebar',
+                        position: v as 'below-prompt' | 'bottom' | 'floating-sidebar',
                       },
                     })}
                     className={adminInputOnCard}
@@ -8877,7 +8878,7 @@ function AdminInner() {
                     <option value="below-prompt">Below prompt</option>
                     <option value="bottom">Bottom of page</option>
                     <option value="floating-sidebar">Floating sidebar</option>
-                  </select>
+                  </AdminSelect>
                 </div>
               </div>
               <ActionButton onClick={handleSaveSettings}>
@@ -9312,16 +9313,16 @@ function AdminInner() {
                           </div>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs">
-                          <select
+                          <AdminSelect
                             value={member.role}
-                            onChange={e => handleUpdateUserRole(member.id, e.target.value)}
+                            onChange={v => handleUpdateUserRole(member.id, v)}
                             className="cursor-pointer rounded-xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-white/[0.05] px-2.5 py-1 text-xs font-semibold outline-none focus:border-primary-500 dark:text-white backdrop-blur-md"
                           >
                             <option value="Admin">Admin</option>
                             <option value="Editor">Editor</option>
                             <option value="Author">Author</option>
                             <option value="Subscriber">Subscriber</option>
-                          </select>
+                          </AdminSelect>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-center text-xs font-bold text-surface-600 dark:text-surface-400">
                           {member.posts}
@@ -9419,16 +9420,16 @@ function AdminInner() {
 
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-surface-400 mb-1.5">Role</label>
-                    <select
+                    <AdminSelect
                       value={inviteRole}
-                      onChange={e => setInviteRole(e.target.value as any)}
+                      onChange={v => setInviteRole(v as any)}
                       className={`${adminInputOnCard} font-semibold`}
                     >
                       <option value="Admin">Admin</option>
                       <option value="Editor">Editor</option>
                       <option value="Author">Author</option>
                       <option value="Subscriber">Subscriber</option>
-                    </select>
+                    </AdminSelect>
                   </div>
 
                   <div className="mt-6 flex justify-end gap-2 border-t border-black/[0.06] dark:border-white/[0.08] pt-3">
@@ -9475,9 +9476,9 @@ function AdminInner() {
                         onChange={e => setBanDurationValue(parseInt(e.target.value) || 1)}
                         className={`${adminInputOnCard} max-w-24 font-semibold disabled:opacity-50`}
                       />
-                      <select
+                      <AdminSelect
                         value={banDurationUnit}
-                        onChange={e => setBanDurationUnit(e.target.value as any)}
+                        onChange={v => setBanDurationUnit(v as any)}
                         className={`${adminInputOnCard} flex-1 font-semibold`}
                       >
                         <option value="Hours">Hours</option>
@@ -9486,7 +9487,7 @@ function AdminInner() {
                         <option value="Months">Months</option>
                         <option value="Permanent">Permanent</option>
                         <option value="None">None (Lift Ban)</option>
-                      </select>
+                      </AdminSelect>
                     </div>
                   </div>
 

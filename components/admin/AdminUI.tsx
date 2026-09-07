@@ -1,4 +1,6 @@
-import type { ReactNode } from 'react';
+import { Children, isValidElement, useEffect, useRef, useState } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent, ReactElement, ReactNode } from 'react';
+import { Check, ChevronDown } from 'lucide-react';
 
 // Shared admin design language with GLM frosted glass aesthetics.
 // Used across every settings tab so panels, headers, labels, and
@@ -243,5 +245,193 @@ export function FieldTextarea({
       {hint && <p className="text-[11px] text-surface-400 mt-1">{hint}</p>}
       {recommended !== undefined && <CharCount value={value} recommended={recommended} />}
     </Field>
+  );
+}
+
+// ---- AdminSelect -----------------------------------------------------------
+// Custom frosted-glass dropdown replacing the native <select> menu, which the
+// OS/browser would otherwise render as an unstyled popup that clashes with the
+// glassmorphism admin. The closed trigger reuses the same class the native
+// <select> did, so it looks identical; only the option list is now custom.
+
+export type SelectOption = { value: string; label: ReactNode };
+
+/** Flatten <option> children into the SelectOption[] the popover renders. */
+function optionsFromChildren(children?: ReactNode): SelectOption[] {
+  const list: SelectOption[] = [];
+  const walk = (nodes?: ReactNode) => {
+    Children.forEach(nodes, (child) => {
+      if (!isValidElement(child)) return;
+      const el = child as ReactElement<{ value?: unknown; children?: ReactNode }>;
+      if (el.type === 'option') {
+        list.push({
+          value: String(el.props.value ?? ''),
+          label: (el.props.children ?? null) as ReactNode,
+        });
+      } else if (el.props && (el.props as { children?: ReactNode }).children) {
+        walk((el.props as { children?: ReactNode }).children);
+      }
+    });
+  };
+  walk(children);
+  return list;
+}
+
+export function AdminSelect({
+  value,
+  onChange,
+  children,
+  placeholder = 'Select...',
+  disabled = false,
+  className = '',
+  wrapperClassName = '',
+  ariaLabel,
+  noChevron = false,
+}: {
+  value?: string | number;
+  onChange: (value: string) => void;
+  /** <option value={...}>Label</option> elements. */
+  children?: ReactNode;
+  placeholder?: string;
+  disabled?: boolean;
+  /** Applied to the trigger button so it matches the native select exactly. */
+  className?: string;
+  /** Optional class name on the outer wrapper relative div. */
+  wrapperClassName?: string;
+  ariaLabel?: string;
+  /** Suppress the internal chevron when the caller renders its own (e.g. AI Studio pill). */
+  noChevron?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState(-1);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const options = optionsFromChildren(children);
+  const current = String(value ?? '');
+  const selected = options.find(o => o.value === current);
+
+  // Auto-detect layout constraints so wrapper flexes or sizes identically to native <select>
+  const isFlex1 = className.includes('flex-1');
+  const isFull = className.includes('w-full') || className.includes('adminInput');
+  const maxWidthMatch = className.match(/\b(max-w-[^\s]+)/);
+  const smWidthMatch = className.match(/\b(sm:w-[^\s]+)/);
+
+  const wrapperLayout = [
+    isFlex1 ? 'flex-1' : '',
+    isFull && !isFlex1 ? 'w-full' : '',
+    !isFull && !isFlex1 ? 'inline-block' : '',
+    maxWidthMatch ? maxWidthMatch[1] : '',
+    smWidthMatch ? smWidthMatch[1] : '',
+    wrapperClassName,
+  ].filter(Boolean).join(' ');
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocPointer = (e: Event) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', onDocPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onDocPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (open && listRef.current) {
+      const activeEl = listRef.current.querySelector<HTMLElement>('[aria-selected="true"]');
+      if (activeEl) {
+        activeEl.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [open]);
+
+  const openList = () => {
+    if (disabled) return;
+    setHighlighted(Math.max(0, options.findIndex(o => o.value === current)));
+    setOpen(o => !o);
+  };
+
+  const choose = (o: SelectOption) => {
+    if (disabled) return;
+    onChange(o.value);
+    setOpen(false);
+  };
+
+  const onKeyDown = (e: ReactKeyboardEvent) => {
+    if (disabled) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (!open) {
+        setHighlighted(Math.max(0, options.findIndex(o => o.value === current)));
+        setOpen(true);
+      } else if (highlighted >= 0 && options[highlighted]) {
+        choose(options[highlighted]);
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!open) {
+        setHighlighted(Math.max(0, options.findIndex(o => o.value === current)));
+        setOpen(true);
+      } else {
+        setHighlighted(h => (h + 1) % options.length);
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (open) setHighlighted(h => (h - 1 + options.length) % options.length);
+    }
+  };
+
+  const popoverWidth = isFull || isFlex1 ? 'w-full' : 'min-w-full w-max max-w-[calc(100vw-2rem)]';
+
+  return (
+    <div ref={rootRef} className={`relative ${wrapperLayout}`}>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={openList}
+        onKeyDown={onKeyDown}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={ariaLabel}
+        className={`relative flex items-center justify-between gap-2 text-left cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${isFull || isFlex1 ? 'w-full' : ''} ${className}`}
+      >
+        <span className={`truncate ${selected ? '' : 'text-surface-400'}`}>{selected ? selected.label : placeholder}</span>
+        {!noChevron && <ChevronDown className={`h-4 w-4 shrink-0 text-surface-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />}
+      </button>
+      {open && (
+        <div
+          ref={listRef}
+          role="listbox"
+          className={`absolute left-0 top-full z-[100] mt-1.5 max-h-64 ${popoverWidth} overflow-auto rounded-xl border border-black/10 bg-white/95 p-1 shadow-xl backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-surface-900/95`}
+        >
+          {options.map((o, i) => {
+            const isSelected = o.value === current;
+            const isActive = i === highlighted;
+            return (
+              <button
+                key={`${o.value}-${i}`}
+                type="button"
+                role="option"
+                aria-selected={isSelected}
+                onMouseEnter={() => setHighlighted(i)}
+                onClick={() => choose(o)}
+                className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors ${
+                  isActive ? 'bg-primary-500/10 text-primary-600 dark:text-primary-300' : 'text-surface-700 dark:text-surface-200'
+                } ${isSelected ? 'font-bold' : ''}`}
+              >
+                <span className="truncate">{o.label}</span>
+                {isSelected && <Check className="h-3.5 w-3.5 shrink-0 text-primary-500" />}
+              </button>
+            );
+          })}
+          {options.length === 0 && <div className="px-2.5 py-2 text-xs text-surface-400">No options</div>}
+        </div>
+      )}
+    </div>
   );
 }
