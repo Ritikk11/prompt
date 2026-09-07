@@ -9,7 +9,7 @@ import {
   Plus, Trash2, Edit3, Eye, EyeOff, ChevronUp, ChevronDown,
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload, Copy,
   Settings, Check, Filter, Search, RotateCcw, GripVertical, Image as ImageIcon,
-  Zap, Layers, Info, LayoutTemplate, BarChart2, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass, Menu, Mail, FolderTree,
+  Zap, Layers, Info, LayoutTemplate, BarChart2, LayoutDashboard, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass, Menu, Mail, FolderTree,
   Ban, Shield, Flag, CheckCircle, Cpu, BookOpen, Newspaper, Share2, Loader2, KeyRound, LogOut
 } from 'lucide-react';
 import { showToast } from '@/components/ui/ToastContainer';
@@ -22,6 +22,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
 import AiStudioTab from '@/components/admin/AiStudioTab';
+import StatsTab from '@/components/admin/StatsTab';
 import { MagicWandProvider, WandButton, useMagicWand } from '@/components/admin/MagicWand';
 import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, FieldTextarea, EditableCard, CharCount, Toggle, ActionButton, AdminSelect, AdminCombobox, AdminTagInput, PresetPills, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
 import { askAi } from '@/lib/admin/ai';
@@ -44,13 +45,13 @@ import ArticleThumbnail, { articleIconList } from '@/components/ArticleThumbnail
 import { getArticlesForSettings } from '@/lib/content';
 import MediaLibraryModal from '@/components/admin/MediaLibraryModal';
 
-type AdminTab = 'dashboard' | 'posts' | 'sections' | 'articles' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages' | 'ai-studio';
+type AdminTab = 'dashboard' | 'stats' | 'posts' | 'sections' | 'articles' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages' | 'ai-studio';
 const DiscoveryPageIds = ['explore', 'tool', 'tag'] as const;
 export type DiscoveryPageId = typeof DiscoveryPageIds[number];
 type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share' | 'categories';
 type SectionLocationFilter = 'homepage' | 'header' | 'footer' | 'all';
 
-const adminTabKeys: AdminTab[] = ['dashboard', 'posts', 'sections', 'articles', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages', 'ai-studio'];
+const adminTabKeys: AdminTab[] = ['dashboard', 'stats', 'posts', 'sections', 'articles', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages', 'ai-studio'];
 const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'discovery', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share', 'categories'];
 const sectionLocationKeys: SectionLocationFilter[] = ['homepage', 'header', 'footer', 'all'];
 
@@ -58,6 +59,7 @@ function parseAdminTab(value: string | null): AdminTab {
   if (value === 'seo-pages') return 'seo';
   if (value === 'static-pages') return 'pages';
   if (value === 'features') return 'settings';
+  if (value === 'analytics' || value === 'statistics') return 'stats';
   if (value && adminTabKeys.includes(value as AdminTab)) return value as AdminTab;
   return 'dashboard';
 }
@@ -3103,7 +3105,8 @@ function AdminInner() {
     sectionLocationFilter === 'all' ? ['homepage', 'header', 'footer'] : [sectionLocationFilter as 'homepage' | 'header' | 'footer'];
 
   const tabs: { key: AdminTab; label: string; icon: React.ReactNode; count?: number }[] = [
-    { key: 'dashboard', label: 'Dashboard', icon: <BarChart2 className="w-4 h-4" /> },
+    { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
+    { key: 'stats', label: 'Stats', icon: <BarChart2 className="w-4 h-4" /> },
     { key: 'posts', label: 'Posts', icon: <FileText className="w-4 h-4" />, count: posts.length },
     { key: 'sections', label: 'Sections', icon: <Layers className="w-4 h-4" /> },
     { key: 'articles', label: 'Articles', icon: <BookOpen className="w-4 h-4" />, count: managedArticles.length },
@@ -3258,7 +3261,7 @@ function AdminInner() {
   const navGroups = [
     {
       title: 'General',
-      items: tabs.filter(t => t.key === 'dashboard')
+      items: tabs.filter(t => ['dashboard', 'stats'].includes(t.key))
     },
     {
       title: 'Content Engine',
@@ -3640,6 +3643,20 @@ function AdminInner() {
             ))}
           </div>
 
+          {/* Quick shortcut to Stats */}
+          <button
+            onClick={() => setTab('stats')}
+            className="group flex w-full items-center justify-between rounded-2xl border border-sky-500/20 bg-gradient-to-r from-sky-500/10 via-indigo-500/10 to-primary-500/10 px-5 py-3.5 text-left text-xs font-bold text-sky-800 dark:text-sky-200 backdrop-blur-xl hover:from-sky-500/15 hover:via-indigo-500/15 hover:to-primary-500/15 transition-all shadow-sm"
+          >
+            <div className="flex items-center gap-2.5">
+              <BarChart2 className="h-4 w-4 text-sky-600 dark:text-sky-400 transition-transform group-hover:scale-110" />
+              <span>Prompt Performance & Viewership Analytics</span>
+            </div>
+            <span className="inline-flex items-center gap-1.5 text-primary-600 dark:text-primary-400 group-hover:translate-x-0.5 transition-transform">
+              View Detailed Stats <ArrowRight className="h-3.5 w-3.5" />
+            </span>
+          </button>
+
           {pendingSubmissionCount > 0 && (
             <button
               onClick={() => setTab('submissions')}
@@ -3699,6 +3716,15 @@ function AdminInner() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ===== STATS TAB ===== */}
+      {tab === 'stats' && (
+        <StatsTab
+          posts={posts}
+          settings={settings}
+          onEditPost={(post) => openEditPost(post)}
+        />
       )}
 
       {/* ===== POSTS TAB ===== */}
