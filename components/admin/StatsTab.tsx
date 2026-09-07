@@ -20,7 +20,9 @@ import {
   Trophy,
   Filter,
   Check,
-  ChevronDown
+  ChevronDown,
+  Calendar,
+  Clock
 } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 import { getAllTools, getToolInfo } from '@/lib/constants';
@@ -34,7 +36,39 @@ interface StatsTabProps {
 }
 
 type SortField = 'views' | 'likes' | 'saves' | 'engagement' | 'newest';
-type TimeframeFilter = 'all' | '30d' | '7d';
+export type TimeframeFilter =
+  | 'all'
+  | '24h'
+  | '48h'
+  | '7d'
+  | '14d'
+  | '30d'
+  | '60d'
+  | '90d'
+  | '180d'
+  | '1y'
+  | 'custom';
+
+export interface TimeframeOption {
+  key: TimeframeFilter;
+  label: string;
+  shortLabel: string;
+  days?: number;
+}
+
+export const TIMEFRAME_OPTIONS: TimeframeOption[] = [
+  { key: 'all', label: 'All Time', shortLabel: 'All Time' },
+  { key: '24h', label: 'Today (24h)', shortLabel: '24h', days: 1 },
+  { key: '48h', label: 'Last 48 Hours', shortLabel: '48h', days: 2 },
+  { key: '7d', label: 'Last 7 Days', shortLabel: '7D', days: 7 },
+  { key: '14d', label: 'Last 14 Days', shortLabel: '14D', days: 14 },
+  { key: '30d', label: 'Last 30 Days', shortLabel: '30D', days: 30 },
+  { key: '60d', label: 'Last 60 Days', shortLabel: '60D', days: 60 },
+  { key: '90d', label: 'Last 3 Months', shortLabel: '90D', days: 90 },
+  { key: '180d', label: 'Last 6 Months', shortLabel: '6M', days: 180 },
+  { key: '1y', label: 'Last 1 Year', shortLabel: '1Y', days: 365 },
+  { key: 'custom', label: 'Custom Range', shortLabel: 'Custom' },
+];
 
 export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps) {
   const [search, setSearch] = useState('');
@@ -42,16 +76,42 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortField, setSortField] = useState<SortField>('views');
   const [timeframe, setTimeframe] = useState<TimeframeFilter>('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
   const [activeView, setActiveView] = useState<'all' | 'leaderboard' | 'breakdowns'>('all');
 
   // Filter posts by timeframe first
   const timeframeFilteredPosts = useMemo(() => {
     if (timeframe === 'all') return posts;
-    const now = Date.now();
-    const days = timeframe === '7d' ? 7 : 30;
-    const cutoff = now - days * 24 * 60 * 60 * 1000;
-    return posts.filter(p => new Date(p.createdAt).getTime() >= cutoff);
-  }, [posts, timeframe]);
+
+    if (timeframe === 'custom') {
+      const start = customStartDate ? new Date(customStartDate).getTime() : 0;
+      const end = customEndDate ? new Date(`${customEndDate}T23:59:59.999`).getTime() : Infinity;
+      return posts.filter(p => {
+        const time = new Date(p.createdAt || p.updatedAt || 0).getTime();
+        return time >= start && time <= end;
+      });
+    }
+
+    const opt = TIMEFRAME_OPTIONS.find(o => o.key === timeframe);
+    if (!opt || !opt.days) return posts;
+
+    const cutoff = Date.now() - opt.days * 24 * 60 * 60 * 1000;
+    return posts.filter(p => {
+      const time = new Date(p.createdAt || p.updatedAt || 0).getTime();
+      return time >= cutoff;
+    });
+  }, [posts, timeframe, customStartDate, customEndDate]);
+
+  const activeTimeframeLabel = useMemo(() => {
+    if (timeframe === 'custom') {
+      if (customStartDate && customEndDate) return `${customStartDate} to ${customEndDate}`;
+      if (customStartDate) return `From ${customStartDate}`;
+      if (customEndDate) return `Until ${customEndDate}`;
+      return 'Custom Range';
+    }
+    return TIMEFRAME_OPTIONS.find(o => o.key === timeframe)?.label || 'All Time';
+  }, [timeframe, customStartDate, customEndDate]);
 
   // Overall Global KPI Metrics
   const metrics = useMemo(() => {
@@ -151,7 +211,7 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
   // Tool Analytics Breakdown
   const toolStats = useMemo(() => {
     const map = new Map<string, { count: number; views: number; likes: number }>();
-    posts.forEach(p => {
+    timeframeFilteredPosts.forEach(p => {
       const tools = getAllTools(p);
       const views = p.views || 0;
       const likes = p.likes || p.likedBy?.length || 0;
@@ -166,7 +226,7 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
       });
     });
 
-    const totalViewsAll = Math.max(1, posts.reduce((sum, p) => sum + (p.views || 0), 0));
+    const totalViewsAll = Math.max(1, timeframeFilteredPosts.reduce((sum, p) => sum + (p.views || 0), 0));
 
     return Array.from(map.entries())
       .map(([tool, data]) => ({
@@ -178,12 +238,12 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
         percentage: ((data.views / totalViewsAll) * 100).toFixed(1),
       }))
       .sort((a, b) => b.views - a.views);
-  }, [posts]);
+  }, [timeframeFilteredPosts]);
 
   // Category Analytics Breakdown
   const categoryStats = useMemo(() => {
     const map = new Map<string, { count: number; views: number; likes: number }>();
-    posts.forEach(p => {
+    timeframeFilteredPosts.forEach(p => {
       const cats = [p.category, ...(p.categories || [])].filter(Boolean) as string[];
       const views = p.views || 0;
       const likes = p.likes || p.likedBy?.length || 0;
@@ -198,7 +258,7 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
       });
     });
 
-    const totalViewsAll = Math.max(1, posts.reduce((sum, p) => sum + (p.views || 0), 0));
+    const totalViewsAll = Math.max(1, timeframeFilteredPosts.reduce((sum, p) => sum + (p.views || 0), 0));
 
     return Array.from(map.entries())
       .map(([category, data]) => ({
@@ -210,12 +270,12 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
         percentage: ((data.views / totalViewsAll) * 100).toFixed(1),
       }))
       .sort((a, b) => b.views - a.views);
-  }, [posts]);
+  }, [timeframeFilteredPosts]);
 
   // Top Tags by Views
   const topTags = useMemo(() => {
     const map = new Map<string, { count: number; views: number }>();
-    posts.forEach(p => {
+    timeframeFilteredPosts.forEach(p => {
       (p.tags || []).forEach(t => {
         const key = t.trim();
         if (!key) return;
@@ -230,7 +290,7 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
       .map(([tag, data]) => ({ tag, count: data.count, views: data.views }))
       .sort((a, b) => b.views - a.views)
       .slice(0, 16);
-  }, [posts]);
+  }, [timeframeFilteredPosts]);
 
   // Export Stats as CSV
   const exportCsv = () => {
@@ -286,56 +346,123 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
         }
       />
 
-      {/* Timeframe Filter Pills */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 rounded-2xl border border-white/80 bg-white/60 p-1 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06] shadow-sm">
-          {(['all', '30d', '7d'] as TimeframeFilter[]).map(tf => {
-            const labels: Record<TimeframeFilter, string> = {
-              all: 'All Time',
-              '30d': 'Last 30 Days',
-              '7d': 'Last 7 Days',
-            };
-            const active = timeframe === tf;
-            return (
-              <button
-                key={tf}
-                type="button"
-                onClick={() => setTimeframe(tf)}
-                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
-                  active
-                    ? 'bg-primary-600 text-white shadow-sm dark:bg-primary-500'
-                    : 'text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-white'
-                }`}
-              >
-                {labels[tf]}
-              </button>
-            );
-          })}
+      {/* Timeframe & View Mode Controls */}
+      <div className="space-y-3">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+          {/* Timeframe Pills */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 xl:pb-0 no-scrollbar rounded-2xl border border-white/80 bg-white/60 p-1 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06] shadow-sm">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 text-[11px] font-bold text-surface-400 uppercase tracking-wider shrink-0">
+              <Clock className="w-3.5 h-3.5 text-primary-500" />
+              <span>Time:</span>
+            </div>
+            {TIMEFRAME_OPTIONS.map(tf => {
+              const active = timeframe === tf.key;
+              return (
+                <button
+                  key={tf.key}
+                  type="button"
+                  onClick={() => setTimeframe(tf.key)}
+                  className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                    active
+                      ? 'bg-primary-600 text-white shadow-sm dark:bg-primary-500'
+                      : 'text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-white hover:bg-black/[0.03] dark:hover:bg-white/[0.04]'
+                  }`}
+                  title={tf.label}
+                >
+                  {tf.key === 'custom' ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Calendar className="w-3 h-3" />
+                      {tf.shortLabel}
+                    </span>
+                  ) : (
+                    tf.shortLabel
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* View Mode Switcher */}
+          <div className="flex items-center gap-1.5 rounded-2xl border border-white/80 bg-white/60 p-1 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06] shadow-sm shrink-0 self-start xl:self-auto">
+            {(['all', 'leaderboard', 'breakdowns'] as const).map(v => {
+              const labels = {
+                all: 'Overview',
+                leaderboard: 'Top Prompts',
+                breakdowns: 'Distributions',
+              };
+              const active = activeView === v;
+              return (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setActiveView(v)}
+                  className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                    active
+                      ? 'bg-primary-600 text-white shadow-sm dark:bg-primary-500'
+                      : 'text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-white'
+                  }`}
+                >
+                  {labels[v]}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5 rounded-2xl border border-white/80 bg-white/60 p-1 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06] shadow-sm">
-          {(['all', 'leaderboard', 'breakdowns'] as const).map(v => {
-            const labels = {
-              all: 'Overview',
-              leaderboard: 'Top Prompts',
-              breakdowns: 'Distributions',
-            };
-            const active = activeView === v;
-            return (
+        {/* Custom Date Range Picker Bar (visible when Custom is selected) */}
+        {timeframe === 'custom' && (
+          <div className="flex flex-wrap items-center gap-3 p-3.5 rounded-2xl border border-primary-500/20 bg-primary-500/5 dark:bg-primary-500/[0.04] backdrop-blur-xl animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="flex items-center gap-2 text-xs font-bold text-primary-700 dark:text-primary-300">
+              <Calendar className="w-4 h-4 text-primary-500" />
+              <span>Custom Date Range:</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-surface-500 dark:text-surface-400">From:</label>
+              <input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                className="rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-surface-900 px-3 py-1.5 text-xs font-medium text-surface-900 dark:text-surface-100 outline-none focus:ring-2 focus:ring-primary-500/30 shadow-sm"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-surface-500 dark:text-surface-400">To:</label>
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                className="rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-surface-900 px-3 py-1.5 text-xs font-medium text-surface-900 dark:text-surface-100 outline-none focus:ring-2 focus:ring-primary-500/30 shadow-sm"
+              />
+            </div>
+            {(customStartDate || customEndDate) && (
               <button
-                key={v}
                 type="button"
-                onClick={() => setActiveView(v)}
-                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
-                  active
-                    ? 'bg-primary-600 text-white shadow-sm dark:bg-primary-500'
-                    : 'text-surface-600 hover:text-surface-900 dark:text-surface-300 dark:hover:text-white'
-                }`}
+                onClick={() => {
+                  setCustomStartDate('');
+                  setCustomEndDate('');
+                }}
+                className="text-xs font-bold text-rose-500 hover:text-rose-600 px-2.5 py-1 rounded-xl hover:bg-rose-500/10 transition-colors"
               >
-                {labels[v]}
+                Reset Dates
               </button>
-            );
-          })}
+            )}
+            <span className="text-[11px] text-surface-400 dark:text-surface-500 ml-auto">
+              Filtered by prompt publication date
+            </span>
+          </div>
+        )}
+
+        {/* Active timeframe indicator info badge */}
+        <div className="flex items-center justify-between text-xs text-surface-500 dark:text-surface-400 px-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary-500" />
+            <span>
+              Showing metrics for: <strong className="text-surface-800 dark:text-surface-200 font-semibold">{activeTimeframeLabel}</strong>
+            </span>
+          </div>
+          <span className="font-mono text-[11px]">
+            {metrics.count} {metrics.count === 1 ? 'prompt' : 'prompts'}
+          </span>
         </div>
       </div>
 
