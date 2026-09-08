@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/admin-auth';
+import { submitToIndexNow } from '@/lib/indexnow';
 import type { Post, Section, SiteSettings } from '@/lib/types';
 
 function getAllToolsFromPost(post: Partial<Post>) {
@@ -16,10 +17,15 @@ function getAllToolsFromPost(post: Partial<Post>) {
 // admin edit instead of waiting for the time-based revalidate window to expire.
 function revalidateContent(resource: string, data: any, id?: string) {
   revalidatePath('/sitemap.xml');
+  revalidatePath('/sitemap-main.xml');
+  revalidatePath('/sitemap-prompts.xml');
 
   if (resource === 'posts') {
     const slug = data?.slug || data?.id || id;
-    if (slug) revalidatePath(`/${slug}`);
+    if (slug) {
+      revalidatePath(`/${slug}`);
+      submitToIndexNow([`/${slug}`, '/explore']).catch(() => {});
+    }
     (data?.tags || []).forEach((tag: string) => tag && revalidatePath(`/tag/${encodeURIComponent(tag.toLowerCase())}`));
     getAllToolsFromPost(data || {}).forEach((tool) => revalidatePath(`/tool/${encodeURIComponent(tool.toLowerCase())}`));
     revalidatePath('/');

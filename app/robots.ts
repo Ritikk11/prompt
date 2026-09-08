@@ -7,8 +7,16 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   const robotsText = settings.seoSettings?.robotsText || '';
   const allow = robotsText.match(/^Allow:\s*(.+)$/im)?.[1]?.trim() || '/';
   const disallow = Array.from(robotsText.matchAll(/^Disallow:\s*(.+)$/gim)).map(match => match[1].trim()).filter(Boolean);
-  const sitemap = robotsText.match(/^Sitemap:\s*(.+)$/im)?.[1]?.trim() || `${baseUrl}/sitemap.xml`;
+  const customSitemaps = Array.from(robotsText.matchAll(/^Sitemap:\s*(.+)$/gim))
+    .map(match => match[1].trim())
+    .filter(Boolean);
 
+  const defaultSitemaps = [
+    `${baseUrl}/sitemap.xml`,
+    `${baseUrl}/sitemap-prompts.xml`,
+  ];
+
+  const sitemap = customSitemaps.length > 0 ? customSitemaps : defaultSitemaps;
   const resolvedDisallow = disallow.length > 0 ? disallow : ['/admin/', '/profile/', '/api/', '/search/', '/submit/', '/login/'];
 
   // Explicit Allow for the major AI/LLM crawlers so training + answer-engine

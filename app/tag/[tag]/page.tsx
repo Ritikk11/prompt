@@ -59,6 +59,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     alternates: { canonical: `${siteUrl}/tag/${encodeURIComponent(decodedTag)}` },
     keywords: [decodedTag, 'AI prompts', 'chatgpt prompts', 'gemini prompts', 'grok prompts', 'qwen prompts'],
+    openGraph: {
+      title,
+      description,
+      siteName: siteTitle,
+      type: 'website',
+      url: `${siteUrl}/tag/${encodeURIComponent(decodedTag)}`,
+      ...(settings.seoSettings?.defaultOgImage ? { images: [{ url: settings.seoSettings.defaultOgImage }] } : {}),
+    },
   };
 }
 

@@ -90,6 +90,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title,
       description,
+      siteName: siteTitle,
+      type: 'website',
+      url: `${siteUrl}/tool/${encodeURIComponent(decodedTool)}`,
+      ...(settings.seoSettings?.defaultOgImage ? { images: [{ url: settings.seoSettings.defaultOgImage }] } : {}),
     },
   };
 }

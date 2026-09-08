@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { isCurrentUserAdmin } from '@/lib/admin-auth';
 import { fetchPostSummaries } from '@/lib/data';
+import { submitToIndexNow } from '@/lib/indexnow';
 import type { Post, PostComment, SiteSettings } from '@/lib/types';
 
 function getAllToolsFromPost(post: Partial<Post>) {
@@ -24,6 +25,13 @@ function revalidateNewPost(post: Post) {
   revalidatePath('/');
   revalidatePath('/explore');
   revalidatePath('/sitemap.xml');
+  revalidatePath('/sitemap-main.xml');
+  revalidatePath('/sitemap-prompts.xml');
+
+  if (slug && isPublicPost(post)) {
+    // Non-blocking IndexNow notification for newly published prompts
+    submitToIndexNow([`/${slug}`, '/explore']).catch(() => {});
+  }
 }
 
 function isMissingTableError(error: unknown) {

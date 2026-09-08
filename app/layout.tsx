@@ -102,6 +102,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   // WebSite (with Sitelinks SearchBox) + Organization, linked via @graph so Google
   // resolves the publisher for Article rich results and brand knowledge panel.
+  const customAlternateNames = initialSettings.seoSettings?.alternateSiteNames || [];
+  const defaultAlternateNames = [
+    'PromptMatrix',
+    'AI Prompt Matrix',
+    'aipromptmatrix.in',
+    'aipromptmatrix',
+  ];
+  const alternateNames = Array.from(
+    new Set([...defaultAlternateNames, ...customAlternateNames])
+  ).filter((name) => name && name.toLowerCase() !== orgName.toLowerCase());
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -109,6 +120,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         '@type': 'WebSite',
         '@id': `${siteUrl}/#website`,
         name: orgName,
+        alternateName: alternateNames,
         url: siteUrl,
         publisher: { '@id': `${siteUrl}/#organization` },
         potentialAction: {
@@ -199,6 +211,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             crossOrigin="anonymous"
           />
         )}
+        <meta property="og:site_name" content={orgName} />
         {initialSettings.seoSettings?.googleVerification && (
           <meta name="google-site-verification" content={initialSettings.seoSettings.googleVerification} />
         )}

@@ -146,7 +146,7 @@ const defaultSettings: SiteSettings = {
   "imgbbApiKey": "2cd70acfe4649cf535a69ec607c85ebd",
   "seoSettings": {
     "redirects": [],
-    "robotsText": "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\nDisallow: /api/\nDisallow: /search/\nDisallow: /submit/\nDisallow: /login/\n\nSitemap: https://aipromptmatrix.in/sitemap.xml",
+    "robotsText": "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\nDisallow: /api/\nDisallow: /search/\nDisallow: /submit/\nDisallow: /login/\n\nSitemap: https://aipromptmatrix.in/sitemap.xml\nSitemap: https://aipromptmatrix.in/sitemap-prompts.xml",
     "schemaType": "Article",
     "enableJsonLd": true,
     "twitterHandle": "",
@@ -164,7 +164,14 @@ const defaultSettings: SiteSettings = {
     "enableBreadcrumbList": true,
     "pinterestVerification": "",
     "defaultMetaDescription": "AI PromptMatrix is your ultimate collection of curated image prompts for Chatgpt, Gemini, Nano Banana Pro, Grok, and more. Discover, copy and create stunning artwork instantly.",
-    "enableSitelinksSearchbox": true
+    "enableSitelinksSearchbox": true,
+    "alternateSiteNames": [
+      "PromptMatrix",
+      "AI Prompt Matrix",
+      "aipromptmatrix.in"
+    ],
+    "indexNowKey": "f758ffa479794b339f86d7830b83ebfe",
+    "enableIndexNow": true
   },
   "socialLinks": {},
   "toolDetails": {

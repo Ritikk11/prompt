@@ -72,14 +72,18 @@ import { formatTitleWithBrand } from './seo-helpers';
 export function staticPageMetadata(page: ReturnType<typeof getStaticPageContent>, settings?: SiteSettings): Metadata {
   const siteTitle = settings?.siteTitle || 'AI PromptMatrix';
   const title = formatTitleWithBrand(page.metaTitle, siteTitle);
+  const ogImage = page.ogImage || settings?.seoSettings?.defaultOgImage;
+
   return {
     title: { absolute: title },
     description: page.metaDescription,
-    openGraph: page.ogImage ? {
+    openGraph: {
       title,
       description: page.metaDescription,
-      images: [{ url: page.ogImage }],
-    } : undefined,
+      siteName: siteTitle,
+      type: 'website',
+      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
+    },
   };
 }
 

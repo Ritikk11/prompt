@@ -21,15 +21,20 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
 
+  const ogImage = discovery.exploreOgImage || settings.seoSettings?.defaultOgImage;
+
   return {
     title: { absolute: title },
     description,
     alternates: { canonical: `${siteUrl}/explore` },
-    openGraph: discovery.exploreOgImage ? {
+    openGraph: {
       title,
       description,
-      images: [{ url: discovery.exploreOgImage }],
-    } : undefined,
+      siteName: siteTitle,
+      type: 'website',
+      url: `${siteUrl}/explore`,
+      ...(ogImage ? { images: [{ url: ogImage }] } : {}),
+    },
   };
 }
 

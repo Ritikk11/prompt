@@ -40,13 +40,20 @@ export function generateSeoPageMetadata(seoPage: any, settings: SiteSettings): M
   const siteTitle = settings.siteTitle || 'AI PromptMatrix';
   const rawTitle = seoPage.seoTitle || seoPage.title;
   const title = formatTitleWithBrand(rawTitle, siteTitle);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+  const description = seoPage.seoDescription || settings.seoSettings?.defaultMetaDescription || `Discover best prompts for ${seoPage.title}`;
+  const canonicalUrl = seoPage.slug ? `${siteUrl}/${seoPage.slug}` : undefined;
 
   return {
     title: { absolute: title },
-    description: seoPage.seoDescription || settings.seoSettings?.defaultMetaDescription || `Discover best prompts for ${seoPage.title}`,
+    description,
+    ...(canonicalUrl ? { alternates: { canonical: canonicalUrl } } : {}),
     openGraph: {
       title,
-      description: seoPage.seoDescription || settings.seoSettings?.defaultMetaDescription || `Discover best prompts for ${seoPage.title}`,
+      description,
+      siteName: siteTitle,
+      type: 'website',
+      ...(canonicalUrl ? { url: canonicalUrl } : {}),
       ...(settings.seoSettings?.defaultOgImage ? { images: [{ url: settings.seoSettings.defaultOgImage }] } : {}),
     },
   };

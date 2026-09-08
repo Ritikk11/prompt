@@ -213,6 +213,9 @@ export interface SeoSettings {
   schemaType?: 'Article' | 'CreativeWork' | 'HowTo';
   enableBreadcrumbList?: boolean;
   enableSitelinksSearchbox?: boolean;
+  alternateSiteNames?: string[];
+  indexNowKey?: string;
+  enableIndexNow?: boolean;
   redirects?: { from: string; to: string; status: 301 | 302 }[];
 }
 

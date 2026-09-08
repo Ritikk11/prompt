@@ -43,9 +43,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     { section: section.name, count: filteredPosts.length, site_title: siteTitle }
   );
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+
   return {
     title: { absolute: title },
     description,
+    alternates: { canonical: `${siteUrl}/section/${encodeURIComponent(slug)}` },
+    openGraph: {
+      title,
+      description,
+      siteName: siteTitle,
+      type: 'website',
+      url: `${siteUrl}/section/${encodeURIComponent(slug)}`,
+      ...(settings.seoSettings?.defaultOgImage ? { images: [{ url: settings.seoSettings.defaultOgImage }] } : {}),
+    },
   };
 }
 

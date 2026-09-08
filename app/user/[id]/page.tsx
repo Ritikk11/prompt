@@ -36,10 +36,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Creator';
   const username = user.user_metadata?.username || user.email?.split('@')[0] || 'creator';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+  const profileTitle = `${displayName} (@${username}) — AI Prompts | AI PromptMatrix`;
+  const profileDescription = user.user_metadata?.bio || `Browse AI prompts and workflows created by ${displayName} (@${username}) on AI PromptMatrix.`;
 
   return {
-    title: `${displayName} (@${username}) — AI Prompts | AI PromptMatrix`,
-    description: user.user_metadata?.bio || `Browse AI prompts and workflows created by ${displayName} (@${username}) on AI PromptMatrix.`,
+    title: profileTitle,
+    description: profileDescription,
+    alternates: { canonical: `${siteUrl}/user/${encodeURIComponent(username)}` },
+    openGraph: {
+      title: profileTitle,
+      description: profileDescription,
+      siteName: 'AI PromptMatrix',
+      type: 'profile',
+      url: `${siteUrl}/user/${encodeURIComponent(username)}`,
+    },
   };
 }
 

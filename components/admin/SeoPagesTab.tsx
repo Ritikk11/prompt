@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit3, X, Save, Search } from 'lucide-react';
+import { Plus, Trash2, Edit3, X, Save, Search, Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase-client';
 import type { SeoSettings, SiteSettings } from '@/lib/types';
 import { WandButton } from '@/components/admin/MagicWand';
@@ -37,11 +37,14 @@ const defaultSeoSettings: SeoSettings = {
   googleVerification: '',
   bingVerification: '',
   pinterestVerification: '',
-  robotsText: 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\n\nSitemap: https://aipromptmatrix.in/sitemap.xml',
+  robotsText: 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\n\nSitemap: https://aipromptmatrix.in/sitemap.xml\nSitemap: https://aipromptmatrix.in/sitemap-prompts.xml',
   sitemapInclude: { posts: true, sections: true, tags: true, tools: true, staticPages: true },
   enableJsonLd: true,
   schemaType: 'HowTo',
   enableBreadcrumbList: true,
+  alternateSiteNames: ['PromptMatrix', 'AI Prompt Matrix', 'aipromptmatrix.in'],
+  indexNowKey: 'f758ffa479794b339f86d7830b83ebfe',
+  enableIndexNow: true,
   redirects: [],
 };
 
@@ -49,6 +52,33 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
   const [seoPages, setSeoPages] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isPingingIndexNow, setIsPingingIndexNow] = useState(false);
+
+  const handlePingIndexNow = async () => {
+    setIsPingingIndexNow(true);
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch('/api/admin/indexnow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ mode: 'recent' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        showToast(data.message || 'Successfully submitted recent URLs to IndexNow!', 'success');
+      } else {
+        showToast(data.message || data.error || 'Failed to ping IndexNow', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error submitting to IndexNow', 'error');
+    } finally {
+      setIsPingingIndexNow(false);
+    }
+  };
 
   const [title, setTitle] = useState('');
   const [seoTitle, setSeoTitle] = useState('');
@@ -271,15 +301,19 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
     <div className="space-y-6">
       <TabBanner
         icon={<Search />}
-        title="SEO"
-        text="Set default metadata for every page and build curated landing pages that rank for specific term combinations."
+        title={mode === 'pages' ? 'SEO Landing Pages' : 'SEO'}
+        text={
+          mode === 'pages'
+            ? 'Curated landing pages built from tag, category, and tool matchers to target specific search terms.'
+            : 'Set default metadata, verification tags, split sitemaps, robots.txt, structured data, and IndexNow instant indexing.'
+        }
       />
 
       {settings && updateSettings && mode !== 'pages' && (
         <Panel>
           <PanelHeader
             title="Global SEO"
-            subtitle="Default metadata, verification tags, sitemap rules, robots text, structured data, and redirects"
+            subtitle="Default metadata, verification tags, split sitemap rules, robots text, structured data, and IndexNow"
           />
 
           <div className="space-y-4">
@@ -383,11 +417,22 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
           </div>
 
           <div className="space-y-4">
-            <SectionEyebrow>3. Sitemap</SectionEyebrow>
+            <SectionEyebrow>3. Sitemap (Split Structure)</SectionEyebrow>
             <div className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-xs text-surface-500">Readonly URL: aipromptmatrix.in/sitemap.xml</p>
-                <button type="button" onClick={() => window.open('/sitemap.xml', '_blank')} className="rounded-xl px-3 py-2 text-xs font-bold text-surface-600 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors">Open sitemap</button>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-white/40 dark:bg-white/[0.03]">
+                <div className="space-y-0.5">
+                  <p className="text-xs font-bold text-surface-800 dark:text-surface-200">
+                    Live XML Sitemaps:
+                  </p>
+                  <p className="text-[11px] text-surface-500 font-mono">
+                    /sitemap.xml (Index) &bull; /sitemap-main.xml (Pages) &bull; /sitemap-prompts.xml (Prompts)
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => window.open('/sitemap.xml', '_blank')} className="rounded-xl px-2.5 py-1.5 text-xs font-bold text-surface-700 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 border border-black/5 dark:border-white/10 transition-colors">Open Index</button>
+                  <button type="button" onClick={() => window.open('/sitemap-main.xml', '_blank')} className="rounded-xl px-2.5 py-1.5 text-xs font-bold text-surface-700 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 border border-black/5 dark:border-white/10 transition-colors">Main Sitemap</button>
+                  <button type="button" onClick={() => window.open('/sitemap-prompts.xml', '_blank')} className="rounded-xl px-2.5 py-1.5 text-xs font-bold text-surface-700 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 border border-black/5 dark:border-white/10 transition-colors">Prompts Sitemap</button>
+                </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 {[
@@ -443,11 +488,76 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                   <option value="HowTo">HowTo</option>
                 </AdminSelect>
               </Field>
+              <Field label="Google Search Alternate Site Names" className="md:col-span-2">
+                <input
+                  value={(seoSettings.alternateSiteNames || []).join(', ')}
+                  onChange={e => updateSeoSettings({
+                    alternateSiteNames: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                  })}
+                  className={adminInput}
+                  placeholder="PromptMatrix, AI Prompt Matrix, aipromptmatrix.in"
+                />
+                <p className="mt-1 text-[11px] text-surface-500 dark:text-surface-400">
+                  Comma-separated alias/fallback names for Google Search. Google displays your preferred site name above search result snippet URLs based on these.
+                </p>
+              </Field>
             </div>
           </div>
 
           <div className="space-y-4">
-            <SectionEyebrow>6. Redirects</SectionEyebrow>
+            <SectionEyebrow>6. IndexNow (Instant Search Indexing)</SectionEyebrow>
+            <div className="rounded-2xl border border-black/[0.08] dark:border-white/10 bg-white/40 dark:bg-white/[0.04] p-4 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold text-surface-900 dark:text-white">Microsoft Bing & IndexNow Auto-Ping</p>
+                  <p className="text-[11px] text-surface-500 mt-0.5">
+                    Instantly notifies Bing, Yandex, Naver, and Seznam whenever prompts or pages are published or updated.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Toggle
+                    checked={seoSettings.enableIndexNow ?? true}
+                    onChange={checked => updateSeoSettings({ enableIndexNow: checked })}
+                  />
+                  <span className="text-xs font-bold text-surface-700 dark:text-surface-300">
+                    {seoSettings.enableIndexNow ?? true ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
+                <Field label="IndexNow API Key">
+                  <input
+                    value={seoSettings.indexNowKey || 'f758ffa479794b339f86d7830b83ebfe'}
+                    onChange={e => updateSeoSettings({ indexNowKey: e.target.value.trim() })}
+                    className={adminInput}
+                    placeholder="f758ffa479794b339f86d7830b83ebfe"
+                  />
+                </Field>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => window.open(`/${seoSettings.indexNowKey || 'f758ffa479794b339f86d7830b83ebfe'}.txt`, '_blank')}
+                    className="rounded-xl px-3 py-2 text-xs font-bold border border-black/10 dark:border-white/10 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
+                  >
+                    Verify Key File
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isPingingIndexNow}
+                    onClick={handlePingIndexNow}
+                    className="flex items-center gap-1.5 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white hover:bg-primary-600 transition-colors disabled:opacity-50 shadow-sm"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {isPingingIndexNow ? 'Submitting...' : 'Ping IndexNow (Recent Prompts)'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <SectionEyebrow>7. Redirects</SectionEyebrow>
             <div className="space-y-3">
               <div className="space-y-2">
                 {(seoSettings.redirects || []).map((redirect, index) => (
