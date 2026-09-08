@@ -16,7 +16,12 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     `${baseUrl}/sitemap-prompts.xml`,
   ];
 
-  const sitemap = customSitemaps.length > 0 ? customSitemaps : defaultSitemaps;
+  const sitemap = Array.from(
+    new Set([
+      ...customSitemaps,
+      ...defaultSitemaps,
+    ])
+  );
   const resolvedDisallow = disallow.length > 0 ? disallow : ['/admin/', '/profile/', '/api/', '/search/', '/submit/', '/login/'];
 
   // Explicit Allow for the major AI/LLM crawlers so training + answer-engine

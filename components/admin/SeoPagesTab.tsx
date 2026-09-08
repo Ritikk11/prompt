@@ -456,11 +456,45 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
 
           <div className="space-y-4">
             <SectionEyebrow>4. Crawling</SectionEyebrow>
-            <Field label="Robots.txt">
+            <Field
+              label="Robots.txt"
+              action={
+                <div className="flex items-center gap-2">
+                  {!seoSettings.robotsText?.includes('sitemap-prompts.xml') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = (seoSettings.robotsText || '').trim();
+                        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://aipromptmatrix.in';
+                        const addition = `\nSitemap: ${baseUrl}/sitemap-prompts.xml`;
+                        updateSeoSettings({
+                          robotsText: current ? `${current}${addition}` : `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\nDisallow: /api/\nDisallow: /search/\nDisallow: /submit/\nDisallow: /login/\n\nSitemap: ${baseUrl}/sitemap.xml\nSitemap: ${baseUrl}/sitemap-prompts.xml`,
+                        });
+                      }}
+                      className="text-xs font-bold text-primary-600 hover:text-primary-700 dark:text-primary-400"
+                    >
+                      + Add Prompts Sitemap
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://aipromptmatrix.in';
+                      updateSeoSettings({
+                        robotsText: `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\nDisallow: /api/\nDisallow: /search/\nDisallow: /submit/\nDisallow: /login/\n\nSitemap: ${baseUrl}/sitemap.xml\nSitemap: ${baseUrl}/sitemap-prompts.xml`,
+                      });
+                    }}
+                    className="text-xs text-surface-500 hover:text-surface-700 dark:hover:text-surface-300"
+                  >
+                    Reset to recommended
+                  </button>
+                </div>
+              }
+            >
               <textarea
                 value={seoSettings.robotsText || ''}
                 onChange={e => updateSeoSettings({ robotsText: e.target.value })}
-                rows={6}
+                rows={8}
                 className={`${adminInput} font-mono resize-y`}
               />
             </Field>
