@@ -1133,7 +1133,7 @@ function AdminInner() {
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
-  const [schemaType, setSchemaType] = useState<Post['schemaType']>('HowTo');
+  const [schemaType, setSchemaType] = useState<Post['schemaType']>('Article');
   const [faqs, setFaqs] = useState<PostFaq[]>([]);
   const [tagsStr, setTagsStr] = useState('');
   const [category, setCategory] = useState('');
@@ -1723,7 +1723,7 @@ function AdminInner() {
   };
 
   const resetForm = () => {
-    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setSchemaType('HowTo'); setFaqs([]); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
+    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setSchemaType((settings.seoSettings?.schemaType as Post['schemaType']) || 'Article'); setFaqs([]); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
     setStatus('published'); setVisibility('public');
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
@@ -1752,7 +1752,7 @@ function AdminInner() {
     setReferenceImages(post.referenceImages || []);
     setSeoTitle(post.seoTitle || '');
     setSeoDescription(post.seoDescription || '');
-    setSchemaType(post.schemaType || 'HowTo');
+    setSchemaType(post.schemaType || (settings.seoSettings?.schemaType as Post['schemaType']) || 'Article');
     setFaqs(post.faqs || []);
     setTagsStr(post.tags.join(', '));
     setCategory(post.category || '');
@@ -3938,7 +3938,7 @@ function AdminInner() {
                   <div className="mb-4 flex flex-col gap-3">
                     <label className="text-xs font-bold uppercase tracking-wider text-surface-500">Schema Type</label>
                     <AdminSelect
-                      value={schemaType || 'HowTo'}
+                      value={schemaType || (settings.seoSettings?.schemaType as Post['schemaType']) || 'Article'}
                       onChange={(v) => setSchemaType(v as any)}
                       className={adminInputOnCard}
                     >

@@ -40,7 +40,7 @@ const defaultSeoSettings: SeoSettings = {
   robotsText: 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\n\nSitemap: https://aipromptmatrix.in/sitemap.xml\nSitemap: https://aipromptmatrix.in/sitemap-prompts.xml',
   sitemapInclude: { posts: true, sections: true, tags: true, tools: true, staticPages: true },
   enableJsonLd: true,
-  schemaType: 'HowTo',
+  schemaType: 'Article',
   enableBreadcrumbList: true,
   alternateSiteNames: ['PromptMatrix', 'AI Prompt Matrix', 'aipromptmatrix.in'],
   indexNowKey: 'f758ffa479794b339f86d7830b83ebfe',
@@ -479,7 +479,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
               </div>
               <Field label="Schema type">
                 <AdminSelect
-                  value={seoSettings.schemaType || 'HowTo'}
+                  value={seoSettings.schemaType || 'Article'}
                   onChange={v => updateSeoSettings({ schemaType: v as SeoSettings['schemaType'] })}
                   className={adminInput}
                 >

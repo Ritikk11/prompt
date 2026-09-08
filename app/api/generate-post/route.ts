@@ -41,7 +41,7 @@ const FIELD_INSTRUCTIONS: Record<FieldKey, string> = {
 Keep custom blocks concise and mobile-friendly.`,
   tags: `"tags": An array of 5-8 relevant tags (strings). See tag rules in SITE CONTEXT above.`,
   category: `"category": A single, broad category for these images. See category rules in SITE CONTEXT above.`,
-  schemaType: `"schemaType": Select the most appropriate Schema.org type from: "Article", "HowTo", or "CreativeWork".`,
+  schemaType: `"schemaType": Select the most appropriate Schema.org type from: "Article", "CreativeWork", or "HowTo". Defaults to "Article".`,
   faqs: `"faqs": An array of 2 to 3 frequently asked questions (and answers) relevant to this specific image style, prompt technique, or subject. Format: [{"question": "...", "answer": "..."}].`,
 };
 
