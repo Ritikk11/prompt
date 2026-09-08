@@ -41,44 +41,62 @@ export async function submitToIndexNow(
     urlList: absoluteUrlList,
   };
 
-  try {
-    const res = await fetch('https://api.indexnow.org/indexnow', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-      },
-      body: JSON.stringify(payload),
-      // 10s timeout so we never hang the server
-      signal: AbortSignal.timeout(10000),
-    });
+  const endpoints = [
+    'https://api.indexnow.org/indexnow',
+    'https://www.bing.com/indexnow',
+  ];
 
-    // 200 = OK, 202 = Accepted (valid IndexNow responses)
-    if (res.ok || res.status === 200 || res.status === 202) {
-      return {
-        success: true,
-        status: res.status,
-        message: `Successfully submitted ${absoluteUrlList.length} URL(s) to IndexNow`,
-        submittedCount: absoluteUrlList.length,
-        key,
-      };
+  let lastStatus = 500;
+  let lastErrorText = '';
+
+  for (const endpoint of endpoints) {
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(10000),
+      });
+
+      // 200 = OK, 202 = Accepted (valid IndexNow responses)
+      if (res.ok || res.status === 200 || res.status === 202) {
+        return {
+          success: true,
+          status: res.status,
+          message: `Successfully submitted ${absoluteUrlList.length} URL(s) to IndexNow`,
+          submittedCount: absoluteUrlList.length,
+          key,
+        };
+      }
+
+      lastStatus = res.status;
+      lastErrorText = await res.text().catch(() => '');
+      console.warn(`[IndexNow] ${endpoint} returned status ${res.status}:`, lastErrorText);
+
+      // If rate-limited (429) or server error (5xx), try alternate endpoint
+      if (res.status === 429 || res.status >= 500) {
+        continue;
+      } else {
+        break;
+      }
+    } catch (err: any) {
+      console.warn(`[IndexNow] Error connecting to ${endpoint}:`, err?.message || err);
+      lastErrorText = err?.message || 'Network error';
     }
-
-    const errorText = await res.text().catch(() => '');
-    console.warn(`[IndexNow] Submission returned status ${res.status}:`, errorText);
-    return {
-      success: false,
-      status: res.status,
-      message: `IndexNow API returned status ${res.status}: ${errorText || res.statusText}`,
-      submittedCount: 0,
-      key,
-    };
-  } catch (error: any) {
-    console.warn('[IndexNow] Submission error:', error?.message || error);
-    return {
-      success: false,
-      message: error?.message || 'Network error submitting to IndexNow',
-      submittedCount: 0,
-      key,
-    };
   }
+
+  const isRateLimited = lastStatus === 429 || lastErrorText.includes('TooManyRequests');
+  const friendlyMessage = isRateLimited
+    ? 'IndexNow temporary rate limit reached (too many rapid requests). Please wait 2–3 minutes before pinging again.'
+    : `IndexNow API returned status ${lastStatus}: ${lastErrorText}`;
+
+  return {
+    success: false,
+    status: lastStatus,
+    message: friendlyMessage,
+    submittedCount: 0,
+    key,
+  };
 }
