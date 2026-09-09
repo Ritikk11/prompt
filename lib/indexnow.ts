@@ -44,6 +44,8 @@ export async function submitToIndexNow(
   const endpoints = [
     'https://api.indexnow.org/indexnow',
     'https://www.bing.com/indexnow',
+    'https://yandex.com/indexnow',
+    'https://search.seznam.cz/indexnow',
   ];
 
   let lastStatus = 500;
@@ -55,6 +57,7 @@ export async function submitToIndexNow(
         method: 'POST',
         headers: {
           'Content-Type': 'application/json; charset=utf-8',
+          'User-Agent': 'AIPromptMatrix-IndexNow/1.0 (+https://aipromptmatrix.in)',
         },
         body: JSON.stringify(payload),
         signal: AbortSignal.timeout(10000),
