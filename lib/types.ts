@@ -50,6 +50,9 @@ export interface Post {
   authorAvatar?: string;
   status?: 'published' | 'pending' | 'draft';
   visibility?: 'public' | 'private';
+  pinterestPinId?: string;
+  pinterestPinnedAt?: string;
+  pinterestUrl?: string;
   createdAt: string;
   // Stamped on every admin/API save; feeds schema.org dateModified. Legacy
   // posts lack it — fall back to createdAt when reading.
@@ -325,6 +328,21 @@ export interface DiscoveryPageSettings {
   showHeroStats?: boolean;
 }
 
+export interface PinterestSettings {
+  appId?: string;
+  appSecret?: string;
+  boardId?: string;
+  boardName?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tokenExpiresAt?: number;
+  username?: string;
+  scope?: string;
+  isConnected?: boolean;
+  autoPublishNewPosts?: boolean;
+  lastPublishedAt?: string;
+}
+
 export interface SiteSettings {
   maintenanceMode?: boolean;
   siteTitle: string;
@@ -445,6 +463,7 @@ export interface SiteSettings {
   shareSettings?: ShareSettings;
   keepExploring?: KeepExploringSettings;
   seoSettings?: SeoSettings;
+  pinterestSettings?: PinterestSettings;
   staticPages?: Record<string, StaticPageSettings>;
   ads?: AdSettings;
   imageProvider?: 'supabase' | 'cloudflare';

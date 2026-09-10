@@ -255,6 +255,21 @@ export async function POST(request: Request) {
     const { error } = await admin.from(table).upsert({ id: rowId, data });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     revalidateContent(resource, data, rowId);
+
+    // Auto-publish to Pinterest in background if post is published and auto-publish is enabled
+    if (resource === 'posts' && data.status === 'published' && !data.pinterestPinId) {
+      admin.from('settings').select('data').eq('id', 'global').maybeSingle().then(({ data: settingsRow }) => {
+        const pSettings = settingsRow?.data?.pinterestSettings;
+        if (pSettings?.autoPublishNewPosts && pSettings?.isConnected) {
+          import('@/lib/pinterest').then(({ publishPostToPinterest }) => {
+            publishPostToPinterest(data, admin).catch(err => {
+              console.error('Pinterest auto-publish error:', err);
+            });
+          });
+        }
+      }).catch(() => {});
+    }
+
     return NextResponse.json({ ok: true });
   }
 

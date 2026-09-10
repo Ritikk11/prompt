@@ -23,6 +23,7 @@ import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
 import AiStudioTab from '@/components/admin/AiStudioTab';
 import StatsTab from '@/components/admin/StatsTab';
+import PinterestTab from '@/components/admin/PinterestTab';
 import { MagicWandProvider, WandButton, useMagicWand } from '@/components/admin/MagicWand';
 import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, FieldTextarea, EditableCard, CharCount, Toggle, ActionButton, AdminSelect, AdminCombobox, AdminTagInput, PresetPills, adminInput, adminInputOnCard, adminLabel } from '@/components/admin/AdminUI';
 import { askAi } from '@/lib/admin/ai';
@@ -48,11 +49,11 @@ import MediaLibraryModal from '@/components/admin/MediaLibraryModal';
 type AdminTab = 'dashboard' | 'stats' | 'posts' | 'sections' | 'articles' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages' | 'ai-studio';
 const DiscoveryPageIds = ['explore', 'tool', 'tag'] as const;
 export type DiscoveryPageId = typeof DiscoveryPageIds[number];
-type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share' | 'categories';
+type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share' | 'categories' | 'pinterest';
 type SectionLocationFilter = 'homepage' | 'header' | 'footer' | 'all';
 
 const adminTabKeys: AdminTab[] = ['dashboard', 'stats', 'posts', 'sections', 'articles', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages', 'ai-studio'];
-const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'discovery', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share', 'categories'];
+const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'discovery', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share', 'categories', 'pinterest'];
 const sectionLocationKeys: SectionLocationFilter[] = ['homepage', 'header', 'footer', 'all'];
 
 function parseAdminTab(value: string | null): AdminTab {
@@ -3816,6 +3817,11 @@ function AdminInner() {
                         {post.featured && <span className="inline-flex items-center gap-1 text-yellow-500 font-semibold"><Star className="h-3.5 w-3.5 fill-yellow-500" /> Featured</span>}
                         {post.status === 'draft' && <span className="inline-flex items-center gap-1 text-orange-500 font-semibold"><FileText className="h-3.5 w-3.5" /> Draft</span>}
                         {post.visibility === 'private' && <span className="inline-flex items-center gap-1 rounded-full bg-surface-100 px-2 py-0.5 font-semibold text-surface-500 dark:bg-surface-800 dark:text-surface-300"><EyeOff className="h-3.5 w-3.5" /> Private</span>}
+                        {post.pinterestPinId && (
+                          <span className="inline-flex items-center gap-1 text-rose-500 font-semibold" title="Pinned to Pinterest">
+                            <Share2 className="h-3 w-3" /> Pinned
+                          </span>
+                        )}
                         {sections.filter(s => s.type === 'custom' && s.postIds?.includes(post.id)).length > 0 && (
                           <span className="text-primary-500 font-semibold">
                             {sections.filter(s => s.type === 'custom' && s.postIds?.includes(post.id)).length} sections
@@ -3824,6 +3830,34 @@ function AdminInner() {
                       </div>
                     </div>
                     <div className="ml-7 flex basis-full flex-wrap items-center justify-end gap-1 border-t border-black/[0.06] dark:border-white/[0.08] pt-2 sm:ml-0 sm:basis-auto sm:flex-nowrap sm:border-t-0 sm:pt-0">
+                      <button
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          try {
+                            showToast(`Pinning to Pinterest board...`);
+                            const res = await fetch('/api/pinterest/publish', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ postId: post.id }),
+                            });
+                            const data = await res.json();
+                            if (!res.ok) throw new Error(data.error || 'Failed to pin');
+                            showToast('Pinned to Pinterest successfully!', 'success');
+                            loadAdminData();
+                          } catch (err: any) {
+                            showToast(err.message || 'Failed to pin to Pinterest', 'error');
+                          }
+                        }}
+                        className={`p-2 rounded-xl transition-colors ${
+                          post.pinterestPinId
+                            ? 'text-rose-600 hover:bg-rose-500/10'
+                            : 'text-surface-400 hover:text-rose-600 hover:bg-rose-500/10'
+                        }`}
+                        title={post.pinterestPinId ? 'Pinned to Pinterest (click to re-pin)' : 'Pin to Pinterest board'}
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={(e) => {
                           e.preventDefault(); e.stopPropagation();
@@ -5751,6 +5785,7 @@ function AdminInner() {
                   { id: 'categories', label: 'Categories Preset', icon: <FolderTree className="w-4 h-4" /> },
                   { id: 'comments', label: 'Comments', icon: <MessageCircle className="w-4 h-4" /> },
                   { id: 'share', label: 'Share Targets', icon: <ArrowRight className="w-4 h-4" /> },
+                  { id: 'pinterest', label: 'Pinterest', icon: <Share2 className="w-4 h-4 text-rose-500" /> },
                 ].map(cat => {
                   const isActive = settingsSubTab === cat.id;
                   return (
@@ -9555,6 +9590,15 @@ function AdminInner() {
               </ActionButton>
               </Panel>
             </div>
+          )}
+
+          {settingsSubTab === 'pinterest' && (
+            <PinterestTab
+              settings={settings}
+              updateSettings={updateSettings}
+              posts={posts}
+              onRefreshData={loadAdminData}
+            />
           )}
 
           {/* Danger Zone Removed */}
