@@ -17,6 +17,15 @@ function resolveAbsoluteUrl(url: string, baseUrl: string): string {
   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
+function getMimeType(url: string): string {
+  const cleanUrl = url.split('?')[0].toLowerCase();
+  if (cleanUrl.endsWith('.webp')) return 'image/webp';
+  if (cleanUrl.endsWith('.png')) return 'image/png';
+  if (cleanUrl.endsWith('.gif')) return 'image/gif';
+  if (cleanUrl.endsWith('.svg')) return 'image/svg+xml';
+  return 'image/jpeg';
+}
+
 export async function GET() {
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in').replace(/\/$/, '');
 
@@ -33,6 +42,8 @@ export async function GET() {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 50);
 
+    const buildDate = new Date().toUTCString();
+
     // 3. Construct Pinterest-compatible Media RSS XML
     let rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" 
@@ -43,6 +54,8 @@ export async function GET() {
     <title>${escapeXml(siteTitle)}</title>
     <link>${baseUrl}</link>
     <description>${escapeXml(siteDescription)}</description>
+    <language>en-US</language>
+    <lastBuildDate>${buildDate}</lastBuildDate>
     <atom:link href="${baseUrl}/feed.xml" rel="self" type="application/rss+xml" />
 `;
 
@@ -50,7 +63,7 @@ export async function GET() {
       const url = `${baseUrl}/${post.slug || post.id}`;
       const baseTitle = escapeXml(post.title);
       const cleanDesc = escapeXml(post.description || post.title);
-      const pubDate = new Date(post.createdAt).toUTCString();
+      const pubDate = new Date(post.updatedAt || post.createdAt).toUTCString();
 
       // Collect all valid images for this post
       const imageUrls: string[] = [];
@@ -65,12 +78,14 @@ export async function GET() {
 
       // 1. Primary Pin item (First/Hero image)
       const primaryImg = imageUrls[0] || '';
+      const primaryMime = primaryImg ? getMimeType(primaryImg) : 'image/jpeg';
       rss += `    <item>
       <title>${baseTitle}</title>
       <link>${url}</link>
       <guid isPermaLink="true">${url}</guid>
       <description><![CDATA[${primaryImg ? `<img src="${primaryImg}" alt="${post.title}" /><br/>` : ''}<p>${post.description || post.title}</p>]]></description>
-${primaryImg ? `      <enclosure url="${escapeXml(primaryImg)}" type="image/jpeg" length="0" />\n      <media:content url="${escapeXml(primaryImg)}" medium="image" />\n` : ''}      <pubDate>${pubDate}</pubDate>
+      <content:encoded><![CDATA[${primaryImg ? `<img src="${primaryImg}" alt="${post.title}" /><br/>` : ''}<p>${post.description || post.title}</p>]]></content:encoded>
+${primaryImg ? `      <enclosure url="${escapeXml(primaryImg)}" type="${primaryMime}" length="350000" />\n      <media:content url="${escapeXml(primaryImg)}" medium="image" type="${primaryMime}" />\n` : ''}      <pubDate>${pubDate}</pubDate>
     </item>
 `;
 
@@ -78,6 +93,7 @@ ${primaryImg ? `      <enclosure url="${escapeXml(primaryImg)}" type="image/jpeg
       if (imageUrls.length > 1) {
         for (let i = 1; i < imageUrls.length; i++) {
           const variantImg = imageUrls[i];
+          const variantMime = getMimeType(variantImg);
           const variantTitle = `${baseTitle} (Variation ${i + 1})`;
           const variantGuid = `${url}#image-${i + 1}`;
 
@@ -86,8 +102,9 @@ ${primaryImg ? `      <enclosure url="${escapeXml(primaryImg)}" type="image/jpeg
       <link>${url}</link>
       <guid isPermaLink="false">${variantGuid}</guid>
       <description><![CDATA[<img src="${variantImg}" alt="${post.title} Variation ${i + 1}" /><br/><p>${post.description || post.title}</p>]]></description>
-      <enclosure url="${escapeXml(variantImg)}" type="image/jpeg" length="0" />
-      <media:content url="${escapeXml(variantImg)}" medium="image" />
+      <content:encoded><![CDATA[<img src="${variantImg}" alt="${post.title} Variation ${i + 1}" /><br/><p>${post.description || post.title}</p>]]></content:encoded>
+      <enclosure url="${escapeXml(variantImg)}" type="${variantMime}" length="350000" />
+      <media:content url="${escapeXml(variantImg)}" medium="image" type="${variantMime}" />
       <pubDate>${pubDate}</pubDate>
     </item>
 `;
