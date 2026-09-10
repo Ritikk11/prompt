@@ -73,7 +73,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     post!
   );
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
-  const ogImage = isBase64 ? `${siteUrl}/og-image.png` : firstImageUrl || seoSettings?.defaultOgImage || `${siteUrl}/og-image.png`;
+  const ogImage = isBase64 ? `${siteUrl}/og-image.webp` : firstImageUrl || seoSettings?.defaultOgImage || `${siteUrl}/og-image.webp`;
 
   return {
     title: { absolute: metaTitle },
@@ -196,7 +196,7 @@ export default async function PostPage({ params }: Props) {
     }
   }
   
-  const rawLogo = settings.siteLogo || '/icon-256x256.jpg';
+  const rawLogo = settings.siteLogo || '/icon-256x256.webp';
   const publisherLogoUrl = rawLogo.startsWith('http') || rawLogo.startsWith('data:')
     ? rawLogo
     : `${siteUrl}${rawLogo.startsWith('/') ? '' : '/'}${rawLogo}`;

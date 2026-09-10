@@ -225,7 +225,7 @@ function LoginContent({ settings }: { settings: SiteSettings }) {
           <Link href="/" className="inline-flex items-center gap-2 transition hover:opacity-80">
             <span className="relative block h-8 w-8 overflow-hidden rounded-xl shadow-sm">
               <Image
-                src={settings.siteLogo || '/icon-190x190.jpg'}
+                src={settings.siteLogo || '/icon-190x190.webp'}
                 alt=""
                 fill
                 sizes="32px"

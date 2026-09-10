@@ -531,7 +531,7 @@ function SiteHeader() {
           {/* Brand */}
           <Link href="/" prefetch={false} className="flex shrink-0 items-center gap-2" onClick={() => setMenuOpen(false)}>
             <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xl sm:h-9 sm:w-9">
-              <Image src={settings.siteLogo || '/icon-190x190.jpg'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" priority />
+              <Image src={settings.siteLogo || '/icon-190x190.webp'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" priority />
             </span>
             <SiteTitle title={settings.siteTitle} className="text-base sm:text-xl" />
           </Link>

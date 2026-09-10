@@ -121,7 +121,7 @@ function FooterContent() {
           <div className="lg:col-span-4">
             <Link href="/" className="flex items-center gap-2 mb-4 w-fit">
               <span className="w-9 h-9 shrink-0 relative overflow-hidden rounded-xl">
-                <Image src={settings.siteLogo || '/icon-190x190.jpg'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" />
+                <Image src={settings.siteLogo || '/icon-190x190.webp'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" />
               </span>
               <SiteTitle title={settings.siteTitle} className="text-xl" />
             </Link>
