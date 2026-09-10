@@ -17,13 +17,14 @@ function resolveAbsoluteUrl(url: string, baseUrl: string): string {
   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
-function getMimeType(url: string): string {
-  const cleanUrl = url.split('?')[0].toLowerCase();
-  if (cleanUrl.endsWith('.webp')) return 'image/webp';
-  if (cleanUrl.endsWith('.png')) return 'image/png';
-  if (cleanUrl.endsWith('.gif')) return 'image/gif';
-  if (cleanUrl.endsWith('.svg')) return 'image/svg+xml';
-  return 'image/jpeg';
+/**
+ * Returns a high-compatibility JPEG image URL using Cloudflare's dynamic converter.
+ * This guarantees Pinterest's RSS scraper recognizes the media as a standard JPEG image.
+ */
+function toJpegFeedUrl(rawUrl: string, baseUrl: string): string {
+  const abs = resolveAbsoluteUrl(rawUrl, baseUrl);
+  if (!abs) return '';
+  return `https://aipromptmatrix.in/cdn-cgi/image/format=jpeg,quality=85/${abs}?ext=.jpg`;
 }
 
 export async function GET() {
@@ -66,34 +67,37 @@ export async function GET() {
       const pubDate = new Date(post.updatedAt || post.createdAt).toUTCString();
 
       // Collect all valid images for this post
-      const imageUrls: string[] = [];
+      const rawImageUrls: string[] = [];
       if (Array.isArray(post.images) && post.images.length > 0) {
         post.images.forEach(img => {
-          if (img.url) imageUrls.push(resolveAbsoluteUrl(img.url, baseUrl));
+          if (img.url) rawImageUrls.push(img.url);
         });
       }
-      if (imageUrls.length === 0 && post.thumbnailUrl) {
-        imageUrls.push(resolveAbsoluteUrl(post.thumbnailUrl, baseUrl));
+      if (rawImageUrls.length === 0 && post.thumbnailUrl) {
+        rawImageUrls.push(post.thumbnailUrl);
       }
 
       // 1. Primary Pin item (First/Hero image)
-      const primaryImg = imageUrls[0] || '';
-      const primaryMime = primaryImg ? getMimeType(primaryImg) : 'image/jpeg';
+      const primaryRaw = rawImageUrls[0] || '';
+      const primaryJpeg = primaryRaw ? toJpegFeedUrl(primaryRaw, baseUrl) : '';
+
       rss += `    <item>
       <title>${baseTitle}</title>
       <link>${url}</link>
       <guid isPermaLink="true">${url}</guid>
-      <description><![CDATA[${primaryImg ? `<img src="${primaryImg}" alt="${post.title}" /><br/>` : ''}<p>${post.description || post.title}</p>]]></description>
-      <content:encoded><![CDATA[${primaryImg ? `<img src="${primaryImg}" alt="${post.title}" /><br/>` : ''}<p>${post.description || post.title}</p>]]></content:encoded>
-${primaryImg ? `      <enclosure url="${escapeXml(primaryImg)}" type="${primaryMime}" length="350000" />\n      <media:content url="${escapeXml(primaryImg)}" medium="image" type="${primaryMime}" />\n` : ''}      <pubDate>${pubDate}</pubDate>
+      <description><![CDATA[${primaryJpeg ? `<img src="${primaryJpeg}" alt="${post.title}" /><br/>` : ''}<p>${post.description || post.title}</p>]]></description>
+      <content:encoded><![CDATA[${primaryJpeg ? `<img src="${primaryJpeg}" alt="${post.title}" /><br/>` : ''}<p>${post.description || post.title}</p>]]></content:encoded>
+${primaryJpeg ? `      <enclosure url="${escapeXml(primaryJpeg)}" type="image/jpeg" length="350000" />
+      <media:content url="${escapeXml(primaryJpeg)}" medium="image" type="image/jpeg" />
+      <media:thumbnail url="${escapeXml(primaryJpeg)}" />\n` : ''}      <pubDate>${pubDate}</pubDate>
     </item>
 `;
 
-      // 2. If prompt has 2+ images, generate dedicated items so Pinterest creates pins for every image variation!
-      if (imageUrls.length > 1) {
-        for (let i = 1; i < imageUrls.length; i++) {
-          const variantImg = imageUrls[i];
-          const variantMime = getMimeType(variantImg);
+      // 2. If prompt has 2+ images, generate dedicated items so Pinterest creates pins for every variation
+      if (rawImageUrls.length > 1) {
+        for (let i = 1; i < rawImageUrls.length; i++) {
+          const variantRaw = rawImageUrls[i];
+          const variantJpeg = toJpegFeedUrl(variantRaw, baseUrl);
           const variantTitle = `${baseTitle} (Variation ${i + 1})`;
           const variantGuid = `${url}#image-${i + 1}`;
 
@@ -101,10 +105,11 @@ ${primaryImg ? `      <enclosure url="${escapeXml(primaryImg)}" type="${primaryM
       <title>${variantTitle}</title>
       <link>${url}</link>
       <guid isPermaLink="false">${variantGuid}</guid>
-      <description><![CDATA[<img src="${variantImg}" alt="${post.title} Variation ${i + 1}" /><br/><p>${post.description || post.title}</p>]]></description>
-      <content:encoded><![CDATA[<img src="${variantImg}" alt="${post.title} Variation ${i + 1}" /><br/><p>${post.description || post.title}</p>]]></content:encoded>
-      <enclosure url="${escapeXml(variantImg)}" type="${variantMime}" length="350000" />
-      <media:content url="${escapeXml(variantImg)}" medium="image" type="${variantMime}" />
+      <description><![CDATA[<img src="${variantJpeg}" alt="${post.title} Variation ${i + 1}" /><br/><p>${post.description || post.title}</p>]]></description>
+      <content:encoded><![CDATA[<img src="${variantJpeg}" alt="${post.title} Variation ${i + 1}" /><br/><p>${post.description || post.title}</p>]]></content:encoded>
+      <enclosure url="${escapeXml(variantJpeg)}" type="image/jpeg" length="350000" />
+      <media:content url="${escapeXml(variantJpeg)}" medium="image" type="image/jpeg" />
+      <media:thumbnail url="${escapeXml(variantJpeg)}" />
       <pubDate>${pubDate}</pubDate>
     </item>
 `;
