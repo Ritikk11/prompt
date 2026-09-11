@@ -27,6 +27,12 @@ function toJpegFeedUrl(rawUrl: string, baseUrl: string): string {
   return `https://aipromptmatrix.in/cdn-cgi/image/format=jpeg,quality=85/${abs}?ext=.jpg`;
 }
 
+function getPostTimestamp(post: Post): number {
+  const dateStr = post.updatedAt || post.createdAt;
+  const time = dateStr ? new Date(dateStr).getTime() : 0;
+  return isNaN(time) ? 0 : time;
+}
+
 export async function GET() {
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in').replace(/\/$/, '');
 
@@ -40,7 +46,7 @@ export async function GET() {
     const posts = ((await fetchPosts()) as Post[]) || [];
     const publishedPosts = posts
       .filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private')
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort((a, b) => getPostTimestamp(b) - getPostTimestamp(a))
       .slice(0, 50);
 
     const buildDate = new Date().toUTCString();
@@ -64,7 +70,8 @@ export async function GET() {
       const url = `${baseUrl}/${post.slug || post.id}`;
       const baseTitle = escapeXml(post.title);
       const cleanDesc = escapeXml(post.description || post.title);
-      const pubDate = new Date(post.updatedAt || post.createdAt).toUTCString();
+      const postTimestamp = getPostTimestamp(post);
+      const pubDate = (postTimestamp ? new Date(postTimestamp) : new Date()).toUTCString();
 
       // Collect all valid images for this post
       const rawImageUrls: string[] = [];
@@ -99,12 +106,12 @@ ${primaryJpeg ? `      <enclosure url="${escapeXml(primaryJpeg)}" type="image/jp
           const variantRaw = rawImageUrls[i];
           const variantJpeg = toJpegFeedUrl(variantRaw, baseUrl);
           const variantTitle = `${baseTitle} (Variation ${i + 1})`;
-          const variantGuid = `${url}#image-${i + 1}`;
+          const variantUrl = `${url}?image=${i + 1}`;
 
           rss += `    <item>
       <title>${variantTitle}</title>
-      <link>${url}</link>
-      <guid isPermaLink="false">${variantGuid}</guid>
+      <link>${variantUrl}</link>
+      <guid isPermaLink="true">${variantUrl}</guid>
       <description><![CDATA[<img src="${variantJpeg}" alt="${post.title} Variation ${i + 1}" /><br/><p>${post.description || post.title}</p>]]></description>
       <content:encoded><![CDATA[<img src="${variantJpeg}" alt="${post.title} Variation ${i + 1}" /><br/><p>${post.description || post.title}</p>]]></content:encoded>
       <enclosure url="${escapeXml(variantJpeg)}" type="image/jpeg" length="350000" />
@@ -123,7 +130,7 @@ ${primaryJpeg ? `      <enclosure url="${escapeXml(primaryJpeg)}" type="image/jp
     return new NextResponse(rss, {
       headers: {
         'Content-Type': 'application/xml; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+        'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
       },
     });
   } catch (error: any) {
