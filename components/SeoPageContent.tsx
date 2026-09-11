@@ -70,6 +70,8 @@ export default function SeoPageContent({ seoPage, allPosts, settings }: SeoPageC
 
   // JSON-LD structured data for Google Search (CollectionPage + BreadcrumbList + ItemList)
   const jsonLd = useMemo(() => {
+    const pageTitle = seoPage.seoTitle || heroTitle;
+    const primaryImg = sortedPosts[0]?.images?.[0]?.url || sortedPosts[0]?.thumbnailUrl;
     return {
       '@context': 'https://schema.org',
       '@graph': [
@@ -77,8 +79,18 @@ export default function SeoPageContent({ seoPage, allPosts, settings }: SeoPageC
           '@type': 'CollectionPage',
           '@id': `${pageUrl}#webpage`,
           url: pageUrl,
-          name: heroTitle,
+          name: pageTitle,
+          headline: pageTitle,
           description: seoPage.seoDescription || heroDescription,
+          ...(primaryImg ? {
+            primaryImageOfPage: {
+              '@type': 'ImageObject',
+              '@id': `${pageUrl}#primaryimage`,
+              url: primaryImg,
+              contentUrl: primaryImg,
+            },
+            image: primaryImg,
+          } : {}),
           isPartOf: {
             '@type': 'WebSite',
             '@id': `${siteUrl}/#website`,
@@ -106,7 +118,7 @@ export default function SeoPageContent({ seoPage, allPosts, settings }: SeoPageC
         },
         {
           '@type': 'ItemList',
-          name: heroTitle,
+          name: pageTitle,
           itemListOrder: 'https://schema.org/ItemListOrderDescending',
           numberOfItems: sortedPosts.length,
           itemListElement: sortedPosts.slice(0, 30).map((post, idx) => ({
@@ -119,7 +131,7 @@ export default function SeoPageContent({ seoPage, allPosts, settings }: SeoPageC
         },
       ],
     };
-  }, [pageUrl, siteUrl, heroTitle, heroDescription, seoPage.seoDescription, settings.siteTitle, sortedPosts]);
+  }, [pageUrl, siteUrl, heroTitle, heroDescription, seoPage.seoTitle, seoPage.seoDescription, settings.siteTitle, sortedPosts]);
 
   const hasFilterTags = Boolean(seoPage.filterTags?.length);
 

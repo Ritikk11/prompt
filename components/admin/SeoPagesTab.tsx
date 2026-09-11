@@ -319,6 +319,9 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
             >
               <textarea rows={2} value={seoTitle} onChange={e => setSeoTitle(e.target.value)} className={`${adminInput} resize-y`} placeholder="Defaults to hero heading" />
               <CharCount value={seoTitle} recommended={60} />
+              <p className="mt-1 text-xs text-surface-500">
+                Write naturally with prepositions (e.g. <em>Viral 80s Look AI Prompts for Instagram &amp; ChatGPT</em>). Avoid stacking raw keywords without prepositions to prevent Google from replacing it with the H1.
+              </p>
             </Field>
             <Field
               label="Meta description (Google snippet & social cards)"

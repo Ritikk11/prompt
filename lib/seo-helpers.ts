@@ -48,7 +48,7 @@ export function generateSeoPageMetadata(seoPage: any, settings: SiteSettings, ma
 
   // Resolve best high-resolution image for social preview
   const firstPromptImage = matchingPosts?.[0]?.images?.[0]?.url || matchingPosts?.[0]?.thumbnailUrl;
-  const ogImage = firstPromptImage || settings.seoSettings?.defaultOgImage || `${siteUrl}/og-image.jpg`;
+  const ogImage = firstPromptImage || settings.seoSettings?.defaultOgImage || `${siteUrl}/og-image.webp`;
 
   return {
     title: { absolute: title },
@@ -62,6 +62,17 @@ export function generateSeoPageMetadata(seoPage: any, settings: SiteSettings, ma
       'gemini prompts',
     ],
     alternates: canonicalUrl ? { canonical: canonicalUrl } : undefined,
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
+    },
     openGraph: {
       title,
       description,

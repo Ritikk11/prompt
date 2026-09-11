@@ -68,6 +68,17 @@ export async function generateMetadata(): Promise<Metadata> {
       shortcut: '/favicon.ico?v=6',
     },
     manifest: '/site.webmanifest',
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
+    },
     openGraph: {
       siteName: siteTitle,
       type: 'website',

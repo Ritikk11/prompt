@@ -51,7 +51,7 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
   );
 };
 
-export default function PostCard({ post: initialPost, index, aspect, cardStyleOverride, badgeStyleOverride }: { post: Post; index?: number; aspect?: string; cardStyleOverride?: 'v1' | 'v2'; badgeStyleOverride?: string }) {
+export default function PostCard({ post: initialPost, index, aspect, cardStyleOverride, badgeStyleOverride, priority = false }: { post: Post; index?: number; aspect?: string; cardStyleOverride?: 'v1' | 'v2'; badgeStyleOverride?: string; priority?: boolean }) {
   const { settings, posts } = useData();
   const post = posts.find(p => p.id === initialPost.id) || initialPost;
   
@@ -73,7 +73,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
 
   const renderBadges = (className = "") => (
     <div className="flex flex-wrap gap-1">
-      {allTools.slice(0, 3).map(tool => (
+      {allTools.slice(0, 3).map((tool) => (
         <Badge key={tool} style={badgeStyle} toolName={tool} toolInfo={getToolInfo(tool, settings?.toolDetails)} className={className} />
       ))}
       {allTools.length > 3 && (
@@ -108,6 +108,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
               className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
               referrerPolicy="no-referrer"
               skeleton={showSkeleton}
+              priority={priority}
             />
           ) : (
             <LoadingImg
@@ -116,6 +117,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
               showSkeleton={showSkeleton}
               className="block h-auto w-full transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
               referrerPolicy="no-referrer"
+              priority={priority}
             />
           )}
           <div className="absolute top-2.5 left-2.5 z-10">
@@ -190,6 +192,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
           className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
           referrerPolicy="no-referrer"
           skeleton={showSkeleton}
+          priority={priority}
         />
       ) : (
         <LoadingImage
@@ -202,6 +205,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
           className="block h-auto w-full transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
           referrerPolicy="no-referrer"
           skeleton={showSkeleton}
+          priority={priority}
         />
       )}
 

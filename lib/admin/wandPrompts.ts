@@ -22,7 +22,7 @@ export const RAW_ONLY = `Return ONLY the requested text — no quotes, no markdo
 
 export const CALLOUT_RULES = `Article bodies support custom markdown callouts: :::tip, :::creative, :::model, :::prompt, :::warning, :::info, :::note, :::important — plus inline highlights {mark:...}, {primary:...}, {green:...}, {red:...}, {kbd:...}. The word after ::: only sets the block color and is never shown as a label. Either add a short, specific title on the same line (e.g. ":::tip Lock the pose with a reference") or leave the block untitled; NEVER title a block with the bare words "Tip", "Warning", "Note", etc. Close each block with ::: on its own line. Never use H1 (#); start at H2 (##).`;
 
-const META_TITLE_RULES = `Strict SEO title, max 60 characters, front-load the main keyword.`;
+const META_TITLE_RULES = `Strict SEO title, max 55-60 characters, front-load the main keyword in a natural, cohesive phrase. NEVER write a comma-less list of disconnected keywords (e.g. avoid 'Word Word Word Word Prompts'); make it read like a genuine compelling title with prepositions/conjunctions (e.g. 'for', 'with', '&') so search engines do not rewrite it.`;
 const META_DESC_RULES = `Strict SEO meta description, 140-160 characters, natural sentence with a reason to click.`;
 
 // ---------- AI Studio (free-form admin chat) ----------

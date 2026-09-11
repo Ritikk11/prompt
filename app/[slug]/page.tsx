@@ -7,7 +7,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { preload, preconnect } from 'react-dom';
 import { getPostBySlugOrId, fetchPostSummaries, getSeoPageBySlug, isPublicPost, fetchSettings } from '@/lib/data';
-import { getPromptImageUrl } from '@/lib/image-url';
+import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
 import PostContent from '@/components/PostContent';
 import PostCard from '@/components/PostCard';
 import FilterChipRail from '@/components/FilterChipRail';
@@ -90,6 +90,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical: `${siteUrl}/${slug}`,
     },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
+    },
     keywords: [...post!.tags, 'AI prompts', 'chatgpt prompts', 'gemini prompts', 'grok prompts', 'qwen prompts'],
     openGraph: {
       title: metaTitle,
@@ -125,6 +136,29 @@ export default async function PostPage({ params }: Props) {
 
   if (!post && seoPage) {
     const [allPosts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
+    const { tags = [], categories = [] } = seoPage;
+    const matching = (allPosts as Post[]).filter(candidate => {
+      if (!isPublicPost(candidate)) return false;
+      if (tags.length > 0 && !tags.every((tag: string) => candidate.tags?.some((t: string) => t.toLowerCase() === tag.toLowerCase()))) return false;
+      const candCats = [candidate.category, ...(candidate.categories || [])].filter((c): c is string => Boolean(c));
+      if (categories.length > 0 && !categories.every((cat: string) => candCats.some((c: string) => c.toLowerCase() === cat.toLowerCase()))) return false;
+      return true;
+    });
+    const sorted = [...matching].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const topPost = sorted[0];
+    if (topPost) {
+      const topImg = topPost.thumbnailUrl || topPost.images?.[0]?.url;
+      if (topImg) {
+        const topThumbnailUrl = getThumbnailImageUrl(topImg);
+        if (topThumbnailUrl) {
+          preload(topThumbnailUrl, {
+            as: 'image',
+            fetchPriority: 'high',
+            referrerPolicy: 'no-referrer',
+          });
+        }
+      }
+    }
     return <SeoPageContent seoPage={seoPage} allPosts={allPosts as Post[]} settings={settings} />;
   }
 
@@ -206,9 +240,9 @@ export default async function PostPage({ params }: Props) {
   const mainJsonLd: any = {
     '@context': 'https://schema.org',
     '@type': schemaType,
-    name: schemaType === 'HowTo' ? `How to use ${post.title}` : post.title,
+    name: schemaType === 'HowTo' ? `How to use ${post.title}` : (post.seoTitle || post.title),
     // Article rich results key off `headline`, not `name`; HowTo uses `name`.
-    ...(schemaType !== 'HowTo' ? { headline: post.title } : {}),
+    ...(schemaType !== 'HowTo' ? { headline: post.seoTitle || post.title } : {}),
     description: post.description,
     author: {
       '@type': 'Organization',

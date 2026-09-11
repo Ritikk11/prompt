@@ -74,6 +74,7 @@ export default function MasonryGrid({
               <PostCard
                 post={post}
                 index={index}
+                priority={index < 2}
                 cardStyleOverride={cardStyleOverride as any}
               />
               {renderAdSlot && (
