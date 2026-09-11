@@ -344,6 +344,7 @@ export interface PinterestSettings {
   scope?: string;
   isConnected?: boolean;
   autoPublishNewPosts?: boolean;
+  useSandbox?: boolean;
   lastPublishedAt?: string;
 }
 

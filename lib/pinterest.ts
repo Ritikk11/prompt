@@ -6,6 +6,12 @@ export const DEFAULT_PINTEREST_BOARD_ID = '1124703775633314110';
 export const DEFAULT_PINTEREST_BOARD_NAME = 'Ai Image Prompts';
 export const DEFAULT_PINTEREST_REDIRECT_URI = 'https://aipromptmatrix.in/api/pinterest/callback';
 export const PINTEREST_API_BASE = 'https://api.pinterest.com/v5';
+export const PINTEREST_SANDBOX_API_BASE = 'https://api-sandbox.pinterest.com/v5';
+
+export function getPinterestApiBase(useSandbox = false): string {
+  return useSandbox ? PINTEREST_SANDBOX_API_BASE : PINTEREST_API_BASE;
+}
+
 export const PINTEREST_SCOPES = [
   'boards:read',
   'boards:write',
@@ -314,8 +320,10 @@ export async function createPinterestPin(options: {
   link: string;
   imageUrl: string;
   altText?: string;
+  useSandbox?: boolean;
 }) {
-  const { accessToken, boardId, title, description, link, imageUrl, altText } = options;
+  const { accessToken, boardId, title, description, link, imageUrl, altText, useSandbox } = options;
+  const apiBase = getPinterestApiBase(useSandbox);
 
   if (!imageUrl) {
     throw new Error('Image URL is required to publish a pin.');
@@ -333,7 +341,7 @@ export async function createPinterestPin(options: {
     },
   };
 
-  const res = await fetch(`${PINTEREST_API_BASE}/pins`, {
+  const res = await fetch(`${apiBase}/pins`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -366,8 +374,9 @@ export async function publishPostToPinterest(
   supabaseAdmin: any,
   overrideBoardId?: string
 ) {
-  let { accessToken, boardId } = await getValidPinterestAccessToken(supabaseAdmin);
+  let { accessToken, boardId, settings: pSettings } = await getValidPinterestAccessToken(supabaseAdmin);
   const targetBoardId = overrideBoardId || boardId;
+  const useSandbox = Boolean(pSettings.useSandbox);
 
   const imageUrl = resolveDirectImageUrl(post);
   if (!imageUrl) {
@@ -388,6 +397,7 @@ export async function publishPostToPinterest(
       link,
       imageUrl,
       altText: title,
+      useSandbox,
     });
   } catch (err: any) {
     // If Pinterest returns 401 Unauthorized, attempt an immediate token refresh and retry once

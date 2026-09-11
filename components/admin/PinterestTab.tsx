@@ -322,6 +322,84 @@ export default function PinterestTab({
         </div>
       </Panel>
 
+      {/* Production Access & RSS Auto-Publish Guide */}
+      <Panel>
+        <PanelHeader
+          title="Important: Pinterest Access Level & Instant RSS Publishing"
+          subtitle="Why Trial Access blocks direct API pins & how to publish immediately"
+        />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+          {/* Option A: Instant RSS Feed Auto-Publish */}
+          <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-500/10 space-y-3">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">
+              <Sparkles className="w-4 h-4" />
+              <span>Recommended: Instant RSS Auto-Publish (Zero Approval Needed)</span>
+            </div>
+            <p className="text-surface-600 dark:text-surface-300 leading-relaxed">
+              Pinterest Business has a built-in auto-publisher that natively pulls all your prompts directly from your RSS feed. It creates rich pins automatically with <strong>zero API limitations</strong> and does not require developer approval.
+            </p>
+            <div className="p-2.5 rounded-xl bg-white/80 dark:bg-black/30 border border-emerald-500/20 flex items-center justify-between gap-2">
+              <code className="font-mono text-[11px] text-emerald-700 dark:text-emerald-300 truncate">
+                https://aipromptmatrix.in/feed.xml
+              </code>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText('https://aipromptmatrix.in/feed.xml');
+                  showToast('RSS Feed URL copied to clipboard!', 'success');
+                }}
+                className="shrink-0 px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-500 transition-colors"
+              >
+                Copy URL
+              </button>
+            </div>
+            <div className="pt-1">
+              <a
+                href="https://www.pinterest.com/settings/claimed-accounts/"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
+                Open Pinterest Auto-publish Settings <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+              <span className="text-surface-400 text-[11px] block mt-0.5">
+                Go to Settings &rarr; Claimed Accounts (or Bulk Create) &rarr; Auto-publish from RSS &rarr; Paste URL &amp; select board &quot;Ai Image Prompts&quot;.
+              </span>
+            </div>
+          </div>
+
+          {/* Option B: Direct API Standard Access */}
+          <div className="p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 dark:bg-rose-500/10 space-y-3">
+            <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-extrabold text-sm">
+              <ShieldCheck className="w-4 h-4" />
+              <span>For 1-Click Push Button: Upgrade to Standard Access</span>
+            </div>
+            <p className="text-surface-600 dark:text-surface-300 leading-relaxed">
+              Pinterest returned: <em>&quot;Apps with Trial access may not create Pins in production.&quot;</em> Pinterest gives new Developer Apps <strong>Trial Access</strong> by default. To use the direct &quot;Publish Pin&quot; API button on live boards, your app needs <strong>Standard Access</strong>.
+            </p>
+            <div className="space-y-1.5 text-surface-600 dark:text-surface-300">
+              <p>1. Open your app in the Pinterest Developer portal.</p>
+              <p>2. Under <strong>Access Level</strong>, click <strong>&quot;Apply for Standard Access&quot;</strong>.</p>
+              <p>3. Submit the brief form (Purpose: &quot;Auto-publishing AI prompt artwork from our website to our brand Pinterest board&quot;).</p>
+            </div>
+            <div className="pt-1">
+              <a
+                href={`https://developers.pinterest.com/apps/${currentPinterest.appId || DEFAULT_PINTEREST_APP_ID}/`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 font-bold text-rose-600 dark:text-rose-400 hover:underline"
+              >
+                Upgrade App to Standard Access <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+              <span className="text-surface-400 text-[11px] block mt-0.5">
+                Once Pinterest approves Standard Access, the direct &quot;Publish Pin&quot; button works immediately!
+              </span>
+            </div>
+          </div>
+        </div>
+      </Panel>
+
       {/* Advanced Credentials Panel */}
       <Panel>
         <PanelHeader
@@ -373,6 +451,17 @@ export default function PinterestTab({
             />
             <p className="text-xs text-surface-500 mt-1">Display label for the board</p>
           </Field>
+        </div>
+
+        <div className="pt-2 border-t border-black/[0.06] dark:border-white/[0.08]">
+          <Toggle
+            checked={currentPinterest.useSandbox ?? false}
+            onChange={(val) => handleUpdateConfig('useSandbox', val)}
+            label="Use Pinterest API Sandbox (Test Mode)"
+          />
+          <p className="text-xs text-surface-400 mt-0.5 ml-11">
+            When enabled, API requests hit api-sandbox.pinterest.com instead of live production api.pinterest.com.
+          </p>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-white/40 dark:bg-white/[0.03] border border-black/[0.06] dark:border-white/[0.08] text-xs text-surface-500 dark:text-surface-400 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
