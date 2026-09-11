@@ -175,7 +175,9 @@ export async function getValidPinterestAccessToken(supabaseAdmin: any): Promise<
   }
 
   const now = Date.now();
-  const tokenExpiredOrExpiring = !pSettings.accessToken || (pSettings.tokenExpiresAt && pSettings.tokenExpiresAt < now + 5 * 60 * 1000);
+  const rawExpiresAt = pSettings.tokenExpiresAt;
+  const tokenExpiresAt = rawExpiresAt ? new Date(rawExpiresAt).getTime() : 0;
+  const tokenExpiredOrExpiring = !pSettings.accessToken || (tokenExpiresAt > 0 && tokenExpiresAt < now + 5 * 60 * 1000);
 
   if (tokenExpiredOrExpiring && pSettings.refreshToken) {
     try {
@@ -340,10 +342,12 @@ export async function createPinterestPin(options: {
     body: JSON.stringify(payload),
   });
 
-  const json = await res.json();
+  const json = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg = json.message || json.error || (json.details ? JSON.stringify(json.details) : `Pinterest API error (${res.status})`);
-    throw new Error(msg);
+    const err: any = new Error(msg);
+    err.status = res.status;
+    throw err;
   }
 
   return {
@@ -362,7 +366,7 @@ export async function publishPostToPinterest(
   supabaseAdmin: any,
   overrideBoardId?: string
 ) {
-  const { accessToken, boardId } = await getValidPinterestAccessToken(supabaseAdmin);
+  let { accessToken, boardId } = await getValidPinterestAccessToken(supabaseAdmin);
   const targetBoardId = overrideBoardId || boardId;
 
   const imageUrl = resolveDirectImageUrl(post);
@@ -374,15 +378,65 @@ export async function publishPostToPinterest(
   const description = formatPinterestDescription(post);
   const link = `https://aipromptmatrix.in/${post.slug || post.id}`;
 
-  const pin = await createPinterestPin({
-    accessToken,
-    boardId: targetBoardId,
-    title,
-    description,
-    link,
-    imageUrl,
-    altText: title,
-  });
+  let pin;
+  try {
+    pin = await createPinterestPin({
+      accessToken,
+      boardId: targetBoardId,
+      title,
+      description,
+      link,
+      imageUrl,
+      altText: title,
+    });
+  } catch (err: any) {
+    // If Pinterest returns 401 Unauthorized, attempt an immediate token refresh and retry once
+    const isUnauthorized = err?.status === 401 || /unauthorized|authentication failed|token/i.test(err?.message || '');
+    if (isUnauthorized) {
+      console.warn('Pinterest API returned 401 Unauthorized. Attempting token refresh...');
+      const { data: row } = await supabaseAdmin.from('settings').select('data').eq('id', 'global').maybeSingle();
+      const currentSettings: PinterestSettings = row?.data?.pinterestSettings || {};
+      if (currentSettings.refreshToken) {
+        const appId = currentSettings.appId || DEFAULT_PINTEREST_APP_ID;
+        const appSecret = currentSettings.appSecret || DEFAULT_PINTEREST_APP_SECRET;
+        const refreshed = await refreshPinterestToken(currentSettings.refreshToken, appId, appSecret);
+
+        accessToken = refreshed.accessToken;
+        const updatedPinterestSettings: PinterestSettings = {
+          ...currentSettings,
+          accessToken: refreshed.accessToken,
+          refreshToken: refreshed.refreshToken,
+          tokenExpiresAt: Date.now() + refreshed.expiresIn * 1000,
+          isConnected: true,
+        };
+
+        if (row?.data) {
+          await supabaseAdmin.from('settings').upsert({
+            id: 'global',
+            data: {
+              ...row.data,
+              pinterestSettings: updatedPinterestSettings,
+            },
+          });
+        }
+
+        // Retry pin creation with fresh token
+        pin = await createPinterestPin({
+          accessToken,
+          boardId: targetBoardId,
+          title,
+          description,
+          link,
+          imageUrl,
+          altText: title,
+        });
+      } else {
+        throw err;
+      }
+    } else {
+      throw err;
+    }
+  }
 
   // Update post in Supabase
   const updatedPost: Post = {

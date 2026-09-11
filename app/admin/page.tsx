@@ -3875,9 +3875,14 @@ function AdminInner() {
                           e.stopPropagation();
                           try {
                             showToast(`Pinning to Pinterest board...`);
+                            const supabase = createSupabaseClient();
+                            const { data: { session } } = await supabase.auth.getSession();
                             const res = await fetch('/api/pinterest/publish', {
                               method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
+                              headers: {
+                                'Content-Type': 'application/json',
+                                ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+                              },
                               body: JSON.stringify({ postId: post.id }),
                             });
                             const data = await res.json();

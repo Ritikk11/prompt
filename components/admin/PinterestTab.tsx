@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { TabBanner, Panel, PanelHeader, Field, Toggle, ActionButton, adminInput } from './AdminUI';
 import { showToast } from '@/components/ui/ToastContainer';
+import { createClient } from '@/lib/supabase-client';
 import type { SiteSettings, PinterestSettings, Post } from '@/lib/types';
 import {
   DEFAULT_PINTEREST_APP_ID,
@@ -54,10 +55,28 @@ export default function PinterestTab({
 
   const currentPinterest = settings.pinterestSettings || {};
 
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        return {
+          Authorization: `Bearer ${session.access_token}`,
+        };
+      }
+    } catch (e) {
+      console.error('Failed to get auth token for Pinterest request:', e);
+    }
+    return {};
+  };
+
   const fetchStatus = useCallback(async () => {
     try {
       setLoadingStatus(true);
-      const res = await fetch('/api/pinterest/status');
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch('/api/pinterest/status', {
+        headers: authHeaders,
+      });
       const data = await res.json();
       if (res.ok) {
         setStatus(data);
@@ -108,9 +127,13 @@ export default function PinterestTab({
   const handlePublishSingle = async (postId: string) => {
     try {
       setPublishingId(postId);
+      const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/pinterest/publish', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({ postId }),
       });
 
@@ -134,9 +157,13 @@ export default function PinterestTab({
 
     try {
       setBulkPublishing(true);
+      const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/pinterest/publish', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({ all: true }),
       });
 
