@@ -95,6 +95,7 @@ export default function ExploreClient({
           { label: 'Prompts', value: publicPosts.length },
           { label: 'AI tools', value: tools.length },
         ] : []}
+        variant={discovery.heroStyle || 'container'}
       />
 
       {/* Active Category Filter Pill */}

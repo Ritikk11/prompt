@@ -15,7 +15,7 @@ function getAllToolsFromPost(post: Partial<Post>) {
 
 // Content pages are ISR-cached; on-demand revalidation keeps them fresh right after an
 // admin edit instead of waiting for the time-based revalidate window to expire.
-function revalidateContent(resource: string, data: any, id?: string) {
+function revalidateContent(resource: string, data: any, id?: string, admin?: any) {
   revalidatePath('/sitemap.xml');
   revalidatePath('/sitemap-main.xml');
   revalidatePath('/sitemap-prompts.xml');
@@ -30,6 +30,19 @@ function revalidateContent(resource: string, data: any, id?: string) {
     getAllToolsFromPost(data || {}).forEach((tool) => revalidatePath(`/tool/${encodeURIComponent(tool.toLowerCase())}`));
     revalidatePath('/');
     revalidatePath('/explore');
+
+    // Automatically purge all active SEO landing pages so the new post appears immediately without manual page edits
+    if (admin) {
+      admin.from('seoPages').select('data').then(({ data: rows }: any) => {
+        (rows || []).forEach((row: any) => {
+          const spSlug = row?.data?.slug;
+          if (spSlug) {
+            revalidatePath(`/${spSlug}`);
+            revalidatePath(`/page/${spSlug}`);
+          }
+        });
+      }).catch(() => {});
+    }
     return;
   }
 
@@ -59,7 +72,11 @@ function revalidateContent(resource: string, data: any, id?: string) {
     if (slug) {
       revalidatePath(`/page/${slug}`);
       revalidatePath(`/${slug}`);
+      submitToIndexNow([`/${slug}`]).catch(() => {});
     }
+    revalidatePath('/');
+    revalidatePath('/sitemap.xml');
+    revalidatePath('/sitemap-main.xml');
     return;
   }
 }
@@ -136,6 +153,14 @@ export async function GET(request: Request) {
   const auth = await requireAdmin(request);
   if (auth.error) return auth.error;
   const admin = auth.admin!;
+
+  const url = new URL(request.url);
+  const resource = url.searchParams.get('resource');
+  if (resource === 'seopages') {
+    const { data: rows, error } = await admin.from('seoPages').select('data');
+    if (error && !isMissingTableError(error)) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ seopages: (rows || []).map((row: any) => row.data) });
+  }
 
   const [posts, sections, settings, seopages, comments] = await Promise.all([
     admin.from('posts').select('data'),
@@ -251,23 +276,52 @@ export async function POST(request: Request) {
     if (resource === 'settings' && rowId !== 'global') return NextResponse.json({ error: 'Settings can only be saved to global' }, { status: 400 });
     if (!validateResourceData(resource, data)) return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     // Freshness signal for schema.org dateModified on prompt pages.
-    if (resource === 'posts') data.updatedAt = new Date().toISOString();
+    if (resource === 'posts') {
+      data.updatedAt = new Date().toISOString();
+      if (data.featured) {
+        data.featuredAt = data.featuredAt || new Date().toISOString();
+        // Enforce maximum 6 featured posts limit: auto-unfeature oldest
+        try {
+          const { data: allPostRows } = await admin.from('posts').select('id, data');
+          const otherFeatured = (allPostRows || [])
+            .filter((r: any) => r.id !== rowId && r.data?.featured === true)
+            .map((r: any) => ({ id: r.id, post: r.data }));
+
+          if (otherFeatured.length >= 6) {
+            otherFeatured.sort((a: any, b: any) => {
+              const timeA = new Date(a.post.featuredAt || a.post.createdAt || 0).getTime();
+              const timeB = new Date(b.post.featuredAt || b.post.createdAt || 0).getTime();
+              return timeA - timeB; // oldest first
+            });
+            const excessCount = otherFeatured.length - 5;
+            const toUnfeature = otherFeatured.slice(0, excessCount);
+            for (const item of toUnfeature) {
+              await admin.from('posts').update({ data: { ...item.post, featured: false } }).eq('id', item.id);
+            }
+          }
+        } catch (err) {
+          console.error('Featured limit check error:', err);
+        }
+      }
+    }
     const { error } = await admin.from(table).upsert({ id: rowId, data });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    revalidateContent(resource, data, rowId);
+    revalidateContent(resource, data, rowId, admin);
 
     // Auto-publish to Pinterest in background if post is published and auto-publish is enabled
     if (resource === 'posts' && data.status === 'published' && !data.pinterestPinId) {
-      admin.from('settings').select('data').eq('id', 'global').maybeSingle().then(({ data: settingsRow }) => {
-        const pSettings = settingsRow?.data?.pinterestSettings;
-        if (pSettings?.autoPublishNewPosts && pSettings?.isConnected) {
-          import('@/lib/pinterest').then(({ publishPostToPinterest }) => {
-            publishPostToPinterest(data, admin).catch(err => {
-              console.error('Pinterest auto-publish error:', err);
-            });
-          });
+      (async () => {
+        try {
+          const { data: settingsRow } = await admin.from('settings').select('data').eq('id', 'global').maybeSingle();
+          const pSettings = settingsRow?.data?.pinterestSettings;
+          if (pSettings?.autoPublishNewPosts && pSettings?.isConnected) {
+            const { publishPostToPinterest } = await import('@/lib/pinterest');
+            await publishPostToPinterest(data, admin);
+          }
+        } catch (err) {
+          console.error('Pinterest auto-publish error:', err);
         }
-      }).catch(() => {});
+      })();
     }
 
     return NextResponse.json({ ok: true });
@@ -277,9 +331,16 @@ export async function POST(request: Request) {
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
     if (!isValidId(id)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
     if (resource === 'settings') return NextResponse.json({ error: 'Settings cannot be deleted' }, { status: 400 });
+
+    let itemSlug: string | undefined;
+    if (resource === 'seopages' || resource === 'posts') {
+      const { data: row } = await admin.from(table).select('data').eq('id', id).maybeSingle();
+      itemSlug = row?.data?.slug;
+    }
+
     const { error } = await admin.from(table).delete().eq('id', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    revalidateContent(resource, null, id);
+    revalidateContent(resource, itemSlug ? { slug: itemSlug, id } : null, id, admin);
     return NextResponse.json({ ok: true });
   }
 

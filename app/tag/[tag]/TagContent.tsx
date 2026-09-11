@@ -73,6 +73,7 @@ export default function TagContent({ posts, settings }: { posts: Post[], setting
         title={heroTitle}
         description={heroDescription}
         stats={(discovery.showHeroStats ?? true) ? [{ label: 'Prompts', value: filtered.length }] : []}
+        variant={discovery.heroStyle || 'container'}
       />
 
       {/* Filters */}

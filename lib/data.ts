@@ -773,6 +773,7 @@ export function toPostSummary(post: Post): Post {
     categories: post.categories,
     aiTools: allTools,
     featured: post.featured,
+    featuredAt: post.featuredAt,
     views: post.views,
     likes: post.likes,
     likedByUser: undefined,
@@ -823,6 +824,7 @@ type PostSummaryRow = {
   status: string | null;
   visibility: string | null;
   created_at: string | null;
+  featured_at?: string | null;
   images: Array<{
     id: string;
     url: string;
@@ -880,6 +882,7 @@ function mapSummaryRow(row: PostSummaryRow): PostSummary {
     status: (row.status || 'published') as Post['status'],
     visibility: (row.visibility || 'public') as Post['visibility'],
     createdAt: row.created_at || '',
+    featuredAt: row.featured_at || undefined,
   };
 }
 

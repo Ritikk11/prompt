@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { isCurrentUserAdmin } from '@/lib/admin-auth';
-import { fetchPostSummaries } from '@/lib/data';
+import { fetchPostSummaries, fetchSeoPages } from '@/lib/data';
 import { submitToIndexNow } from '@/lib/indexnow';
 import type { Post, PostComment, SiteSettings } from '@/lib/types';
 
@@ -27,6 +27,16 @@ function revalidateNewPost(post: Post) {
   revalidatePath('/sitemap.xml');
   revalidatePath('/sitemap-main.xml');
   revalidatePath('/sitemap-prompts.xml');
+
+  // Purge all SEO landing pages so the new post displays on them immediately
+  fetchSeoPages().then((pages) => {
+    (pages || []).forEach((p: any) => {
+      if (p?.slug) {
+        revalidatePath(`/${p.slug}`);
+        revalidatePath(`/page/${p.slug}`);
+      }
+    });
+  }).catch(() => {});
 
   if (slug && isPublicPost(post)) {
     // Non-blocking IndexNow notification for newly published prompts

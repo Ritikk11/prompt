@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
-import { fetchPostSummaries, fetchSettings } from '@/lib/data';
+import { fetchPostSummaries, fetchSeoPages, fetchSettings } from '@/lib/data';
 import { submitToIndexNow } from '@/lib/indexnow';
 import type { Post } from '@/lib/types';
 
@@ -22,11 +22,17 @@ export async function POST(request: Request) {
     } else if (body.url) {
       urlsToSubmit = [body.url];
     } else {
-      // Default: fetch published posts
-      const posts = (await fetchPostSummaries()) as Post[];
+      // Default: fetch published posts and SEO pages
+      const [posts, seoPages] = await Promise.all([
+        fetchPostSummaries() as Promise<Post[]>,
+        fetchSeoPages() as Promise<any[]>,
+      ]);
       const published = posts.filter(
         p => (p.status === 'published' || !p.status) && p.visibility !== 'private'
       );
+      const seoPageUrls = seoPages
+        .filter(p => p?.slug)
+        .map(p => `${siteUrl}/${String(p.slug).replace(/^\/+|\/+$/g, '')}`);
 
       if (body.mode === 'all') {
         urlsToSubmit = [
@@ -34,14 +40,16 @@ export async function POST(request: Request) {
           `${siteUrl}/explore`,
           `${siteUrl}/blog`,
           `${siteUrl}/guides`,
+          ...seoPageUrls,
           ...published.map(p => `${siteUrl}/${p.slug || p.id}`),
         ];
       } else {
-        // Default mode 'recent': submit homepage, explore, and the 25 most recent prompts
+        // Default mode 'recent': submit homepage, explore, SEO pages, and recent prompts
         const recent = published.slice(0, 30);
         urlsToSubmit = [
           siteUrl,
           `${siteUrl}/explore`,
+          ...seoPageUrls,
           ...recent.map(p => `${siteUrl}/${p.slug || p.id}`),
         ];
       }

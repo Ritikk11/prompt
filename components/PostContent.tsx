@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
 import Image from 'next/image';
-import { Copy, Check, Eye, Heart, Tag, ChevronLeft, ChevronRight, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Compass, Lightbulb, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle, Layers, ClipboardCheck } from 'lucide-react';
+import { Copy, Check, Eye, Heart, Tag, ChevronLeft, ChevronRight, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Compass, Lightbulb, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle, Layers, ClipboardCheck, Sparkles } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { getGridClasses } from '@/lib/utils';
 import { getDefaultImageModel, getToolInfo, getAllTools, getToolForImageModel } from '@/lib/constants';
@@ -26,6 +26,7 @@ import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
 import AdSlot from '@/components/AdSlot';
 import ScrollReveal from '@/components/ScrollReveal';
 import ToolBadge from '@/components/ToolBadge';
+import { getRecommendedPosts } from '@/lib/related-posts';
 
 const GALLERY_SIZES = '(max-width: 768px) calc(100vw - 48px), 680px';
 const buildGallerySrcSet = (url?: string) => {
@@ -276,7 +277,15 @@ const defaultKeepExploring = {
   ctaHref: '/explore',
 };
 
-export default function PostContent({ post: initialPost, relatedPosts }: { post: Post; relatedPosts: Post[] }) {
+export default function PostContent({
+  post: initialPost,
+  relatedPosts,
+  recommendedPosts: serverRecommendedPosts = [],
+}: {
+  post: Post;
+  relatedPosts: Post[];
+  recommendedPosts?: Post[];
+}) {
   const { incrementViews, toggleLike, toggleBookmark, settings, posts } = useData();
   const router = useRouter();
   const pathname = usePathname();
@@ -522,14 +531,12 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
   const showTags = settings.features?.showTags ?? true;
   const showDetailedInsights = settings.features?.showDetailedInsights ?? true;
   const relatedPostIds = new Set(relatedPosts.map(p => p.id));
-  const recommendedPosts = posts
-    .filter(p =>
-      p.id !== post.id &&
-      !relatedPostIds.has(p.id) &&
-      (p.status === 'published' || !p.status) &&
-      p.visibility !== 'private'
-    )
-    .slice(0, 4);
+  const recommendedPosts = useMemo(() => {
+    if (serverRecommendedPosts && serverRecommendedPosts.length > 0) {
+      return serverRecommendedPosts;
+    }
+    return getRecommendedPosts(post, posts, relatedPosts, { limit: 6 });
+  }, [post, posts, relatedPosts, serverRecommendedPosts]);
   const primaryToolName = heroTools[0] || 'ChatGPT / Gemini';
   const toolLabel = heroTools.length === 0 ? 'your AI tool' : heroTools.length === 1 ? heroTools[0] : heroTools.join(' or ');
   const howToSteps = [
@@ -714,6 +721,68 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
     );
   };
 
+  const renderLargeExploreShowcase = () => {
+    const chatGptInfo = getToolInfo('ChatGPT', settings?.toolDetails);
+    const geminiInfo = getToolInfo('Gemini', settings?.toolDetails);
+
+    const glassPill =
+      'border border-white/60 bg-white/25 shadow-sm backdrop-blur-md backdrop-saturate-150 transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/60 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/[0.10] dark:hover:text-white';
+
+    const gradientButton =
+      'bg-gradient-to-r from-google-blue to-[#1a73e8] text-white shadow-md shadow-primary-500/25 transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg hover:shadow-primary-500/40 hover:brightness-[1.06] active:scale-95';
+
+    return (
+      <section className="my-12 rounded-3xl border border-white/80 bg-white/60 p-8 text-center backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.08] sm:p-12">
+        <div className="mx-auto max-w-2xl">
+          <h2 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">
+            Explore More Prompts
+          </h2>
+          <p className="mt-2 text-sm text-surface-600 dark:text-surface-300">
+            Browse our curated library of tested AI image prompts or filter by your favorite tool.
+          </p>
+
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
+            {/* Big All Prompts Button */}
+            <Link
+              href="/explore"
+              className={`group/cta inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full border border-transparent px-8 text-base font-bold ${gradientButton}`}
+            >
+              <Compass className="h-5 w-5" />
+              <span>All Prompts</span>
+              <ArrowRight className="h-4 w-4 transition-transform duration-200 ease-out group-hover/cta:translate-x-1" />
+            </Link>
+
+            {/* ChatGPT Prompts Button */}
+            <Link
+              href="/tool/chatgpt"
+              className={`inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full px-8 text-base font-bold text-surface-700 ${glassPill}`}
+            >
+              {chatGptInfo?.logo ? (
+                <span className="relative h-5 w-5 overflow-hidden rounded-full shrink-0">
+                  <Image src={chatGptInfo.logo} alt="ChatGPT" width={20} height={20} className="h-full w-full object-contain dark:invert dark:brightness-200" referrerPolicy="no-referrer" />
+                </span>
+              ) : null}
+              <span>ChatGPT</span>
+            </Link>
+
+            {/* Gemini Prompts Button */}
+            <Link
+              href="/tool/gemini"
+              className={`inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full px-8 text-base font-bold text-surface-700 ${glassPill}`}
+            >
+              {geminiInfo?.logo ? (
+                <span className="relative h-5 w-5 overflow-hidden rounded-full shrink-0">
+                  <Image src={geminiInfo.logo} alt="Gemini" width={20} height={20} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+                </span>
+              ) : null}
+              <span>Gemini</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  };
+
   const getTryToolsForImage = (image: Post['images'][number]) => {
     const selectedTools = (image.aiTools || []).filter(Boolean);
     if (selectedTools.length > 0) return selectedTools;
@@ -737,8 +806,18 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
             className="inline-flex items-center gap-2 rounded-xl border border-white/80 bg-white/60 px-3 py-2 text-xs font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-surface-200 dark:hover:text-white backdrop-blur-xl backdrop-saturate-150"
           >
             {info.logo && (
-              <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-white/60 p-[1px] backdrop-blur-xl backdrop-saturate-150">
-                <Image src={info.logo} alt={`${tool} logo`} fill className="object-contain" referrerPolicy="no-referrer" />
+              <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full p-[1px]">
+                <Image
+                  src={info.logo}
+                  alt={`${tool} logo`}
+                  fill
+                  className={`object-contain ${
+                    tool.toLowerCase().includes('chatgpt') || info.logo.includes('chatgpt')
+                      ? 'dark:invert dark:brightness-200'
+                      : ''
+                  }`}
+                  referrerPolicy="no-referrer"
+                />
               </span>
             )}
             Try in {tool}
@@ -1499,7 +1578,7 @@ export default function PostContent({ post: initialPost, relatedPosts }: { post:
         </div>
       )}
 
-      {renderExploreAllPromptsBlock(true)}
+      {renderLargeExploreShowcase()}
 
       {/* Extended HTML / Article Description */}
       {showDetailedInsights && post.extendedDescription && (

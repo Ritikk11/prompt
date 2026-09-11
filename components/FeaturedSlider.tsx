@@ -19,9 +19,10 @@ import { isNearbySlide, promptImageUrl, useFeaturedSlider, type HeroProps } from
  * This replaced a picker over nine hero variants (settings.heroStyle, v1–v9),
  * each in its own dynamic chunk. One layout, no chunk indirection.
  */
-export default function FeaturedSlider({ featuredPosts: featured, settings }: HeroProps) {
+export default function FeaturedSlider({ featuredPosts: rawFeatured, settings }: HeroProps) {
+  const featured = (rawFeatured || []).slice(0, 6);
   const { current, goTo, handleTouchStart, handleTouchMove, handleTouchEnd } =
-    useFeaturedSlider(featured || [], settings.heroAutoPlay ?? true);
+    useFeaturedSlider(featured, settings.heroAutoPlay ?? true);
 
   if (!settings.heroEnabled) return null;
   if (!featured || featured.length === 0) return null;

@@ -277,6 +277,7 @@ const defaultDiscoveryPages: Required<DiscoveryPageSettings> = {
   useCustomRailOnTags: false,
   useCustomRailOnSections: false,
   showHeroStats: true,
+  heroStyle: 'container',
 };
 
 function newNavId(): string {
@@ -1256,6 +1257,7 @@ function AdminInner() {
   const [editSectionHeroTitle, setEditSectionHeroTitle] = useState('');
   const [editSectionHeroDescription, setEditSectionHeroDescription] = useState('');
   const [editSectionHeroBadge, setEditSectionHeroBadge] = useState('');
+  const [editSectionHeroStyle, setEditSectionHeroStyle] = useState<Section['heroStyle'] | ''>('');
   const [editSectionSeoTitle, setEditSectionSeoTitle] = useState('');
   const [editSectionSeoDescription, setEditSectionSeoDescription] = useState('');
   const [editSectionIntroContent, setEditSectionIntroContent] = useState('');
@@ -1789,6 +1791,26 @@ function AdminInner() {
     router.push(`/admin?tab=posts&action=edit&id=${encodeURIComponent(post.id)}`, { scroll: false });
   };
 
+  const featurePostWithLimit = async (targetPost: Post, willFeature: boolean) => {
+    if (!willFeature) {
+      await updatePost({ ...targetPost, featured: false });
+      return;
+    }
+    const otherFeatured = posts.filter(p => p.id !== targetPost.id && p.featured);
+    if (otherFeatured.length >= 6) {
+      const sorted = [...otherFeatured].sort((a, b) => {
+        const timeA = new Date(a.featuredAt || a.createdAt || 0).getTime();
+        const timeB = new Date(b.featuredAt || b.createdAt || 0).getTime();
+        return timeA - timeB;
+      });
+      const excess = sorted.slice(0, otherFeatured.length - 5);
+      for (const oldPost of excess) {
+        await updatePost({ ...oldPost, featured: false });
+      }
+    }
+    await updatePost({ ...targetPost, featured: true, featuredAt: new Date().toISOString() });
+  };
+
   // Ref for posts so the URL-sync effect below doesn't re-run on every posts
   // array reference change (which happens on token refresh, likes, views, etc.)
   const postsRef = useRef(posts);
@@ -2210,6 +2232,7 @@ function AdminInner() {
       authorUsername: editingPost?.authorUsername,
       authorAvatar: editingPost?.authorAvatar,
       featured,
+      featuredAt: featured ? ((editingPost?.featured && editingPost?.featuredAt) ? editingPost.featuredAt : new Date().toISOString()) : undefined,
       views: editingPost?.views || 0,
       likes: editingPost?.likes || 0,
       likedByUser: editingPost?.likedByUser,
@@ -2221,6 +2244,20 @@ function AdminInner() {
     if (seoDescription) post.seoDescription = seoDescription;
 
     try {
+      if (featured) {
+        const otherFeatured = posts.filter(p => p.id !== postId && p.featured);
+        if (otherFeatured.length >= 6) {
+          const sorted = [...otherFeatured].sort((a, b) => {
+            const timeA = new Date(a.featuredAt || a.createdAt || 0).getTime();
+            const timeB = new Date(b.featuredAt || b.createdAt || 0).getTime();
+            return timeA - timeB;
+          });
+          const excess = sorted.slice(0, otherFeatured.length - 5);
+          for (const oldPost of excess) {
+            await updatePost({ ...oldPost, featured: false });
+          }
+        }
+      }
       if (editingPost) {
         await updatePost(post);
       } else {
@@ -2319,8 +2356,8 @@ function AdminInner() {
 
     for (const post of selected) {
       if (action === 'delete') await deletePost(post.id);
-      if (action === 'feature') await updatePost({ ...post, featured: true });
-      if (action === 'unfeature') await updatePost({ ...post, featured: false });
+      if (action === 'feature') await featurePostWithLimit(post, true);
+      if (action === 'unfeature') await featurePostWithLimit(post, false);
       if (action === 'publish') await updatePost({ ...post, status: 'published', visibility: 'public' });
       if (action === 'unpublish') await updatePost({ ...post, status: 'draft', visibility: 'private' });
     }
@@ -2354,6 +2391,7 @@ function AdminInner() {
     setEditSectionHeroTitle(section.heroTitle || '');
     setEditSectionHeroDescription(section.heroDescription || '');
     setEditSectionHeroBadge(section.heroBadge || '');
+    setEditSectionHeroStyle(section.heroStyle || '');
     setEditSectionSeoTitle(section.seoTitle || '');
     setEditSectionSeoDescription(section.seoDescription || '');
     setEditSectionIntroContent(section.introContent || '');
@@ -2378,6 +2416,7 @@ function AdminInner() {
       heroBadge: editSectionHeroBadge || undefined,
       heroTitle: editSectionHeroTitle || undefined,
       heroDescription: editSectionHeroDescription || undefined,
+      heroStyle: editSectionHeroStyle || undefined,
       seoTitle: editSectionSeoTitle || undefined,
       seoDescription: editSectionSeoDescription || undefined,
       introContent: editSectionIntroContent || undefined,
@@ -3878,7 +3917,7 @@ function AdminInner() {
                         {post.visibility === 'private' ? <EyeOff className="w-4 h-4 text-red-500" /> : <Eye className="w-4 h-4 text-surface-400" />}
                       </button>
                       <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); updatePost({ ...post, featured: !post.featured }); }}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); featurePostWithLimit(post, !post.featured); }}
                         className={`p-2 rounded-xl transition-colors ${post.featured ? 'bg-amber-500/10 text-amber-500' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
                         title={post.featured ? 'Remove from hero' : 'Add to hero'}
                       >
@@ -4449,7 +4488,7 @@ function AdminInner() {
                       <span className="text-sm font-medium flex items-center gap-1.5">
                         <Star className="w-4 h-4 text-yellow-500" /> Feature in Hero Slideshow
                       </span>
-                      <p className="text-xs text-surface-400 mt-0.5">Featured posts appear in the hero carousel on the homepage</p>
+                      <p className="text-xs text-surface-400 mt-0.5">Featured posts appear in the hero slider on the homepage (max 6 posts, oldest unfeatures automatically)</p>
                     </div>
                   </label>
                 </div>
@@ -5317,6 +5356,16 @@ function AdminInner() {
                                 />
                                 <p className="text-[11px] text-surface-400 mt-1">Small label shown above the hero title.</p>
                               </Field>
+                              <div className="flex items-center justify-between p-3 rounded-xl border border-surface-200 dark:border-surface-800 bg-surface-50/50 dark:bg-surface-800/30">
+                                <div>
+                                  <label className="text-xs font-bold text-surface-900 dark:text-white">Hero container</label>
+                                  <p className="text-[11px] text-surface-400">Frosted glass container box</p>
+                                </div>
+                                <Toggle
+                                  checked={editSectionHeroStyle !== 'simple'}
+                                  onChange={(checked) => setEditSectionHeroStyle(checked ? 'container' : 'simple')}
+                                />
+                              </div>
                               <Field label="Page hero title">
                                 <input
                                   value={editSectionHeroTitle}
@@ -5539,6 +5588,7 @@ function AdminInner() {
                                   setEditSectionLimit(section.limit);
                                   setEditSectionCardStyle(section.cardStyle || '');
                                   setEditSectionHeroBadge(section.heroBadge || '');
+                                  setEditSectionHeroStyle(section.heroStyle || '');
                                   setEditSectionHeroTitle(section.heroTitle || '');
                                   setEditSectionHeroDescription(section.heroDescription || '');
                                   setEditSectionSeoTitle(section.seoTitle || '');
@@ -6084,6 +6134,18 @@ function AdminInner() {
                 <div className="flex items-center gap-2.5 p-3.5 text-xs text-surface-600 dark:text-surface-300 bg-surface-50 dark:bg-surface-800/60 rounded-xl border border-surface-200 dark:border-surface-700">
                   <Info className="w-4 h-4 text-surface-400 shrink-0" />
                   <span>Controls for listing & discovery pages. Each panel is labeled with the exact page it affects. Rails default to off — they never show fake &quot;auto&quot; chips.</span>
+                </div>
+
+                {/* Global Hero Container Style Toggle */}
+                <div className="flex items-center justify-between p-4 rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
+                  <div>
+                    <h4 className="font-bold text-sm text-surface-900 dark:text-white">Hero container</h4>
+                    <p className="text-xs text-surface-500">Frosted glass container box for discovery pages</p>
+                  </div>
+                  <Toggle
+                    checked={(discoveryPages.heroStyle ?? 'container') !== 'simple'}
+                    onChange={(checked) => setDiscoveryPages(prev => ({ ...prev, heroStyle: checked ? 'container' : 'simple' }))}
+                  />
                 </div>
 
                 {/* Sub-tabs Navigation */}

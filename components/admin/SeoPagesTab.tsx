@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Edit3, X, Save, Search, Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase-client';
 import type { SeoSettings, SiteSettings } from '@/lib/types';
@@ -12,14 +12,20 @@ import { confirmAction } from '@/components/ui/ConfirmDialog';
 type SeoPagesTabMode = 'global' | 'pages' | 'all';
 
 
-async function adminRequest(payload?: any) {
+async function adminRequest(payload?: any, searchParams?: Record<string, string>) {
   const supabase = createClient();
   const { data: { session } } = await supabase.auth.getSession();
   const headers: Record<string, string> = {};
   if (payload) headers['Content-Type'] = 'application/json';
   if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
 
-  const res = await fetch('/api/admin', {
+  let url = '/api/admin';
+  if (searchParams) {
+    const q = new URLSearchParams(searchParams).toString();
+    if (q) url += `?${q}`;
+  }
+
+  const res = await fetch(url, {
     method: payload ? 'POST' : 'GET',
     headers,
     body: payload ? JSON.stringify(payload) : undefined,
@@ -81,6 +87,9 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
   };
 
   const [title, setTitle] = useState('');
+  const [heroTitle, setHeroTitle] = useState('');
+  const [heroDescription, setHeroDescription] = useState('');
+  const [heroBadge, setHeroBadge] = useState('');
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
   const [slug, setSlug] = useState('');
@@ -90,6 +99,8 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
   const [aiToolsStr, setAiToolsStr] = useState('');
   const [filterTagsStr, setFilterTagsStr] = useState('');
   const [cardStyle, setCardStyle] = useState('');
+  const [heroStyle, setHeroStyle] = useState<'container' | 'simple'>('container');
+  const [loadingPages, setLoadingPages] = useState(true);
   const seoSettings = { ...defaultSeoSettings, ...(settings?.seoSettings || {}) };
 
   const updateSeoSettings = (patch: Partial<SeoSettings>) => {
@@ -107,66 +118,114 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
     });
   };
 
-  useEffect(() => {
-    const fetchPages = async () => {
-      const data = await adminRequest();
+  const fetchPages = useCallback(async () => {
+    try {
+      setLoadingPages(true);
+      const data = await adminRequest(undefined, { resource: 'seopages' });
       setSeoPages(data.seopages || []);
-    };
-
-    fetchPages().catch((error) => console.error('SEO pages fetch error:', error));
+    } catch (error) {
+      console.error('SEO pages fetch error:', error);
+    } finally {
+      setLoadingPages(false);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchPages();
+  }, [fetchPages]);
+
   const resetForm = () => {
-    setTitle(''); setSeoTitle(''); setSeoDescription(''); setSlug(''); setIntroContent(''); setTagsStr(''); setCategoriesStr(''); setAiToolsStr(''); setFilterTagsStr(''); setCardStyle('');
+    setTitle('');
+    setHeroTitle('');
+    setHeroDescription('');
+    setHeroBadge('');
+    setSeoTitle('');
+    setSeoDescription('');
+    setSlug('');
+    setIntroContent('');
+    setTagsStr('');
+    setCategoriesStr('');
+    setAiToolsStr('');
+    setFilterTagsStr('');
+    setCardStyle('');
+    setHeroStyle('container');
     setEditingId(null);
     setShowForm(false);
   };
 
   const startEdit = (page: any) => {
-    setTitle(page.title);
+    setTitle(page.title || '');
+    setHeroTitle(page.heroTitle || '');
+    setHeroDescription(page.heroDescription || '');
+    setHeroBadge(page.heroBadge || '');
     setSeoTitle(page.seoTitle || '');
     setSeoDescription(page.seoDescription || '');
-    setSlug(page.slug);
+    setSlug(page.slug || '');
     setIntroContent(page.introContent || '');
     setTagsStr((page.tags || []).join(', '));
     setCategoriesStr((page.categories || []).join(', '));
     setAiToolsStr((page.aiTools || []).join(', '));
     setFilterTagsStr((page.filterTags || []).join(', '));
     setCardStyle(page.cardStyle || '');
+    setHeroStyle(page.heroStyle === 'simple' ? 'simple' : 'container');
     setEditingId(page.id);
     setShowForm(true);
   };
 
   const handleSave = async () => {
-    if (!title || !slug) {
+    if (!title.trim() || !slug.trim()) {
       showToast('Title and slug required', 'error');
       return;
     }
+    const cleanSlug = slug.trim().toLowerCase().replace(/^\/+|\/+$/g, '').replace(/[^a-z0-9-]+/g, '-');
+    if (!cleanSlug) {
+      showToast('Invalid slug format', 'error');
+      return;
+    }
+
     const id = editingId || Math.random().toString(36).substr(2, 9);
+    const existing = seoPages.find(p => p.id === id);
     
     const data = {
       id,
-      title,
-      seoTitle,
-      seoDescription,
-      slug,
+      title: title.trim(),
+      heroTitle: heroTitle.trim() || undefined,
+      heroDescription: heroDescription.trim() || undefined,
+      heroBadge: heroBadge.trim() || undefined,
+      seoTitle: seoTitle.trim() || undefined,
+      seoDescription: seoDescription.trim() || undefined,
+      slug: cleanSlug,
       introContent,
       tags: tagsStr.split(',').map(s => s.trim()).filter(Boolean),
       categories: categoriesStr.split(',').map(s => s.trim()).filter(Boolean),
       aiTools: aiToolsStr.split(',').map(s => s.trim()).filter(Boolean),
       filterTags: filterTagsStr.split(',').map(s => s.trim()).filter(Boolean),
       cardStyle: cardStyle || undefined,
-      createdAt: new Date().toISOString()
+      heroStyle: heroStyle || 'container',
+      createdAt: existing?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
+    // 1. Instant optimistic update so the page appears immediately without delay
+    setSeoPages(prev => {
+      const idx = prev.findIndex(p => p.id === id);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = data;
+        return next;
+      }
+      return [data, ...prev];
+    });
+    resetForm();
+    showToast('SEO page saved successfully', 'success');
+
+    // 2. Persist to server in background
     try {
       await adminRequest({ action: 'upsert', resource: 'seopages', id, data });
-      const adminData = await adminRequest();
-      setSeoPages(adminData.seopages || []);
-      resetForm();
     } catch (e) {
-      console.error(e);
-      showToast('Error saving SEO page', 'error');
+      console.error('Error saving SEO page', e);
+      showToast('Error saving SEO page to database', 'error');
+      fetchPages();
     }
   };
 
@@ -194,9 +253,16 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
           />
 
           <div className="space-y-4">
-            <SectionEyebrow>1. Page content</SectionEyebrow>
+            <div className="flex items-center justify-between gap-2 pb-1">
+              <SectionEyebrow>1. Page hero (visible on page)</SectionEyebrow>
+              <Toggle
+                checked={heroStyle !== 'simple'}
+                onChange={(checked) => setHeroStyle(checked ? 'container' : 'simple')}
+                label="Hero container"
+              />
+            </div>
             <Field
-              label="Page heading"
+              label="Collection title (internal name & fallback)"
               action={
                 <WandButton
                   fieldId="seo-page-heading"
@@ -206,14 +272,25 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                 />
               }
             >
-              <textarea rows={2} value={title} onChange={e => setTitle(e.target.value)} className={`${adminInput} resize-y`} placeholder="e.g. Best Upscale Images generated with Gemini" />
+              <input value={title} onChange={e => setTitle(e.target.value)} className={adminInput} placeholder="e.g. 80s Look Prompts" />
               <CharCount value={title} recommended={60} />
             </Field>
-            <Field label="Slug (available as /slug and /page/slug)">
-              <input value={slug} onChange={e => setSlug(e.target.value)} className={adminInput} placeholder="e.g. upscale-images-gemini" />
+            <Field label="Hero heading (visible H1 on page, defaults to title)">
+              <textarea rows={2} value={heroTitle} onChange={e => setHeroTitle(e.target.value)} className={`${adminInput} resize-y`} placeholder="e.g. Trending 80s Look AI Prompts" />
+              <CharCount value={heroTitle} recommended={60} />
+            </Field>
+            <Field label="Hero description (visible on page under H1)">
+              <textarea value={heroDescription} onChange={e => setHeroDescription(e.target.value)} rows={3} className={`${adminInput} resize-y`} placeholder="Custom description shown on the live page hero..." />
+            </Field>
+            <Field label="Hero badge (optional, e.g. Collection, Trending, Curated)">
+              <input value={heroBadge} onChange={e => setHeroBadge(e.target.value)} className={adminInput} placeholder="e.g. Curated Collection" />
+            </Field>
+            <Field label="URL Slug (path)">
+              <input value={slug} onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-/]/g, ''))} className={adminInput} placeholder="e.g. trending-80s-look-ai-photo-prompts" />
+              <p className="mt-1 text-xs text-surface-500">Live URL: aipromptmatrix.in/{slug.replace(/^\/+/, '')}</p>
             </Field>
             <Field
-              label="Intro content (optional)"
+              label="Intro content (optional, markdown guide shown below hero)"
               action={
                 <WandButton
                   fieldId="seo-page-intro"
@@ -223,14 +300,14 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                 />
               }
             >
-              <textarea value={introContent} onChange={e => setIntroContent(e.target.value)} rows={4} className={`${adminInput} resize-y`} placeholder="Short intro shown above the matching prompt grid. Markdown is supported." />
+              <textarea value={introContent} onChange={e => setIntroContent(e.target.value)} rows={4} className={`${adminInput} resize-y`} placeholder="Short intro or guide shown above the matching prompt grid. Markdown is supported." />
             </Field>
           </div>
 
           <div className="space-y-4">
-            <SectionEyebrow>2. Search appearance</SectionEyebrow>
+            <SectionEyebrow>2. Search appearance (Google & Social)</SectionEyebrow>
             <Field
-              label="SEO title (optional)"
+              label="SEO title (<title> tag for Google & Twitter)"
               action={
                 <WandButton
                   fieldId="seo-page-seo-title"
@@ -240,11 +317,11 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                 />
               }
             >
-              <textarea rows={2} value={seoTitle} onChange={e => setSeoTitle(e.target.value)} className={`${adminInput} resize-y`} placeholder="Defaults to page heading" />
+              <textarea rows={2} value={seoTitle} onChange={e => setSeoTitle(e.target.value)} className={`${adminInput} resize-y`} placeholder="Defaults to hero heading" />
               <CharCount value={seoTitle} recommended={60} />
             </Field>
             <Field
-              label="Meta description (optional)"
+              label="Meta description (Google snippet & social cards)"
               action={
                 <WandButton
                   fieldId="seo-page-meta-desc"
@@ -254,7 +331,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                 />
               }
             >
-              <textarea value={seoDescription} onChange={e => setSeoDescription(e.target.value)} rows={2} className={`${adminInput} resize-y`} placeholder="Short search-result description for this page..." />
+              <textarea value={seoDescription} onChange={e => setSeoDescription(e.target.value)} rows={2} className={`${adminInput} resize-y`} placeholder="Short search-result description for this page (120-160 chars)..." />
               <CharCount value={seoDescription} recommended={160} />
             </Field>
           </div>
@@ -281,11 +358,10 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
             <Field label="Card style (optional)">
               <AdminSelect value={cardStyle} onChange={setCardStyle} className={adminInput}>
                 <option value="">Use global card style</option>
-                {['v1','v2','v3','v4','v5','v6','v7','v8'].map(style => (
-                  <option key={style} value={style}>{style}</option>
-                ))}
+                <option value="v2">v2 (Redesign - Glass frost)</option>
+                <option value="v1">v1 (Classic - Solid surface)</option>
               </AdminSelect>
-              <p className="mt-1 text-xs text-surface-500">Use this when you want this page to show a different card design than the rest of the site.</p>
+              <p className="mt-1 text-xs text-surface-500">Choose card design for this landing page.</p>
             </Field>
           </div>
 
@@ -637,20 +713,33 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
           }
         />
         <div className="space-y-3">
-          {seoPages.length === 0 && <p className="text-surface-500 text-xs">No SEO pages created. These help you rank for specific term combinations.</p>}
-          {seoPages.map(page => (
+          {loadingPages && (
+            <div className="py-8 text-center text-xs text-surface-400">Loading SEO pages...</div>
+          )}
+          {!loadingPages && seoPages.length === 0 && <p className="text-surface-500 text-xs">No SEO pages created. These help you rank for specific term combinations.</p>}
+          {!loadingPages && seoPages.map(page => (
             <EditableCard key={page.id} isEditing={false}>
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <h3 className="font-bold text-sm text-surface-900 dark:text-white">{page.title}</h3>
-                  {page.seoDescription && <p className="text-xs text-surface-500 mt-0.5 line-clamp-2">{page.seoDescription}</p>}
-                  <p className="text-xs text-primary-500 break-all mb-1">/{page.slug} <span className="text-surface-500">or</span> /page/{page.slug}</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-sm text-surface-900 dark:text-white">{page.heroTitle || page.title}</h3>
+                    {page.heroBadge && (
+                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-300">
+                        {page.heroBadge}
+                      </span>
+                    )}
+                  </div>
+                  {(page.heroDescription || page.seoDescription) && (
+                    <p className="text-xs text-surface-500 mt-0.5 line-clamp-2">{page.heroDescription || page.seoDescription}</p>
+                  )}
+                  <p className="text-xs font-mono text-primary-500 break-all mb-1">/{page.slug}</p>
                   <div className="flex flex-wrap gap-2 text-[10px] text-surface-500">
                     {page.tags?.length > 0 && <span>Tags: {page.tags.join(', ')}</span>}
                     {page.categories?.length > 0 && <span>Cats: {page.categories.join(', ')}</span>}
                     {page.aiTools?.length > 0 && <span>Tools: {page.aiTools.join(', ')}</span>}
                     {page.filterTags?.length > 0 && <span>Filter rail: {page.filterTags.join(', ')}</span>}
                     {page.cardStyle && <span>Cards: {page.cardStyle}</span>}
+                    {page.heroStyle && <span className="font-semibold text-primary-600 dark:text-primary-400">Hero: {page.heroStyle === 'simple' ? 'Simple' : 'Container'}</span>}
                   </div>
                 </div>
                 <div className="flex gap-2 shrink-0">

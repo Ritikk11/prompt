@@ -36,25 +36,53 @@ export function formatTitleWithBrand(title?: string | null, siteTitle: string = 
   return `${cleanedTitle} | ${brand}`;
 }
 
-export function generateSeoPageMetadata(seoPage: any, settings: SiteSettings): Metadata {
+export function generateSeoPageMetadata(seoPage: any, settings: SiteSettings, matchingPosts?: any[]): Metadata {
   const siteTitle = settings.siteTitle || 'AI PromptMatrix';
-  const rawTitle = seoPage.seoTitle || seoPage.title;
+  const rawTitle = seoPage.seoTitle || seoPage.heroTitle || seoPage.title;
   const title = formatTitleWithBrand(rawTitle, siteTitle);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
-  const description = seoPage.seoDescription || settings.seoSettings?.defaultMetaDescription || `Discover best prompts for ${seoPage.title}`;
-  const canonicalUrl = seoPage.slug ? `${siteUrl}/${seoPage.slug}` : undefined;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in').replace(/\/$/, '');
+  const description = seoPage.seoDescription || seoPage.heroDescription || settings.seoSettings?.defaultMetaDescription || `Discover curated AI prompts for ${seoPage.title}`;
+
+  const cleanSlug = String(seoPage.slug || '').replace(/^\/+|\/+$/g, '');
+  const canonicalUrl = cleanSlug ? `${siteUrl}/${cleanSlug}` : undefined;
+
+  // Resolve best high-resolution image for social preview
+  const firstPromptImage = matchingPosts?.[0]?.images?.[0]?.url || matchingPosts?.[0]?.thumbnailUrl;
+  const ogImage = firstPromptImage || settings.seoSettings?.defaultOgImage || `${siteUrl}/og-image.jpg`;
 
   return {
     title: { absolute: title },
     description,
-    ...(canonicalUrl ? { alternates: { canonical: canonicalUrl } } : {}),
+    keywords: [
+      ...(seoPage.tags || []),
+      ...(seoPage.categories || []),
+      ...(seoPage.aiTools || []),
+      'AI prompts',
+      'chatgpt prompts',
+      'gemini prompts',
+    ],
+    alternates: canonicalUrl ? { canonical: canonicalUrl } : undefined,
     openGraph: {
       title,
       description,
       siteName: siteTitle,
       type: 'website',
-      ...(canonicalUrl ? { url: canonicalUrl } : {}),
-      ...(settings.seoSettings?.defaultOgImage ? { images: [{ url: settings.seoSettings.defaultOgImage }] } : {}),
+      url: canonicalUrl,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      site: settings.seoSettings?.twitterHandle || undefined,
+      images: ogImage ? [ogImage] : [],
     },
   };
 }

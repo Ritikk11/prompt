@@ -64,6 +64,8 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
     filtered.sort((a, b) => (b.views * viewsW + b.likes * likesW) - (a.views * viewsW + a.likes * likesW));
   }
 
+  const heroVariant: 'container' | 'simple' = section.heroStyle === 'simple' ? 'simple' : 'container';
+
   return (
     <div className="max-w-7xl mx-auto px-2 py-8 sm:py-12">
       <nav className="flex items-center gap-2 text-sm text-surface-400 mb-8 font-medium">
@@ -77,6 +79,7 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
         title={heroTitle}
         description={heroDescription}
         stats={(settings.discoveryPages?.showHeroStats ?? true) ? [{ label: 'Prompts', value: filtered.length }] : []}
+        variant={heroVariant}
       />
       {section.introContent && (
         <div className="max-w-3xl mb-12">

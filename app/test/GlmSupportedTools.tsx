@@ -86,7 +86,18 @@ export default function GlmSupportedTools({ posts, settings }: { posts: PostSumm
                 <div className="mx-auto mt-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/60 bg-white/40 dark:border-white/10 dark:bg-white/5">
                   {info?.logo ? (
                     <span className="relative h-7 w-7 overflow-hidden rounded-full">
-                      <Image src={info.logo} alt={`${tool} logo`} width={56} height={56} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+                      <Image
+                        src={info.logo}
+                        alt={`${tool} logo`}
+                        width={56}
+                        height={56}
+                        className={`h-full w-full object-contain ${
+                          tool.toLowerCase().includes('chatgpt') || info.logo.includes('chatgpt')
+                            ? 'dark:invert dark:brightness-200'
+                            : ''
+                        }`}
+                        referrerPolicy="no-referrer"
+                      />
                     </span>
                   ) : (
                     <Zap className="h-5 w-5 text-primary-500" />

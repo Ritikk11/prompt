@@ -96,6 +96,7 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
         description={heroCopy}
         icon={toolInfo.logo ? { logo: toolInfo.logo, label: displayTool, logoScale: toolInfo.logoScale } : <Cpu className="h-4 w-4" />}
         stats={(discovery.showHeroStats ?? true) ? [{ label: 'Prompts', value: filtered.length }] : []}
+        variant={discovery.heroStyle || 'container'}
       />
 
       {/* Filters */}

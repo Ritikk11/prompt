@@ -34,6 +34,7 @@ export interface Post {
   categories?: string[];
   aiTools?: string[];
   featured: boolean;
+  featuredAt?: string;
   views: number;
   likes: number;
   likedByUser?: boolean;
@@ -80,6 +81,7 @@ export type PostSummary = Pick<
   | 'status'
   | 'visibility'
   | 'createdAt'
+  | 'featuredAt'
 >;
 
 export interface PostComment {
@@ -100,6 +102,7 @@ export interface Section {
   heroBadge?: string;
   heroTitle?: string;
   heroDescription?: string;
+  heroStyle?: 'container' | 'simple';
   seoTitle?: string;
   seoDescription?: string;
   introContent?: string;
@@ -326,6 +329,7 @@ export interface DiscoveryPageSettings {
   useCustomRailOnTags?: boolean;
   useCustomRailOnSections?: boolean;
   showHeroStats?: boolean;
+  heroStyle?: 'container' | 'simple';
 }
 
 export interface PinterestSettings {

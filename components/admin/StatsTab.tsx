@@ -576,7 +576,17 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white dark:bg-surface-800 p-0.5 shadow-2xs border border-black/5 dark:border-white/10">
                           {toolInfo.logo ? (
-                            <Image src={toolInfo.logo} alt={item.tool} width={16} height={16} className="h-full w-full object-contain rounded-full" />
+                            <Image
+                              src={toolInfo.logo}
+                              alt={item.tool}
+                              width={16}
+                              height={16}
+                              className={`h-full w-full object-contain rounded-full ${
+                                item.tool.toLowerCase().includes('chatgpt') || toolInfo.logo.includes('chatgpt')
+                                  ? 'dark:invert dark:brightness-200'
+                                  : ''
+                              }`}
+                            />
                           ) : (
                             <Cpu className="w-3 h-3 text-surface-500" />
                           )}

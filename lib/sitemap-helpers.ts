@@ -142,14 +142,10 @@ export async function generateMainSitemapXml(): Promise<string> {
       seoPages.forEach(page => {
         const slug = String(page.slug || '').replace(/^\/+|\/+$/g, '');
         if (!slug) return;
-        entries.push({
-          url: `${baseUrl}/page/${page.slug}`,
-          lastModified: page.createdAt ? new Date(page.createdAt) : now,
-        });
         if (!postSlugs.has(slug) && !staticPaths.includes(slug)) {
           entries.push({
             url: `${baseUrl}/${slug}`,
-            lastModified: page.createdAt ? new Date(page.createdAt) : now,
+            lastModified: page.updatedAt ? new Date(page.updatedAt) : (page.createdAt ? new Date(page.createdAt) : now),
           });
         }
       });

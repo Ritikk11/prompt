@@ -16,6 +16,7 @@ import ScrollReveal from '@/components/ScrollReveal';
 import type { Post } from '@/lib/types';
 import SeoPageContent from '@/components/SeoPageContent';
 import { generateSeoPageMetadata, formatTitleWithBrand } from '@/lib/seo-helpers';
+import { getRelatedPosts, getRecommendedPosts } from '@/lib/related-posts';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -54,8 +55,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   if (seoPage) {
-    const settings = await fetchSettings();
-    return generateSeoPageMetadata(seoPage, settings);
+    const [settings, allPosts] = await Promise.all([fetchSettings(), fetchPostSummaries()]);
+    const { tags = [], categories = [] } = seoPage;
+    const matching = allPosts.filter(candidate => {
+      if (!isPublicPost(candidate)) return false;
+      if (tags.length > 0 && !tags.every((tag: string) => candidate.tags?.some((t: string) => t.toLowerCase() === tag.toLowerCase()))) return false;
+      const candCats = [candidate.category, ...(candidate.categories || [])].filter((c): c is string => Boolean(c));
+      if (categories.length > 0 && !categories.every((cat: string) => candCats.some((c: string) => c.toLowerCase() === cat.toLowerCase()))) return false;
+      return true;
+    });
+    return generateSeoPageMetadata(seoPage, settings, matching);
   }
 
   const settings = await fetchSettings();
@@ -121,16 +130,9 @@ export default async function PostPage({ params }: Props) {
 
   if (!post) notFound();
 
-  let relatedPosts: Post[] = [];
   const [allPosts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
-  relatedPosts = allPosts
-    .filter(p =>
-      p.id !== post.id &&
-      (p.status === 'published' || !p.status) &&
-      p.visibility !== 'private' &&
-      p.tags.some(t => post.tags.includes(t))
-    )
-    .slice(0, 4);
+  const relatedPosts = getRelatedPosts(post, allPosts as Post[], { limit: 16 });
+  const recommendedPosts = getRecommendedPosts(post, allPosts as Post[], relatedPosts, { limit: 6 });
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
   const schemaType = post.schemaType || settings.seoSettings?.schemaType || 'Article';
@@ -342,7 +344,7 @@ export default async function PostPage({ params }: Props) {
           )}
         </>
       )}
-      <PostContent post={post} relatedPosts={relatedPosts} />
+      <PostContent post={post} relatedPosts={relatedPosts} recommendedPosts={recommendedPosts} />
     </>
   );
 }

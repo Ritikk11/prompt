@@ -1,6 +1,6 @@
 import { Children, isValidElement, useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, ReactElement, ReactNode } from 'react';
-import { Check, ChevronDown, Plus, Sparkles, Tag, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronLeft, ChevronRight, GripVertical, Plus, Sparkles, Tag, X } from 'lucide-react';
 
 // Shared admin design language with GLM frosted glass aesthetics.
 // Used across every settings tab so panels, headers, labels, and
@@ -611,6 +611,7 @@ export function AdminTagInput({
   rows = 2,
   className = '',
   disabled = false,
+  showReorder = true,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -619,8 +620,11 @@ export function AdminTagInput({
   rows?: number;
   className?: string;
   disabled?: boolean;
+  showReorder?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -637,6 +641,21 @@ export function AdminTagInput({
         s.value.toLowerCase().includes(currentToken)
       ).slice(0, 15)
     : [];
+
+  const tokens = value.split(',').map(s => s.trim()).filter(Boolean);
+
+  const moveToken = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= tokens.length) return;
+    const next = [...tokens];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    onChange(next.join(', '));
+  };
+
+  const removeToken = (index: number) => {
+    const next = tokens.filter((_, i) => i !== index);
+    onChange(next.join(', '));
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -702,6 +721,106 @@ export function AdminTagInput({
               )}
             </button>
           ))}
+        </div>
+      )}
+
+      {showReorder && tokens.length > 0 && (
+        <div className="mt-2 rounded-xl border border-black/[0.06] bg-surface-50/70 p-2.5 dark:border-white/[0.08] dark:bg-surface-800/40">
+          <div className="mb-2 flex items-center justify-between px-0.5">
+            <span className="text-[11px] font-bold text-surface-700 dark:text-surface-300">
+              Drag to reorder tags <span className="text-[10px] font-normal text-surface-400">(#1 starting tag carries highest weight for related suggestions)</span>:
+            </span>
+            <span className="text-[10px] text-surface-400">
+              {tokens.length} {tokens.length === 1 ? 'tag' : 'tags'}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {tokens.map((token, idx) => (
+              <div
+                key={`${token}-${idx}`}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('text/plain', String(idx));
+                  e.dataTransfer.effectAllowed = 'move';
+                  setDraggedIdx(idx);
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  if (dragOverIdx !== idx) setDragOverIdx(idx);
+                }}
+                onDragLeave={() => {
+                  if (dragOverIdx === idx) setDragOverIdx(null);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                  if (!isNaN(fromIdx) && fromIdx !== idx) {
+                    moveToken(fromIdx, idx);
+                  }
+                  setDraggedIdx(null);
+                  setDragOverIdx(null);
+                }}
+                onDragEnd={() => {
+                  setDraggedIdx(null);
+                  setDragOverIdx(null);
+                }}
+                className={`group inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs border transition-all cursor-grab active:cursor-grabbing select-none ${
+                  draggedIdx === idx
+                    ? 'opacity-35 scale-95 border-dashed border-primary-500 bg-primary-500/10'
+                    : dragOverIdx === idx
+                    ? 'ring-2 ring-primary-500 bg-primary-500/20 scale-105 shadow-md'
+                    : idx === 0
+                    ? 'border-amber-500/40 bg-amber-500/15 text-amber-900 dark:text-amber-200 font-semibold shadow-xs'
+                    : idx === 1
+                    ? 'border-primary-500/30 bg-primary-500/10 text-primary-900 dark:text-primary-200 font-medium'
+                    : 'border-black/[0.08] bg-white text-surface-700 dark:border-white/10 dark:bg-surface-800 dark:text-surface-300'
+                }`}
+              >
+                <GripVertical className="w-3.5 h-3.5 text-surface-400 group-hover:text-surface-600 dark:group-hover:text-surface-200 shrink-0" />
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                  idx === 0
+                    ? 'bg-amber-500/25 text-amber-700 dark:text-amber-300'
+                    : idx === 1
+                    ? 'bg-primary-500/20 text-primary-700 dark:text-primary-300'
+                    : 'bg-black/[0.05] text-surface-500 dark:bg-white/10 dark:text-surface-400'
+                }`}>
+                  {idx === 0 ? '★ #1 Primary' : `#${idx + 1}`}
+                </span>
+                <span className="truncate max-w-[130px] font-medium">{token}</span>
+                <div className="flex items-center gap-0.5 ml-0.5">
+                  {idx > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); moveToken(idx, idx - 1); }}
+                      title="Move left (higher priority)"
+                      className="p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 transition-colors"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {idx < tokens.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); moveToken(idx, idx + 1); }}
+                      title="Move right (lower priority)"
+                      className="p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 transition-colors"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); removeToken(idx); }}
+                    title="Remove tag"
+                    className="p-0.5 rounded hover:bg-rose-500/10 hover:text-rose-500 text-surface-400 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

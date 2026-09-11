@@ -56,7 +56,14 @@ export default async function Home() {
     fetchSettings(),
     fetchPostSummaries(),
   ]);
-  const featuredPosts = allPosts.filter(p => p.featured && (p.status === 'published' || !p.status) && p.visibility !== 'private');
+  const featuredPosts = allPosts
+    .filter(p => p.featured && (p.status === 'published' || !p.status) && p.visibility !== 'private')
+    .sort((a, b) => {
+      const timeA = new Date(a.featuredAt || a.createdAt || 0).getTime();
+      const timeB = new Date(b.featuredAt || b.createdAt || 0).getTime();
+      return timeB - timeA;
+    })
+    .slice(0, 6);
   // No hero-image preload: the LCP element is the landing hero's H1 (text), and
   // the featured slider now sits below it. Preloading a below-fold image at high
   // priority only competes with the critical path. The slider's frosted backdrop

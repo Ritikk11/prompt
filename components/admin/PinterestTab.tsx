@@ -17,7 +17,7 @@ import {
 
 interface PinterestTabProps {
   settings: SiteSettings;
-  updateSettings: (updater: (prev: SiteSettings) => SiteSettings) => void;
+  updateSettings: (settings: SiteSettings) => Promise<void> | void;
   posts: Post[];
   onRefreshData?: () => void;
 }
@@ -58,8 +58,8 @@ export default function PinterestTab({
     try {
       setLoadingStatus(true);
       const res = await fetch('/api/pinterest/status');
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
         setStatus(data);
       }
     } catch (err) {
@@ -96,13 +96,13 @@ export default function PinterestTab({
   };
 
   const handleUpdateConfig = (field: keyof PinterestSettings, value: any) => {
-    updateSettings(prev => ({
-      ...prev,
+    updateSettings({
+      ...settings,
       pinterestSettings: {
-        ...prev.pinterestSettings,
+        ...settings.pinterestSettings,
         [field]: value,
       },
-    }));
+    });
   };
 
   const handlePublishSingle = async (postId: string) => {
@@ -266,7 +266,6 @@ export default function PinterestTab({
               checked={currentPinterest.autoPublishNewPosts ?? true}
               onChange={(val) => handleUpdateConfig('autoPublishNewPosts', val)}
               label="Auto-publish new posts to Pinterest"
-              description="Automatically pin prompts to Pinterest when published in the admin panel."
             />
           </div>
 
@@ -304,7 +303,7 @@ export default function PinterestTab({
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="App ID" hint="Your Pinterest Developer App ID (e.g. 1610432)">
+          <Field label="App ID">
             <input
               type="text"
               value={currentPinterest.appId || DEFAULT_PINTEREST_APP_ID}
@@ -312,9 +311,10 @@ export default function PinterestTab({
               className={adminInput}
               placeholder="1610432"
             />
+            <p className="text-xs text-surface-500 mt-1">Your Pinterest Developer App ID (e.g. 1610432)</p>
           </Field>
 
-          <Field label="App Secret Key" hint="Your Pinterest App Secret (used for token exchange & refresh)">
+          <Field label="App Secret Key">
             <input
               type="password"
               value={currentPinterest.appSecret || DEFAULT_PINTEREST_APP_SECRET}
@@ -322,9 +322,10 @@ export default function PinterestTab({
               className={adminInput}
               placeholder="c14f46..."
             />
+            <p className="text-xs text-surface-500 mt-1">Your Pinterest App Secret (used for token exchange & refresh)</p>
           </Field>
 
-          <Field label="Board ID" hint="The Pinterest board ID where pins should be published">
+          <Field label="Board ID">
             <input
               type="text"
               value={currentPinterest.boardId || DEFAULT_PINTEREST_BOARD_ID}
@@ -332,9 +333,10 @@ export default function PinterestTab({
               className={adminInput}
               placeholder="1124703775633314110"
             />
+            <p className="text-xs text-surface-500 mt-1">The Pinterest board ID where pins should be published</p>
           </Field>
 
-          <Field label="Board Name" hint="Display label for the board">
+          <Field label="Board Name">
             <input
               type="text"
               value={currentPinterest.boardName || DEFAULT_PINTEREST_BOARD_NAME}
@@ -342,6 +344,7 @@ export default function PinterestTab({
               className={adminInput}
               placeholder="Ai Image Prompts"
             />
+            <p className="text-xs text-surface-500 mt-1">Display label for the board</p>
           </Field>
         </div>
 
