@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { safeFetchImage, MAX_IMAGE_BYTES } from "@/lib/safe-fetch";
 import { fetchSettings } from "@/lib/data";
 import { TOOLS_MODELS_RULES, HUMAN_WRITING_RULES } from "@/lib/admin/wandPrompts";
+import { isMaasConfigured, callMaasWithFallback, DEFAULT_POST_ARTICLE_FALLBACKS } from "@/lib/admin/maas-client";
 
 export const dynamic = 'force-dynamic';
 
@@ -125,14 +126,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid image prompt count' }, { status: 400 });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!isMaasConfigured() && !process.env.GEMINI_API_KEY) {
       return NextResponse.json(
-        { error: 'Gemini API Key is missing.' },
+        { error: 'AI API Key is missing (neither MAAS_API_KEY nor GEMINI_API_KEY configured).' },
         { status: 500 }
       );
     }
-
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const formattedImages = images
       .map((img: any, idx: number) => `Image ${idx + 1} Prompt: ${String(img?.prompt || '').slice(0, 4000)}`)
@@ -149,7 +148,7 @@ export async function POST(req: NextRequest) {
 
     // Determine which fields are actually being requested. An empty
     // instruction, or one that doesn't reference any specific field, means
-    // "generate the full post" (all fields) â€” same as before.
+    // "generate the full post" (all fields) — same as before.
     const requestedFields = detectRequestedFields(promptInstruction);
     const fieldsToGenerate = requestedFields.length > 0 ? requestedFields : FIELD_ORDER;
     const isPartial = requestedFields.length > 0;
@@ -163,7 +162,7 @@ export async function POST(req: NextRequest) {
       : '';
 
     const focusNotice = isPartial
-      ? `\nThe user has asked you to generate ONLY the following field(s): ${fieldsToGenerate.join(', ')}. The response schema below only contains these fields â€” do not attempt to add any others.\n`
+      ? `\nThe user has asked you to generate ONLY the following field(s): ${fieldsToGenerate.join(', ')}. The response schema below only contains these fields — do not attempt to add any others.\n`
       : '';
 
     const currentFieldsText = currentFields
@@ -173,6 +172,58 @@ export async function POST(req: NextRequest) {
     const settings = await fetchSettings();
     const siteTools = settings.aiTools && settings.aiTools.length > 0 ? settings.aiTools.join(', ') : 'ChatGPT, Gemini, Grok, Qwen';
     const SITE_CONTEXT = getSiteContext(siteTools);
+
+    // 1. Try DeepSeek V4 via Model Studio (MaaS) with full model fallback cascade
+    if (isMaasConfigured()) {
+      try {
+        const maasPrompt = `You are an expert copywriter and SEO specialist working on posts for this specific site.
+
+${SITE_CONTEXT}
+${taxonomyText}${recentPostsText}${customInstructionText}${focusNotice}${currentFieldsText}
+Here are the text prompts the user used to create the images:
+${formattedImages}
+
+Generate the following field(s) in valid JSON format:
+${fieldInstructionsText}
+
+You MUST return a JSON object with EXACTLY these top-level keys: ${fieldsToGenerate.map(f => `"${f}"`).join(', ')}.
+Output pure JSON only, no markdown ticks, no conversational filler.`;
+
+        const result = await callMaasWithFallback({
+          models: DEFAULT_POST_ARTICLE_FALLBACKS,
+          messages: [
+            {
+              role: 'system',
+              content: `You are an expert copywriter and SEO specialist. Always output valid, parseable JSON conforming strictly to the requested keys. Never wrap with markdown backticks or commentary.\n\n${SITE_CONTEXT}`,
+            },
+            {
+              role: 'user',
+              content: maasPrompt,
+            },
+          ],
+          json: true,
+          temperature: 0.7,
+        });
+
+        const raw = result.content.trim();
+        const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+        const parsed = JSON.parse(cleaned);
+
+        // Verify at least one requested field is present
+        if (fieldsToGenerate.some(f => f in parsed)) {
+          return NextResponse.json(parsed);
+        }
+      } catch (maasErr: any) {
+        console.warn('All MaaS fallback models failed for post generation:', maasErr?.message);
+      }
+    }
+
+    // 2. Fallback to Gemini if MaaS is unconfigured or failed
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error('MaaS generation failed and GEMINI_API_KEY is not configured.');
+    }
+
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const systemPrompt = `You are an expert copywriter and SEO specialist working on posts for this specific site.
 

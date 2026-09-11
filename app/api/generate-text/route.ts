@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { safeFetchImage, MAX_IMAGE_BYTES } from "@/lib/safe-fetch";
+import { isMaasConfigured, isMaasModel, callMaasWithFallback, DEFAULT_POST_ARTICLE_FALLBACKS, getMaasDefaultModel } from "@/lib/admin/maas-client";
 
 // Only inert raster types — same allowlist as the upload route. Without this
 // check a caller could pass data:image/svg+xml (or any other active MIME) and
@@ -17,10 +18,85 @@ export async function POST(req: NextRequest) {
     const auth = await requireAdmin(req);
     if (auth.error) return auth.error;
 
-    const { prompt, systemContext, imageUrl, json, model: requestedModel, generateImage } = await req.json();
+    const { prompt, systemContext, imageUrl, json, model: requestedModel, generateImage, enableSearch } = await req.json();
 
     if (!prompt) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
+    }
+
+    if (!isMaasConfigured() && !process.env.GEMINI_API_KEY) {
+      return NextResponse.json(
+        { error: 'AI API Key is missing (neither MAAS_API_KEY nor GEMINI_API_KEY configured).' },
+        { status: 500 }
+      );
+    }
+
+    // Handle Image Generation requests
+    if (generateImage || requestedModel === 'imagen-3.0-generate-002') {
+      if (process.env.GEMINI_API_KEY) {
+        try {
+          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+          const imageResponse = await ai.models.generateImages({
+            model: 'imagen-3.0-generate-002',
+            prompt: prompt,
+            config: {
+              numberOfImages: 1,
+              outputMimeType: 'image/jpeg',
+              aspectRatio: '1:1',
+            },
+          });
+
+          const imageBytes = imageResponse.generatedImages?.[0]?.image?.imageBytes;
+          if (imageBytes) {
+            const generatedDataUrl = `data:image/jpeg;base64,${imageBytes}`;
+            return NextResponse.json({
+              text: `Generated image for prompt: "${prompt}"`,
+              generatedImageUrl: generatedDataUrl,
+              isImage: true,
+            });
+          }
+        } catch (err: any) {
+          console.warn('Imagen 3 API failed or not enabled on key, falling back to FLUX/Pollinations:', err.message);
+        }
+      }
+
+      // Fallback to high quality FLUX / Pollinations URL
+      const seed = Math.floor(Math.random() * 1000000);
+      const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true&model=flux`;
+      return NextResponse.json({
+        text: `Generated image for prompt: "${prompt}"`,
+        generatedImageUrl: fallbackUrl,
+        isImage: true,
+      });
+    }
+
+    // 1. If requested model is a MaaS model (DeepSeek, Qwen, etc.) or MaaS is configured
+    if (isMaasConfigured() && (isMaasModel(requestedModel) || !requestedModel)) {
+      try {
+        const maasMessages: any[] = [];
+        if (systemContext) {
+          maasMessages.push({
+            role: 'system',
+            content: `${systemContext}\n\nPlease respond with clear, well-formatted markdown. If writing code, enclose code in proper markdown backticks with language tags (e.g. \`\`\`typescript ... \`\`\`).`,
+          });
+        }
+        maasMessages.push({ role: 'user', content: prompt });
+
+        const targetModel = requestedModel || getMaasDefaultModel();
+        const result = await callMaasWithFallback({
+          models: [targetModel, ...DEFAULT_POST_ARTICLE_FALLBACKS],
+          messages: maasMessages,
+          json: Boolean(json),
+          enableSearch: Boolean(enableSearch),
+        });
+
+        return NextResponse.json({ text: result.content });
+      } catch (maasErr: any) {
+        console.warn(`MaaS text generation failed, falling back to Gemini:`, maasErr?.message);
+        if (!process.env.GEMINI_API_KEY) {
+          throw maasErr;
+        }
+      }
     }
 
     if (!process.env.GEMINI_API_KEY) {
@@ -31,41 +107,6 @@ export async function POST(req: NextRequest) {
     }
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-    // Handle Image Generation requests
-    if (generateImage || requestedModel === 'imagen-3.0-generate-002') {
-      try {
-        const imageResponse = await ai.models.generateImages({
-          model: 'imagen-3.0-generate-002',
-          prompt: prompt,
-          config: {
-            numberOfImages: 1,
-            outputMimeType: 'image/jpeg',
-            aspectRatio: '1:1',
-          },
-        });
-
-        const imageBytes = imageResponse.generatedImages?.[0]?.image?.imageBytes;
-        if (imageBytes) {
-          const generatedDataUrl = `data:image/jpeg;base64,${imageBytes}`;
-          return NextResponse.json({
-            text: `Generated image for prompt: "${prompt}"`,
-            generatedImageUrl: generatedDataUrl,
-            isImage: true,
-          });
-        }
-      } catch (err: any) {
-        console.warn('Imagen 3 API failed or not enabled on key, falling back to FLUX/Pollinations:', err.message);
-        // Fallback to high quality FLUX / Pollinations URL
-        const seed = Math.floor(Math.random() * 1000000);
-        const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}&nologo=true&model=flux`;
-        return NextResponse.json({
-          text: `Generated image for prompt: "${prompt}"`,
-          generatedImageUrl: fallbackUrl,
-          isImage: true,
-        });
-      }
-    }
 
     // Determine model (fallback to gemini-2.5-flash)
     const validModels = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];

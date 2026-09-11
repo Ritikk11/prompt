@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { fetchSettings } from "@/lib/data";
 import { TOOLS_MODELS_RULES, HUMAN_WRITING_RULES } from "@/lib/admin/wandPrompts";
+import { isMaasConfigured, callMaasWithFallback, DEFAULT_POST_ARTICLE_FALLBACKS } from "@/lib/admin/maas-client";
 
 export const dynamic = 'force-dynamic';
 
@@ -97,14 +98,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Provide a working title or an instruction describing the article.' }, { status: 400 });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!isMaasConfigured() && !process.env.GEMINI_API_KEY) {
       return NextResponse.json(
-        { error: 'Gemini API Key is missing.' },
+        { error: 'AI API Key is missing (neither MAAS_API_KEY nor GEMINI_API_KEY configured).' },
         { status: 500 }
       );
     }
-
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const safeCategory = category === 'guide' ? 'guide' : 'blog';
 
@@ -144,6 +143,57 @@ export async function POST(req: NextRequest) {
     const settings = await fetchSettings();
     const siteTools = settings.aiTools && settings.aiTools.length > 0 ? settings.aiTools.join(', ') : 'ChatGPT, Gemini, Grok, Qwen';
     const SITE_CONTEXT = getSiteContext(siteTools);
+
+    // 1. Try DeepSeek V4 via Model Studio (MaaS) with full fallback cascade
+    if (isMaasConfigured()) {
+      try {
+        const maasPrompt = `You are an expert content writer and SEO specialist working on articles for this specific site.
+
+${SITE_CONTEXT}
+${taxonomyText}${existingArticlesText}${customInstructionText}${focusNotice}${currentFieldsText}
+You are writing a "${safeCategory}" article. ${topicText}
+
+Generate the following field(s) in valid JSON format:
+${fieldInstructionsText}
+
+You MUST return a JSON object with EXACTLY these top-level keys: ${fieldsToGenerate.map(f => `"${f}"`).join(', ')}.
+Output pure JSON only, no markdown ticks, no conversational filler.`;
+
+        const result = await callMaasWithFallback({
+          models: DEFAULT_POST_ARTICLE_FALLBACKS,
+          messages: [
+            {
+              role: 'system',
+              content: `You are an expert content writer and SEO specialist. Always output valid, parseable JSON conforming strictly to the requested keys. Never wrap with markdown backticks or commentary.\n\n${SITE_CONTEXT}`,
+            },
+            {
+              role: 'user',
+              content: maasPrompt,
+            },
+          ],
+          json: true,
+          temperature: 0.7,
+        });
+
+        const raw = result.content.trim();
+        const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+        const parsed = JSON.parse(cleaned);
+
+        // Verify at least one requested field is present
+        if (fieldsToGenerate.some(f => f in parsed)) {
+          return NextResponse.json(parsed);
+        }
+      } catch (maasErr: any) {
+        console.warn('All MaaS fallback models failed for article generation:', maasErr?.message);
+      }
+    }
+
+    // 2. Fallback to Gemini if MaaS is unconfigured or failed
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error('MaaS generation failed and GEMINI_API_KEY is not configured.');
+    }
+
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const systemPrompt = `You are an expert content writer and SEO specialist working on articles for this specific site.
 

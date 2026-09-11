@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { safeFetchImage, MAX_IMAGE_BYTES } from "@/lib/safe-fetch";
+import { isMaasConfigured, isMaasModel, streamMaasWithFallback, DEFAULT_POST_ARTICLE_FALLBACKS, getMaasDefaultModel, type MaasChatMessage } from "@/lib/admin/maas-client";
 
 // Only inert raster types — mirrors the upload route and generate-text allowlist.
 const ALLOWED_IMAGE_MIME_TYPES = new Set([
@@ -51,14 +52,58 @@ export async function POST(req: NextRequest) {
     const auth = await requireAdmin(req);
     if (auth.error) return auth.error;
 
-    const { messages, systemContext, model: requestedModel } = await req.json() as {
+    const { messages, systemContext, model: requestedModel, enableSearch } = await req.json() as {
       messages: IncomingMessage[];
       systemContext?: string;
       model?: string;
+      enableSearch?: boolean;
     };
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: 'messages array is required' }, { status: 400 });
+    }
+
+    if (!isMaasConfigured() && !process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: 'AI API Key is missing (neither MAAS_API_KEY nor GEMINI_API_KEY configured).' }, { status: 500 });
+    }
+
+    // 1. If requested model is a MaaS model (DeepSeek, Qwen, etc.) or MaaS is configured
+    if (isMaasConfigured() && (isMaasModel(requestedModel) || !requestedModel)) {
+      try {
+        const maasMessages: MaasChatMessage[] = [];
+        if (systemContext) {
+          maasMessages.push({
+            role: 'system',
+            content: `${systemContext}\n\nPlease respond with clear, well-formatted markdown. If writing code, enclose code in proper markdown backticks with language tags (e.g. \`\`\`typescript ... \`\`\`).`,
+          });
+        }
+        for (const m of messages) {
+          maasMessages.push({
+            role: m.role === 'assistant' ? 'assistant' : 'user',
+            content: m.content,
+          });
+        }
+
+        const targetModel = requestedModel || getMaasDefaultModel();
+        const { stream } = await streamMaasWithFallback({
+          models: [targetModel, ...DEFAULT_POST_ARTICLE_FALLBACKS],
+          messages: maasMessages,
+          enableSearch: Boolean(enableSearch),
+        });
+
+        return new Response(stream, {
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'no-cache, no-transform',
+            'X-Accel-Buffering': 'no',
+          },
+        });
+      } catch (maasErr: any) {
+        console.warn(`MaaS stream failed for model ${requestedModel}, falling back to Gemini:`, maasErr?.message);
+        if (!process.env.GEMINI_API_KEY) {
+          throw maasErr;
+        }
+      }
     }
 
     if (!process.env.GEMINI_API_KEY) {

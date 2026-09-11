@@ -7,6 +7,7 @@ export interface AskAiOptions {
   json?: boolean;
   model?: string;
   generateImage?: boolean;
+  enableSearch?: boolean;
 }
 
 export interface AskAiResponse {
@@ -36,6 +37,7 @@ export async function askAiFull(prompt: string, options: AskAiOptions = {}): Pro
       json: options.json,
       model: options.model,
       generateImage: options.generateImage,
+      enableSearch: options.enableSearch,
     }),
   });
   if (!res.ok) throw new Error(await res.text());
@@ -62,6 +64,7 @@ export interface StreamMessage {
 export interface AskAiStreamOptions {
   systemContext?: string;
   model?: string;
+  enableSearch?: boolean;
 }
 
 export interface AskAiStreamHandlers {
@@ -91,6 +94,7 @@ export async function askAiStream(
       messages,
       systemContext: options.systemContext,
       model: options.model,
+      enableSearch: options.enableSearch,
     }),
     signal: handlers.signal,
   });

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import {
   Wand2, Send, Sparkles, FileText, Tag, Image as ImageIcon, X, Bot,
   Cpu, Brain, Palette, ChevronDown, Zap, Square, Download, PanelLeftOpen,
-  PanelLeftClose,
+  PanelLeftClose, Globe,
 } from 'lucide-react';
 import { askAiStream, askAiFull } from '@/lib/admin/ai';
 import { aiStudioSystemContext } from '@/lib/admin/wandPrompts';
@@ -19,7 +19,17 @@ import ChatSidebar from '@/components/admin/aistudio/ChatSidebar';
 import MessageBubble from '@/components/admin/aistudio/MessageBubble';
 import type { Post } from '@/lib/types';
 
-export type GeminiModelId = 'gemini-2.5-flash' | 'gemini-2.5-flash-lite' | 'imagen-3.0-generate-002';
+export type AiStudioModelId =
+  | 'deepseek-v4-pro'
+  | 'deepseek-v4-flash'
+  | 'qwen3.7-max'
+  | 'qwen3.8-flash'
+  | 'glm-5.1'
+  | 'gemini-2.5-flash'
+  | 'gemini-2.5-flash-lite'
+  | 'imagen-3.0-generate-002';
+
+export type GeminiModelId = AiStudioModelId;
 
 interface AiStudioTabProps {
   posts: Post[];
@@ -27,26 +37,32 @@ interface AiStudioTabProps {
   onCreatePostFromAi?: (promptText: string, imageUrl?: string) => void;
 }
 
-const models: { id: GeminiModelId; label: string; short: string; icon: any; emoji: string }[] = [
-  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', short: 'Flash', icon: Zap, emoji: '⚡' },
-  { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', short: 'Flash-Lite', icon: Cpu, emoji: '🚀' },
+const models: { id: AiStudioModelId; label: string; short: string; icon: any; emoji: string }[] = [
+  { id: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro (Reasoning)', short: 'DeepSeek Pro', icon: Brain, emoji: '🧠' },
+  { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', short: 'DeepSeek Flash', icon: Zap, emoji: '⚡' },
+  { id: 'qwen3.7-max', label: 'Qwen 3.7 Max', short: 'Qwen Max', icon: Sparkles, emoji: '💎' },
+  { id: 'qwen3.8-flash', label: 'Qwen 3.8 Flash (1M Context)', short: 'Qwen Flash', icon: Cpu, emoji: '🚀' },
+  { id: 'glm-5.1', label: 'GLM 5.1', short: 'GLM 5.1', icon: Bot, emoji: '🔮' },
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', short: 'Gemini Flash', icon: Zap, emoji: '⚡' },
+  { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', short: 'Gemini Lite', icon: Cpu, emoji: '✨' },
   { id: 'imagen-3.0-generate-002', label: 'Imagen 3 (Image Gen)', short: 'Imagen 3', icon: Palette, emoji: '🎨' },
 ];
 
 const modelLabel = (id?: string) => models.find(m => m.id === id)?.label || id;
 
 const presets = [
-  { title: 'Write an Article', icon: FileText, prompt: "Write a detailed markdown article about 'How to write ChatGPT Image Prompts'. Include practical tips, structural steps, and example prompts.", model: 'gemini-2.5-flash' as GeminiModelId },
-  { title: 'Generate AI Image', icon: Palette, prompt: 'A futuristic cyberpunk cat wearing neon goggles sitting on a rain-slicked Tokyo street at night, 8k resolution, photorealistic', model: 'imagen-3.0-generate-002' as GeminiModelId },
-  { title: 'Brainstorm Tags', icon: Tag, prompt: 'Suggest 10 trending AI image prompt tags and categories for a prompt gallery site. Return them as a markdown table with columns Tag, Category, Why it works.', model: 'gemini-2.5-flash' as GeminiModelId },
-  { title: 'Deep Coding & Logic', icon: Brain, prompt: 'Write a TypeScript utility function to parse and validate AI prompt tags from markdown frontmatter with unit test examples.', model: 'gemini-2.5-flash' as GeminiModelId },
+  { title: 'Write an Article', icon: FileText, prompt: "Write a detailed markdown article about 'How to write ChatGPT Image Prompts'. Include practical tips, structural steps, and example prompts.", model: 'deepseek-v4-pro' as AiStudioModelId },
+  { title: 'Generate AI Image', icon: Palette, prompt: 'A futuristic cyberpunk cat wearing neon goggles sitting on a rain-slicked Tokyo street at night, 8k resolution, photorealistic', model: 'imagen-3.0-generate-002' as AiStudioModelId },
+  { title: 'Brainstorm Tags', icon: Tag, prompt: 'Suggest 10 trending AI image prompt tags and categories for a prompt gallery site. Return them as a markdown table with columns Tag, Category, Why it works.', model: 'deepseek-v4-flash' as AiStudioModelId },
+  { title: 'Deep Coding & Logic', icon: Brain, prompt: 'Write a TypeScript utility function to parse and validate AI prompt tags from markdown frontmatter with unit test examples.', model: 'deepseek-v4-pro' as AiStudioModelId },
 ];
 
 export default function AiStudioTab({ posts, onCreateArticleFromAi, onCreatePostFromAi }: AiStudioTabProps) {
   const chat = useConversations();
   const [inputPrompt, setInputPrompt] = useState('');
   const [attachedImageUrl, setAttachedImageUrl] = useState('');
-  const [selectedModel, setSelectedModel] = useState<GeminiModelId>('gemini-2.5-flash');
+  const [selectedModel, setSelectedModel] = useState<AiStudioModelId>('deepseek-v4-pro');
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [busy, setBusy] = useState(false);           // any generation in flight
   const [streamingId, setStreamingId] = useState<string | null>(null);
@@ -125,7 +141,7 @@ export default function AiStudioTab({ posts, onCreateArticleFromAi, onCreatePost
       try {
         await askAiStream(
           history.map(m => ({ role: m.role, content: m.content, imageUrl: m.imageUrl })),
-          { systemContext: buildSystemContext(), model },
+          { systemContext: buildSystemContext(), model, enableSearch: webSearchEnabled },
           {
             signal: controller.signal,
             onToken: (t) => chat.updateMessage(assistantId, m => ({ ...m, content: m.content + t })),
@@ -378,6 +394,21 @@ export default function AiStudioTab({ posts, onCreateArticleFromAi, onCreatePost
                 ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
                 : <ImageIcon className="h-5 w-5" />}
             </label>
+
+            <button
+              type="button"
+              onClick={() => setWebSearchEnabled(v => !v)}
+              disabled={busy || selectedModel === 'imagen-3.0-generate-002'}
+              className={`flex shrink-0 items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-all ${
+                webSearchEnabled
+                  ? 'border border-primary-500/40 bg-primary-500/15 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300'
+                  : 'text-surface-400 hover:bg-surface-100 hover:text-surface-700 dark:hover:bg-surface-800 dark:hover:text-surface-200'
+              }`}
+              title={webSearchEnabled ? 'Live Web Search enabled (click to disable)' : 'Enable live Web Search'}
+            >
+              <Globe className="h-4 w-4" />
+              <span className="hidden sm:inline text-[11px] font-bold">Search</span>
+            </button>
 
             <textarea
               ref={textareaRef}
