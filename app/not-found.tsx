@@ -53,6 +53,7 @@ export default function NotFound() {
         <div className="relative z-10 mt-6 flex flex-wrap items-center justify-center gap-2.5">
           <Link
             href="/explore"
+            prefetch={false}
             className="inline-flex h-9 items-center gap-2 rounded-full bg-primary-600 px-5 text-xs font-bold text-white shadow-md shadow-primary-500/25 transition hover:bg-primary-700 active:scale-95"
           >
             <Compass className="h-3.5 w-3.5" /> Explore Prompts
@@ -60,6 +61,7 @@ export default function NotFound() {
 
           <Link
             href="/"
+            prefetch={false}
             className="inline-flex h-9 items-center gap-2 rounded-full border border-white/80 bg-white/80 px-5 text-xs font-bold text-surface-800 shadow-sm backdrop-blur-md transition hover:bg-white hover:text-surface-950 active:scale-95 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-200 dark:hover:bg-white/[0.14] dark:hover:text-white"
           >
             <Home className="h-3.5 w-3.5" /> Back to Home

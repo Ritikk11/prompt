@@ -69,7 +69,7 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
   return (
     <div className="max-w-7xl mx-auto px-2 py-8 sm:py-12">
       <nav className="flex items-center gap-2 text-sm text-surface-400 mb-8 font-medium">
-        <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
+        <Link href="/" prefetch={false} className="hover:text-primary-500 transition-colors">Home</Link>
         <ChevronRight className="w-3.5 h-3.5 opacity-50" />
         <span className="text-surface-900 dark:text-white">{section.name}</span>
       </nav>
@@ -154,7 +154,7 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
       {filtered.length === 0 ? (
         <div className="rounded-[32px] border border-dashed border-white/70 bg-white/40 py-20 text-center backdrop-blur-xl dark:border-white/15 dark:bg-white/[0.05]">
           <p className="text-surface-500 font-medium">No prompts found in this section yet.</p>
-          <Link href="/explore" className="mt-4 inline-block text-primary-500 font-bold hover:underline">
+          <Link href="/explore" prefetch={false} className="mt-4 inline-block text-primary-500 font-bold hover:underline">
             Explore other prompts
           </Link>
         </div>

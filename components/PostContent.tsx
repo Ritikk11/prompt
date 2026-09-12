@@ -511,7 +511,7 @@ export default function PostContent({
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <h2 className="text-2xl font-bold mb-4 text-surface-900 dark:text-white">Post not found</h2>
         <p className="text-surface-500 mb-8">This prompt might have been moved or deleted.</p>
-        <Link href="/" className="px-6 py-3 rounded-xl bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-colors shadow-lg shadow-primary-500/20">
+        <Link href="/" prefetch={false} className="px-6 py-3 rounded-xl bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-colors shadow-lg shadow-primary-500/20">
           Return to Gallery
         </Link>
       </div>
@@ -700,6 +700,7 @@ export default function PostContent({
               <Link
                 key={`${item.label}:${item.href}`}
                 href={item.href}
+                prefetch={false}
                 className="group flex items-center justify-between rounded-xl border border-white/80 bg-white/25 px-3 py-2.5 text-xs font-bold text-surface-700 hover:border-primary-400/60 hover:bg-white/70 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:bg-white/10 dark:hover:text-white"
               >
                 <span className="flex items-center gap-2">
@@ -713,6 +714,7 @@ export default function PostContent({
         </div>
         <Link
           href={keepExploring.ctaHref || '/explore'}
+          prefetch={false}
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-xs font-black text-white hover:bg-primary-700"
         >
           {keepExploring.ctaLabel} <ArrowRight className="h-3.5 w-3.5" />
@@ -745,6 +747,7 @@ export default function PostContent({
             {/* Big All Prompts Button */}
             <Link
               href="/explore"
+              prefetch={false}
               className={`group/cta inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full border border-transparent px-8 text-base font-bold ${gradientButton}`}
             >
               <Compass className="h-5 w-5" />
@@ -755,6 +758,7 @@ export default function PostContent({
             {/* ChatGPT Prompts Button */}
             <Link
               href="/tool/chatgpt"
+              prefetch={false}
               className={`inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full px-8 text-base font-bold text-surface-700 ${glassPill}`}
             >
               {chatGptInfo?.logo ? (
@@ -768,6 +772,7 @@ export default function PostContent({
             {/* Gemini Prompts Button */}
             <Link
               href="/tool/gemini"
+              prefetch={false}
               className={`inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full px-8 text-base font-bold text-surface-700 ${glassPill}`}
             >
               {geminiInfo?.logo ? (
@@ -894,7 +899,7 @@ export default function PostContent({
     const authorUrl = `/user/${post.authorId}`;
 
     return (
-      <Link href={authorUrl} className="group flex items-center gap-3">
+      <Link href={authorUrl} prefetch={false} className="group flex items-center gap-3">
         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary-500/20 ring-2 ring-white/20">
           {avatarUrl ? (
             <Image src={avatarUrl} alt="" fill sizes="40px" className="object-cover" referrerPolicy="no-referrer" />
@@ -1213,7 +1218,7 @@ export default function PostContent({
 
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-surface-400 mb-6 font-medium">
-        <Link href="/" className="hover:text-primary-500 transition-colors">Home</Link>
+        <Link href="/" prefetch={false} className="hover:text-primary-500 transition-colors">Home</Link>
         <ChevronLeft className="w-3.5 h-3.5 rotate-180 opacity-50" />
         <span className="truncate text-surface-900 dark:text-white max-w-[200px]">{post.title}</span>
       </nav>
@@ -1531,7 +1536,7 @@ export default function PostContent({
                           )}
                           <div className="min-w-0">
                             {settings.features?.showPublicProfiles ? (
-                              <Link href={`/user/${comment.userId}`} className="block truncate text-sm font-bold text-surface-900 hover:text-primary-500 dark:text-white">
+                              <Link href={`/user/${comment.userId}`} prefetch={false} className="block truncate text-sm font-bold text-surface-900 hover:text-primary-500 dark:text-white">
                                 {comment.userName}
                               </Link>
                             ) : (
@@ -1563,7 +1568,7 @@ export default function PostContent({
               <div className="w-1.5 h-8 bg-primary-500 rounded-full underline-offset-8" />
               <h2 className="text-2xl font-black tracking-tight">Related Prompts</h2>
             </div>
-            <Link href="/explore" className="text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center gap-2 group">
+            <Link href="/explore" prefetch={false} className="text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center gap-2 group">
               Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
@@ -1642,7 +1647,7 @@ export default function PostContent({
                 <h2 className="text-2xl font-black tracking-tight">Recommended Posts</h2>
               </div>
             </div>
-            <Link href="/explore" className="hidden text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 sm:flex items-center gap-2 group">
+            <Link href="/explore" prefetch={false} className="hidden text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 sm:flex items-center gap-2 group">
               Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>

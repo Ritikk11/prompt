@@ -13,7 +13,7 @@ export default async function ProfilePage() {
             The profile and login features have been disabled by the site admin.
           </p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/" className="rounded-xl bg-primary-500 px-5 py-3 text-sm font-bold text-white hover:bg-primary-600">Back to Home</Link>
+            <Link href="/" prefetch={false} className="rounded-xl bg-primary-500 px-5 py-3 text-sm font-bold text-white hover:bg-primary-600">Back to Home</Link>
           </div>
         </div>
       </div>

@@ -56,7 +56,7 @@ function SearchContent({ posts, settings }: { posts: Post[], settings: SiteSetti
           <SearchIcon className="w-16 h-16 text-surface-200 dark:text-surface-700 mx-auto mb-4" />
           <p className="text-xl font-semibold text-surface-400">No results found</p>
           <p className="text-sm text-surface-400 mt-2 mb-6">Try different keywords or browse collections</p>
-          <Link href="/" className="px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors">
+          <Link href="/" prefetch={false} className="px-5 py-2.5 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors">
             Back to Home
           </Link>
         </div>

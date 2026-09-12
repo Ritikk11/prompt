@@ -77,7 +77,7 @@ export default async function PublicProfilePage({ params }: Props) {
       <div className="mx-auto max-w-xl px-4 py-20 text-center">
         <h1 className="mb-3 text-2xl font-bold">Public profiles are disabled</h1>
         <p className="mt-2 text-sm text-surface-500">Public creator profiles are currently disabled by the site admin.</p>
-        <Link href="/" className="mt-4 inline-block text-primary-500 hover:text-primary-600">
+        <Link href="/" prefetch={false} className="mt-4 inline-block text-primary-500 hover:text-primary-600">
           Return home
         </Link>
       </div>
@@ -98,6 +98,7 @@ export default async function PublicProfilePage({ params }: Props) {
         </p>
         <Link
           href="/explore"
+          prefetch={false}
           className="mt-6 inline-flex h-9 items-center gap-1.5 rounded-full bg-primary-600 px-5 text-xs font-bold text-white shadow-sm transition hover:bg-primary-700 active:scale-95"
         >
           Explore trending prompts

@@ -890,6 +890,7 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
                         <div className="flex items-center gap-1">
                           <Link
                             href={`/post/${post.slug || post.id}`}
+                            prefetch={false}
                             target="_blank"
                             className="rounded-lg p-1.5 text-surface-500 hover:bg-black/5 hover:text-surface-900 dark:hover:bg-white/10 dark:hover:text-white transition-colors"
                             title="View live post"

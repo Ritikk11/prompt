@@ -83,6 +83,7 @@ export default function ErrorBoundary({
 
           <Link
             href="/"
+            prefetch={false}
             className="inline-flex h-9 items-center gap-2 rounded-full border border-black/[0.08] bg-black/[0.02] px-4 text-xs font-semibold text-surface-600 transition hover:bg-black/[0.06] hover:text-surface-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-surface-400 dark:hover:bg-white/[0.08] dark:hover:text-white"
           >
             <Home className="h-3.5 w-3.5" /> Home

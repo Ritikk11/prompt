@@ -205,6 +205,7 @@ export default function PublicProfileClient({
           </p>
           <Link
             href="/explore"
+            prefetch={false}
             className="mt-5 inline-flex h-8 items-center gap-1.5 rounded-full border border-white/80 bg-white/60 px-4 text-xs font-semibold text-surface-700 shadow-sm backdrop-blur-xl transition hover:bg-white hover:text-surface-900 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:text-white"
           >
             Explore trending prompts

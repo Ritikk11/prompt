@@ -64,6 +64,7 @@ export default function HomeCreativeDirections({ posts, settings }: { posts: Pos
             <Link
               key={`${item.type}-${item.value}`}
               href={itemHref(item)}
+              prefetch={false}
               /* /test design: compact glass pills, not the old icon cards.
                  Glass pills (backdrop-blur-xl ≙ capped 12px) over flat cards:
                  no nested blur passes, hover scales the pill itself. */

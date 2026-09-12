@@ -233,6 +233,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
 
             <Link
               href={`/user/${username || user.id}`}
+              prefetch={false}
               target="_blank"
               className="mt-4 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-primary-500/20 bg-primary-500/10 text-primary-600 dark:text-primary-400 hover:bg-primary-500/15 transition-colors"
             >
@@ -394,7 +395,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                     Track pending, approved, and draft prompt collections from one place.
                   </p>
                 </div>
-                <Link href="/submit" className="inline-flex items-center justify-center rounded-xl bg-primary-500 px-5 py-3 text-sm font-bold text-white hover:bg-primary-600">
+                <Link href="/submit" prefetch={false} className="inline-flex items-center justify-center rounded-xl bg-primary-500 px-5 py-3 text-sm font-bold text-white hover:bg-primary-600">
                   Submit new prompt
                 </Link>
               </div>
@@ -415,7 +416,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                   <div className="text-center py-12 border border-dashed border-white/80 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-white/5">
                     <Heart className="w-8 h-8 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
                     <p className="text-surface-500 font-medium">No bookmarks yet</p>
-                    <Link href="/explore" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
+                    <Link href="/explore" prefetch={false} className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
                       Explore trending prompts
                     </Link>
                   </div>
@@ -440,7 +441,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                   <div className="text-center py-12 border border-dashed border-white/80 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-white/5">
                     <Heart className="w-8 h-8 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
                     <p className="text-surface-500 font-medium">No liked prompts yet</p>
-                    <Link href="/explore" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
+                    <Link href="/explore" prefetch={false} className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
                       Explore trending prompts
                     </Link>
                   </div>
@@ -467,7 +468,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
               ) : mySubmissions.length === 0 ? (
                 <div className="text-center py-12 border border-dashed border-white/80 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-white/5">
                   <p className="text-surface-500 font-medium">You haven&apos;t submitted any prompts.</p>
-                  <Link href="/submit" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
+                  <Link href="/submit" prefetch={false} className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
                     Submit a new prompt
                   </Link>
                 </div>
@@ -496,7 +497,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                 <div className="text-center py-12 border border-dashed border-white/80 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-white/5">
                   <MessageCircle className="w-8 h-8 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
                   <p className="text-surface-500 font-medium">No comments yet</p>
-                  <Link href="/explore" className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
+                  <Link href="/explore" prefetch={false} className="text-primary-500 hover:text-primary-600 text-sm mt-2 inline-block">
                     Find prompts to discuss
                   </Link>
                 </div>
@@ -505,7 +506,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
                   {comments.map(comment => (
                     <div key={comment.id} className="rounded-2xl border border-white/80 bg-white/60 backdrop-blur-[16px] backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.08] p-4">
                       <div className="flex flex-wrap items-center gap-2 text-xs text-surface-500">
-                        <Link href={getPostPath({ id: comment.postId, slug: comment.postSlug })} className="font-bold text-primary-500 hover:text-primary-600">
+                        <Link href={getPostPath({ id: comment.postId, slug: comment.postSlug })} prefetch={false} className="font-bold text-primary-500 hover:text-primary-600">
                           {comment.postTitle}
                         </Link>
                         <span>•</span>

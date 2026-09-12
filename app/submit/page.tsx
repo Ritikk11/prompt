@@ -51,8 +51,8 @@ export default function SubmitPage() {
             The submission form is disabled by the site admin right now. You can still contact the team if you want to suggest a prompt or request access.
           </p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/contact" className="rounded-xl bg-primary-500 px-5 py-3 text-sm font-bold text-white hover:bg-primary-600">Contact Us</Link>
-            <Link href="/explore" className="rounded-full border border-white/80 bg-white/60 px-5 py-3 text-sm font-bold text-surface-700 shadow-sm backdrop-blur-xl transition hover:border-primary-400/60 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-200 dark:hover:text-white">Explore Prompts</Link>
+            <Link href="/contact" prefetch={false} className="rounded-xl bg-primary-500 px-5 py-3 text-sm font-bold text-white hover:bg-primary-600">Contact Us</Link>
+            <Link href="/explore" prefetch={false} className="rounded-full border border-white/80 bg-white/60 px-5 py-3 text-sm font-bold text-surface-700 shadow-sm backdrop-blur-xl transition hover:border-primary-400/60 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-200 dark:hover:text-white">Explore Prompts</Link>
           </div>
         </div>
       </div>
@@ -158,7 +158,7 @@ export default function SubmitPage() {
         <div className="mb-8 p-5 rounded-2xl border border-amber-200 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-sm">
           <p className="font-extrabold mb-1">Please Complete Your Profile</p>
           <p className="mb-3 text-surface-600 dark:text-surface-300">Set your name, public @username, and profile picture before submitting to ensure your prompts are properly credited.</p>
-          <Link href="/profile?setup=true" className="inline-flex font-bold underline text-primary-500 hover:text-primary-600">
+          <Link href="/profile?setup=true" prefetch={false} className="inline-flex font-bold underline text-primary-500 hover:text-primary-600">
             Go to Profile Setup &rarr;
           </Link>
         </div>

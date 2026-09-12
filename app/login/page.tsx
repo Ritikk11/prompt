@@ -27,6 +27,7 @@ export default async function LoginPage() {
           <div className="mt-6">
             <Link
               href="/"
+              prefetch={false}
               className="inline-flex h-9 items-center gap-2 rounded-full bg-primary-600 px-5 text-xs font-bold text-white shadow-sm transition hover:bg-primary-700 active:scale-95"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Return to homepage

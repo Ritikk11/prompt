@@ -222,7 +222,7 @@ function LoginContent({ settings }: { settings: SiteSettings }) {
 
         {/* Brand Header */}
         <div className="relative z-10 mb-6 text-center">
-          <Link href="/" className="inline-flex items-center gap-2 transition hover:opacity-80">
+          <Link href="/" prefetch={false} className="inline-flex items-center gap-2 transition hover:opacity-80">
             <span className="relative block h-8 w-8 overflow-hidden rounded-xl shadow-sm">
               <Image
                 src={settings.siteLogo || '/icon-190x190.webp'}
@@ -504,6 +504,7 @@ function LoginContent({ settings }: { settings: SiteSettings }) {
         <div className="relative z-10 mt-8 text-center">
           <Link
             href="/"
+            prefetch={false}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-surface-500 hover:text-surface-900 dark:text-surface-400 dark:hover:text-white"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Return to homepage
