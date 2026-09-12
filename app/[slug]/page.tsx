@@ -6,7 +6,7 @@ export const revalidate = 43200;
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { preload, preconnect } from 'react-dom';
-import { getPostBySlugOrId, fetchPostSummaries, getSeoPageBySlug, isPublicPost, fetchSettings } from '@/lib/data';
+import { getPostBySlugOrId, fetchPostSummaries, fetchSeoPages, getSeoPageBySlug, isPublicPost, fetchSettings } from '@/lib/data';
 import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
 import { stringifyJsonLd } from '@/lib/json-ld';
 import { isSafePublicSlug } from '@/lib/slug-guard';
@@ -394,9 +394,17 @@ export default async function PostPage({ params }: Props) {
   );
 }
 
-// Empty array + dynamicParams default (true) is required for ISR to actually cache
-// this route per-slug — without it, `revalidate` above is silently ignored and every
-// request falls back to full SSR. See https://github.com/vercel/next.js/issues/62195
-export function generateStaticParams() {
-  return [];
+export async function generateStaticParams() {
+  try {
+    const [posts, seoPages] = await Promise.all([
+      fetchPostSummaries(),
+      fetchSeoPages(),
+    ]);
+    const postSlugs = (posts || []).map((p) => ({ slug: p.slug || p.id }));
+    const seoSlugs = (seoPages || []).map((s: any) => ({ slug: s.slug || s.id }));
+    return [...postSlugs, ...seoSlugs].filter((p) => Boolean(p.slug) && isSafePublicSlug(p.slug));
+  } catch (error) {
+    console.error('generateStaticParams error in [slug]:', error);
+    return [];
+  }
 }

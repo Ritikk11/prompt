@@ -925,7 +925,7 @@ function mapSummaryRow(row: PostSummaryRow): PostSummary {
   };
 }
 
-export async function fetchPostSummaries(): Promise<Post[]> {
+export const fetchPostSummaries = cache(async (): Promise<Post[]> => {
   try {
     const supabase = createPublicClient();
     const { data, error } = await supabase.from('public_post_summaries').select('*');
@@ -948,7 +948,7 @@ export async function fetchPostSummaries(): Promise<Post[]> {
     console.error('Supabase post summaries fetch error:', error);
     return [];
   }
-}
+});
 
 export const fetchSections = cache(async () => {
   try {

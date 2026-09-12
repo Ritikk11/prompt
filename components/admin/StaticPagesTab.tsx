@@ -69,7 +69,7 @@ export default function StaticPagesTab({ settings, updateSettings }: { settings:
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', 'pages');
     params.set('page', nextPage);
-    router.push(`/admin?${params.toString()}`, { scroll: false });
+    window.history.replaceState(null, '', `/admin?${params.toString()}`);
   };
 
   useEffect(() => {

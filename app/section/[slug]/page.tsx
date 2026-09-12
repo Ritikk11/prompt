@@ -4,7 +4,7 @@
 export const revalidate = 43200;
 
 import { Metadata } from 'next';
-import { getSectionBySlug, fetchPostSummaries, fetchSettings } from '@/lib/data';
+import { getSectionBySlug, fetchSections, fetchPostSummaries, fetchSettings } from '@/lib/data';
 import type { Post, Section } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import { filterPostsForSection } from '@/lib/sections';
@@ -94,8 +94,15 @@ export default async function SectionPage({ params }: Props) {
   );
 }
 
-// Empty array is required for ISR to actually cache this route per-slug — without it,
-// `revalidate` above is silently ignored and every request falls back to full SSR.
-export function generateStaticParams() {
-  return [];
+export async function generateStaticParams() {
+  try {
+    const sections = await fetchSections();
+    return (sections || [])
+      .filter(s => s.visible !== false)
+      .map(s => ({ slug: s.slug || s.id }))
+      .filter(s => Boolean(s.slug));
+  } catch (error) {
+    console.error('generateStaticParams error in section:', error);
+    return [];
+  }
 }

@@ -9,6 +9,7 @@ import FilterChipRail from '@/components/FilterChipRail';
 import { getFilterTagsFromPosts } from '@/lib/filter-tags';
 import { getAllTools } from '@/lib/constants';
 import { Clock, Flame, X } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import DiscoveryPageHero from '@/components/DiscoveryPageHero';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
 import ScrollReveal from '@/components/ScrollReveal';
@@ -22,8 +23,16 @@ export default function ExploreClient({
   settings: SiteSettings;
   initialCategory?: string;
 }) {
+  const searchParams = useSearchParams();
+  const urlCategory = searchParams ? searchParams.get('category') : null;
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'trending'>('latest');
-  const [activeCategory, setActiveCategory] = useState<string | null>(initialCategory || null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(initialCategory || (urlCategory ? decodeURIComponent(urlCategory) : null));
+
+  useEffect(() => {
+    if (urlCategory) {
+      setActiveCategory(decodeURIComponent(urlCategory));
+    }
+  }, [urlCategory]);
 
   const itemsPerLoad = settings.features?.infiniteScrollItems || 20;
   const [displayedCount, setDisplayedCount] = useState(itemsPerLoad);

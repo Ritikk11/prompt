@@ -1483,7 +1483,7 @@ function AdminInner() {
     }
 
     const query = params.toString();
-    router.push(query ? `/admin?${query}` : '/admin', { scroll: false });
+    window.history.replaceState(null, '', query ? `/admin?${query}` : '/admin');
   };
 
   const setTab = (nextTab: AdminTab) => {
@@ -1500,6 +1500,17 @@ function AdminInner() {
     setSectionLocationFilterState(nextLocation);
     pushAdminRoute('sections', { loc: nextLocation });
   };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      setTabState(parseAdminTab(params.get('tab')));
+      setSettingsSubTabState(parseSettingsSubTab(params.get('sub')));
+      setSectionLocationFilterState(parseSectionLocation(params.get('loc')));
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -1736,7 +1747,7 @@ function AdminInner() {
   const closePostForm = () => {
     const restoreY = postFormScrollYRef.current;
     resetForm();
-    router.push('/admin?tab=posts', { scroll: false });
+    window.history.replaceState(null, '', '/admin?tab=posts');
     // The editor is tall and its Save/Cancel sit at the bottom, so on mobile
     // the viewport is left far down when it closes. Wait a frame for the list
     // to remount, then return the viewport to the card the user was editing.
@@ -1781,14 +1792,14 @@ function AdminInner() {
     resetForm();
     setShowPostForm(true);
     setTabState('posts');
-    router.push('/admin?tab=posts&action=new', { scroll: false });
+    window.history.replaceState(null, '', '/admin?tab=posts&action=new');
   };
 
   const openEditPost = (post: Post) => {
     postFormScrollYRef.current = window.scrollY;
     startEdit(post);
     setTabState('posts');
-    router.push(`/admin?tab=posts&action=edit&id=${encodeURIComponent(post.id)}`, { scroll: false });
+    window.history.replaceState(null, '', `/admin?tab=posts&action=edit&id=${encodeURIComponent(post.id)}`);
   };
 
   const featurePostWithLimit = async (targetPost: Post, willFeature: boolean) => {

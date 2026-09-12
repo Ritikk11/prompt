@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     webpackBuildWorker: false,
+    staleTimes: {
+      dynamic: 60,
+      static: 300,
+    },
     // NOTE: do not enable experimental.inlineCss here — it embeds the CSS into
     // every prerendered page inside the worker bundle, which blows past the
     // Cloudflare free-plan 3 MiB Worker size limit and fails deploy.

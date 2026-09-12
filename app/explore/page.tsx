@@ -38,20 +38,18 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-interface Props {
-  searchParams?: Promise<{ category?: string }>;
-}
+import { Suspense } from 'react';
 
-export default async function ExplorePage({ searchParams }: Props) {
-  const resolved = searchParams ? await searchParams : {};
+export default async function ExplorePage() {
   const posts = await fetchPostSummaries();
   const settings = await fetchSettings();
   
   return (
-    <ExploreClient
-      posts={posts}
-      settings={settings}
-      initialCategory={resolved.category ? decodeURIComponent(resolved.category) : undefined}
-    />
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <ExploreClient
+        posts={posts}
+        settings={settings}
+      />
+    </Suspense>
   );
 }

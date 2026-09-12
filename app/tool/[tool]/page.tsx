@@ -111,8 +111,15 @@ export default async function ToolPage({ params }: Props) {
   return <ToolContent posts={posts} settings={settings} />;
 }
 
-// Empty array is required for ISR to actually cache this route per-tool — without it,
-// `revalidate` above is silently ignored and every request falls back to full SSR.
-export function generateStaticParams() {
-  return [];
+export async function generateStaticParams() {
+  try {
+    const [posts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
+    const tools = new Set<string>();
+    (settings.aiTools || []).forEach(t => tools.add(t));
+    (posts || []).forEach(p => getAllTools(p).forEach(t => tools.add(t)));
+    return Array.from(tools).filter(Boolean).map(tool => ({ tool }));
+  } catch (error) {
+    console.error('generateStaticParams error in tool:', error);
+    return [];
+  }
 }

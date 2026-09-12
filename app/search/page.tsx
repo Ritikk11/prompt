@@ -1,7 +1,7 @@
+export const revalidate = 43200;
+
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import SearchClient from './SearchClient';
-
-
 
 export default async function SearchPage() {
   const posts = await fetchPostSummaries();

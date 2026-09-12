@@ -83,8 +83,17 @@ export default async function TagPage({ params }: Props) {
   return <TagContent posts={posts} settings={settings} />;
 }
 
-// Empty array is required for ISR to actually cache this route per-tag — without it,
-// `revalidate` above is silently ignored and every request falls back to full SSR.
-export function generateStaticParams() {
-  return [];
+export async function generateStaticParams() {
+  try {
+    const posts = await fetchPostSummaries();
+    const tagSet = new Set<string>();
+    (posts || []).forEach(p => (p.tags || []).forEach(t => {
+      const clean = t.trim();
+      if (clean) tagSet.add(clean.toLowerCase());
+    }));
+    return Array.from(tagSet).map(tag => ({ tag }));
+  } catch (error) {
+    console.error('generateStaticParams error in tag:', error);
+    return [];
+  }
 }
