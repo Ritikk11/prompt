@@ -36,6 +36,7 @@ export interface Post {
   featured: boolean;
   featuredAt?: string;
   views: number;
+  dailyViews?: Record<string, number>;
   likes: number;
   likedByUser?: boolean;
   likedBy?: string[];

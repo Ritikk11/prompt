@@ -368,9 +368,25 @@ export async function POST(request: Request) {
       else likedBy.delete(user.id);
     }
 
+    let dailyViews = post.dailyViews;
+    if (action === 'view') {
+      const today = new Date().toISOString().slice(0, 10);
+      dailyViews = { ...(post.dailyViews || {}) };
+      dailyViews[today] = (dailyViews[today] || 0) + 1;
+
+      // Keep last 90 days to prevent unbounded size
+      const cutoffDate = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+      for (const d of Object.keys(dailyViews)) {
+        if (d < cutoffDate) {
+          delete dailyViews[d];
+        }
+      }
+    }
+
     const updated = {
       ...post,
       views: action === 'view' ? (post.views || 0) + 1 : post.views || 0,
+      dailyViews,
       likes: action === 'like' ? Math.max(0, (post.likes || 0) + (liked ? 1 : -1)) : post.likes || 0,
       likedBy: action === 'like' && user ? Array.from(likedBy) : post.likedBy,
     };

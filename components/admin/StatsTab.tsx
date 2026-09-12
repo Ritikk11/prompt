@@ -22,7 +22,8 @@ import {
   Check,
   ChevronDown,
   Calendar,
-  Clock
+  Clock,
+  Globe
 } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 import { getAllTools, getToolInfo } from '@/lib/constants';
@@ -70,6 +71,70 @@ export const TIMEFRAME_OPTIONS: TimeframeOption[] = [
   { key: 'custom', label: 'Custom Range', shortLabel: 'Custom' },
 ];
 
+/**
+ * Calculates views for a post in the selected timeframe.
+ * If post.dailyViews is populated, sums matching day buckets.
+ * Otherwise, falls back to post.createdAt check for historical views.
+ */
+export function getPostViewsInTimeframe(
+  post: Post,
+  timeframe: TimeframeFilter,
+  customStart?: string,
+  customEnd?: string
+): number {
+  if (timeframe === 'all') {
+    return post.views || 0;
+  }
+
+  const now = Date.now();
+  const todayKey = new Date(now).toISOString().slice(0, 10);
+  const yesterdayKey = new Date(now - 86400000).toISOString().slice(0, 10);
+
+  if (post.dailyViews && Object.keys(post.dailyViews).length > 0) {
+    if (timeframe === '24h') {
+      return post.dailyViews[todayKey] || 0;
+    }
+    if (timeframe === '48h') {
+      return (post.dailyViews[todayKey] || 0) + (post.dailyViews[yesterdayKey] || 0);
+    }
+    if (timeframe === 'custom') {
+      let sum = 0;
+      const start = customStart || '0000-00-00';
+      const end = customEnd || '9999-99-99';
+      for (const [date, count] of Object.entries(post.dailyViews)) {
+        if (date >= start && date <= end) {
+          sum += count;
+        }
+      }
+      return sum;
+    }
+
+    const opt = TIMEFRAME_OPTIONS.find(o => o.key === timeframe);
+    const days = opt?.days || 1;
+    const cutoffDateKey = new Date(now - days * 86400000).toISOString().slice(0, 10);
+    let sum = 0;
+    for (const [date, count] of Object.entries(post.dailyViews)) {
+      if (date >= cutoffDateKey) {
+        sum += count;
+      }
+    }
+    return sum;
+  }
+
+  // Graceful fallback for historical legacy views recorded before dailyViews tracking:
+  const postTime = new Date(post.createdAt || post.updatedAt || 0).getTime();
+  if (timeframe === 'custom') {
+    const start = customStart ? new Date(customStart).getTime() : 0;
+    const end = customEnd ? new Date(`${customEnd}T23:59:59.999`).getTime() : Infinity;
+    return postTime >= start && postTime <= end ? (post.views || 0) : 0;
+  }
+
+  const opt = TIMEFRAME_OPTIONS.find(o => o.key === timeframe);
+  const days = opt?.days || 1;
+  const cutoff = now - days * 86400000;
+  return postTime >= cutoff ? (post.views || 0) : 0;
+}
+
 export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps) {
   const [search, setSearch] = useState('');
   const [selectedTool, setSelectedTool] = useState('');
@@ -78,30 +143,7 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
   const [timeframe, setTimeframe] = useState<TimeframeFilter>('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
-  const [activeView, setActiveView] = useState<'all' | 'leaderboard' | 'breakdowns'>('all');
-
-  // Filter posts by timeframe first
-  const timeframeFilteredPosts = useMemo(() => {
-    if (timeframe === 'all') return posts;
-
-    if (timeframe === 'custom') {
-      const start = customStartDate ? new Date(customStartDate).getTime() : 0;
-      const end = customEndDate ? new Date(`${customEndDate}T23:59:59.999`).getTime() : Infinity;
-      return posts.filter(p => {
-        const time = new Date(p.createdAt || p.updatedAt || 0).getTime();
-        return time >= start && time <= end;
-      });
-    }
-
-    const opt = TIMEFRAME_OPTIONS.find(o => o.key === timeframe);
-    if (!opt || !opt.days) return posts;
-
-    const cutoff = Date.now() - opt.days * 24 * 60 * 60 * 1000;
-    return posts.filter(p => {
-      const time = new Date(p.createdAt || p.updatedAt || 0).getTime();
-      return time >= cutoff;
-    });
-  }, [posts, timeframe, customStartDate, customEndDate]);
+  const [activeView, setActiveView] = useState<'all' | 'leaderboard' | 'breakdowns' | 'pages'>('all');
 
   const activeTimeframeLabel = useMemo(() => {
     if (timeframe === 'custom') {
@@ -113,17 +155,28 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
     return TIMEFRAME_OPTIONS.find(o => o.key === timeframe)?.label || 'All Time';
   }, [timeframe, customStartDate, customEndDate]);
 
-  // Overall Global KPI Metrics
+  // Overall Global KPI Metrics calculated for the active timeframe
   const metrics = useMemo(() => {
-    const list = timeframeFilteredPosts;
-    const totalViews = list.reduce((acc, p) => acc + (p.views || 0), 0);
-    const totalLikes = list.reduce((acc, p) => acc + (p.likes || p.likedBy?.length || 0), 0);
-    const totalSaves = list.reduce((acc, p) => acc + (p.bookmarkedBy?.length || 0), 0);
-    const avgViews = list.length > 0 ? Math.round(totalViews / list.length) : 0;
-    const avgLikes = list.length > 0 ? (totalLikes / list.length).toFixed(1) : '0';
+    const postViewsMap = new Map<string, number>();
+    let totalViews = 0;
+    let activeInPeriod = 0;
+
+    posts.forEach(p => {
+      const v = getPostViewsInTimeframe(p, timeframe, customStartDate, customEndDate);
+      postViewsMap.set(p.id, v);
+      totalViews += v;
+      if (v > 0) activeInPeriod++;
+    });
+
+    const totalLikes = posts.reduce((acc, p) => acc + (p.likes || p.likedBy?.length || 0), 0);
+    const totalSaves = posts.reduce((acc, p) => acc + (p.bookmarkedBy?.length || 0), 0);
+    const avgViews = posts.length > 0 ? Math.round(totalViews / posts.length) : 0;
+    const avgLikes = posts.length > 0 ? (totalLikes / posts.length).toFixed(1) : '0';
     const engagementRate = totalViews > 0 ? (((totalLikes + totalSaves) / totalViews) * 100).toFixed(1) : '0.0';
 
-    const topPost = [...list].sort((a, b) => (b.views || 0) - (a.views || 0))[0] || null;
+    const sortedByTimeframe = [...posts].sort((a, b) => (postViewsMap.get(b.id) || 0) - (postViewsMap.get(a.id) || 0));
+    const topPost = sortedByTimeframe[0] || null;
+    const topPostViews = topPost ? (postViewsMap.get(topPost.id) || 0) : 0;
 
     return {
       totalViews,
@@ -133,9 +186,12 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
       avgLikes,
       engagementRate,
       topPost,
-      count: list.length,
+      topPostViews,
+      count: posts.length,
+      activeInPeriod,
+      postViewsMap,
     };
-  }, [timeframeFilteredPosts]);
+  }, [posts, timeframe, customStartDate, customEndDate]);
 
   // Available Tools and Categories for Filter Dropdowns
   const availableTools = useMemo(() => {
@@ -151,9 +207,9 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
     return Array.from(set).sort();
   }, [posts]);
 
-  // Filtered & Sorted Posts for the Leaderboard
+  // Filtered & Sorted Posts for the Leaderboard (all posts kept in library)
   const displayPosts = useMemo(() => {
-    let result = [...timeframeFilteredPosts];
+    let result = [...posts];
 
     if (search.trim()) {
       const q = search.trim().toLowerCase();
@@ -179,19 +235,24 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
     }
 
     result.sort((a, b) => {
-      const aViews = a.views || 0;
-      const bViews = b.views || 0;
+      const aPeriodViews = metrics.postViewsMap.get(a.id) || 0;
+      const bPeriodViews = metrics.postViewsMap.get(b.id) || 0;
+      const aTotalViews = a.views || 0;
+      const bTotalViews = b.views || 0;
       const aLikes = a.likes || a.likedBy?.length || 0;
       const bLikes = b.likes || b.likedBy?.length || 0;
       const aSaves = a.bookmarkedBy?.length || 0;
       const bSaves = b.bookmarkedBy?.length || 0;
 
-      if (sortField === 'views') return bViews - aViews;
+      if (sortField === 'views') {
+        if (bPeriodViews !== aPeriodViews) return bPeriodViews - aPeriodViews;
+        return bTotalViews - aTotalViews;
+      }
       if (sortField === 'likes') return bLikes - aLikes;
       if (sortField === 'saves') return bSaves - aSaves;
       if (sortField === 'engagement') {
-        const aRate = aViews > 0 ? (aLikes + aSaves) / aViews : 0;
-        const bRate = bViews > 0 ? (bLikes + bSaves) / bViews : 0;
+        const aRate = aPeriodViews > 0 ? (aLikes + aSaves) / aPeriodViews : 0;
+        const bRate = bPeriodViews > 0 ? (bLikes + bSaves) / bPeriodViews : 0;
         return bRate - aRate;
       }
       if (sortField === 'newest') {
@@ -201,23 +262,21 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
     });
 
     return result;
-  }, [timeframeFilteredPosts, search, selectedTool, selectedCategory, sortField]);
+  }, [posts, metrics.postViewsMap, search, selectedTool, selectedCategory, sortField]);
 
-  // Highest views in display list (for progress bar width scaling)
+  // Highest views in display list for progress bar width scaling
   const maxViewsInList = useMemo(() => {
-    return Math.max(1, ...displayPosts.map(p => p.views || 0));
-  }, [displayPosts]);
+    return Math.max(1, ...displayPosts.map(p => metrics.postViewsMap.get(p.id) || 0));
+  }, [displayPosts, metrics.postViewsMap]);
 
-  // Tool Analytics Breakdown
+  // Tool Analytics Breakdown (deduplicated per post, based on timeframe views)
   const toolStats = useMemo(() => {
     const map = new Map<string, { count: number; views: number; likes: number }>();
-    timeframeFilteredPosts.forEach(p => {
-      const tools = getAllTools(p);
-      const views = p.views || 0;
+    posts.forEach(p => {
+      const tools = Array.from(new Set(getAllTools(p).map(t => t.trim()).filter(Boolean)));
+      const views = metrics.postViewsMap.get(p.id) || 0;
       const likes = p.likes || p.likedBy?.length || 0;
-      tools.forEach(t => {
-        const key = t.trim();
-        if (!key) return;
+      tools.forEach(key => {
         const existing = map.get(key) || { count: 0, views: 0, likes: 0 };
         existing.count += 1;
         existing.views += views;
@@ -226,7 +285,8 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
       });
     });
 
-    const totalViewsAll = Math.max(1, timeframeFilteredPosts.reduce((sum, p) => sum + (p.views || 0), 0));
+    const sumViews = Array.from(map.values()).reduce((sum, d) => sum + d.views, 0);
+    const totalViewsAll = Math.max(1, sumViews > 0 ? sumViews : metrics.totalViews);
 
     return Array.from(map.entries())
       .map(([tool, data]) => ({
@@ -234,31 +294,31 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
         count: data.count,
         views: data.views,
         likes: data.likes,
-        avgViews: Math.round(data.views / data.count),
+        avgViews: data.count > 0 ? Math.round(data.views / data.count) : 0,
         percentage: ((data.views / totalViewsAll) * 100).toFixed(1),
       }))
       .sort((a, b) => b.views - a.views);
-  }, [timeframeFilteredPosts]);
+  }, [posts, metrics.postViewsMap, metrics.totalViews]);
 
-  // Category Analytics Breakdown
+  // Category Analytics Breakdown (deduplicated per post, normalized percentage <= 100%)
   const categoryStats = useMemo(() => {
     const map = new Map<string, { count: number; views: number; likes: number }>();
-    timeframeFilteredPosts.forEach(p => {
-      const cats = [p.category, ...(p.categories || [])].filter(Boolean) as string[];
-      const views = p.views || 0;
+    posts.forEach(p => {
+      const rawCats = [p.category, ...(p.categories || [])].filter(Boolean) as string[];
+      const uniqueCats = Array.from(new Set(rawCats.map(c => c.trim()).filter(Boolean)));
+      const views = metrics.postViewsMap.get(p.id) || 0;
       const likes = p.likes || p.likedBy?.length || 0;
-      cats.forEach(c => {
-        const key = c.trim();
-        if (!key) return;
-        const existing = map.get(key) || { count: 0, views: 0, likes: 0 };
+      uniqueCats.forEach(c => {
+        const existing = map.get(c) || { count: 0, views: 0, likes: 0 };
         existing.count += 1;
         existing.views += views;
         existing.likes += likes;
-        map.set(key, existing);
+        map.set(c, existing);
       });
     });
 
-    const totalViewsAll = Math.max(1, timeframeFilteredPosts.reduce((sum, p) => sum + (p.views || 0), 0));
+    const sumViews = Array.from(map.values()).reduce((sum, d) => sum + d.views, 0);
+    const totalViewsAll = Math.max(1, sumViews > 0 ? sumViews : metrics.totalViews);
 
     return Array.from(map.entries())
       .map(([category, data]) => ({
@@ -266,23 +326,23 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
         count: data.count,
         views: data.views,
         likes: data.likes,
-        avgViews: Math.round(data.views / data.count),
+        avgViews: data.count > 0 ? Math.round(data.views / data.count) : 0,
         percentage: ((data.views / totalViewsAll) * 100).toFixed(1),
       }))
       .sort((a, b) => b.views - a.views);
-  }, [timeframeFilteredPosts]);
+  }, [posts, metrics.postViewsMap, metrics.totalViews]);
 
-  // Top Tags by Views
+  // Top Tags by Views in Timeframe
   const topTags = useMemo(() => {
     const map = new Map<string, { count: number; views: number }>();
-    timeframeFilteredPosts.forEach(p => {
-      (p.tags || []).forEach(t => {
-        const key = t.trim();
-        if (!key) return;
-        const existing = map.get(key) || { count: 0, views: 0 };
+    posts.forEach(p => {
+      const views = metrics.postViewsMap.get(p.id) || 0;
+      const uniqueTags = Array.from(new Set((p.tags || []).map(t => t.trim()).filter(Boolean)));
+      uniqueTags.forEach(t => {
+        const existing = map.get(t) || { count: 0, views: 0 };
         existing.count += 1;
-        existing.views += (p.views || 0);
-        map.set(key, existing);
+        existing.views += views;
+        map.set(t, existing);
       });
     });
 
@@ -290,27 +350,65 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
       .map(([tag, data]) => ({ tag, count: data.count, views: data.views }))
       .sort((a, b) => b.views - a.views)
       .slice(0, 16);
-  }, [timeframeFilteredPosts]);
+  }, [posts, metrics.postViewsMap]);
+
+  // Page Performance Breakdown (per post URL and discovery hubs)
+  const pageStats = useMemo(() => {
+    const promptPages = posts.map(p => {
+      const pViews = metrics.postViewsMap.get(p.id) || 0;
+      return {
+        path: `/${p.slug || p.id}`,
+        title: p.title,
+        type: 'Prompt Detail',
+        timeframeViews: pViews,
+        totalViews: p.views || 0,
+        category: p.category || (p.categories && p.categories[0]) || 'General',
+        tools: getAllTools(p),
+      };
+    }).sort((a, b) => b.timeframeViews - a.timeframeViews || b.totalViews - a.totalViews);
+
+    return {
+      promptPages,
+    };
+  }, [posts, metrics.postViewsMap]);
 
   // Export Stats as CSV
   const exportCsv = () => {
-    const headers = ['ID', 'Title', 'Slug', 'Category', 'AI Tools', 'Tags', 'Views', 'Likes', 'Saves', 'Engagement Rate %', 'Status', 'Created At'];
+    const headers = [
+      'ID',
+      'Title',
+      'Slug',
+      `Views (${activeTimeframeLabel})`,
+      'Total Lifetime Views',
+      'Likes',
+      'Saves',
+      'Engagement Rate %',
+      'Category',
+      'AI Tools',
+      'Tags',
+      'Status',
+      'Created At'
+    ];
     const rows = displayPosts.map(p => {
+      const periodViews = metrics.postViewsMap.get(p.id) || 0;
       const views = p.views || 0;
       const likes = p.likes || p.likedBy?.length || 0;
       const saves = p.bookmarkedBy?.length || 0;
-      const engRate = views > 0 ? (((likes + saves) / views) * 100).toFixed(1) : '0.0';
+      const engRate = periodViews > 0
+        ? (((likes + saves) / periodViews) * 100).toFixed(1)
+        : (views > 0 ? (((likes + saves) / views) * 100).toFixed(1) : '0.0');
       return [
         `"${p.id}"`,
         `"${(p.title || '').replace(/"/g, '""')}"`,
         `"${p.slug || ''}"`,
-        `"${p.category || ''}"`,
-        `"${getAllTools(p).join(', ')}"`,
-        `"${(p.tags || []).join(', ')}"`,
+        periodViews,
         views,
         likes,
         saves,
         engRate,
+        `"${p.category || ''}"`,
+        `"${getAllTools(p).join(', ')}"`,
+        `"${(p.tags || []).join(', ')}"`,
         `"${p.status || 'published'}"`,
         `"${p.createdAt}"`,
       ].join(',');
@@ -320,7 +418,7 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `promptmatrix_stats_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `promptmatrix_stats_${timeframe}_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -384,11 +482,12 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
 
           {/* View Mode Switcher */}
           <div className="flex items-center gap-1.5 rounded-2xl border border-white/80 bg-white/60 p-1 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06] shadow-sm shrink-0 self-start xl:self-auto">
-            {(['all', 'leaderboard', 'breakdowns'] as const).map(v => {
+            {(['all', 'leaderboard', 'breakdowns', 'pages'] as const).map(v => {
               const labels = {
                 all: 'Overview',
                 leaderboard: 'Top Prompts',
                 breakdowns: 'Distributions',
+                pages: 'Page Stats',
               };
               const active = activeView === v;
               return (
@@ -447,7 +546,7 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
               </button>
             )}
             <span className="text-[11px] text-surface-400 dark:text-surface-500 ml-auto">
-              Filtered by prompt publication date
+              Filtered by recorded view dates
             </span>
           </div>
         )}
@@ -457,11 +556,11 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
           <div className="flex items-center gap-2">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary-500" />
             <span>
-              Showing metrics for: <strong className="text-surface-800 dark:text-surface-200 font-semibold">{activeTimeframeLabel}</strong>
+              Showing view metrics for: <strong className="text-surface-800 dark:text-surface-200 font-semibold">{activeTimeframeLabel}</strong>
             </span>
           </div>
-          <span className="font-mono text-[11px]">
-            {metrics.count} {metrics.count === 1 ? 'prompt' : 'prompts'}
+          <span className="font-mono text-[11px] text-surface-500">
+            {metrics.activeInPeriod} of {metrics.count} prompts active in this period
           </span>
         </div>
       </div>
@@ -541,7 +640,7 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
             </span>
           </div>
           <p className="text-2xl font-black text-surface-950 dark:text-white tracking-tight truncate" title={metrics.topPost?.title || 'None'}>
-            {metrics.topPost ? (metrics.topPost.views || 0).toLocaleString() : '0'}
+            {metrics.topPostViews.toLocaleString()}
           </p>
           <p className="mt-1 text-xs font-medium text-surface-500 dark:text-surface-400 truncate" title={metrics.topPost?.title || 'None'}>
             {metrics.topPost ? metrics.topPost.title : 'No prompts'}
@@ -771,12 +870,15 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
             ) : (
               <div className="divide-y divide-black/[0.06] dark:divide-white/[0.08]">
                 {displayPosts.map((post, index) => {
-                  const views = post.views || 0;
+                  const timeframeViews = metrics.postViewsMap.get(post.id) || 0;
+                  const totalViews = post.views || 0;
                   const likes = post.likes || post.likedBy?.length || 0;
                   const saves = post.bookmarkedBy?.length || 0;
-                  const engRate = views > 0 ? (((likes + saves) / views) * 100).toFixed(1) : '0.0';
+                  const engRate = timeframeViews > 0
+                    ? (((likes + saves) / timeframeViews) * 100).toFixed(1)
+                    : (totalViews > 0 ? (((likes + saves) / totalViews) * 100).toFixed(1) : '0.0');
                   const tools = getAllTools(post);
-                  const viewWidthPercent = Math.max(2, Math.min(100, Math.round((views / maxViewsInList) * 100)));
+                  const viewWidthPercent = Math.max(2, Math.min(100, Math.round((timeframeViews / maxViewsInList) * 100)));
 
                   return (
                     <div
@@ -800,32 +902,35 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
                               🥉
                             </span>
                           ) : (
-                            <span className="text-surface-400 text-[11px]">#{index + 1}</span>
+                            <span className="text-surface-400">#{index + 1}</span>
                           )}
                         </div>
 
                         {/* Thumbnail */}
-                        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-black/5 dark:border-white/10 bg-surface-100 dark:bg-surface-800">
-                          {post.thumbnailUrl ? (
+                        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-black/5 dark:border-white/10 bg-black/5 dark:bg-white/5">
+                          {post.images?.[0]?.url ? (
                             <Image
-                              src={post.thumbnailUrl}
+                              src={post.images[0].url}
                               alt={post.title}
                               fill
-                              className="object-cover"
                               sizes="44px"
-                              loading="lazy"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                              referrerPolicy="no-referrer"
                             />
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center text-surface-400 text-xs">
-                              Prompt
+                            <div className="flex h-full w-full items-center justify-center text-surface-400">
+                              <Sparkles className="w-4 h-4" />
                             </div>
                           )}
                         </div>
 
-                        {/* Info */}
+                        {/* Title & Metadata */}
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <h4 className="truncate text-xs font-bold text-surface-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                            <h4
+                              className="font-bold text-xs sm:text-sm text-surface-900 dark:text-white truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors"
+                              title={post.title}
+                            >
                               {post.title}
                             </h4>
                             {post.featured && (
@@ -853,11 +958,20 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
                       {/* Right: Metrics + Actions */}
                       <div className="flex items-center justify-between sm:justify-end gap-5 shrink-0 pl-10 sm:pl-0">
                         {/* Views Column with Bar */}
-                        <div className="w-28 text-right space-y-1">
+                        <div className="w-32 text-right space-y-1">
                           <div className="flex items-center justify-end gap-1.5 font-mono text-xs font-bold text-surface-950 dark:text-white">
                             <Eye className="w-3.5 h-3.5 text-sky-500" />
-                            <span>{views.toLocaleString()}</span>
+                            <span>{timeframeViews.toLocaleString()}</span>
                           </div>
+                          {timeframe !== 'all' ? (
+                            <div className="text-[10px] text-surface-400 font-mono">
+                              Total: {totalViews.toLocaleString()}
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-surface-400 font-mono">
+                              All Time
+                            </div>
+                          )}
                           <div className="h-1.5 w-full rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
                             <div
                               className="h-full rounded-full bg-sky-500 transition-all duration-300"
@@ -912,6 +1026,79 @@ export default function StatsTab({ posts, settings, onEditPost }: StatsTabProps)
                 })}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Page & Route Views Section */}
+      {(activeView === 'all' || activeView === 'pages') && (
+        <div className="rounded-3xl border border-white/80 bg-white/60 p-6 shadow-sm backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.06] space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
+                <Globe className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-surface-950 dark:text-white">Page Performance & Route Stats</h3>
+                <p className="text-xs text-surface-500 dark:text-surface-400">
+                  Readership per prompt page and content routes in {activeTimeframeLabel}
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-mono font-bold text-surface-500 dark:text-surface-400">
+              {pageStats.promptPages.length} prompt pages
+            </span>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-black/[0.06] bg-white/40 dark:border-white/10 dark:bg-white/[0.03]">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-black/[0.06] bg-black/[0.02] dark:border-white/[0.08] dark:bg-white/[0.02] text-surface-500 dark:text-surface-400 font-semibold uppercase tracking-wider text-[10px]">
+                <tr>
+                  <th className="py-3 px-4">Page / Route</th>
+                  <th className="py-3 px-4">Category</th>
+                  <th className="py-3 px-4 text-right">Views ({activeTimeframeLabel})</th>
+                  <th className="py-3 px-4 text-right">Lifetime Views</th>
+                  <th className="py-3 px-4 text-center">Preview</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-black/[0.06] dark:divide-white/[0.08]">
+                {pageStats.promptPages.map((page, idx) => (
+                  <tr key={page.path} className="hover:bg-white/70 dark:hover:bg-white/[0.04] transition-colors">
+                    <td className="py-3 px-4 max-w-xs sm:max-w-md">
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-mono text-[11px] text-surface-400 w-5">#{idx + 1}</span>
+                        <div className="min-w-0">
+                          <p className="font-bold text-surface-900 dark:text-white truncate" title={page.title}>{page.title}</p>
+                          <p className="font-mono text-[10px] text-surface-400 truncate">{page.path}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-semibold text-primary-600 dark:text-primary-300 border border-primary-500/20">
+                        {page.category}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-right font-mono font-bold text-surface-900 dark:text-white">
+                      {page.timeframeViews.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4 text-right font-mono text-surface-500 dark:text-surface-400">
+                      {page.totalViews.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <Link
+                        href={page.path}
+                        prefetch={false}
+                        target="_blank"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-primary-600 hover:text-primary-700 dark:text-primary-400 transition-colors p-1"
+                        title="Open page live"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
