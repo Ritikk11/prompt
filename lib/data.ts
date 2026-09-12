@@ -87,6 +87,8 @@ const defaultSettings: SiteSettings = {
     "premiumPrice": 5,
     "userProfiles": false,
     "mobileColumns": 1,
+    "showLikeCount": false,
+    "showViewCount": false,
     "infiniteScroll": true,
     "premiumPrompts": false,
     "smartTemplates": true,
@@ -127,9 +129,7 @@ const defaultSettings: SiteSettings = {
     "Vintage",
     "Food"
   ],
-  "adminEmails": [
-    "ritikkewat11@gmail.com"
-  ],
+  "adminEmails": [],
   "headerLinks": [
     {
       "id": "e61198ab-e5ff-46f7-b5c6-d295f1db257c",
@@ -140,6 +140,16 @@ const defaultSettings: SiteSettings = {
       "id": "d793a34d-170e-40c9-bf3c-93394812e140",
       "href": "/tool/gemini",
       "label": "Gemini Prompts"
+    }
+  ],
+  "headerMenus": [
+    {
+      "id": "menu-1",
+      "label": "Tools",
+      "itemNavKeys": [
+        "link:e61198ab-e5ff-46f7-b5c6-d295f1db257c",
+        "link:d793a34d-170e-40c9-bf3c-93394812e140"
+      ]
     }
   ],
   "heroEnabled": true,
@@ -172,7 +182,9 @@ const defaultSettings: SiteSettings = {
     "indexNowKey": "f758ffa479794b339f86d7830b83ebfe",
     "enableIndexNow": true
   },
-  "socialLinks": {},
+  "socialLinks": {
+    "pinterest": "https://in.pinterest.com/aipromptmatrix"
+  },
   "toolDetails": {
     "Grok": {
       "logo": "https://i.ibb.co/XrRWC5c6/Grok-logo.webp",
@@ -224,7 +236,7 @@ const defaultSettings: SiteSettings = {
   },
   "heroAutoPlay": true,
   "heroSubtitle": "Explore a curated collection of breathtaking AI-generated imagery and their full prompts. Learn, inspire, and create.",
-  "heroHideStats": false,
+  "heroHideStats": true,
   "heroContent": {
     "kickerPrefix": "Curated prompts for",
     "accentPattern": "(ai\\s+prompts?|image\\s+prompts?)",
@@ -389,7 +401,7 @@ const defaultSettings: SiteSettings = {
       "itemDescription": "Curated prompt direction"
     }
   },
-  "siteDescription": "AI PromptMatrix is your ultimate collection of curated image prompts for Chatgpt, Gemini, Nano Banana Pro, Grok, and more. Discover, copy and create stunning artwork instantly.",
+  "siteDescription": "Explore curated AI image prompts for ChatGPT, Gemini, Nano Banana Pro, Grok, and more. Copy, customize, and create stunning images.",
   "articleOverrides": {},
   "footerLinkGroups": [
     {
@@ -471,18 +483,18 @@ const defaultSettings: SiteSettings = {
   "exploreFilterItems": [
     {
       "type": "tool",
-      "label": "ChatGPT | GPT image 2",
-      "value": "ChatGPT"
-    },
-    {
-      "type": "tool",
-      "label": "Gemini | Nano Banana Pro",
+      "label": "Gemini",
       "value": "Gemini"
     },
     {
       "type": "tag",
       "label": "Photography",
       "value": "Photography"
+    },
+    {
+      "type": "tool",
+      "label": "ChatGPT",
+      "value": "ChatGPT"
     },
     {
       "type": "category",
@@ -503,6 +515,31 @@ const defaultSettings: SiteSettings = {
       "type": "tag",
       "label": "Selfie",
       "value": "Selfie"
+    },
+    {
+      "type": "tag",
+      "label": "Anime",
+      "value": "Anime"
+    },
+    {
+      "type": "tag",
+      "label": "Character",
+      "value": "Character"
+    },
+    {
+      "type": "tag",
+      "label": "Collage",
+      "value": "Collage"
+    },
+    {
+      "type": "tag",
+      "label": "Products",
+      "value": "Products"
+    },
+    {
+      "type": "tag",
+      "label": "Ads",
+      "value": "Ads"
     }
   ],
   "homepageBlockOrder": [
