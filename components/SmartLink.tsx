@@ -13,7 +13,7 @@ export default function SmartLink({ href, className, children, onClick }: { href
   }
 
   return (
-    <Link href={href || '/'} className={className} onClick={onClick}>
+    <Link href={href || '/'} prefetch={false} className={className} onClick={onClick}>
       {children}
     </Link>
   );

@@ -89,7 +89,10 @@ export async function generateStaticParams() {
     const tagSet = new Set<string>();
     (posts || []).forEach(p => (p.tags || []).forEach(t => {
       const clean = t.trim();
-      if (clean) tagSet.add(clean.toLowerCase());
+      if (clean) {
+        tagSet.add(clean.toLowerCase());
+        tagSet.add(clean);
+      }
     }));
     return Array.from(tagSet).map(tag => ({ tag }));
   } catch (error) {

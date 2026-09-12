@@ -649,7 +649,7 @@ export default function PostContent({
     const firstToolInfo = firstTool ? getToolInfo(firstTool, settings?.toolDetails) : null;
     const itemImageUrl = getThumbnailImageUrl(item.thumbnailUrl || item.images?.[0]?.url || '', { width: 220, quality: 72 });
     return (
-    <Link href={`/${item.slug || item.id}`} className="group flex gap-3 rounded-2xl border border-white/80 bg-white/60 p-2.5 shadow-sm backdrop-blur-xl backdrop-saturate-150 transition-[border-color,box-shadow] duration-300 hover:border-primary-400/60 hover:shadow-md dark:border-white/10 dark:bg-white/[0.08] dark:hover:border-primary-400/50">
+    <Link href={`/${item.slug || item.id}`} prefetch={false} className="group flex gap-3 rounded-2xl border border-white/80 bg-white/60 p-2.5 shadow-sm backdrop-blur-xl backdrop-saturate-150 transition-[border-color,box-shadow] duration-300 hover:border-primary-400/60 hover:shadow-md dark:border-white/10 dark:bg-white/[0.08] dark:hover:border-primary-400/50">
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-black/[0.04] dark:bg-white/[0.06]">
         <LoadingImage src={itemImageUrl} alt={item.title} fill showSkeleton={showSkeleton} className="object-cover transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
       </div>
@@ -1466,7 +1466,8 @@ export default function PostContent({
           {(post.tags || []).map(tag => (
             <Link
               key={tag}
-              href={`/tag/${encodeURIComponent(tag)}`}
+              href={`/tag/${encodeURIComponent(tag.toLowerCase())}`}
+              prefetch={false}
               className="px-4 py-2 rounded-xl text-xs font-bold bg-black/[0.04] dark:bg-white/[0.06] text-surface-600 dark:text-surface-300 hover:bg-primary-500 hover:text-white dark:hover:bg-primary-500 dark:hover:text-white transition-all transform uppercase tracking-wider"
             >
               #{tag}

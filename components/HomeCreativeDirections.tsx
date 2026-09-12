@@ -25,7 +25,7 @@ function countMatches(posts: Post[], item: CreativeDirectionItem) {
 function itemHref(item: CreativeDirectionItem) {
   if (item.type === 'tool') return `/tool/${encodeURIComponent(item.value)}`;
   if (item.type === 'category') return `/explore?category=${encodeURIComponent(item.value)}`;
-  return `/tag/${encodeURIComponent(item.value)}`;
+  return `/tag/${encodeURIComponent(item.value.toLowerCase())}`;
 }
 
 export default function HomeCreativeDirections({ posts, settings }: { posts: Post[]; settings?: SiteSettings }) {

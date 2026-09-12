@@ -115,8 +115,18 @@ export async function generateStaticParams() {
   try {
     const [posts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
     const tools = new Set<string>();
-    (settings.aiTools || []).forEach(t => tools.add(t));
-    (posts || []).forEach(p => getAllTools(p).forEach(t => tools.add(t)));
+    (settings.aiTools || []).forEach(t => {
+      if (t) {
+        tools.add(t);
+        tools.add(t.toLowerCase());
+      }
+    });
+    (posts || []).forEach(p => getAllTools(p).forEach(t => {
+      if (t) {
+        tools.add(t);
+        tools.add(t.toLowerCase());
+      }
+    }));
     return Array.from(tools).filter(Boolean).map(tool => ({ tool }));
   } catch (error) {
     console.error('generateStaticParams error in tool:', error);
