@@ -70,6 +70,14 @@ function RouteChangeComplete({ onRouteChange }: { onRouteChange: () => void }) {
       didMountRef.current = true;
       return;
     }
+    if (!window.location.hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      requestAnimationFrame(() => {
+        if (!window.location.hash && window.scrollY > 0) {
+          window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        }
+      });
+    }
     onRouteChange();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, searchParams]);
@@ -321,12 +329,29 @@ function SiteHeader() {
 
   useEffect(() => stopRouteTimers, [stopRouteTimers]);
 
-  // Close both panels on route change.
+  // Close panels, reset header scroll state, and scroll to top on route change.
   useEffect(() => {
     setMenuOpen(false);
     setActiveMenuId(null);
     setSearchOpen(false);
     setShowLiveResults(false);
+    if (!window.location.hash) {
+      lastScrollYRef.current = 0;
+      setScrolled(false);
+      setIsVisible(true);
+      suppressHideRef.current = true;
+      if (suppressHideTimeoutRef.current) window.clearTimeout(suppressHideTimeoutRef.current);
+      suppressHideTimeoutRef.current = window.setTimeout(() => {
+        suppressHideRef.current = false;
+        suppressHideTimeoutRef.current = null;
+      }, 400);
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      requestAnimationFrame(() => {
+        if (!window.location.hash && window.scrollY > 0) {
+          window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        }
+      });
+    }
   }, [pathname]);
 
   useEffect(() => {

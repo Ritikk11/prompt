@@ -92,7 +92,7 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 /* Match native UI (select dropdowns, date pickers, scrollbars) to the active
