@@ -97,19 +97,21 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const admin = createAdminClient();
-  
-  const { data: globalSettingsRow } = await admin.from('settings').select('data').eq('id', 'global').maybeSingle();
-  const globalSettings = (globalSettingsRow?.data || {}) as SiteSettings;
-  
-  if (globalSettings.maintenanceMode) {
-    if (!(await isCurrentUserAdmin(request))) {
-      return NextResponse.json({ error: 'Service unavailable during maintenance' }, { status: 503 });
-    }
-  }
-
   const body = await request.json().catch(() => null);
   const { action, id, data, liked, text } = body || {};
+
+  const admin = createAdminClient();
+  
+  if (action !== 'view') {
+    const { data: globalSettingsRow } = await admin.from('settings').select('data').eq('id', 'global').maybeSingle();
+    const globalSettings = (globalSettingsRow?.data || {}) as SiteSettings;
+    
+    if (globalSettings.maintenanceMode) {
+      if (!(await isCurrentUserAdmin(request))) {
+        return NextResponse.json({ error: 'Service unavailable during maintenance' }, { status: 503 });
+      }
+    }
+  }
 
   if (action === 'submit') {
     const user = await getUserFromRequest(request);

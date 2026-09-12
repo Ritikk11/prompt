@@ -501,7 +501,7 @@ function SiteHeader() {
     return item.kind === 'link' ? (
       <SmartLink key={item.navKey} href={item.href} onClick={onNavigate} className={cls}>{inner}</SmartLink>
     ) : (
-      <Link key={item.navKey} href={item.href} onClick={onNavigate} className={cls}>{inner}</Link>
+      <Link key={item.navKey} href={item.href} prefetch={false} onClick={onNavigate} className={cls}>{inner}</Link>
     );
   };
 
@@ -553,7 +553,7 @@ function SiteHeader() {
               return item.kind === 'link' ? (
                 <SmartLink key={item.navKey} href={item.href} className={pill}>{item.label}</SmartLink>
               ) : (
-                <Link key={item.navKey} href={item.href} className={pill}>{item.label}</Link>
+                <Link key={item.navKey} href={item.href} prefetch={false} className={pill}>{item.label}</Link>
               );
             })}
 
@@ -774,7 +774,7 @@ function SiteHeader() {
                   return item.kind === 'link' ? (
                     <SmartLink key={item.navKey} href={item.href} onClick={() => setMenuOpen(false)} className={cls}>{inner}</SmartLink>
                   ) : (
-                    <Link key={item.navKey} href={item.href} onClick={() => setMenuOpen(false)} className={cls}>{inner}</Link>
+                    <Link key={item.navKey} href={item.href} prefetch={false} onClick={() => setMenuOpen(false)} className={cls}>{inner}</Link>
                   );
                 })}
               </div>
