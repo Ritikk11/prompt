@@ -355,7 +355,6 @@ export interface SiteSettings {
   authors?: any;
   categories?: any;
   categoryPresets?: CategoryPreset[];
-  imgbbApiKey?: string;
   defaultAuthorId?: string;
   cloudinaryCloudName?: string;
   cloudinaryUploadPreset?: string;

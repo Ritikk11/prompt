@@ -12,6 +12,7 @@ import AdSlot from '@/components/AdSlot';
 import SiteBackground from '@/components/SiteBackground';
 import MaintenanceBouncer from '@/components/MaintenanceBouncer';
 import { fetchSections, fetchSettings } from '@/lib/data';
+import { stringifyJsonLd } from '@/lib/json-ld';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -234,7 +235,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         )}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: stringifyJsonLd(jsonLd) }}
         />
         
         {/* Google tag (gtag.js) — lazyOnload defers it to browser idle time.

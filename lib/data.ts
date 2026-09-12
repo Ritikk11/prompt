@@ -143,7 +143,6 @@ const defaultSettings: SiteSettings = {
     }
   ],
   "heroEnabled": true,
-  "imgbbApiKey": "2cd70acfe4649cf535a69ec607c85ebd",
   "seoSettings": {
     "redirects": [],
     "robotsText": "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\nDisallow: /api/\nDisallow: /search/\nDisallow: /submit/\nDisallow: /login/\n\nSitemap: https://aipromptmatrix.in/sitemap.xml\nSitemap: https://aipromptmatrix.in/sitemap-prompts.xml",
@@ -729,10 +728,13 @@ function sanitizeSettings(settings: SiteSettings): SiteSettings {
 
 function sanitizePublicSettings(settings: SiteSettings): SiteSettings {
   const sanitized = sanitizeSettings(settings);
-  return {
-    ...sanitized,
-    adminEmails: [],
-  };
+  const {
+    adminEmails: _adminEmails,
+    pinterestSettings: _pinterestSettings,
+    ...publicSettings
+  } = sanitized;
+
+  return publicSettings as SiteSettings;
 }
 
 function publicImageUrl(post: Post) {
@@ -930,7 +932,7 @@ export const fetchSections = cache(async () => {
 export const fetchSettings = cache(async () => {
   try {
     const supabase = createPublicClient();
-    const { data, error } = await supabase.from('settings').select('data').eq('id', 'global').maybeSingle();
+    const { data, error } = await supabase.from('public_settings').select('data').eq('id', 'global').maybeSingle();
     if (error) {
       console.error('Supabase settings fetch error:', error);
       return sanitizePublicSettings(defaultSettings);

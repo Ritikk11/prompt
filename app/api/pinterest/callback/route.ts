@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { requireAdmin } from '@/lib/admin-auth';
 import {
   exchangePinterestCode,
   getPinterestUserAccount,
   getPinterestBoards,
   DEFAULT_PINTEREST_APP_ID,
-  DEFAULT_PINTEREST_APP_SECRET,
   DEFAULT_PINTEREST_BOARD_ID,
   DEFAULT_PINTEREST_BOARD_NAME,
 } from '@/lib/pinterest';
@@ -13,9 +13,21 @@ import type { SiteSettings, PinterestSettings } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+function redirectWithClearedState(url: string) {
+  const response = NextResponse.redirect(url);
+  response.cookies.set('pinterest_oauth_state', '', {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/api/pinterest/callback',
+    maxAge: 0,
+  });
+  return response;
+}
+
+export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
   const error = url.searchParams.get('error');
   const errorDescription = url.searchParams.get('error_description');
 
@@ -23,14 +35,28 @@ export async function GET(request: Request) {
 
   if (error) {
     console.error('Pinterest OAuth denied or failed:', error, errorDescription);
-    return NextResponse.redirect(
+    return redirectWithClearedState(
       `${adminBaseUrl}&pinterest_error=${encodeURIComponent(errorDescription || error)}`
     );
   }
 
   if (!code) {
-    return NextResponse.redirect(
+    return redirectWithClearedState(
       `${adminBaseUrl}&pinterest_error=${encodeURIComponent('No authorization code received from Pinterest.')}`
+    );
+  }
+
+  const expectedState = request.cookies.get('pinterest_oauth_state')?.value || '';
+  if (!state || !expectedState || state !== expectedState) {
+    return redirectWithClearedState(
+      `${adminBaseUrl}&pinterest_error=${encodeURIComponent('Pinterest authorization expired. Please start the connection again.')}`
+    );
+  }
+
+  const auth = await requireAdmin(request);
+  if (auth.error) {
+    return redirectWithClearedState(
+      `${adminBaseUrl}&pinterest_error=${encodeURIComponent('Please sign in as an administrator before connecting Pinterest.')}`
     );
   }
 
@@ -53,8 +79,9 @@ export async function GET(request: Request) {
     };
 
     const currentPinterest = siteSettings.pinterestSettings || {};
+    const { appSecret: _storedAppSecret, ...storedPinterest } = currentPinterest;
     const appId = currentPinterest.appId || DEFAULT_PINTEREST_APP_ID;
-    const appSecret = currentPinterest.appSecret || DEFAULT_PINTEREST_APP_SECRET;
+    const appSecret = currentPinterest.appSecret || process.env.PINTEREST_APP_SECRET;
 
     // Exchange the authorization code for tokens
     const tokens = await exchangePinterestCode(
@@ -74,9 +101,8 @@ export async function GET(request: Request) {
       || boards[0];
 
     const updatedPinterestSettings: PinterestSettings = {
-      ...currentPinterest,
+      ...storedPinterest,
       appId,
-      appSecret,
       boardId: targetBoard?.id || currentPinterest.boardId || DEFAULT_PINTEREST_BOARD_ID,
       boardName: targetBoard?.name || currentPinterest.boardName || DEFAULT_PINTEREST_BOARD_NAME,
       accessToken: tokens.accessToken,
@@ -98,15 +124,15 @@ export async function GET(request: Request) {
 
     if (upsertError) {
       console.error('Failed to save Pinterest settings in Supabase:', upsertError);
-      return NextResponse.redirect(
+      return redirectWithClearedState(
         `${adminBaseUrl}&pinterest_error=${encodeURIComponent(upsertError.message)}`
       );
     }
 
-    return NextResponse.redirect(`${adminBaseUrl}&pinterest=connected`);
+    return redirectWithClearedState(`${adminBaseUrl}&pinterest=connected`);
   } catch (err: any) {
     console.error('Pinterest OAuth callback error:', err);
-    return NextResponse.redirect(
+    return redirectWithClearedState(
       `${adminBaseUrl}&pinterest_error=${encodeURIComponent(err.message || 'OAuth token exchange failed')}`
     );
   }

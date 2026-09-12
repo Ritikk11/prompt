@@ -11,7 +11,6 @@ import { createClient } from '@/lib/supabase-client';
 import type { SiteSettings, PinterestSettings, Post } from '@/lib/types';
 import {
   DEFAULT_PINTEREST_APP_ID,
-  DEFAULT_PINTEREST_APP_SECRET,
   DEFAULT_PINTEREST_BOARD_ID,
   DEFAULT_PINTEREST_BOARD_NAME,
 } from '@/lib/pinterest';
@@ -89,7 +88,10 @@ export default function PinterestTab({
   }, []);
 
   useEffect(() => {
-    fetchStatus();
+    const timer = window.setTimeout(() => {
+      void fetchStatus();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [fetchStatus]);
 
   // Check URL params for oauth feedback
@@ -98,7 +100,9 @@ export default function PinterestTab({
     const params = new URLSearchParams(window.location.search);
     if (params.get('pinterest') === 'connected') {
       showToast('Pinterest connected successfully! Board verified.', 'success');
-      fetchStatus();
+      window.setTimeout(() => {
+        void fetchStatus();
+      }, 0);
       onRefreshData?.();
     } else if (params.get('pinterest_error')) {
       showToast(`Pinterest connection failed: ${params.get('pinterest_error')}`, 'error');
@@ -108,9 +112,6 @@ export default function PinterestTab({
   const handleConnect = () => {
     if (status?.authUrl) {
       window.location.href = status.authUrl;
-    } else {
-      const url = `https://www.pinterest.com/oauth/?client_id=${currentPinterest.appId || DEFAULT_PINTEREST_APP_ID}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/pinterest/callback')}&response_type=code&scope=boards:read,boards:write,pins:read,pins:write,user_accounts:read`;
-      window.location.href = url;
     }
   };
 
@@ -422,12 +423,12 @@ export default function PinterestTab({
           <Field label="App Secret Key">
             <input
               type="password"
-              value={currentPinterest.appSecret || DEFAULT_PINTEREST_APP_SECRET}
-              onChange={(e) => handleUpdateConfig('appSecret', e.target.value)}
+              value=""
+              readOnly
               className={adminInput}
-              placeholder="c14f46..."
+              placeholder="Stored as PINTEREST_APP_SECRET on the server"
             />
-            <p className="text-xs text-surface-500 mt-1">Your Pinterest App Secret (used for token exchange & refresh)</p>
+            <p className="text-xs text-surface-500 mt-1">Set this as the PINTEREST_APP_SECRET server secret. It is no longer stored in browser settings.</p>
           </Field>
 
           <Field label="Board ID">

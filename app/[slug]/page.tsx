@@ -8,6 +8,8 @@ import { notFound } from 'next/navigation';
 import { preload, preconnect } from 'react-dom';
 import { getPostBySlugOrId, fetchPostSummaries, getSeoPageBySlug, isPublicPost, fetchSettings } from '@/lib/data';
 import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
+import { stringifyJsonLd } from '@/lib/json-ld';
+import { isSafePublicSlug } from '@/lib/slug-guard';
 import PostContent from '@/components/PostContent';
 import PostCard from '@/components/PostCard';
 import FilterChipRail from '@/components/FilterChipRail';
@@ -44,6 +46,13 @@ function strengthenMetaDescription(desc: string, post: Post): string {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  if (!isSafePublicSlug(slug)) {
+    return {
+      title: 'Page Not Found | AI PromptMatrix',
+      description: 'The requested page could not be found.',
+    };
+  }
+
   const post = await getPostBySlugOrId(slug);
   const seoPage = post ? null : await getSeoPageBySlug(slug);
 
@@ -129,6 +138,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PostPage({ params }: Props) {
   const { slug } = await params;
+  if (!isSafePublicSlug(slug)) notFound();
+
   const [post, seoPage] = await Promise.all([
     getPostBySlugOrId(slug),
     getSeoPageBySlug(slug),
@@ -362,18 +373,18 @@ export default async function PostPage({ params }: Props) {
         <>
           <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(mainJsonLd) }}
+            dangerouslySetInnerHTML={{ __html: stringifyJsonLd(mainJsonLd) }}
           />
           {breadcrumbJsonLd && (
             <script
               type="application/ld+json"
-              dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+              dangerouslySetInnerHTML={{ __html: stringifyJsonLd(breadcrumbJsonLd) }}
             />
           )}
           {faqJsonLd && (
             <script
               type="application/ld+json"
-              dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+              dangerouslySetInnerHTML={{ __html: stringifyJsonLd(faqJsonLd) }}
             />
           )}
         </>

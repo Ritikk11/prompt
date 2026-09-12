@@ -29,6 +29,22 @@ CREATE TABLE IF NOT EXISTS newsletter_subscribers (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS upload_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS upload_events_user_created_at_idx
+ON upload_events (user_id, created_at DESC);
+
+CREATE OR REPLACE VIEW public_settings AS
+SELECT
+  id,
+  data - 'adminEmails' - 'imgbbApiKey' - 'pinterestSettings' AS data
+FROM settings
+WHERE id = 'global';
+
 -- Enable Realtime for all tables
 alter publication supabase_realtime add table settings;
 alter publication supabase_realtime add table sections;
@@ -44,9 +60,13 @@ ALTER TABLE sections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "seoPages" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE upload_events ENABLE ROW LEVEL SECURITY;
 
 -- Settings Policies
-CREATE POLICY "Allow public read access on settings" ON settings FOR SELECT USING (true);
+CREATE POLICY "Block public read access on settings" ON settings FOR SELECT USING (false);
+
+REVOKE SELECT ON settings FROM anon, authenticated;
+GRANT SELECT ON public_settings TO anon, authenticated;
 
 -- Sections Policies
 CREATE POLICY "Allow public read access on sections" ON sections FOR SELECT USING (true);
@@ -68,3 +88,11 @@ USING (true)
 WITH CHECK (true);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON newsletter_subscribers TO service_role;
+
+CREATE POLICY "Service role can manage upload events" ON upload_events
+FOR ALL
+TO service_role
+USING (true)
+WITH CHECK (true);
+
+GRANT SELECT, INSERT, DELETE ON upload_events TO service_role;

@@ -3,7 +3,6 @@ import { Children, type ReactNode, useState, useEffect } from 'react';
 import { Check, Copy } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
 import 'highlight.js/styles/github-dark.css';
 
 type CalloutType = 'tip' | 'warning' | 'info' | 'note' | 'success' | 'danger' | 'highlight' | 'quote' | 'prompt' | 'example' | 'creative' | 'model' | 'important';
@@ -288,7 +287,6 @@ function renderMarkdown(content: string) {
   return (
     <Markdown
       remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeRaw]}
       components={{
         h2: (props) => (
           <h2 className="mt-10 mb-6 border-b border-white/70 pb-3 text-3xl font-bold tracking-tight text-surface-900 dark:border-white/10 dark:text-white">

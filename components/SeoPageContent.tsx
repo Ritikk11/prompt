@@ -12,6 +12,7 @@ import ScrollReveal from '@/components/ScrollReveal';
 import FilterChipRail from '@/components/FilterChipRail';
 import MasonryGrid from '@/components/MasonryGrid';
 import PostCard from '@/components/PostCard';
+import { stringifyJsonLd } from '@/lib/json-ld';
 
 interface SeoPageContentProps {
   seoPage: any;
@@ -142,7 +143,7 @@ export default function SeoPageContent({ seoPage, allPosts, settings }: SeoPageC
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: stringifyJsonLd(jsonLd) }}
       />
 
       {/* Breadcrumbs */}

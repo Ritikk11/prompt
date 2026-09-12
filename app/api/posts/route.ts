@@ -64,6 +64,30 @@ function isPublicPost(post: Pick<Post, 'status' | 'visibility'>) {
   return (post.status === 'published' || !post.status) && post.visibility !== 'private';
 }
 
+function cleanTextValue(value: unknown, max = 500) {
+  return typeof value === 'string' ? value.trim().slice(0, max) : '';
+}
+
+function cleanStringArray(value: unknown, maxItems = 30, maxLength = 80) {
+  return Array.isArray(value)
+    ? value
+        .map((item) => cleanTextValue(item, maxLength))
+        .filter(Boolean)
+        .slice(0, maxItems)
+    : [];
+}
+
+function slugifySubmission(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s_-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 72);
+}
+
 export async function GET() {
   const posts = await fetchPostSummaries();
   return NextResponse.json(
@@ -120,27 +144,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid post' }, { status: 400 });
     }
 
-    // Post ids are client-chosen and user-visible. If this id exists, only its
-    // original author may overwrite it — otherwise any logged-in user could
-    // clobber someone else's post via upsert.
-    if (!/^[A-Za-z0-9_-]{1,80}$/.test(post.id)) {
-      return NextResponse.json({ error: 'Invalid post id' }, { status: 400 });
-    }
-    const { data: existingRow, error: existingError } = await admin
-      .from('posts')
-      .select('data')
-      .eq('id', post.id)
-      .maybeSingle();
-    if (existingError) return NextResponse.json({ error: existingError.message }, { status: 500 });
-    if (existingRow?.data) {
-      const existing = existingRow.data as Post;
-      if (existing.authorId && existing.authorId !== user.id) {
-        return NextResponse.json({ error: 'A post with this id already exists' }, { status: 409 });
-      }
+    const submissionId = crypto.randomUUID();
+    const slugBase = slugifySubmission(post.slug || post.title) || `submission-${submissionId.slice(0, 8)}`;
+    const submittedAt = new Date().toISOString();
+    const images = (post.images || [])
+      .slice(0, 30)
+      .map((image: any, index) => ({
+        id: cleanTextValue(image?.id, 80) || `${submissionId}-${index + 1}`,
+        url: cleanTextValue(image?.url, 2000),
+        urls: cleanStringArray(image?.urls, 10, 2000),
+        prompt: cleanTextValue(image?.prompt, 12000),
+        aiTool: cleanTextValue(image?.aiTool, 80),
+        aiTools: cleanStringArray(image?.aiTools || [image?.aiTool], 12, 80),
+        model: cleanTextValue(image?.model, 120) || undefined,
+      }))
+      .filter((image) => image.url && image.prompt);
+
+    if (images.length === 0) {
+      return NextResponse.json({ error: 'Invalid post images' }, { status: 400 });
     }
 
     const cleanPost: Post = {
-      ...post,
+      id: submissionId,
+      slug: `${slugBase}-${submissionId.slice(0, 8)}`,
+      title: cleanTextValue(post.title, 180),
+      description: cleanTextValue(post.description, 2000),
+      extendedDescription: cleanTextValue(post.extendedDescription, 30000) || undefined,
+      thumbnailUrl: cleanTextValue(post.thumbnailUrl, 2000) || images[0]?.url,
+      referenceImages: cleanStringArray(post.referenceImages, 10, 2000),
+      images,
+      tags: cleanStringArray(post.tags, 30, 80),
+      category: cleanTextValue(post.category, 80) || undefined,
+      categories: cleanStringArray(post.categories, 10, 80),
+      aiTools: cleanStringArray(post.aiTools || images.flatMap((image) => image.aiTools || [image.aiTool]), 12, 80),
       authorId: user.id,
       authorName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Creator',
       authorUsername: user.user_metadata?.username || user.email?.split('@')[0] || 'creator',
@@ -148,13 +184,17 @@ export async function POST(request: Request) {
       status: settings.features.userSubmissionsAutoApprove ? 'published' : 'pending',
       visibility: 'public',
       featured: false,
-      views: post.views || 0,
-      likes: post.likes || 0,
-      createdAt: post.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      views: 0,
+      likes: 0,
+      comments: [],
+      isPremium: false,
+      isTemplate: Boolean(post.isTemplate),
+      templateVariables: cleanStringArray(post.templateVariables, 30, 80),
+      createdAt: submittedAt,
+      updatedAt: submittedAt,
     };
 
-    const submissionInsert = await admin.from('submissions').upsert({
+    const submissionInsert = await admin.from('submissions').insert({
       id: cleanPost.id,
       user_id: user.id,
       data: cleanPost,

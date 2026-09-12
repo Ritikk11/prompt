@@ -36,7 +36,8 @@ export async function GET(request: Request) {
     const unpinnedPosts = publishedPosts.filter(p => !p.pinterestPinId);
 
     const appId = pSettings.appId || DEFAULT_PINTEREST_APP_ID;
-    const authUrl = getPinterestAuthUrl(appId, redirectUri);
+    const oauthState = crypto.randomUUID();
+    const authUrl = getPinterestAuthUrl(appId, redirectUri, oauthState);
 
     let isConnected = false;
     let boards: Array<{ id: string; name: string; privacy?: string }> = [];
@@ -53,7 +54,7 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       connected: isConnected,
       username: pSettings.username || 'aipromptmatrix',
       appId,
@@ -70,6 +71,14 @@ export async function GET(request: Request) {
       },
       connectionError,
     });
+    response.cookies.set('pinterest_oauth_state', oauthState, {
+      httpOnly: true,
+      secure: url.protocol === 'https:',
+      sameSite: 'lax',
+      path: '/api/pinterest/callback',
+      maxAge: 10 * 60,
+    });
+    return response;
   } catch (err: any) {
     console.error('Pinterest status error:', err);
     return NextResponse.json(

@@ -7,6 +7,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import ArticleCard, { formatArticleDate } from '@/components/ArticleCard';
 import ArticleThumbnail from '@/components/ArticleThumbnail';
 import ScrollReveal from '@/components/ScrollReveal';
+import { stringifyJsonLd } from '@/lib/json-ld';
 
 function extractFaqsFromMarkdown(markdown: string) {
   const faqs: { question: string; answer: string }[] = [];
@@ -120,12 +121,12 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-8 sm:px-6 sm:py-12 lg:px-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: stringifyJsonLd(jsonLd) }} />
       {breadcrumbJsonLd && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: stringifyJsonLd(breadcrumbJsonLd) }} />
       )}
       {faqJsonLd && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: stringifyJsonLd(faqJsonLd) }} />
       )}
       <Link href={listHref} className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-500 hover:text-primary-600">
         <ArrowLeft className="h-3.5 w-3.5" /> {listLabel}

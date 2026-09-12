@@ -1,7 +1,6 @@
 import type { Post, SiteSettings, PinterestSettings } from './types';
 
 export const DEFAULT_PINTEREST_APP_ID = '1610432';
-export const DEFAULT_PINTEREST_APP_SECRET = 'c14f464099e8ac7a703b452d947adc2b55f99d5e';
 export const DEFAULT_PINTEREST_BOARD_ID = '1124703775633314110';
 export const DEFAULT_PINTEREST_BOARD_NAME = 'Ai Image Prompts';
 export const DEFAULT_PINTEREST_REDIRECT_URI = 'https://aipromptmatrix.in/api/pinterest/callback';
@@ -20,12 +19,21 @@ export const PINTEREST_SCOPES = [
   'user_accounts:read'
 ].join(',');
 
+function resolvePinterestAppSecret(secret?: string): string {
+  const resolved = secret || process.env.PINTEREST_APP_SECRET || '';
+  if (!resolved) {
+    throw new Error('Pinterest app secret is not configured. Set PINTEREST_APP_SECRET in the server environment.');
+  }
+  return resolved;
+}
+
 /**
  * Builds the Pinterest OAuth 2.0 authorization URL
  */
 export function getPinterestAuthUrl(
   clientId = DEFAULT_PINTEREST_APP_ID,
-  redirectUri = DEFAULT_PINTEREST_REDIRECT_URI
+  redirectUri = DEFAULT_PINTEREST_REDIRECT_URI,
+  state?: string
 ): string {
   const params = new URLSearchParams({
     client_id: clientId,
@@ -33,6 +41,7 @@ export function getPinterestAuthUrl(
     response_type: 'code',
     scope: PINTEREST_SCOPES,
   });
+  if (state) params.set('state', state);
   return `https://www.pinterest.com/oauth/?${params.toString()}`;
 }
 
@@ -42,10 +51,10 @@ export function getPinterestAuthUrl(
 export async function exchangePinterestCode(
   code: string,
   clientId = DEFAULT_PINTEREST_APP_ID,
-  clientSecret = DEFAULT_PINTEREST_APP_SECRET,
+  clientSecret?: string,
   redirectUri = DEFAULT_PINTEREST_REDIRECT_URI
 ) {
-  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+  const credentials = Buffer.from(`${clientId}:${resolvePinterestAppSecret(clientSecret)}`).toString('base64');
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     code,
@@ -80,9 +89,9 @@ export async function exchangePinterestCode(
 export async function refreshPinterestToken(
   refreshToken: string,
   clientId = DEFAULT_PINTEREST_APP_ID,
-  clientSecret = DEFAULT_PINTEREST_APP_SECRET
+  clientSecret?: string
 ) {
-  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+  const credentials = Buffer.from(`${clientId}:${resolvePinterestAppSecret(clientSecret)}`).toString('base64');
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
     refresh_token: refreshToken,
@@ -173,7 +182,7 @@ export async function getValidPinterestAccessToken(supabaseAdmin: any): Promise<
   const pSettings: PinterestSettings = siteSettings.pinterestSettings || {};
 
   const appId = pSettings.appId || DEFAULT_PINTEREST_APP_ID;
-  const appSecret = pSettings.appSecret || DEFAULT_PINTEREST_APP_SECRET;
+  const appSecret = pSettings.appSecret || process.env.PINTEREST_APP_SECRET;
   const boardId = pSettings.boardId || DEFAULT_PINTEREST_BOARD_ID;
 
   if (!pSettings.accessToken && !pSettings.refreshToken) {
@@ -408,7 +417,7 @@ export async function publishPostToPinterest(
       const currentSettings: PinterestSettings = row?.data?.pinterestSettings || {};
       if (currentSettings.refreshToken) {
         const appId = currentSettings.appId || DEFAULT_PINTEREST_APP_ID;
-        const appSecret = currentSettings.appSecret || DEFAULT_PINTEREST_APP_SECRET;
+        const appSecret = currentSettings.appSecret || process.env.PINTEREST_APP_SECRET;
         const refreshed = await refreshPinterestToken(currentSettings.refreshToken, appId, appSecret);
 
         accessToken = refreshed.accessToken;
