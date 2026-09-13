@@ -98,7 +98,7 @@ export default function PostContent({
 
   const fallbackPromptImageUrl = '';
   const originalMainImageUrl = post.thumbnailUrl || post.images?.[0]?.url || fallbackPromptImageUrl;
-  const mainPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 1280, quality: 78 });
+  const mainPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 768, quality: 78 });
   const backgroundPromptImageUrl = mainPromptImageUrl;
 
   const heroImageSrcSet = [360, 480, 768, 1280]
@@ -215,9 +215,11 @@ export default function PostContent({
       case 'v2': // Immersive Blur Background
         return (
           <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-white/[0.08] shadow-2xl group min-h-[500px] flex items-end">
-            {/* Decorative background blur sharing mainPromptImageUrl to reuse browser cache */}
+            {/* Decorative background blur sharing heroImageSrcSet and HERO_SIZES to reuse browser cache */}
             <img
               src={mainPromptImageUrl}
+              srcSet={heroImageSrcSet}
+              sizes={HERO_SIZES}
               alt=""
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40 blur-xl scale-110"
@@ -286,6 +288,8 @@ export default function PostContent({
               <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-black/[0.04] dark:bg-white/[0.06] flex items-center justify-center p-6 lg:p-10">
                 <img
                   src={mainPromptImageUrl}
+                  srcSet={heroImageSrcSet}
+                  sizes={HERO_SIZES}
                   alt=""
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-0 h-full w-full object-cover blur-3xl opacity-20 scale-125 z-0"

@@ -197,7 +197,7 @@ export default async function PostPage({ params }: Props) {
   const isSameAsMain = galleryFirstImage && (galleryFirstImage === mainImage || !post.thumbnailUrl || post.thumbnailUrl === galleryFirstImage);
   const preloadTargets = [
     mainImage && {
-      url: getPromptImageUrl(mainImage, { width: 1280, quality: 78 }),
+      url: getPromptImageUrl(mainImage, { width: 768, quality: 78 }),
       srcSet: buildSrcSet(mainImage, [360, 480, 768, 1280]),
       sizes: '(max-width: 640px) 200px, (max-width: 1024px) 240px, 320px',
       priority: 'high' as const,
