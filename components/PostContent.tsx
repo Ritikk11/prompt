@@ -215,12 +215,12 @@ export default function PostContent({
       case 'v2': // Immersive Blur Background
         return (
           <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-white/[0.08] shadow-2xl group min-h-[500px] flex items-end">
-            {/* Decorative background blur. Already preloaded at low priority in page.tsx;
-                dropping priority here prevents network scheduling competition with the foreground LCP image. */}
+            {/* Decorative background blur with priority so mobile LCP paints immediately without waiting */}
             <Image
               src={backgroundPromptImageUrl}
               alt="bg"
               fill
+              priority
               className="object-cover opacity-40 blur-xl scale-110"
               referrerPolicy="no-referrer"
             />
@@ -231,8 +231,8 @@ export default function PostContent({
                 alt={post.title}
                 showSkeleton={showSkeleton}
                 priority
-                wrapperClassName="inline-flex max-w-full shrink-0 justify-center rounded-2xl shadow-2xl"
-                className="h-auto max-h-[300px] w-auto max-w-full rounded-2xl object-contain sm:max-h-[360px] lg:max-h-[460px]"
+                wrapperClassName="inline-flex max-w-full shrink-0 justify-center rounded-2xl shadow-2xl aspect-square w-[260px] sm:w-[320px] lg:w-[400px]"
+                className="h-auto max-h-[260px] sm:max-h-[320px] lg:max-h-[400px] w-auto max-w-full rounded-2xl object-contain"
                 referrerPolicy="no-referrer"
                 width={1280}
                 height={1280}
