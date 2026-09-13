@@ -2,11 +2,11 @@
 
 import NextLink from 'next/link';
 import { useRouter } from 'next/navigation';
-import { forwardRef, type ComponentProps } from 'react';
+import { forwardRef, useEffect, type ComponentProps } from 'react';
 import { normalizeDiscoveryHref } from '@/lib/prefetch-policy';
 
 type Props = Omit<ComponentProps<typeof NextLink>, 'prefetch'> & {
-  prefetch?: boolean | 'intent';
+  prefetch?: boolean | 'intent' | 'eager';
 };
 
 const prefetchedUrls = new Set<string>();
@@ -25,7 +25,7 @@ function canPrefetch() {
 }
 
 const PrefetchLink = forwardRef<HTMLAnchorElement, Props>(function PrefetchLink(
-  { prefetch = true, onMouseEnter, onFocus, onTouchStart, href: rawHref, ...props },
+  { prefetch = true, onMouseEnter, onFocus, onTouchStart, onPointerDown, href: rawHref, ...props },
   forwardedRef
 ) {
   const router = useRouter();
@@ -57,6 +57,19 @@ const PrefetchLink = forwardRef<HTMLAnchorElement, Props>(function PrefetchLink(
     }
   };
 
+  useEffect(() => {
+    if (prefetch === 'eager' && canPrefetch()) {
+      const win = typeof window !== 'undefined' ? window : null;
+      if (!win) return;
+      const idleCallback = win.requestIdleCallback || ((cb: () => void) => win.setTimeout(cb, 120));
+      const cancelIdle = win.cancelIdleCallback || win.clearTimeout;
+      const idleId = idleCallback(() => {
+        warm();
+      });
+      return () => cancelIdle(idleId as any);
+    }
+  }, [prefetch, hrefString]);
+
   return (
     <NextLink
       {...props}
@@ -73,6 +86,10 @@ const PrefetchLink = forwardRef<HTMLAnchorElement, Props>(function PrefetchLink(
       }}
       onTouchStart={(event) => {
         onTouchStart?.(event);
+        if (!event.defaultPrevented) warm();
+      }}
+      onPointerDown={(event) => {
+        onPointerDown?.(event);
         if (!event.defaultPrevented) warm();
       }}
     />

@@ -167,7 +167,7 @@ export default function PromptItemCard({
             onTouchEnd={handleTouchEnd}
           >
             <div
-              className="relative flex w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-black/[0.04] dark:bg-white/[0.06]"
+              className="relative flex w-full min-h-[300px] sm:min-h-[420px] cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-black/[0.04] dark:bg-white/[0.06]"
               onClick={() => openLightbox(images, safeActiveIdx, index, tools)}
             >
               <LoadingImg
@@ -176,7 +176,10 @@ export default function PromptItemCard({
                 sizes={GALLERY_SIZES}
                 alt={`${post.title}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}`}
                 showSkeleton={showSkeleton}
-                priority={false}
+                priority={index === 0}
+                loading={index < 2 ? 'eager' : 'lazy'}
+                fetchPriority={index === 0 ? 'high' : 'auto'}
+                decoding={index === 0 ? 'sync' : 'async'}
                 wrapperClassName="w-full"
                 className="block h-auto w-full rounded-xl transition-transform duration-300 ease-out group-hover/img:scale-[1.02]"
                 referrerPolicy="no-referrer"

@@ -61,12 +61,18 @@ export default function LoadingImage({
   const timedOut = isCurrentSrc && imageState.timedOut;
 
   useEffect(() => {
-    // One-shot check for every image: failures that fired before hydration
-    // never reach onError, leaving the broken img collapsed with no fallback.
+    // One-shot check for every image: if the image already finished loading
+    // (from browser HTTP cache or before hydration), update state immediately
+    // rather than staying hidden behind opacity-0 for extra frames.
     const initial = imageRef.current;
-    if (initial?.complete && initial.naturalWidth === 0) {
-      setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
-      return;
+    if (initial?.complete) {
+      if (initial.naturalWidth > 0) {
+        setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+        return;
+      } else {
+        setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
+        return;
+      }
     }
     if (!enabled) return;
     let completeCheck = 0;
@@ -197,11 +203,18 @@ export function LoadingImg({
   const timedOut = isCurrentSrc && imageState.timedOut;
 
   useEffect(() => {
-    // One-shot: failures that fired before hydration never reach onError.
+    // One-shot: if the image already finished loading (from HTTP cache or
+    // before hydration), update state immediately so it is not hidden behind
+    // opacity-0 for extra frames.
     const initial = imageRef.current;
-    if (initial?.complete && initial.naturalWidth === 0) {
-      setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
-      return;
+    if (initial?.complete) {
+      if (initial.naturalWidth > 0) {
+        setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+        return;
+      } else {
+        setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
+        return;
+      }
     }
     if (!enabled) return;
     let completeCheck = 0;
@@ -257,13 +270,18 @@ export function LoadingImg({
   const transitionClass = enabled
     ? `${hasTransition ? '' : 'transition-opacity duration-300 '}${settled ? 'opacity-100' : 'opacity-0'}`
     : '';
-  // On failure the image contributes no height (broken img has no natural
-  // dimensions), which collapses the wrapper to a sliver and squashes the
-  // fallback. Reserve real space so the placeholder stays readable.
-  const failedSizing = failed ? ' flex aspect-[4/5] max-h-[85vh] w-full items-center justify-center' : '';
+  // While loading or on failure, an unrendered/broken image contributes no
+  // intrinsic height, which collapses the wrapper to a thin sliver and squashes
+  // the shimmer/fallback. Reserve real space until settled so the skeleton
+  // presents a full card preview and the browser can measure layout accurately.
+  const hasExplicitSizing = /\b(aspect-|h-|max-h-)\b/.test(wrapperClassName);
+  const placeholderSizing =
+    (!settled || failed) && !hasExplicitSizing
+      ? ' flex aspect-[4/5] sm:aspect-square max-h-[85vh] min-h-[280px] w-full items-center justify-center'
+      : (failed ? ' flex aspect-[4/5] max-h-[85vh] w-full items-center justify-center' : '');
 
   return (
-    <span className={`relative block overflow-hidden${failedSizing} ${wrapperClassName}`}>
+    <span className={`relative block overflow-hidden${placeholderSizing} ${wrapperClassName}`}>
       {(enabled || failed) && !settled ? (
         <span className="pointer-events-none absolute inset-0 z-[1] image-shimmer" aria-hidden="true" />
       ) : null}
