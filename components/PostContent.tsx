@@ -1,678 +1,464 @@
-'use client';
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-
 import Image from 'next/image';
-import { Copy, Check, Eye, Heart, Tag, ChevronLeft, ChevronRight, Clock, ArrowRight, Lock, Download, ZoomIn, X, DownloadCloud, Image as ImageIcon, Compass, Lightbulb, Bookmark, Share2, ExternalLink, Link as LinkIcon, MessageCircle, Layers, ClipboardCheck, Sparkles } from 'lucide-react';
-import { useData } from '@/components/context/DataContext';
-import { getGridClasses } from '@/lib/utils';
-import { getDefaultImageModel, getToolInfo, getAllTools, getToolForImageModel } from '@/lib/constants';
+import {
+  Clock,
+  ArrowRight,
+  Compass,
+  Lightbulb,
+  ExternalLink,
+  Check,
+  Copy,
+  DownloadCloud,
+  Image as ImageIcon,
+  Eye,
+  Layers,
+  ClipboardCheck,
+} from 'lucide-react';
+import type { Post, SiteSettings } from '@/lib/types';
+import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
 import { isUserOwnedPost, EDITORIAL_TEAM_NAME } from '@/lib/authors';
-import TemplatePrompt from '@/components/TemplatePrompt';
-import { getSupabaseClient } from '@/lib/supabase-lazy';
-import type { User } from '@supabase/supabase-js';
-import type { Post, ImagePrompt, ShareTarget } from '@/lib/types';
-
-import CopyButton from '@/components/CopyButton';
-import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
-import dynamic from 'next/dynamic';
-
-const MarkdownRenderer = dynamic(() => import('@/components/MarkdownRenderer'), { ssr: true });
-const PostCard = dynamic(() => import('@/components/PostCard'), { ssr: true });
-import MasonryGrid from '@/components/MasonryGrid';
 import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
+import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
+import ToolBadge from '@/components/ToolBadge';
 import AdSlot from '@/components/AdSlot';
 import ScrollReveal from '@/components/ScrollReveal';
-import ToolBadge from '@/components/ToolBadge';
-import { getRecommendedPosts } from '@/lib/related-posts';
+import MasonryGrid from '@/components/MasonryGrid';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
-const GALLERY_SIZES = '(max-width: 768px) calc(100vw - 48px), 680px';
-const buildGallerySrcSet = (url?: string) => {
-  if (!url) return undefined;
-  return [480, 768, 1100]
-    .map((w) => `${getPromptImageUrl(url, { width: w, quality: 78 })} ${w}w`)
-    .join(', ');
-};
+// Client Islands
+import PostPageProvider from '@/components/post/PostPageProvider';
+import PostHeroStats from '@/components/post/PostHeroStats';
+import PromptItemCard from '@/components/post/PromptItemCard';
+import PostShareCard from '@/components/post/PostShareCard';
+import CommentsSection from '@/components/post/CommentsSection';
+import CopyCollectionBanner from '@/components/post/CopyCollectionBanner';
 
-function PromptImageGallery({
-  img,
-  index,
-  postTitle,
-  showSkeleton,
-  settings,
-  onOpenLightbox,
-  onDownload,
-}: {
-  img: ImagePrompt;
-  index: number;
-  postTitle: string;
-  showSkeleton: boolean;
-  settings: any;
-  onOpenLightbox: (images: string[], initialIndex: number, promptIndex: number, tools: string[]) => void;
-  onDownload: (url: string, filename: string) => void;
-}) {
-  const images = useMemo(() => {
-    if (img.urls && img.urls.length > 0) return img.urls.filter(Boolean);
-    return [img.url].filter(Boolean);
-  }, [img.urls, img.url]);
-
-  const [activeIdx, setActiveIdx] = useState(0);
-  const touchStartX = useRef<number>(0);
-  const touchEndX = useRef<number>(0);
-
-  const safeActiveIdx = activeIdx < images.length ? activeIdx : 0;
-  const activeUrl = images[safeActiveIdx] || img.url || '';
-  const tools = img.aiTool ? img.aiTool.split(',').map((t) => t.trim()).filter(Boolean) : [];
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current || images.length <= 1) return;
-    const diff = touchStartX.current - touchEndX.current;
-    if (Math.abs(diff) > 45) {
-      if (diff > 0) {
-        // Swiped Left -> Next
-        setActiveIdx((prev) => (prev + 1) % images.length);
-      } else {
-        // Swiped Right -> Prev
-        setActiveIdx((prev) => (prev - 1 + images.length) % images.length);
-      }
-    }
-    touchStartX.current = 0;
-    touchEndX.current = 0;
-  };
-
-  const prevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveIdx((prev) => (prev - 1 + images.length) % images.length);
-  };
-
-  const nextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveIdx((prev) => (prev + 1) % images.length);
-  };
-
-  return (
-    <div className="relative self-start p-3 sm:p-4">
-      <div 
-        className="relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-white/60 bg-white/25 p-2 dark:border-white/10 dark:bg-white/[0.06] group/img select-none"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <div
-          className="relative flex w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-black/[0.04] dark:bg-white/[0.06]"
-          onClick={() => onOpenLightbox(images, safeActiveIdx, index, tools)}
-        >
-          <LoadingImg
-            src={getPromptImageUrl(activeUrl || '', { width: 1100, quality: 78 })}
-            srcSet={buildGallerySrcSet(activeUrl)}
-            sizes={GALLERY_SIZES}
-            alt={`${postTitle}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}`}
-            showSkeleton={showSkeleton}
-            priority={index === 0 && safeActiveIdx === 0}
-            wrapperClassName="w-full"
-            className="block h-auto w-full rounded-xl transition-transform duration-300 ease-out group-hover/img:scale-[1.02]"
-            referrerPolicy="no-referrer"
-          />
-        </div>
-
-        {/* Top-Left Tool Badges */}
-        <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-2 pointer-events-none">
-          {tools.map((tool) => {
-            const info = getToolInfo(tool, settings?.toolDetails);
-            return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="sm" />;
-          })}
-        </div>
-
-        {/* Top-Right: Prompt Number & Image Counter */}
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 pointer-events-none">
-          {images.length > 1 && (
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-primary-600/90 text-white backdrop-blur-md border border-white/20 uppercase tracking-wider shadow-lg">
-              {safeActiveIdx + 1} / {images.length}
-            </span>
-          )}
-          <span className="px-2.5 py-1.5 rounded-full text-[9px] font-bold bg-black/50 text-white backdrop-blur-md border border-white/10 uppercase tracking-widest shadow-xl">
-            PROMPT #{index + 1}
-          </span>
-        </div>
-
-        {/* Desktop Side Chevron Arrows on Hover */}
-        {images.length > 1 && (
-          <>
-            <button
-              onClick={prevImage}
-              aria-label="Previous variation"
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md opacity-0 group-hover/img:opacity-100 transition-all hover:scale-110 shadow-xl hidden sm:flex items-center justify-center"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={nextImage}
-              aria-label="Next variation"
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md opacity-0 group-hover/img:opacity-100 transition-all hover:scale-110 shadow-xl hidden sm:flex items-center justify-center"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </>
-        )}
-
-        {/* In-Image Floating Bottom Bar (Thumbnails & Action Buttons) */}
-        <div className="absolute inset-x-2 bottom-2 z-20 pointer-events-none flex items-end justify-between gap-2 p-2 rounded-b-xl bg-gradient-to-t from-black/45 via-black/10 to-transparent pt-8">
-          {/* Floating Mini-Thumbnails (Small size, optimized) */}
-          {images.length > 1 ? (
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pointer-events-auto py-1 max-w-[calc(100%-96px)]">
-              {images.map((u, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveIdx(i);
-                  }}
-                  className={`relative flex-none w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden transition-all duration-200 ${
-                    i === safeActiveIdx
-                      ? 'ring-2 ring-primary-500 scale-105 opacity-100 shadow-md'
-                      : 'opacity-60 hover:opacity-100 scale-95 hover:scale-100 border border-white/30'
-                  }`}
-                  title={`Variation ${i + 1}`}
-                >
-                  <img
-                    src={getThumbnailImageUrl(u, { width: 90, quality: 65 })}
-                    alt={`Thumb ${i + 1}`}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                    referrerPolicy="no-referrer"
-                  />
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div />
-          )}
-
-          {/* Action buttons (Download & Fullscreen) with True Frosted Glassmorphism */}
-          <div className="flex items-center gap-2 pointer-events-auto ml-auto">
-            <button
-              title="Download image"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (activeUrl) onDownload(activeUrl, `prompt_${postTitle}_${index + 1}_v${safeActiveIdx + 1}.png`);
-              }}
-              className="p-2.5 sm:p-3 rounded-full bg-white/20 hover:bg-white/35 active:bg-white/40 text-white backdrop-blur-xl border border-white/35 hover:border-white/60 hover:scale-110 active:scale-95 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-            <button
-              title="View fullscreen"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenLightbox(images, safeActiveIdx, index, tools);
-              }}
-              className="p-2.5 sm:p-3 rounded-full bg-white/20 hover:bg-white/35 active:bg-white/40 text-white backdrop-blur-xl border border-white/35 hover:border-white/60 hover:scale-110 active:scale-95 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
-            >
-              <ZoomIn className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+interface PostContentProps {
+  post: Post;
+  settings: SiteSettings;
+  relatedPosts?: Post[];
+  recommendedPosts?: Post[];
 }
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
-const WhatsAppLogo = ({ className = '' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
-    <path d="M12.04 2a9.89 9.89 0 0 0-8.44 15.03L2.5 22l5.08-1.06A9.9 9.9 0 1 0 12.04 2Zm0 1.8a8.1 8.1 0 0 1 6.88 12.37 8.1 8.1 0 0 1-10.98 2.94l-.34-.2-2.8.59.6-2.72-.22-.35A8.09 8.09 0 0 1 12.04 3.8Zm-3.1 4.16c-.17 0-.43.06-.66.31-.23.25-.88.86-.88 2.1s.9 2.43 1.03 2.6c.13.16 1.75 2.8 4.34 3.81 2.15.85 2.6.68 3.06.64.47-.04 1.52-.62 1.74-1.22.21-.59.21-1.1.15-1.21-.07-.11-.24-.17-.5-.31-.27-.13-1.53-.76-1.77-.84-.24-.09-.42-.13-.6.13-.17.26-.68.84-.84 1.01-.15.17-.31.19-.58.06-.26-.13-1.11-.41-2.12-1.31-.78-.7-1.31-1.56-1.46-1.82-.15-.26-.02-.4.12-.53.12-.12.27-.31.4-.47.13-.15.17-.26.26-.43.09-.18.04-.33-.02-.46-.07-.13-.58-1.43-.82-1.96-.2-.45-.42-.46-.62-.47h-.53Z" />
-  </svg>
-);
-
-const XLogo = ({ className = '' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
-    <path d="M13.74 10.62 21.05 2h-1.73l-6.35 7.48L7.9 2H2.05l7.67 11.31L2.05 22h1.73l6.71-7.9L15.86 22h5.85l-7.97-11.38Zm-2.38 2.8-.78-1.13L4.4 3.32h2.67l4.99 7.24.78 1.13 6.48 9.42h-2.67l-5.29-7.69Z" />
-  </svg>
-);
-
-const InstagramLogo = ({ className = '' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none">
-    <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="2" />
-    <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
-    <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" />
-  </svg>
-);
-
-const FacebookLogo = ({ className = '' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
-    <path d="M14 8.3V6.9c0-.7.46-.86.78-.86h1.98V3.02L14.03 3C11 3 10.3 5.26 10.3 6.7v1.6H8v3.1h2.3V21H14v-9.6h2.5l.34-3.1H14Z" />
-  </svg>
-);
-
-const PinterestLogo = ({ className = '' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
-    <path d="M12.04 2C6.58 2 3 5.75 3 10.45c0 2.18 1.22 4.9 3.17 5.76.3.14.46.08.53-.2.05-.22.32-1.29.44-1.79.04-.16.02-.3-.11-.45-.64-.76-1.15-2.14-1.15-3.43 0-3.28 2.48-6.45 6.7-6.45 3.65 0 6.2 2.48 6.2 6.03 0 4.01-2.03 6.79-4.67 6.79-1.46 0-2.55-1.2-2.2-2.67.42-1.76 1.23-3.65 1.23-4.92 0-1.13-.61-2.08-1.87-2.08-1.48 0-2.67 1.53-2.67 3.58 0 1.31.44 2.19.44 2.19l-1.79 7.56c-.3 1.27-.18 3.05-.05 4.2.06.51.72.63.95.18.6-1.09 1.57-2.88 1.91-4.13.13-.49.68-2.58.68-2.58.53 1.01 2.06 1.86 3.69 1.86 4.85 0 8.35-4.46 8.35-9.99C22.78 5.35 18.73 2 12.04 2Z" />
-  </svg>
-);
 
 const defaultKeepExploring = {
-  title: 'Keep exploring',
-  description: 'Browse more prompt pages with examples, model notes, and copy-ready creative workflows.',
-  links: [
-    { label: 'Image prompt library', href: '/explore', icon: 'image' },
-    { label: 'Poster and portrait ideas', href: '/tag/poster', icon: 'layers' },
-    { label: 'Copy-ready creative workflows', href: '/search?q=workflow', icon: 'clipboard' },
-  ],
-  ctaLabel: 'Open prompt library',
+  title: 'Keep Exploring',
+  description: 'Find more creative inspiration from our expanding prompt directory.',
+  ctaLabel: 'Explore All Prompts',
   ctaHref: '/explore',
+  links: [
+    { label: 'Browse Latest Prompts', href: '/section/latest-prompts', icon: 'image' },
+    { label: 'Trending Prompt Collections', href: '/section/popular-prompts', icon: 'layers' },
+    { label: 'Browse by AI Tool', href: '/tool/chatgpt', icon: 'clipboard' },
+  ],
 };
 
+const HERO_SIZES = '(max-width: 640px) 200px, (max-width: 1024px) 240px, 320px';
+
 export default function PostContent({
-  post: initialPost,
-  relatedPosts,
-  recommendedPosts: serverRecommendedPosts = [],
-}: {
-  post: Post;
-  relatedPosts: Post[];
-  recommendedPosts?: Post[];
-}) {
-  const { incrementViews, toggleLike, toggleBookmark, settings, posts } = useData();
-  const router = useRouter();
-  const pathname = usePathname();
-  const contextPost = posts.find(p => p.id === initialPost?.id);
-  const contextHasPrompts = contextPost?.images?.some((image) => image.prompt?.trim());
-  const post = useMemo(() => (
-    contextHasPrompts ? contextPost! : {
-      ...initialPost,
-      views: contextPost?.views ?? initialPost.views,
-      likes: contextPost?.likes ?? initialPost.likes,
-      likedByUser: contextPost?.likedByUser ?? initialPost.likedByUser,
-      bookmarkedByUser: contextPost?.bookmarkedByUser ?? initialPost.bookmarkedByUser,
-    }
-  ), [contextHasPrompts, contextPost, initialPost]);
-  
-  const viewIncrementedRef = useRef(false);
-  const showSkeleton = settings.features?.skeletonLoaders ?? false;
-  const showLikeCount = settings.features?.showLikeCount ?? true;
-  const showViewCount = settings.features?.showViewCount ?? true;
-
-  const [lightboxState, setLightboxState] = useState<{
-    images: string[];
-    activeImageIndex: number;
-    promptIndex: number;
-    tools: string[];
-  } | null>(null);
-  const [isLightboxClosing, setIsLightboxClosing] = useState(false);
-
-  const closeLightbox = useCallback(() => {
-    setIsLightboxClosing(true);
-    setTimeout(() => {
-      setLightboxState(null);
-      setIsLightboxClosing(false);
-    }, 130);
-  }, []);
-
-  const openLightbox = useCallback((images: string[], initialIndex: number, promptIndex: number, tools: string[]) => {
-    setIsLightboxClosing(false);
-    setLightboxState({ images, activeImageIndex: initialIndex, promptIndex, tools });
-  }, []);
-
-  useEffect(() => {
-    if (!lightboxState) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeLightbox();
-      if (e.key === 'ArrowLeft' && lightboxState.images.length > 1) {
-        setLightboxState(prev => prev ? ({
-          ...prev,
-          activeImageIndex: (prev.activeImageIndex - 1 + prev.images.length) % prev.images.length
-        }) : null);
-      }
-      if (e.key === 'ArrowRight' && lightboxState.images.length > 1) {
-        setLightboxState(prev => prev ? ({
-          ...prev,
-          activeImageIndex: (prev.activeImageIndex + 1) % prev.images.length
-        }) : null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxState, closeLightbox]);
-  const [user, setUser] = useState<User | null>(null);
-  const [expandedPrompts, setExpandedPrompts] = useState<Record<string, boolean>>({});
-  const [shareFeedback, setShareFeedback] = useState('');
-  const [tryFeedback, setTryFeedback] = useState('');
-  const [commentText, setCommentText] = useState('');
-  const [commentSubmitting, setCommentSubmitting] = useState(false);
-  const [commentState, setCommentState] = useState(() => ({
-    postId: post.id,
-    items: post.comments || [],
-  }));
-  const comments = commentState.postId === post.id ? commentState.items : (post.comments || []);
-
-  useEffect(() => {
-    // If login/user profiles are disabled, we do not need to check for a logged in user at all.
-    // This saves downloading and executing the 50KB Supabase bundle.
-    if (!settings.features?.userProfiles) return;
-
-    let unsubscribe: (() => void) | undefined;
-    let cancelled = false;
-    let timeoutId: number;
-
-    const initAuth = () => {
-      getSupabaseClient().then((supabase) => {
-        if (cancelled) return;
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (!cancelled) setUser(session?.user ?? null);
-        });
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-          setUser(session?.user ?? null);
-        });
-        unsubscribe = () => subscription.unsubscribe();
-      }).catch((error) => {
-        console.error("Auth init error:", error);
-      });
-    };
-
-    // Defer Supabase auth initialization to free up the main thread during initial hydration on mobile
-    timeoutId = window.setTimeout(initAuth, 2000);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timeoutId);
-      if (unsubscribe) unsubscribe();
-    };
-  }, [settings.features?.userProfiles]);
-
-  const hasTemplateVariables = (prompt: string) => /(?:\[[^\]]+\]|\{[^}]+\})/.test(prompt);
-
-  const trackEvent = (eventName: string, params: Record<string, string | number | boolean> = {}) => {
-    if (typeof window === 'undefined') return;
-    const gtag = (window as any).gtag;
-    if (typeof gtag === 'function') {
-      gtag('event', eventName, { post_id: post.id, post_slug: post.slug, ...params });
-    }
-  };
-
-  const handleBookmark = async () => {
-    if (!user) {
-      handleLogin();
-      return;
-    }
-    try {
-      const saved = await toggleBookmark(post.id, post);
-      if (saved !== null) trackEvent(saved ? 'prompt_saved' : 'prompt_unsaved');
-    } catch (error: any) {
-      alert(error?.message || 'Could not update bookmark.');
-    }
-  };
-
-  const handleSubmitComment = async () => {
-    if (!user) {
-      handleLogin();
-      return;
-    }
-    const text = commentText.trim();
-    if (text.length < 2) return;
-    setCommentSubmitting(true);
-    try {
-      const supabase = await getSupabaseClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch('/api/posts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        },
-        body: JSON.stringify({ action: 'comment', id: post.id, text }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || 'Could not post comment');
-      trackEvent('comment_submitted', { status: json.comment?.status || 'unknown' });
-      setCommentState(prev => {
-        const currentItems = prev.postId === post.id ? prev.items : (post.comments || []);
-        return { postId: post.id, items: [...currentItems, json.comment] };
-      });
-      setCommentText('');
-    } catch (error: any) {
-      alert(error?.message || 'Could not post comment.');
-    } finally {
-      setCommentSubmitting(false);
-    }
-  };
-
-  const handleDownload = async (url: string, filename: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      console.error('Download failed:', error);
-      window.open(url, '_blank');
-    }
-  };
-
-  const handleLogin = () => {
-    router.push(`/login?redirectTo=${encodeURIComponent(pathname)}`);
-  };
-
-  const heroTools = post ? getAllTools(post) : [];
-  const primaryHeroToolInfo = heroTools.length > 0 ? getToolInfo(heroTools[0], settings?.toolDetails) : { color: '', logo: '', logoScale: undefined };
-  const heroToolInfo = primaryHeroToolInfo;
-  const heroToolName = heroTools.join(' + ');
-  const fallbackPromptImageUrl = '';
-  const originalMainImageUrl = post.thumbnailUrl || post.images[0]?.url || fallbackPromptImageUrl;
-  const mainPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 1280, quality: 78 });
-  const backgroundPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 720, quality: 60 });
-  const displayPromptImageUrl = (url?: string, width = 1200) => getPromptImageUrl(url || fallbackPromptImageUrl, { width, quality: 78 });
-  const displayReferenceImageUrl = (url?: string) => getThumbnailImageUrl(url, { width: 760, quality: 74 });
-
-  // Responsive variants via the Cloudflare edge resizer: phones get ~480-768px,
-  // desktops 1100-1280px. Each (image x width) pair is one "unique
-  // transformation" against the 5k/mo Cloudflare quota, cached at the edge.
-  // Originals on uploads.aipromptmatrix.in stay untouched.
-  // NOTE: these strings must stay in sync with the LCP preloads in
-  // app/[slug]/page.tsx or the browser fetches the LCP image twice.
-  // Hero renders ~200-240px wide (h-300/360px × ~2:3 aspect), desktop ~307px.
-  // sizes must reflect that or 2.6x-DPR phones pick 960w for a 239px render
-  // (flagged by PageSpeed). Now: 768w mobile, 1280w only on dense desktops.
-  const HERO_SIZES = '(max-width: 640px) 200px, (max-width: 1024px) 240px, 320px';
-  const buildImageSrcSet = (url: string | undefined, widths: number[], quality: number) =>
-    widths.map((w) => `${getPromptImageUrl(url || fallbackPromptImageUrl, { width: w, quality })} ${w}w`).join(', ');
-  const heroImageSrcSet = buildImageSrcSet(originalMainImageUrl, [480, 768, 1280], 78);
-  const GALLERY_SIZES = '(max-width: 768px) calc(100vw - 48px), 680px';
-  const buildGallerySrcSet = (url?: string) => buildImageSrcSet(url, [480, 768, 1100], 78);
-
-  useEffect(() => {
-    if (post && !viewIncrementedRef.current) {
-      incrementViews(post.id, initialPost);
-      viewIncrementedRef.current = true;
-    }
-  }, [post, initialPost, incrementViews]);
-
+  post,
+  settings,
+  relatedPosts = [],
+  recommendedPosts = [],
+}: PostContentProps) {
   if (!post) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <h2 className="text-2xl font-bold mb-4 text-surface-900 dark:text-white">Post not found</h2>
         <p className="text-surface-500 mb-8">This prompt might have been moved or deleted.</p>
-        <Link href="/" prefetch={false} className="px-6 py-3 rounded-xl bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-colors shadow-lg shadow-primary-500/20">
+        <Link
+          href="/"
+          prefetch={false}
+          className="px-6 py-3 rounded-xl bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-colors shadow-lg shadow-primary-500/20"
+        >
           Return to Gallery
         </Link>
       </div>
     );
   }
 
-  const allPromptsText = settings.features?.premiumPrompts && post.isPremium && !user 
-    ? "Premium Collection - Please sign in to view full prompts." 
-    : (post.images || []).map((img, i) => `Image ${i + 1} (${img.aiTool}):\n${img.prompt}`).join('\n\n');
+  const showSkeleton = settings.features?.skeletonLoaders ?? false;
+  const showLikeCount = settings.features?.showLikeCount ?? true;
+  const showViewCount = settings.features?.showViewCount ?? true;
   const showCopyCollection = settings.features?.showCopyCollection ?? true;
   const showHowTo = settings.features?.showHowTo ?? true;
   const showRecommendedPosts = settings.features?.showRecommendedPosts ?? true;
   const showPostSidebar = settings.features?.showPostSidebar ?? true;
   const showShareButtons = settings.features?.showShareButtons ?? true;
-  const showTryButtons = settings.features?.showTryButtons ?? true;
   const showYouMightAlsoLike = settings.features?.showYouMightAlsoLike ?? true;
   const showTags = settings.features?.showTags ?? true;
   const showDetailedInsights = settings.features?.showDetailedInsights ?? true;
-  const relatedPostIds = new Set(relatedPosts.map(p => p.id));
-  const recommendedPosts = useMemo(() => {
-    if (serverRecommendedPosts && serverRecommendedPosts.length > 0) {
-      return serverRecommendedPosts;
-    }
-    return getRecommendedPosts(post, posts, relatedPosts, { limit: 6 });
-  }, [post, posts, relatedPosts, serverRecommendedPosts]);
-  const primaryToolName = heroTools[0] || 'ChatGPT / Gemini';
-  const toolLabel = heroTools.length === 0 ? 'your AI tool' : heroTools.length === 1 ? heroTools[0] : heroTools.join(' or ');
+
+  const heroTools = getAllTools(post);
+  const primaryHeroToolInfo =
+    heroTools.length > 0
+      ? getToolInfo(heroTools[0], settings?.toolDetails)
+      : { color: '', logo: '', logoScale: undefined };
+  const heroToolInfo = primaryHeroToolInfo;
+  const heroToolName = heroTools.join(' + ');
+
+  const fallbackPromptImageUrl = '';
+  const originalMainImageUrl = post.thumbnailUrl || post.images?.[0]?.url || fallbackPromptImageUrl;
+  const mainPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 1280, quality: 78 });
+  const backgroundPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 720, quality: 60 });
+
+  const heroImageSrcSet = [480, 768, 1280]
+    .map((w) => `${getPromptImageUrl(originalMainImageUrl || fallbackPromptImageUrl, { width: w, quality: 78 })} ${w}w`)
+    .join(', ');
+
+  const toolLabel =
+    heroTools.length === 0
+      ? 'your AI tool'
+      : heroTools.length === 1
+      ? heroTools[0]
+      : heroTools.join(' or ');
+
   const howToSteps = [
-    { title: `Open ${toolLabel}`, text: 'Use the tool or model listed with this prompt. If multiple tools are shown, choose the one you prefer.', icon: ExternalLink },
-    { title: 'Copy the prompt', text: 'Use the copy button on any prompt card, or copy the entire collection above.', icon: Copy },
-    { title: 'Upload reference image', text: 'Attach your reference image first when the prompt is image-guided.', icon: ImageIcon },
-    { title: 'Customize details', text: 'Replace placeholders, names, colors, aspect ratio, or style notes as needed.', icon: Check },
-    { title: 'Paste and generate', text: 'Paste the prompt with the image, generate the artwork, then refine in small steps.', icon: DownloadCloud }
+    {
+      title: `Open ${toolLabel}`,
+      text: 'Use the tool or model listed with this prompt. If multiple tools are shown, choose the one you prefer.',
+      icon: ExternalLink,
+    },
+    {
+      title: 'Copy the prompt',
+      text: 'Use the copy button on any prompt card, or copy the entire collection above.',
+      icon: Copy,
+    },
+    {
+      title: 'Upload reference image',
+      text: 'Attach your reference image first when the prompt is image-guided.',
+      icon: ImageIcon,
+    },
+    {
+      title: 'Customize details',
+      text: 'Replace placeholders, names, colors, aspect ratio, or style notes as needed.',
+      icon: Check,
+    },
+    {
+      title: 'Paste and generate',
+      text: 'Paste the prompt with the image, generate the artwork, then refine in small steps.',
+      icon: DownloadCloud,
+    },
   ];
 
   const postHeroStyle = settings.postHeroStyle || 'v1';
-  const pageUrl = typeof window !== 'undefined' ? window.location.href : `https://aipromptmatrix.in/${post.slug || post.id}`;
-  const firstPrompt = post.images?.find(image => image.prompt?.trim())?.prompt || allPromptsText;
-
-  const getTryToolUrl = (tool: string, prompt: string) => {
-    const encoded = encodeURIComponent(prompt);
-    const normalized = tool.toLowerCase();
-    if (normalized.includes('chatgpt') || normalized.includes('openai')) return `https://chatgpt.com/?q=${encoded}`;
-    if (normalized.includes('gemini') || normalized.includes('banana')) return 'https://gemini.google.com/app';
-    if (normalized.includes('grok')) return `https://grok.com/?q=${encoded}`;
-    if (normalized.includes('qwen')) return `https://chat.qwen.ai/?q=${encoded}`;
-    return `https://www.google.com/search?q=${encodeURIComponent(`${tool} AI image generator`)}`;
-  };
-
-  const handleTryTool = async (tool: string, prompt: string) => {
-    const targetUrl = getTryToolUrl(tool, prompt);
-    const opened = window.open(targetUrl, '_blank', 'noopener,noreferrer');
-    try {
-      await navigator.clipboard.writeText(prompt);
-      setTryFeedback(`Prompt copied. Opening ${tool}...`);
-      window.setTimeout(() => setTryFeedback(''), 2500);
-    } catch {}
-    trackEvent('try_tool_clicked', { tool });
-    if (!opened) {
-      setTryFeedback(`Prompt copied. Please allow popups to open ${tool}.`);
-      window.setTimeout(() => setTryFeedback(''), 3500);
-    }
-  };
-
-  const configuredShareTargets = settings.shareSettings?.targets?.length
-    ? settings.shareSettings.targets
-    : ['whatsapp', 'x', 'instagram', 'copy'] as ShareTarget[];
-  const shareTargets = configuredShareTargets.filter((target, index, list) => list.indexOf(target) === index);
   const sharePosition = settings.shareSettings?.position || 'floating-sidebar';
   const showInlineShareButtons = showShareButtons;
   const showSidebarShareButtons = showShareButtons && sharePosition === 'floating-sidebar';
-  const shareButtonMeta: Record<ShareTarget, { label: string; title: string; className: string; icon: ReactNode }> = {
-    whatsapp: { label: 'WhatsApp', title: 'Share on WhatsApp', className: 'text-green-500 hover:bg-green-500 hover:text-white', icon: <WhatsAppLogo className="h-4 w-4" /> },
-    x: { label: 'X', title: 'Share on X', className: 'hover:bg-black hover:text-white', icon: <XLogo className="h-4 w-4" /> },
-    instagram: { label: 'Instagram', title: 'Copy caption for Instagram', className: 'text-pink-500 hover:bg-pink-500 hover:text-white', icon: <InstagramLogo className="h-4 w-4" /> },
-    copy: { label: 'Copy link', title: 'Copy link', className: 'hover:bg-primary-500 hover:text-white', icon: <LinkIcon className="h-4 w-4" /> },
-    facebook: { label: 'Facebook', title: 'Share on Facebook', className: 'text-blue-600 hover:bg-blue-600 hover:text-white', icon: <FacebookLogo className="h-4 w-4" /> },
-    pinterest: { label: 'Pinterest', title: 'Share on Pinterest', className: 'text-red-600 hover:bg-red-600 hover:text-white', icon: <PinterestLogo className="h-4 w-4" /> },
+
+  const renderAuthorByline = () => {
+    const isUserOwned = isUserOwnedPost(post.authorId);
+    if (!isUserOwned) {
+      return (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-md border border-white/20 text-xs text-white/90">
+          <div className="w-5 h-5 rounded-full bg-primary-500/30 flex items-center justify-center text-[10px] font-bold text-white">
+            P
+          </div>
+          <span>Curated by</span>
+          <span className="font-semibold text-white">AI PromptMatrix Editorial</span>
+        </div>
+      );
+    }
+
+    if (!settings.features?.showPublicProfiles) {
+      return (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-md border border-white/20 text-xs text-white/90">
+          <div className="w-5 h-5 rounded-full bg-primary-500/30 flex items-center justify-center text-[10px] font-bold text-white">
+            {(post.authorUsername || 'C').slice(0, 1).toUpperCase()}
+          </div>
+          <span>Curated by</span>
+          <span className="font-semibold text-white">@{post.authorUsername || 'creator'}</span>
+        </div>
+      );
+    }
+
+    const username = post.authorUsername || 'creator';
+    const authorUrl = `/user/${post.authorId}`;
+    const avatarUrl = post.authorAvatar;
+
+    return (
+      <Link
+        href={authorUrl}
+        prefetch={false}
+        className="group flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/20 dark:bg-white/10 hover:bg-white/30 dark:hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all text-xs text-white/90"
+      >
+        {avatarUrl ? (
+          <Image
+            src={avatarUrl}
+            alt={username}
+            width={20}
+            height={20}
+            className="w-5 h-5 rounded-full object-cover ring-1 ring-white/40"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <div className="w-5 h-5 rounded-full bg-primary-500/40 flex items-center justify-center text-[10px] font-bold text-white ring-1 ring-white/40">
+            {username.slice(0, 1).toUpperCase()}
+          </div>
+        )}
+        <span className="text-white/70">By</span>
+        <span className="font-semibold text-white leading-tight transition-colors group-hover:text-primary-300">
+          @{username}
+        </span>
+      </Link>
+    );
   };
 
-  const renderShareCard = (className = '') => (
-    <div className={`rounded-2xl border border-white/80 bg-white/60 p-4 dark:border-white/10 dark:bg-white/[0.08] backdrop-blur-xl backdrop-saturate-150 ${className}`.trim()}>
-      <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-surface-900 dark:text-white">
-        <Share2 className="h-4 w-4 text-primary-500" /> Share
-      </h3>
-      <div className="grid grid-cols-4 gap-2">
-        {shareTargets.map(target => (
-          <button
-            key={target}
-            onClick={() => handleShare(target)}
-            className={`flex items-center justify-center rounded-xl bg-black/[0.04] p-2 dark:bg-white/[0.06] ${shareButtonMeta[target].className}`}
-            title={shareButtonMeta[target].title}
-            aria-label={shareButtonMeta[target].title}
-          >
-            {shareButtonMeta[target].icon}
-          </button>
-        ))}
-      </div>
-      {(shareFeedback || tryFeedback) && (
-        <p className="mt-3 text-[11px] font-bold text-primary-500">{shareFeedback || tryFeedback}</p>
-      )}
+  const renderMetaInfo = (align: 'center' | 'start' = 'center') => (
+    <div className={`flex flex-col items-center gap-5 sm:gap-4 ${align === 'start' ? 'lg:items-start' : ''}`}>
+      <PostHeroStats post={post} showViewCount={showViewCount} showLikeCount={showLikeCount} />
+      {renderAuthorByline()}
     </div>
   );
 
-  const handleShare = async (target: ShareTarget) => {
-    const text = `${post.title} - ${pageUrl}`;
-    trackEvent('share_clicked', { target });
-    if (target === 'copy') {
-      await navigator.clipboard.writeText(pageUrl);
-      setShareFeedback('Link copied');
-      window.setTimeout(() => setShareFeedback(''), 2500);
-      return;
+  const renderHero = () => {
+    switch (postHeroStyle) {
+      case 'v2': // Immersive Blur Background
+        return (
+          <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-white/[0.08] shadow-2xl group min-h-[500px] flex items-end">
+            {/* Decorative background blur. Already preloaded at low priority in page.tsx;
+                dropping priority here prevents network scheduling competition with the foreground LCP image. */}
+            <Image
+              src={backgroundPromptImageUrl}
+              alt="bg"
+              fill
+              className="object-cover opacity-40 blur-xl scale-110"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+            <div className="relative z-20 w-full max-w-6xl mx-auto flex flex-col items-center gap-8 p-8 pb-12 text-center lg:flex-row lg:items-center lg:gap-12 lg:p-12 lg:text-left">
+              <LoadingImg
+                src={mainPromptImageUrl}
+                alt={post.title}
+                showSkeleton={showSkeleton}
+                priority
+                wrapperClassName="inline-flex max-w-full shrink-0 justify-center rounded-2xl shadow-2xl"
+                className="h-auto max-h-[300px] w-auto max-w-full rounded-2xl object-contain sm:max-h-[360px] lg:max-h-[460px]"
+                referrerPolicy="no-referrer"
+                width={1280}
+                height={1280}
+                srcSet={heroImageSrcSet}
+                sizes={HERO_SIZES}
+                decoding="sync"
+              />
+              <div className="flex min-w-0 flex-col items-center lg:items-start">
+                <div className="flex flex-wrap justify-center gap-2 mb-6 lg:justify-start">
+                  {heroTools.map((tool) => {
+                    const info = getToolInfo(tool, settings?.toolDetails);
+                    return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
+                  })}
+                </div>
+                <h1 className="text-4xl md:text-5xl xl:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight drop-shadow-lg">
+                  {post.title}
+                </h1>
+                <p className="text-white/80 text-lg md:text-xl max-w-2xl leading-relaxed mb-8 drop-shadow">
+                  {post.description}
+                </p>
+                {renderMetaInfo('start')}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'v3': // Diagonal Split
+        return (
+          <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-white/25 dark:bg-white/[0.08] border border-white/80 dark:border-white/10 shadow-xl backdrop-blur-md backdrop-saturate-150">
+            <div className="grid grid-cols-1 md:grid-cols-2 min-h-[400px]">
+              <div className="flex flex-col justify-center p-8 md:p-12 order-2 md:order-1">
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <div className="flex flex-wrap gap-2">
+                    {heroTools.map((tool) => {
+                      const info = getToolInfo(tool, settings?.toolDetails);
+                      return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
+                    })}
+                  </div>
+                  {post.featured && (
+                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-black/[0.07] dark:bg-white/[0.09] text-surface-700 dark:text-surface-300">
+                      ⭐ Featured
+                    </span>
+                  )}
+                </div>
+                <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 leading-tight">
+                  {post.title}
+                </h1>
+                <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg mb-8 line-clamp-4">
+                  {post.description}
+                </p>
+                <div className="flex justify-start">{renderMetaInfo()}</div>
+              </div>
+              <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-black/[0.04] dark:bg-white/[0.06] flex items-center justify-center p-6 lg:p-10">
+                <Image
+                  src={backgroundPromptImageUrl}
+                  alt=""
+                  fill
+                  className="object-cover blur-3xl opacity-20 scale-125 z-0"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="max-h-[400px] w-full max-w-[800px] h-full sm:w-[600px] rounded-[24px] shadow-2xl relative z-10 overflow-hidden">
+                  <LoadingImage
+                    src={mainPromptImageUrl}
+                    alt={post.title}
+                    fill
+                    showSkeleton={showSkeleton}
+                    className="object-contain"
+                    referrerPolicy="no-referrer"
+                    priority
+                    fetchPriority="high"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'v4': // Minimalist Text
+        return (
+          <div className="mb-12 flex flex-col items-center text-center mt-6 md:mt-10">
+            <ToolBadge toolName={heroToolName} toolInfo={heroToolInfo} size="lg" className="mb-6" />
+            <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 tracking-tight leading-tight max-w-4xl">
+              {post.title}
+            </h1>
+            <p className="text-surface-600 dark:text-surface-400 text-lg md:text-2xl max-w-3xl leading-relaxed mb-8 font-medium">
+              {post.description}
+            </p>
+            <div className="relative w-full max-w-2xl aspect-video mb-10 rounded-3xl overflow-hidden shadow-xl bg-black/[0.04] dark:bg-white/[0.06] p-4">
+              <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-inner">
+                <LoadingImage
+                  src={mainPromptImageUrl}
+                  alt={post.title}
+                  fill
+                  showSkeleton={showSkeleton}
+                  className="object-contain"
+                  referrerPolicy="no-referrer"
+                  priority
+                  fetchPriority="high"
+                  sizes="(max-width: 768px) 100vw, 672px"
+                />
+              </div>
+            </div>
+            {renderMetaInfo()}
+          </div>
+        );
+
+      case 'v5': // Asymmetric Offset
+        return (
+          <div className="relative mb-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-8">
+            <div className="lg:col-span-7 order-2 lg:order-1">
+              <div className="flex flex-wrap gap-2 mb-4">
+                {heroTools.map((tool) => {
+                  const info = getToolInfo(tool, settings?.toolDetails);
+                  return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
+                })}
+              </div>
+              <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 leading-[1.1] tracking-tight">
+                {post.title}
+              </h1>
+              <p className="text-surface-600 dark:text-surface-400 text-lg md:text-xl mb-10 leading-relaxed max-w-2xl border-l-4 border-primary-500 pl-6">
+                {post.description}
+              </p>
+              <div className="flex justify-start">{renderMetaInfo()}</div>
+            </div>
+            <div className="lg:col-span-5 order-1 lg:order-2 relative aspect-[3/4] lg:aspect-auto lg:h-[600px] rounded-[40px] overflow-hidden shadow-2xl skew-y-2 lg:skew-y-0 lg:-rotate-2 hover:rotate-0 transition-transform duration-700">
+              <LoadingImage
+                src={mainPromptImageUrl}
+                alt={post.title}
+                fill
+                showSkeleton={showSkeleton}
+                className="object-contain lg:object-cover"
+                referrerPolicy="no-referrer"
+                priority
+                fetchPriority="high"
+                sizes="(max-width: 1024px) 100vw, 42vw"
+              />
+            </div>
+          </div>
+        );
+
+      case 'v1':
+      default: // Natural layout
+        return (
+          <>
+            <div className="mb-6 flex flex-col items-center text-center">
+              <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 tracking-tight leading-tight max-w-4xl">
+                {post.title}
+              </h1>
+              <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg max-w-3xl leading-relaxed mb-6">
+                {post.description}
+              </p>
+              {renderMetaInfo()}
+            </div>
+            <div className="relative mb-12 w-full max-w-5xl mx-auto flex justify-center">
+              <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-black/[0.04] dark:bg-white/[0.06] p-2 sm:p-4">
+                <div className="relative aspect-[4/5] min-h-0 w-full overflow-hidden rounded-[24px] shadow-md sm:aspect-auto sm:h-[70vh] sm:min-h-[520px] sm:max-h-[760px]">
+                  <LoadingImage
+                    src={mainPromptImageUrl}
+                    alt={post.title}
+                    fill
+                    showSkeleton={showSkeleton}
+                    priority
+                    fetchPriority="high"
+                    sizes="(max-width: 768px) 100vw, 960px"
+                    className="object-contain"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              </div>
+            </div>
+          </>
+        );
     }
-    if (target === 'instagram') {
-      await navigator.clipboard.writeText(text);
-      setShareFeedback('Caption copied for Instagram');
-      window.setTimeout(() => setShareFeedback(''), 2500);
-      window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
-      return;
-    }
-    const imageUrl = post.thumbnailUrl || post.images?.[0]?.url || '';
-    const url = target === 'whatsapp'
-      ? `https://wa.me/?text=${encodeURIComponent(text)}`
-      : target === 'facebook'
-        ? `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`
-        : target === 'pinterest'
-          ? `https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(pageUrl)}&description=${encodeURIComponent(post.title)}&media=${encodeURIComponent(imageUrl)}`
-          : `https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(pageUrl)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const SidebarCard = ({ item }: { item: Post }) => {
     const tools = getAllTools(item);
     const firstTool = tools[0];
     const firstToolInfo = firstTool ? getToolInfo(firstTool, settings?.toolDetails) : null;
-    const itemImageUrl = getThumbnailImageUrl(item.thumbnailUrl || item.images?.[0]?.url || '', { width: 220, quality: 72 });
+    const itemImageUrl = getThumbnailImageUrl(item.thumbnailUrl || item.images?.[0]?.url || '', {
+      width: 220,
+      quality: 72,
+    });
     return (
-    <Link href={`/${item.slug || item.id}`} prefetch={false} className="group flex gap-3 rounded-2xl border border-white/80 bg-white/60 p-2.5 shadow-sm backdrop-blur-xl backdrop-saturate-150 transition-[border-color,box-shadow] duration-300 hover:border-primary-400/60 hover:shadow-md dark:border-white/10 dark:bg-white/[0.08] dark:hover:border-primary-400/50">
-      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-black/[0.04] dark:bg-white/[0.06]">
-        <LoadingImage src={itemImageUrl} alt={item.title} fill showSkeleton={showSkeleton} className="object-cover transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
-      </div>
-      <div className="min-w-0 flex-1 py-1">
-        <h4 className="line-clamp-2 text-xs font-bold leading-snug text-surface-900 dark:text-white">{item.title}</h4>
-        <div className="mt-1 flex items-center justify-between gap-2">
-            {showViewCount && <p className="flex min-w-0 items-center gap-2 text-[11px] text-surface-400">
-            <Eye className="h-3 w-3" /> {(item.views || 0).toLocaleString()}
-          </p>}
-          {firstTool && firstToolInfo && (
-            <ToolBadge toolName={firstTool} toolInfo={firstToolInfo} size="sm" className="shrink-0" />
-          )}
+      <Link
+        href={`/${item.slug || item.id}`}
+        prefetch={false}
+        className="group flex gap-3 rounded-2xl border border-white/80 bg-white/60 p-2.5 shadow-sm backdrop-blur-xl backdrop-saturate-150 transition-[border-color,box-shadow] duration-300 hover:border-primary-400/60 hover:shadow-md dark:border-white/10 dark:bg-white/[0.08] dark:hover:border-primary-400/50"
+      >
+        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-black/[0.04] dark:bg-white/[0.06]">
+          <LoadingImage
+            src={itemImageUrl}
+            alt={item.title}
+            fill
+            showSkeleton={showSkeleton}
+            className="object-cover transition-transform group-hover:scale-105"
+            referrerPolicy="no-referrer"
+          />
         </div>
-      </div>
-    </Link>
-  );
+        <div className="min-w-0 flex-1 py-1">
+          <h4 className="line-clamp-2 text-xs font-bold leading-snug text-surface-900 dark:text-white">
+            {item.title}
+          </h4>
+          <div className="mt-1 flex items-center justify-between gap-2">
+            {showViewCount && (
+              <p className="flex min-w-0 items-center gap-2 text-[11px] text-surface-400">
+                <Eye className="h-3 w-3" /> {(item.views || 0).toLocaleString()}
+              </p>
+            )}
+            {firstTool && firstToolInfo && (
+              <ToolBadge toolName={firstTool} toolInfo={firstToolInfo} size="sm" className="shrink-0" />
+            )}
+          </div>
+        </div>
+      </Link>
+    );
   };
 
   const renderExploreAllPromptsBlock = (mobile = false) => {
     const keepExploring = {
       ...defaultKeepExploring,
       ...(settings.keepExploring || {}),
-      links: settings.keepExploring?.links?.length ? settings.keepExploring.links : defaultKeepExploring.links,
+      links: settings.keepExploring?.links?.length
+        ? settings.keepExploring.links
+        : defaultKeepExploring.links,
     };
     const iconMap = {
       image: ImageIcon,
@@ -681,13 +467,19 @@ export default function PostContent({
     };
 
     return (
-      <div className={`rounded-2xl border border-white/80 bg-white/60 p-4 dark:border-white/10 dark:bg-white/[0.08]  backdrop-blur-xl backdrop-saturate-150${mobile ? 'mb-16 lg:hidden' : ''}`}>
+      <div
+        className={`rounded-2xl border border-white/80 bg-white/60 p-4 dark:border-white/10 dark:bg-white/[0.08] backdrop-blur-xl backdrop-saturate-150 ${
+          mobile ? 'mb-16 lg:hidden' : ''
+        }`}
+      >
         <div className="mb-4 flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-500/10 text-primary-500">
             <Compass className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-sm font-black text-surface-900 dark:text-white">{keepExploring.title}</h3>
+            <h3 className="text-sm font-black text-surface-900 dark:text-white">
+              {keepExploring.title}
+            </h3>
             <p className="mt-1 text-xs leading-relaxed text-surface-500 dark:text-surface-400">
               {keepExploring.description}
             </p>
@@ -723,1061 +515,350 @@ export default function PostContent({
     );
   };
 
-  const renderLargeExploreShowcase = () => {
-    const chatGptInfo = getToolInfo('ChatGPT', settings?.toolDetails);
-    const geminiInfo = getToolInfo('Gemini', settings?.toolDetails);
+  const renderLargeExploreShowcase = () => (
+    <section className="my-12 rounded-3xl border border-white/80 bg-white/60 p-8 text-center backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.08] sm:p-12">
+      <div className="mx-auto max-w-2xl">
+        <h2 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">
+          Explore More Prompts
+        </h2>
+        <p className="mt-2 text-sm text-surface-600 dark:text-surface-300">
+          Browse our curated library of tested AI image prompts or filter by your favorite tool.
+        </p>
 
-    const glassPill =
-      'border border-white/60 bg-white/25 shadow-sm backdrop-blur-md backdrop-saturate-150 transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/60 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/[0.10] dark:hover:text-white';
-
-    const gradientButton =
-      'bg-gradient-to-r from-google-blue to-[#1a73e8] text-white shadow-md shadow-primary-500/25 transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg hover:shadow-primary-500/40 hover:brightness-[1.06] active:scale-95';
-
-    return (
-      <section className="my-12 rounded-3xl border border-white/80 bg-white/60 p-8 text-center backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.08] sm:p-12">
-        <div className="mx-auto max-w-2xl">
-          <h2 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">
-            Explore More Prompts
-          </h2>
-          <p className="mt-2 text-sm text-surface-600 dark:text-surface-300">
-            Browse our curated library of tested AI image prompts or filter by your favorite tool.
-          </p>
-
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
-            {/* Big All Prompts Button */}
-            <Link
-              href="/explore"
-              prefetch={false}
-              className={`group/cta inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full border border-transparent px-8 text-base font-bold ${gradientButton}`}
-            >
-              <Compass className="h-5 w-5" />
-              <span>All Prompts</span>
-              <ArrowRight className="h-4 w-4 transition-transform duration-200 ease-out group-hover/cta:translate-x-1" />
-            </Link>
-
-            {/* ChatGPT Prompts Button */}
-            <Link
-              href="/tool/chatgpt"
-              prefetch={false}
-              className={`inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full px-8 text-base font-bold text-surface-700 ${glassPill}`}
-            >
-              {chatGptInfo?.logo ? (
-                <span className="relative h-5 w-5 overflow-hidden rounded-full shrink-0">
-                  <Image src={chatGptInfo.logo} alt="ChatGPT" width={20} height={20} className="h-full w-full object-contain dark:invert dark:brightness-200" referrerPolicy="no-referrer" />
-                </span>
-              ) : null}
-              <span>ChatGPT</span>
-            </Link>
-
-            {/* Gemini Prompts Button */}
-            <Link
-              href="/tool/gemini"
-              prefetch={false}
-              className={`inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full px-8 text-base font-bold text-surface-700 ${glassPill}`}
-            >
-              {geminiInfo?.logo ? (
-                <span className="relative h-5 w-5 overflow-hidden rounded-full shrink-0">
-                  <Image src={geminiInfo.logo} alt="Gemini" width={20} height={20} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
-                </span>
-              ) : null}
-              <span>Gemini</span>
-            </Link>
-          </div>
-        </div>
-      </section>
-    );
-  };
-
-  const getTryToolsForImage = (image: Post['images'][number]) => {
-    const selectedTools = (image.aiTools || []).filter(Boolean);
-    if (selectedTools.length > 0) return selectedTools;
-
-    const fallbackTools = [image.aiTool].filter(Boolean);
-    const modelTool = getToolForImageModel(image.model);
-    return modelTool && fallbackTools.some(tool => tool.toLowerCase() === modelTool.toLowerCase()) ? [modelTool] : fallbackTools;
-  };
-  const renderTryButtonsForPrompt = (tools: string[], prompt: string, className = '') => {
-    const uniqueTools = Array.from(new Set(tools.filter(Boolean)));
-    if (!showTryButtons || uniqueTools.length === 0 || !prompt.trim()) return null;
-    return (
-      <div className={`flex flex-wrap gap-2 ${className}`}>
-        {uniqueTools.map(tool => (
-          (() => {
-            const info = getToolInfo(tool, settings?.toolDetails);
-            return (
-          <button
-            key={tool}
-            onClick={() => handleTryTool(tool, prompt)}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/80 bg-white/60 px-3 py-2 text-xs font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-surface-200 dark:hover:text-white backdrop-blur-xl backdrop-saturate-150"
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
+          <Link
+            href="/explore"
+            prefetch={false}
+            className="bg-gradient-to-r from-google-blue to-[#1a73e8] text-white shadow-md shadow-primary-500/25 transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg hover:shadow-primary-500/40 hover:brightness-[1.06] active:scale-95 inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold"
           >
-            {info.logo && (
-              <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full p-[1px]">
-                <Image
-                  src={info.logo}
-                  alt={`${tool} logo`}
-                  fill
-                  className={`object-contain ${
-                    tool.toLowerCase().includes('chatgpt') || info.logo.includes('chatgpt')
-                      ? 'dark:invert dark:brightness-200'
-                      : ''
-                  }`}
-                  referrerPolicy="no-referrer"
-                />
-              </span>
-            )}
-            Try in {tool}
-            <ExternalLink className="h-3.5 w-3.5" />
-          </button>
-            );
-          })()
-        ))}
+            <span>Browse All Prompts</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
-    );
-  };
-
-  const renderMetaInfo = (align: 'center' | 'start' = 'center') => {
-    return (
-      <div className={`flex flex-col items-center gap-5 sm:gap-4 ${align === 'start' ? 'lg:items-start' : ''}`}>
-        <div className="flex flex-nowrap items-center justify-center gap-2 sm:gap-5 rounded-[32px] border border-white/20 bg-black/25 py-2 px-3 sm:py-3 sm:px-7 text-xs sm:text-sm font-medium text-white/75 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_-1px_0_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.5),0_0_30px_rgba(129,140,248,0.25),0_0_60px_rgba(139,92,246,0.15)] transition-shadow duration-300 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_-1px_0_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.5),0_0_40px_rgba(129,140,248,0.35),0_0_80px_rgba(139,92,246,0.2)]">
-          {showViewCount && <><span className="flex items-center gap-2 sm:gap-2.5">
-            <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
-              <Eye className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.7)]" />
-            </span>
-            {(post.views || 0).toLocaleString()} {(post.views === 1) ? 'view' : 'views'}
-          </span>
-          <span className="h-5 w-px bg-white/15" /></>}
-          <button
-            onClick={() => toggleLike(post.id, initialPost)}
-            className="flex items-center gap-2 sm:gap-2.5 transition-all duration-300 hover:text-white hover:scale-105 active:scale-95"
-          >
-            <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
-              <Heart className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${post.likedByUser ? 'text-red-500 fill-red-500 animate-heart-pop drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]' : 'text-violet-400 drop-shadow-[0_0_8px_rgba(167,139,250,0.7)]'}`} />
-            </span>
-            {showLikeCount ? `${(post.likes || 0).toLocaleString()} ${post.likes === 1 ? 'like' : 'likes'}` : (post.likedByUser ? 'Liked' : 'Like')}
-          </button>
-          <span className="h-5 w-px bg-white/15" />
-          <button
-            onClick={handleBookmark}
-            aria-label={post.bookmarkedByUser ? 'Remove bookmark' : 'Bookmark this post'}
-            className="flex items-center gap-2 sm:gap-2.5 transition-all duration-300 hover:text-white hover:scale-105 active:scale-95"
-          >
-            <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
-              <Bookmark className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${post.bookmarkedByUser ? 'text-indigo-300 fill-indigo-300' : 'text-indigo-400'} drop-shadow-[0_0_8px_rgba(129,140,248,0.7)]`} />
-            </span>
-            {post.bookmarkedByUser ? 'Saved' : 'Save'}
-          </button>
-        </div>
-        {renderAuthorByline()}
-      </div>
-    );
-  };
-
-  const renderAuthorByline = () => {
-    const isUserOwned = isUserOwnedPost(post.authorId);
-
-    if (!isUserOwned) {
-      return (
-        <div className="flex items-center gap-3">
-          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center ring-2 ring-white/20">
-            {settings.siteLogo ? (
-              <Image src={settings.siteLogo} alt="" fill sizes="40px" className="object-cover" referrerPolicy="no-referrer" />
-            ) : (
-              <span className="text-white text-xs font-black">AI</span>
-            )}
-          </div>
-          <div className="min-w-0 text-left">
-            <p className="text-sm font-semibold text-white leading-tight">{EDITORIAL_TEAM_NAME}</p>
-            <p className="mt-0.5 text-xs text-white/60">Published on {formatDate(post.createdAt)}</p>
-          </div>
-        </div>
-      );
-    }
-
-    const displayName = post.authorName || 'Creator';
-    const username = post.authorUsername || 'creator';
-    const avatarUrl = post.authorAvatar;
-    const authorUrl = `/user/${post.authorId}`;
-
-    return (
-      <Link href={authorUrl} prefetch={false} className="group flex items-center gap-3">
-        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary-500/20 ring-2 ring-white/20">
-          {avatarUrl ? (
-            <Image src={avatarUrl} alt="" fill sizes="40px" className="object-cover" referrerPolicy="no-referrer" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-sm font-black text-white">
-              {displayName.slice(0, 1).toUpperCase()}
-            </div>
-          )}
-        </div>
-        <div className="min-w-0 text-left">
-          <p className="text-sm font-semibold text-white leading-tight transition-colors group-hover:text-primary-300">@{username}</p>
-          <p className="mt-0.5 text-xs text-white/60">Submitted on {formatDate(post.createdAt)}</p>
-        </div>
-      </Link>
-    );
-  };
-
-  const renderHero = () => {
-    switch (postHeroStyle) {
-      case 'v2': // Immersive Blur Background
-        return (
-          <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-white/[0.08] shadow-2xl group min-h-[500px] flex items-end">
-            {/* Decorative, but it covers the viewport so Lighthouse counts it
-                as the mobile LCP element — priority makes it paint immediately
-                (same file as the preloaded hero thumbnail, so no extra fetch). */}
-            <Image src={backgroundPromptImageUrl} alt="bg" fill priority className="object-cover opacity-40 blur-xl scale-110"  referrerPolicy="no-referrer" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
-            <div className="relative z-20 w-full max-w-6xl mx-auto flex flex-col items-center gap-8 p-8 pb-12 text-center lg:flex-row lg:items-center lg:gap-12 lg:p-12 lg:text-left">
-              <LoadingImg
-                  src={mainPromptImageUrl}
-                  alt={post.title}
-                  showSkeleton={showSkeleton}
-                  priority
-                  wrapperClassName="inline-flex max-w-full shrink-0 justify-center rounded-2xl shadow-2xl"
-                  className="h-auto max-h-[300px] w-auto max-w-full rounded-2xl object-contain sm:max-h-[360px] lg:max-h-[460px]"
-                  referrerPolicy="no-referrer"
-                  width={1280}
-                  height={1280}
-                  srcSet={heroImageSrcSet}
-                  sizes={HERO_SIZES}
-                  decoding="sync"
-                />
-              <div className="flex min-w-0 flex-col items-center lg:items-start">
-                <div className="flex flex-wrap justify-center gap-2 mb-6 lg:justify-start">
-                  {heroTools.map(tool => {
-                    const info = getToolInfo(tool, settings?.toolDetails);
-                    return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
-                  })}
-                </div>
-                <h1 className="text-4xl md:text-5xl xl:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight drop-shadow-lg">{post.title}</h1>
-                <p className="text-white/80 text-lg md:text-xl max-w-2xl leading-relaxed mb-8 drop-shadow">{post.description}</p>
-                {renderMetaInfo('start')}
-              </div>
-            </div>
-          </div>
-        );
-      case 'v3': // Diagonal Split
-        return (
-          <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-white/25 dark:bg-white/[0.08] border border-white/80 dark:border-white/10 shadow-xl backdrop-blur-md backdrop-saturate-150">
-             <div className="grid grid-cols-1 md:grid-cols-2 min-h-[400px]">
-                <div className="flex flex-col justify-center p-8 md:p-12 order-2 md:order-1">
-                   <div className="flex flex-wrap items-center gap-2 mb-4">
-                   <div className="flex flex-wrap gap-2">
-                     {heroTools.map(tool => {
-                       const info = getToolInfo(tool, settings?.toolDetails);
-                       return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
-                     })}
-                   </div>
-                     {post.featured && <span className="px-3 py-1 rounded-full text-xs font-medium bg-black/[0.07] dark:bg-white/[0.09] text-surface-700 dark:text-surface-300">⭐ Featured</span>}
-                   </div>
-                   <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 leading-tight">{post.title}</h1>
-                   <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg mb-8 line-clamp-4">{post.description}</p>
-                   <div className="flex justify-start">{renderMetaInfo()}</div>
-                </div>
-                <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-black/[0.04] dark:bg-white/[0.06] flex items-center justify-center p-6 lg:p-10">
-                   <Image src={backgroundPromptImageUrl} alt="" fill className="object-cover blur-3xl opacity-20 scale-125 z-0"  referrerPolicy="no-referrer" />
-                   <div className="max-h-[400px] w-full max-w-[800px] h-full sm:w-[600px] rounded-[24px] shadow-2xl relative z-10 overflow-hidden">
-                     <LoadingImage
-                       src={mainPromptImageUrl}
-                       alt={post.title}
-                       fill
-                       showSkeleton={showSkeleton}
-                       className="object-contain"
-                       referrerPolicy="no-referrer"
-                       priority
-                       fetchPriority="high"
-                       sizes="(max-width: 768px) 100vw, 50vw"
-                     />
-                   </div>
-                </div>
-             </div>
-          </div>
-        );
-      case 'v4': // Minimalist Text
-        return (
-          <div className="mb-12 flex flex-col items-center text-center mt-6 md:mt-10">
-            <ToolBadge toolName={heroToolName} toolInfo={heroToolInfo} size="lg" className="mb-6" />
-            <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 tracking-tight leading-tight max-w-4xl">{post.title}</h1>
-            <p className="text-surface-600 dark:text-surface-400 text-lg md:text-2xl max-w-3xl leading-relaxed mb-8 font-medium">{post.description}</p>
-            <div className="relative w-full max-w-2xl aspect-video mb-10 rounded-3xl overflow-hidden shadow-xl bg-black/[0.04] dark:bg-white/[0.06] p-4">
-              <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-inner">
-                <LoadingImage 
-                  src={mainPromptImageUrl}
-                  alt={post.title} 
-                  fill 
-                  showSkeleton={showSkeleton}
-                  className="object-contain" 
-                  referrerPolicy="no-referrer"
-                  priority
-                  fetchPriority="high"
-                  sizes="(max-width: 768px) 100vw, 672px"
-                />
-              </div>
-            </div>
-            {renderMetaInfo()}
-          </div>
-        );
-      case 'v5': // Asymmetric Offset
-        return (
-          <div className="relative mb-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-8">
-            <div className="lg:col-span-7 order-2 lg:order-1">
-            <div className="flex flex-wrap gap-2 mb-4">
-              {heroTools.map(tool => {
-                const info = getToolInfo(tool, settings?.toolDetails);
-                return (
-                  <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />
-                );
-              })}
-            </div>
-              <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 leading-[1.1] tracking-tight">
-                {post.title}
-              </h1>
-              <p className="text-surface-600 dark:text-surface-400 text-lg md:text-xl mb-10 leading-relaxed max-w-2xl border-l-4 border-primary-500 pl-6">
-                {post.description}
-              </p>
-              <div className="flex justify-start">{renderMetaInfo()}</div>
-            </div>
-            <div className="lg:col-span-5 order-1 lg:order-2 relative aspect-[3/4] lg:aspect-auto lg:h-[600px] rounded-[40px] overflow-hidden shadow-2xl skew-y-2 lg:skew-y-0 lg:-rotate-2 hover:rotate-0 transition-transform duration-700">
-               <LoadingImage
-                src={mainPromptImageUrl}
-                alt={post.title}
-                fill
-                showSkeleton={showSkeleton}
-                className="object-contain lg:object-cover"
-                referrerPolicy="no-referrer"
-                priority
-                fetchPriority="high"
-                sizes="(max-width: 1024px) 100vw, 42vw"
-              />
-            </div>
-          </div>
-        );
-      case 'v6': // Cyberpunk Bordered
-        return (
-          <div className="relative mb-16 w-full p-1 bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 rounded-[32px] shadow-[0_20px_50px_rgba(var(--primary-500),0.3)]">
-            <div className="bg-white/60 dark:bg-white/[0.08] rounded-[30px] p-8 md:p-12 overflow-hidden relative">
-               <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 blur-[100px] pointer-events-none" />
-               <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[100px] pointer-events-none" />
-               <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                  <div>
-                    <div className="flex gap-2 mb-6">
-                       <span className="px-2 py-1 bg-black text-white dark:bg-white/60 dark:text-black text-[10px] font-black uppercase tracking-widest">AI GENERATED</span>
-                       <ToolBadge toolName={heroToolName} toolInfo={heroToolInfo} size="sm" />
-                    </div>
-                    <h1 className="text-4xl md:text-5xl font-black text-surface-900 dark:text-white mb-6 uppercase tracking-tighter italic">
-                      {post.title}
-                    </h1>
-                    <p className="text-surface-600 dark:text-surface-400 text-base md:text-lg mb-8 font-medium">
-                      {post.description}
-                    </p>
-                    <div className="flex justify-start">{renderMetaInfo()}</div>
-                  </div>
-                  <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-white/80 shadow-2xl rotate-1">
-                    <LoadingImage
-                      src={mainPromptImageUrl}
-                      alt={post.title}
-                      fill
-                      showSkeleton={showSkeleton}
-                      className="object-contain md:object-cover"
-                      referrerPolicy="no-referrer"
-                      priority
-                      fetchPriority="high"
-                      sizes="(max-width: 1024px) 100vw, 50vw"
-                    />
-                  </div>
-               </div>
-            </div>
-          </div>
-        );
-      case 'v7': // Full Screen Hero
-        return (
-          <div className="relative mb-12 h-[520px] w-full overflow-hidden rounded-[32px] group sm:h-[560px] md:h-[80vh] md:min-h-[600px] md:rounded-[48px]">
-             <LoadingImage
-              src={mainPromptImageUrl}
-              alt={post.title}
-              fill
-              showSkeleton={showSkeleton}
-              className="object-contain md:object-cover transition-transform duration-1000 group-hover:scale-105"
-              referrerPolicy="no-referrer"
-              priority
-              fetchPriority="high"
-              sizes="100vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-            <div className="absolute inset-0 flex flex-col items-center justify-end p-6 text-center sm:p-8 md:p-16">
-               <div className="flex flex-wrap gap-2 mb-6 justify-center">
-                 {heroTools.map(tool => {
-                   const info = getToolInfo(tool, settings?.toolDetails);
-                   return (
-                     <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />
-                   );
-                 })}
-               </div>
-               <h1 className="text-3xl font-black text-white mb-5 max-w-5xl leading-tight sm:text-4xl md:text-7xl md:mb-6">
-                 {post.title}
-               </h1>
-               <div className="mb-4 scale-95 sm:mb-6 md:mb-10 md:scale-110">{renderMetaInfo()}</div>
-            </div>
-          </div>
-        );
-      case 'v8': // Floating Card
-        return (
-          <div className="relative mb-20 md:mb-32">
-             <div className="relative w-full h-64 md:h-96 rounded-[32px] overflow-hidden">
-                <Image 
-                  src={mainPromptImageUrl}
-                  alt={post.title} 
-                  fill 
-                  className="object-cover blur-2xl opacity-50 scale-110" 
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white dark:to-surface-950" />
-             </div>
-             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-0 md:-translate-y-1/2 w-[95%] max-w-5xl bg-white/60 dark:bg-white/[0.08] rounded-[32px] shadow-2xl border border-white/70 dark:border-white/10 p-8 md:p-12 flex flex-col md:flex-row gap-10 items-center backdrop-blur-xl backdrop-saturate-150">
-                <div className="w-full md:w-1/2 aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shrink-0">
-                  <LoadingImage
-                    src={mainPromptImageUrl}
-                    alt={post.title}
-                    fill
-                    showSkeleton={showSkeleton}
-                    className="object-contain md:object-cover"
-                    referrerPolicy="no-referrer"
-                    priority
-                    fetchPriority="high"
-                    sizes="(max-width: 768px) 95vw, 475px"
-                  />
-                </div>
-                <div className="w-full md:w-1/2">
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {heroTools.map(tool => {
-                      const info = getToolInfo(tool, settings?.toolDetails);
-                      return (
-                        <ToolBadge key={tool} toolName={tool} toolInfo={info} size="sm" />
-                      );
-                    })}
-                  </div>
-                  <h1 className="text-3xl md:text-5xl font-black text-surface-900 dark:text-white mb-4 tracking-tight leading-tight">
-                    {post.title}
-                  </h1>
-                  <p className="text-surface-500 dark:text-surface-400 mb-8 line-clamp-3 italic font-medium">
-                    &quot;{post.description}&quot;
-                  </p>
-                  <div className="scale-90 origin-left">{renderMetaInfo()}</div>
-                </div>
-             </div>
-          </div>
-        );
-      case 'v1':
-      default: // Natural layout
-        return (
-          <>
-            <div className="mb-6 flex flex-col items-center text-center">
-              <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 tracking-tight leading-tight max-w-4xl">{post.title}</h1>
-              <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg max-w-3xl leading-relaxed mb-6">{post.description}</p>
-              {renderMetaInfo()}
-            </div>
-            <div className="relative mb-12 w-full max-w-5xl mx-auto flex justify-center">
-              <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-black/[0.04] dark:bg-white/[0.06] p-2 sm:p-4">
-                <div className="relative aspect-[4/5] min-h-0 w-full overflow-hidden rounded-[24px] shadow-md sm:aspect-auto sm:h-[70vh] sm:min-h-[520px] sm:max-h-[760px]">
-                  <LoadingImage
-                    src={mainPromptImageUrl}
-                    alt={post.title}
-                    fill
-                    showSkeleton={showSkeleton}
-                    className="object-contain"
-                    referrerPolicy="no-referrer"
-                    priority
-                    fetchPriority="high"
-                    sizes="(max-width: 640px) 100vw, 1024px"
-                  />
-                </div>
-                <div className="absolute top-6 left-6 z-20">
-                  <ToolBadge toolName={heroToolName} toolInfo={heroToolInfo} size="md" />
-                </div>
-                {post.featured && (
-                  <div className="absolute top-6 right-6 z-20">
-                    <span className="inline-flex px-3 py-1.5 rounded-lg text-[11px] font-bold bg-yellow-400 text-yellow-900 border border-yellow-300 shadow-md uppercase tracking-widest">
-                      ⭐ Featured
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </>
-        );
-    }
-  };
+    </section>
+  );
 
   return (
-    <div className="max-w-6xl mx-auto px-1 py-4 sm:py-6">
-      {(shareFeedback || tryFeedback) && (
-        <div className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-full border border-white/80 bg-white/60 px-4 py-2 text-xs font-bold text-surface-800 shadow-xl dark:border-white/10 dark:bg-white/[0.08] dark:text-white backdrop-blur-xl backdrop-saturate-150">
-          {shareFeedback || tryFeedback}
+    <PostPageProvider
+      userProfilesEnabled={settings.features?.userProfiles}
+      postTitle={post.title}
+      postId={post.id}
+      settings={settings}
+    >
+      <div className="max-w-6xl mx-auto px-1 py-4 sm:py-6">
+        {/* Breadcrumb Navigation */}
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <Link
+            href="/explore"
+            prefetch={false}
+            className="group inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/60 px-3 py-1.5 text-xs font-semibold text-surface-600 shadow-sm backdrop-blur-xl transition-all hover:border-primary-400 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400 dark:hover:text-primary-400"
+          >
+            <span className="transition-transform group-hover:-translate-x-0.5">←</span>
+            <span>Back to prompts</span>
+          </Link>
         </div>
-      )}
 
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-surface-400 mb-6 font-medium">
-        <Link href="/" prefetch={false} className="hover:text-primary-500 transition-colors">Home</Link>
-        <ChevronLeft className="w-3.5 h-3.5 rotate-180 opacity-50" />
-        <span className="truncate text-surface-900 dark:text-white max-w-[200px]">{post.title}</span>
-      </nav>
+        {/* Hero Banner Section (Server Rendered) */}
+        {renderHero()}
 
-      {/* Post Header & Hero styles */}
-      {renderHero()}
-
-      <AdSlot placement="postTop" />
-
-      <div className={showPostSidebar ? 'grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_280px]' : ''}>
-        <div className="min-w-0">
-
-      {/* Reference Images */}
-      {post.referenceImages && post.referenceImages.length > 0 && (
-        <div className="mb-16">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-              <ImageIcon className="w-5 h-5 text-primary-500" />
-            </div>
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight">
-              Reference Images <span className="text-surface-600 dark:text-surface-400 font-medium ml-1">({post.referenceImages.length})</span>
-            </h2>
-          </div>
-          
-          <div className="flex flex-wrap gap-4">
-             {post.referenceImages.map((url, idx) => (
-               <div key={idx} className="relative group rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-white/80 dark:border-white/10 bg-white/60 backdrop-blur-[16px] backdrop-saturate-150 dark:bg-white/[0.08] flex flex-col w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.67rem)] lg:w-[calc(25%-0.75rem)]">
-                 <div className="relative w-full h-auto flex items-center justify-center p-3 sm:p-4 bg-white/25 dark:bg-white/5">
-                    <div className="w-full relative rounded-xl overflow-hidden cursor-zoom-in" onClick={() => setLightboxState({ images: post.referenceImages || [], activeImageIndex: idx, promptIndex: -1, tools: [] })}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={displayReferenceImageUrl(url)}
+        {/* Main Body Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+          <div>
+            {/* Reference Images (if guided) */}
+            {post.referenceImages && post.referenceImages.length > 0 && (
+              <div className="mb-12">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1.5 h-4 bg-primary-500 rounded-full" />
+                  <h3 className="font-bold text-base tracking-tight">Reference Images</h3>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {post.referenceImages.map((url, idx) => (
+                    <div
+                      key={idx}
+                      className="group relative aspect-square overflow-hidden rounded-2xl border border-white/80 bg-white/40 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.08]"
+                    >
+                      <LoadingImage
+                        src={getThumbnailImageUrl(url, { width: 400, quality: 75 })}
                         alt={`Reference ${idx + 1}`}
-                        className="w-full h-auto block rounded-xl group-hover:scale-[1.01] transition-transform duration-500"
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
                         referrerPolicy="no-referrer"
-                        loading="lazy"
-                        decoding="async"
                       />
                     </div>
-                 </div>
-                 <div className="p-3 sm:p-4 border-t border-white/70 dark:border-white/10 flex justify-between items-center bg-white/60 dark:bg-white/[0.08] mt-auto backdrop-blur-xl backdrop-saturate-150">
-                    <span className="text-sm font-semibold tracking-wide text-surface-600 dark:text-surface-400">Ref {idx + 1}</span>
-                    <button
-                      onClick={() => handleDownload(url, `reference_${post.id}_${idx + 1}.png`)}
-                      className="rounded-lg p-2 transition-colors hover:bg-black/[0.06] dark:hover:bg-white/10 text-surface-600 dark:text-surface-400"
-                      title="Download image"
-                    >
-                      <DownloadCloud className="w-5 h-5" />
-                    </button>
-                 </div>
-               </div>
-             ))}
-          </div>
-        </div>
-      )}
+                  ))}
+                </div>
+              </div>
+            )}
 
-      {/* Images with Prompts — NO cropping, natural display */}
-      <div className="mb-16">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-            <Tag className="w-5 h-5 text-primary-500" />
-          </div>
-          <h2 className="text-xl md:text-2xl font-bold tracking-tight">
-            Prompt Gallery <span className="text-surface-600 dark:text-surface-400 font-medium ml-1">({post.images.length})</span>
-          </h2>
-        </div>
-
-        <div className="space-y-10">
-          {(post.images || []).map((img, index) => (
-            <div
-              key={img.id}
-              className="group rounded-2xl overflow-hidden border border-white/80 dark:border-white/10 bg-white/60 backdrop-blur-[16px] backdrop-saturate-150 dark:bg-white/[0.08] hover:shadow-xl transition-all duration-300"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Image + Prompt layout */}
-              <div className="grid grid-cols-1 items-start gap-0 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:gap-5">
-                {/* Image Gallery — multi-image swipeable with mini thumbnails */}
-                <PromptImageGallery
+            {/* Prompt Cards List (Client Island per item for paywall & carousel) */}
+            <div className="space-y-12 mb-12">
+              {(post.images || []).map((img, index) => (
+                <PromptItemCard
+                  key={img.id || index}
                   img={img}
                   index={index}
-                  postTitle={post.title}
-                  showSkeleton={showSkeleton}
+                  post={post}
                   settings={settings}
-                  onOpenLightbox={(images, initialIndex, promptIndex, tools) => {
-                    setLightboxState({ images, activeImageIndex: initialIndex, promptIndex, tools });
-                  }}
-                  onDownload={handleDownload}
+                  showSkeleton={showSkeleton}
                 />
+              ))}
+            </div>
 
-                {/* Prompt */}
-                <div className="flex flex-col justify-between p-5 sm:p-6">
+            {/* Inline Share Card (on mobile / inline layouts) */}
+            {showInlineShareButtons && (
+              <PostShareCard
+                postTitle={post.title}
+                postSlugOrId={post.slug || post.id}
+                thumbnailUrl={post.thumbnailUrl}
+                className={`mb-12 md:mb-16 ${sharePosition === 'floating-sidebar' ? 'lg:hidden' : ''}`}
+              />
+            )}
+
+            {/* Copy All Prompts Banner */}
+            {showCopyCollection && (post.images?.length || 0) > 1 && (
+              <CopyCollectionBanner post={post} settings={settings} />
+            )}
+
+            {/* How to Use Section (Server Rendered HTML with content-visibility optimization) */}
+            {showHowTo && (
+              <div
+                className="mb-16 rounded-3xl border border-white/80 bg-white/60 p-5 dark:border-white/10 dark:bg-white/[0.08] sm:p-8 backdrop-blur-xl backdrop-saturate-150"
+                style={{ contentVisibility: 'auto', containIntrinsicSize: '0 400px' }}
+              >
+                <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    {settings.features?.premiumPrompts && post.isPremium && !user ? (
-                       <div className="bg-white/25 dark:bg-white/5 rounded-2xl p-6 mb-6 text-center border border-white/60 dark:border-white/10 relative overflow-hidden group-hover:bg-primary-50/20 dark:group-hover:bg-primary-900/10 transition-colors">
-                         <div className="absolute inset-0 bg-white/25 dark:bg-white/5 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6">
-                           <Lock className="w-8 h-8 text-yellow-500 mb-3" />
-                           <h4 className="font-bold text-lg mb-1">Premium Prompt</h4>
-                           <p className="text-sm text-surface-500 mb-4 max-w-sm">
-                             Sign in to view and copy this engineered prompt.
-                           </p>
-                           {settings.features?.premiumPaymentUrl ? (
-                             <a href={settings.features?.premiumPaymentUrl} target="_blank" rel="noreferrer" className="px-5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-yellow-500 to-yellow-600 text-white hover:from-yellow-600 hover:to-yellow-700 shadow-lg">
-                               Unlock All for ${settings.features?.premiumPrice || 5}
-                             </a>
-                           ) : (
-                             <button onClick={handleLogin} className="px-5 py-2.5 rounded-xl text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 shadow-lg">
-                               Sign in to Unlock
-                             </button>
-                           )}
-                         </div>
-                         <p className="text-sm md:text-base leading-relaxed text-surface-700 dark:text-surface-300 font-mono filter blur-[4px] truncate">
-                           {img.prompt.slice(0, 100)}...
-                         </p>
-                       </div>
-                    ) : settings.features?.smartTemplates && hasTemplateVariables(img.prompt) ? (
-                       <TemplatePrompt originalPrompt={img.prompt} />
-                    ) : (
-                      <>
-                        <div className="mb-4 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-4 bg-primary-500 rounded-full" />
-                            <h3 className="font-bold text-base tracking-tight">Prompt</h3>
-                          </div>
-                          <CopyButton text={img.prompt} />
-                        </div>
-                        <div className="relative mb-4">
-                          <div className={`no-scrollbar overflow-hidden rounded-2xl border border-primary-500/20 bg-primary-50/25 p-5 transition-colors group-hover:bg-primary-50/40 dark:border-primary-400/20 dark:bg-primary-950/25 dark:group-hover:bg-primary-900/30 sm:p-6 md:max-h-[460px] md:overflow-y-auto ${expandedPrompts[img.id] ? 'max-h-none md:max-h-[460px]' : 'max-h-[260px]'}`}>
-                            <p className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-surface-800 dark:text-surface-200 md:text-base selection:bg-primary-500/20">
-                              {img.prompt}
-                            </p>
-                          </div>
-                          {/* Cut-off affordance: fade out collapsed text instead of a hard clip */}
-                          {!expandedPrompts[img.id] && (
-                            <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-20 rounded-b-2xl bg-gradient-to-t from-surface-50 to-transparent dark:from-surface-800 md:hidden" />
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setExpandedPrompts(prev => ({ ...prev, [img.id]: !prev[img.id] }))}
-                          className="btn-glow mb-6 inline-flex w-full items-center justify-center rounded-full border border-white/80 px-4 py-2 text-xs font-semibold text-surface-700 transition-colors dark:border-white/15 dark:text-surface-200 md:hidden"
-                        >
-                          {expandedPrompts[img.id] ? 'Show less prompt' : 'Show full prompt'}
-                        </button>
-                      </>
-                    )}
+                    <p className="mb-2 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">
+                      Quick workflow
+                    </p>
+                    <h3 className="text-2xl font-extrabold tracking-tight text-surface-900 dark:text-white md:text-3xl">
+                      How to use these prompts
+                    </h3>
                   </div>
-                  <div className="flex items-center gap-2 text-xs font-bold text-surface-600 dark:text-surface-400 uppercase tracking-widest">
-                    <Clock className="w-4 h-4 text-primary-500/50" />
-                    Model: <span className="text-surface-600 dark:text-surface-200">{img.model || getDefaultImageModel(img.aiTool) || img.aiTool}</span>
-                  </div>
-                  {renderTryButtonsForPrompt(getTryToolsForImage(img), img.prompt, 'mt-4')}
+                  <p className="max-w-xl text-sm leading-relaxed text-surface-500 dark:text-surface-400">
+                    Copy, customize, and generate. Keep the original prompt structure intact, then
+                    adjust only the details you want to change.
+                  </p>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {showInlineShareButtons && (
-        renderShareCard(`mb-12 md:mb-16 ${sharePosition === 'floating-sidebar' ? 'lg:hidden' : ''}`)
-      )}
-
-      {/* Copy All Prompts CTA — only for collections with >1 prompt */}
-      {showCopyCollection && (post.images?.length || 0) > 1 && (
-        <div className="mb-16 p-8 md:p-12 rounded-[32px] bg-gradient-to-br from-primary-600 via-primary-500 to-purple-600 text-white text-center shadow-2xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-32 translate-x-32 group-hover:scale-150 transition-transform duration-1000" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-900/20 rounded-full blur-3xl translate-y-32 -translate-x-32 group-hover:scale-150 transition-transform duration-1000" />
-          
-          <div className="relative z-10">
-            <h3 className="text-2xl md:text-3xl font-extrabold mb-3 tracking-tight">Copy Entire Collection</h3>
-            <p className="text-white/80 text-base md:text-lg mb-8 max-w-xl mx-auto font-medium">
-              {post.images.length === 1
-                ? 'Copy this prompt instantly to use in your favorite AI generator.'
-                : `Grab all ${post.images.length} creative prompts instantly to use in your favorite AI generator.`}
-            </p>
-            <div className="flex justify-center">
-              <CopyButton
-                text={allPromptsText}
-                eventName="collection_copied"
-                className="px-6 py-3 text-base shadow-xl border-white/30 bg-white/20 text-white backdrop-blur-xl hover:border-white hover:bg-white hover:text-primary-700 hover:shadow-2xl dark:border-white/30 dark:bg-white/20 dark:text-white dark:hover:border-white dark:hover:bg-white dark:hover:text-primary-700"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* How to use */}
-      {showHowTo && (
-      <div className="mb-16 rounded-3xl border border-white/80 bg-white/60 p-5 dark:border-white/10 dark:bg-white/[0.08] sm:p-8 backdrop-blur-xl backdrop-saturate-150">
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="mb-2 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">Quick workflow</p>
-            <h3 className="text-2xl font-extrabold tracking-tight text-surface-900 dark:text-white md:text-3xl">How to use these prompts</h3>
-          </div>
-          <p className="max-w-xl text-sm leading-relaxed text-surface-500 dark:text-surface-400">
-            Copy, customize, and generate. Keep the original prompt structure intact, then adjust only the details you want to change.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {howToSteps.map((step, index) => {
-            const StepIcon = step.icon;
-            return (
-              <div key={step.title} className="rounded-2xl border border-white/80 bg-white/25 p-4 dark:border-white/10 dark:bg-white/5">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500 text-white shadow-lg shadow-primary-500/20">
-                    <StepIcon className="h-5 w-5" />
-                  </div>
-                  <span className="text-xs font-black text-surface-600 dark:text-surface-400">0{index + 1}</span>
-                </div>
-                <h4 className="mb-2 text-sm font-bold text-surface-900 dark:text-white">{step.title}</h4>
-                <p className="text-xs leading-relaxed text-surface-500 dark:text-surface-400">{step.text}</p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      )}
-
-      <AdSlot placement="postBottom" />
-
-        </div>
-
-        {showPostSidebar && (
-          <aside className="hidden lg:block">
-            <div className="sticky top-20 space-y-4">
-              {showSidebarShareButtons && (
-                renderShareCard()
-              )}
-
-              {renderExploreAllPromptsBlock()}
-
-              {showYouMightAlsoLike && recommendedPosts.length > 0 && (
-                <div className="rounded-2xl border border-white/80 bg-white/60 p-4 dark:border-white/10 dark:bg-white/[0.08] backdrop-blur-xl backdrop-saturate-150">
-                  <h3 className="mb-3 text-sm font-black text-surface-900 dark:text-white">You might also like</h3>
-                  <div className="space-y-2">
-                    {recommendedPosts.slice(0, 3).map(item => <SidebarCard key={item.id} item={item} />)}
-                  </div>
-                </div>
-              )}
-            </div>
-          </aside>
-        )}
-      </div>
-
-      {/* Tags */}
-      {showTags && (
-      <div className="mb-16">
-        <h3 className="text-sm font-bold text-surface-600 dark:text-surface-400 uppercase tracking-[0.2em] mb-6">Discovery Tags</h3>
-        <div className="flex flex-wrap gap-2.5">
-          {(post.tags || []).map(tag => (
-            <Link
-              key={tag}
-              href={`/tag/${encodeURIComponent(tag.toLowerCase())}`}
-              prefetch={false}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-black/[0.04] dark:bg-white/[0.06] text-surface-600 dark:text-surface-300 hover:bg-primary-500 hover:text-white dark:hover:bg-primary-500 dark:hover:text-white transition-all transform uppercase tracking-wider"
-            >
-              #{tag}
-            </Link>
-          ))}
-        </div>
-      </div>
-      )}
-
-      {settings.features?.comments && (
-        <div className="mb-16 border-t border-white/80 dark:border-white/10 pt-16">
-          <h3 className="text-xl md:text-2xl font-bold tracking-tight mb-8">Comments & Feedback</h3>
-          <div className="bg-white/25 dark:bg-white/5 rounded-2xl p-8 text-center border border-white/80 dark:border-white/10">
-            {user ? (
-               <div className="max-w-2xl mx-auto flex flex-col gap-4">
-                 <textarea
-                   rows={3}
-                   value={commentText}
-                   onChange={(event) => setCommentText(event.target.value)}
-                   placeholder="Share your experience using these prompts, or post your own variations..."
-                   className="w-full px-4 py-3 rounded-xl bg-white/60 dark:bg-white/[0.08] border border-white/80 dark:border-white/10 focus:border-primary-500 outline-none transition-colors text-sm resize-none"
-                 />
-                 <div className="flex justify-end">
-                   <button
-                     type="button"
-                     onClick={handleSubmitComment}
-                     disabled={commentSubmitting || commentText.trim().length < 2}
-                     className="px-5 py-2.5 rounded-xl text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                   >
-                     {commentSubmitting ? 'Posting...' : 'Post Comment'}
-                   </button>
-                 </div>
-               </div>
-            ) : (
-               <div>
-                 <p className="text-surface-600 dark:text-surface-400 mb-4">Join the discussion and share your results.</p>
-                 <button onClick={handleLogin} className="px-5 py-2.5 rounded-xl text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors">
-                   Sign in to Comment
-                 </button>
-               </div>
-            )}
-            
-            <div className="mt-12 text-left">
-              <p className="text-sm font-medium text-surface-600 dark:text-surface-400 mb-6">
-                {comments.filter(comment => comment.status === 'approved' || comment.userId === user?.id).length} comments
-              </p>
-              <div className="space-y-4">
-                {comments
-                  .filter(comment => comment.status === 'approved' || comment.userId === user?.id)
-                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                  .map(comment => (
-                    <div key={comment.id} className="rounded-2xl border border-white/80 bg-white/60 p-4 dark:border-white/10 dark:bg-white/[0.08] backdrop-blur-xl backdrop-saturate-150">
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <div className="flex min-w-0 items-center gap-3">
-                          {comment.userAvatar ? (
-                            <Image src={comment.userAvatar} alt="" width={32} height={32} className="rounded-full" referrerPolicy="no-referrer" />
-                          ) : (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600 dark:bg-primary-900/40">
-                              {comment.userName.slice(0, 1).toUpperCase()}
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            {settings.features?.showPublicProfiles ? (
-                              <Link href={`/user/${comment.userId}`} prefetch={false} className="block truncate text-sm font-bold text-surface-900 hover:text-primary-500 dark:text-white">
-                                {comment.userName}
-                              </Link>
-                            ) : (
-                              <p className="truncate text-sm font-bold text-surface-900 dark:text-white">{comment.userName}</p>
-                            )}
-                            <p className="text-xs text-surface-400">{formatDate(comment.createdAt)}</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                  {howToSteps.map((step, index) => {
+                    const StepIcon = step.icon;
+                    return (
+                      <div
+                        key={step.title}
+                        className="rounded-2xl border border-white/80 bg-white/25 p-4 dark:border-white/10 dark:bg-white/5"
+                      >
+                        <div className="mb-4 flex items-center justify-between gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500 text-white shadow-lg shadow-primary-500/20">
+                            <StepIcon className="h-5 w-5" />
                           </div>
-                        </div>
-                        {comment.status === 'pending' && (
-                          <span className="rounded-full bg-yellow-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
-                            Pending
+                          <span className="text-xs font-black text-surface-600 dark:text-surface-400">
+                            0{index + 1}
                           </span>
-                        )}
+                        </div>
+                        <h4 className="mb-2 text-sm font-bold text-surface-900 dark:text-white">
+                          {step.title}
+                        </h4>
+                        <p className="text-xs leading-relaxed text-surface-500 dark:text-surface-400">
+                          {step.text}
+                        </p>
                       </div>
-                      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-surface-600 dark:text-surface-300">{comment.text}</p>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Related Posts */}
-      {showRecommendedPosts && relatedPosts.length > 0 && (
-        <div className="border-t border-white/80 dark:border-white/10 pt-16">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-1.5 h-8 bg-primary-500 rounded-full underline-offset-8" />
-              <h2 className="text-2xl font-black tracking-tight">Related Prompts</h2>
-            </div>
-            <Link href="/explore" prefetch={false} className="text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center gap-2 group">
-              Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </div>
-          <ScrollReveal>
-            <div className="mb-16">
-              <MasonryGrid
-                posts={relatedPosts}
-                settings={settings}
-                renderAdSlot={false}
-              />
-            </div>
-          </ScrollReveal>
-        </div>
-      )}
-
-      {renderLargeExploreShowcase()}
-
-      {/* Extended HTML / Article Description */}
-      {showDetailedInsights && post.extendedDescription && (
-        <div className="mt-16 border-t border-white/80 pt-10 dark:border-white/10 sm:mt-20 sm:pt-16">
-          <div className="max-w-4xl mx-auto">
-            <div className="mb-8 flex flex-col gap-3 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-1.5 rounded-full bg-primary-500" />
-                <div>
-                  <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">Guide</p>
-                  <h2 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">Detailed Insights</h2>
+                    );
+                  })}
                 </div>
               </div>
-              <div className="h-px flex-1 bg-black/[0.07] dark:bg-white/[0.09] sm:max-w-48" />
-            </div>
-            
-            <div className="relative overflow-hidden rounded-2xl border border-white/80 bg-white/60 p-5 dark:border-white/10 dark:bg-white/[0.08] sm:rounded-3xl sm:p-8 md:p-12 backdrop-blur-xl backdrop-saturate-150">
-              <div className="prose prose-sm max-w-none dark:prose-invert sm:prose-base lg:prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary-500 hover:prose-a:text-primary-600 prose-img:rounded-xl prose-img:shadow-md prose-p:text-surface-600 dark:prose-p:text-surface-300 prose-li:text-surface-600 dark:prose-li:text-surface-300">
-                <MarkdownRenderer>{post.extendedDescription}</MarkdownRenderer>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {post.faqs?.length ? (
-        <div className="mt-16 border-t border-white/80 pt-10 dark:border-white/10 sm:mt-20 sm:pt-16">
-          <div className="mx-auto max-w-4xl">
-            <div className="mb-8 flex items-center gap-3">
-              <div className="h-9 w-1.5 rounded-full bg-primary-500" />
-              <div>
-                <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">FAQ</p>
-                <h2 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">Frequently Asked Questions</h2>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {post.faqs.map((faq, index) => (
-                <details key={`${faq.question}-${index}`} className="group rounded-2xl border border-white/80 bg-white/60 p-5 dark:border-white/10 dark:bg-white/[0.08] backdrop-blur-xl backdrop-saturate-150">
-                  <summary className="cursor-pointer list-none text-base font-bold text-surface-900 dark:text-white">
-                    {faq.question}
-                  </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-surface-600 dark:text-surface-300">{faq.answer}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* Recommended Posts */}
-      {showRecommendedPosts && recommendedPosts.length > 0 && (
-        <div className="mt-16 border-t border-white/80 pt-10 dark:border-white/10 sm:mt-20 sm:pt-16">
-          <div className="mb-8 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-500">
-                <Lightbulb className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">Next ideas</p>
-                <h2 className="text-2xl font-black tracking-tight">Recommended Posts</h2>
-              </div>
-            </div>
-            <Link href="/explore" prefetch={false} className="hidden text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 sm:flex items-center gap-2 group">
-              Explore More <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </div>
-          <ScrollReveal>
-            <div className="mb-16">
-              <MasonryGrid
-                posts={recommendedPosts}
-                settings={settings}
-                renderAdSlot={false}
-              />
-            </div>
-          </ScrollReveal>
-        </div>
-      )}
-
-      {/* Enhanced Lightbox Modal with Snappy Animations & Glassmorphism */}
-      {lightboxState && (
-        <div 
-          className={`fixed inset-0 z-50 flex flex-col items-center justify-between p-3 sm:p-6 cursor-zoom-out bg-black/90 backdrop-blur-[4px] select-none ${isLightboxClosing ? 'lightbox-backdrop-out pointer-events-none' : 'lightbox-backdrop-in'}`}
-          onClick={closeLightbox}
-        >
-          {/* Top Bar (Floating Badges on left, Floating Glass Actions on right) */}
-          <div className="w-full max-w-7xl flex items-center justify-between gap-2 z-50 pointer-events-none shrink-0 px-2 sm:px-4 py-2">
-            <div className="flex items-center gap-1.5 pointer-events-auto min-w-0 overflow-x-auto no-scrollbar py-0.5">
-              {lightboxState.tools.map(tool => {
-                const info = getToolInfo(tool, settings?.toolDetails);
-                return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="sm" className="whitespace-nowrap shrink-0" />;
-              })}
-              <span className="whitespace-nowrap shrink-0 px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-bold bg-white/15 text-white backdrop-blur-xl border border-white/25 uppercase tracking-wider shadow-lg">
-                {lightboxState.promptIndex >= 0 ? `Prompt #${lightboxState.promptIndex + 1}` : 'Reference'}
-                {lightboxState.images.length > 1 && (
-                  <span className="text-white/80 font-normal ml-1">
-                    ({lightboxState.activeImageIndex + 1}/{lightboxState.images.length})
-                  </span>
-                )}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto shrink-0" onClick={e => e.stopPropagation()}>
-              <button
-                onClick={() => {
-                  const currentUrl = lightboxState.images[lightboxState.activeImageIndex];
-                  if (currentUrl) handleDownload(currentUrl, `prompt_${post.id}_${lightboxState.promptIndex + 1}_v${lightboxState.activeImageIndex + 1}.png`);
-                }}
-                className="p-2 sm:p-2.5 rounded-full bg-white/20 hover:bg-white/35 text-white backdrop-blur-xl border border-white/30 hover:border-white/50 hover:scale-110 active:scale-95 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
-                title="Download image"
-              >
-                <Download className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-              <button
-                onClick={closeLightbox}
-                className="p-2 sm:p-2.5 rounded-full bg-white/20 hover:bg-white/35 text-white backdrop-blur-xl border border-white/30 hover:border-white/50 hover:scale-110 active:scale-95 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
-                title="Close (Esc)"
-              >
-                <X className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Center Area — Perfectly fits image with zero cropping & zoom animation */}
-          <div 
-            className={`relative w-full flex-1 min-h-0 flex items-center justify-center p-2 sm:p-4 ${isLightboxClosing ? 'lightbox-content-out' : 'lightbox-content-in'}`}
-            onClick={closeLightbox}
-          >
-            {/* Side Navigation Arrows (if multiple images) */}
-            {lightboxState.images.length > 1 && (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLightboxState(prev => prev ? ({ ...prev, activeImageIndex: (prev.activeImageIndex - 1 + prev.images.length) % prev.images.length }) : null);
-                  }}
-                  className="absolute left-2 sm:left-4 z-50 p-2.5 sm:p-3 rounded-full bg-white/20 hover:bg-white/35 text-white backdrop-blur-xl border border-white/30 hover:border-white/50 hover:scale-110 active:scale-95 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
-                  title="Previous image"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLightboxState(prev => prev ? ({ ...prev, activeImageIndex: (prev.activeImageIndex + 1) % prev.images.length }) : null);
-                  }}
-                  className="absolute right-2 sm:right-4 z-50 p-2.5 sm:p-3 rounded-full bg-white/20 hover:bg-white/35 text-white backdrop-blur-xl border border-white/30 hover:border-white/50 hover:scale-110 active:scale-95 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
-                  title="Next image"
-                >
-                  <ChevronRight className="w-6 h-6" />
-                </button>
-              </>
             )}
 
-            {/* Click on image stops propagation so only background clicks close */}
-            <img
-              src={lightboxState.images[lightboxState.activeImageIndex]}
-              alt={`${post.title} full view`}
-              onClick={e => e.stopPropagation()}
-              className="max-h-full max-w-full w-auto h-auto object-contain rounded-2xl shadow-2xl cursor-default"
-              referrerPolicy="no-referrer"
-            />
+            <AdSlot placement="postBottom" />
           </div>
 
-          {/* Bottom Floating Thumbnails (if multiple images) */}
-          {lightboxState.images.length > 1 ? (
-            <div 
-              className="z-50 shrink-0 flex items-center gap-2 p-2 rounded-2xl bg-white/15 backdrop-blur-xl border border-white/25 shadow-2xl max-w-[90vw] overflow-x-auto no-scrollbar mb-1"
-              onClick={e => e.stopPropagation()}
-            >
-              {lightboxState.images.map((u, i) => (
-                <button
-                  key={i}
-                  onClick={() => setLightboxState(prev => prev ? ({ ...prev, activeImageIndex: i }) : null)}
-                  className={`relative flex-none w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden transition-all ${
-                    i === lightboxState.activeImageIndex
-                      ? 'ring-2 ring-primary-400 scale-105 opacity-100 shadow-xl'
-                      : 'opacity-60 hover:opacity-100 scale-95 border border-white/30'
-                  }`}
-                >
-                  <img
-                    src={getThumbnailImageUrl(u, { width: 100, quality: 65 })}
-                    alt={`Thumb ${i + 1}`}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
+          {/* Sticky Desktop Sidebar */}
+          {showPostSidebar && (
+            <aside className="hidden lg:block">
+              <div className="sticky top-20 space-y-4">
+                {showSidebarShareButtons && (
+                  <PostShareCard
+                    postTitle={post.title}
+                    postSlugOrId={post.slug || post.id}
+                    thumbnailUrl={post.thumbnailUrl}
                   />
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="h-2" />
+                )}
+
+                {renderExploreAllPromptsBlock()}
+
+                {showYouMightAlsoLike && recommendedPosts.length > 0 && (
+                  <div className="rounded-2xl border border-white/80 bg-white/60 p-4 dark:border-white/10 dark:bg-white/[0.08] backdrop-blur-xl backdrop-saturate-150">
+                    <h3 className="mb-3 text-sm font-black text-surface-900 dark:text-white">
+                      You might also like
+                    </h3>
+                    <div className="space-y-2">
+                      {recommendedPosts.slice(0, 3).map((item) => (
+                        <SidebarCard key={item.id} item={item} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </aside>
           )}
         </div>
-      )}
-    </div>
+
+        {/* Discovery Tags (Server Rendered HTML) */}
+        {showTags && (post.tags || []).length > 0 && (
+          <div className="mb-16">
+            <h3 className="text-sm font-bold text-surface-600 dark:text-surface-400 uppercase tracking-[0.2em] mb-6">
+              Discovery Tags
+            </h3>
+            <div className="flex flex-wrap gap-2.5">
+              {(post.tags || []).map((tag) => (
+                <Link
+                  key={tag}
+                  href={`/tag/${encodeURIComponent(tag.toLowerCase())}`}
+                  prefetch={false}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-black/[0.04] dark:bg-white/[0.06] text-surface-600 dark:text-surface-300 hover:bg-primary-500 hover:text-white dark:hover:bg-primary-500 dark:hover:text-white transition-all transform uppercase tracking-wider"
+                >
+                  #{tag}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Comments Section (Client Island with content-visibility optimization) */}
+        {settings.features?.comments && (
+          <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 400px' }}>
+            <CommentsSection
+              postId={post.id}
+              initialComments={post.comments || []}
+              settings={settings}
+            />
+          </div>
+        )}
+
+        {/* Related Posts Section (MasonryGrid unchanged client island, 0 CLS risk) */}
+        {showRecommendedPosts && relatedPosts.length > 0 && (
+          <div className="border-t border-white/80 dark:border-white/10 pt-16">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-8 bg-primary-500 rounded-full underline-offset-8" />
+                <h2 className="text-2xl font-black tracking-tight">Related Prompts</h2>
+              </div>
+              <Link
+                href="/explore"
+                prefetch={false}
+                className="text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center gap-2 group"
+              >
+                Explore More{' '}
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+            <ScrollReveal>
+              <div className="mb-16">
+                <MasonryGrid posts={relatedPosts} settings={settings} renderAdSlot={false} />
+              </div>
+            </ScrollReveal>
+          </div>
+        )}
+
+        {renderLargeExploreShowcase()}
+
+        {/* Extended Description / Markdown Insights (Server Rendered with content-visibility) */}
+        {showDetailedInsights && post.extendedDescription && (
+          <div
+            className="mt-16 border-t border-white/80 pt-10 dark:border-white/10 sm:mt-20 sm:pt-16"
+            style={{ contentVisibility: 'auto', containIntrinsicSize: '0 400px' }}
+          >
+            <div className="max-w-4xl mx-auto">
+              <div className="mb-8 flex flex-col gap-3 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-1.5 rounded-full bg-primary-500" />
+                  <div>
+                    <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">
+                      Guide
+                    </p>
+                    <h2 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">
+                      Detailed Insights
+                    </h2>
+                  </div>
+                </div>
+                <div className="h-px flex-1 bg-black/[0.07] dark:bg-white/[0.09] sm:max-w-48" />
+              </div>
+
+              <div className="relative overflow-hidden rounded-2xl border border-white/80 bg-white/60 p-5 dark:border-white/10 dark:bg-white/[0.08] sm:rounded-3xl sm:p-8 md:p-12 backdrop-blur-xl backdrop-saturate-150">
+                <div className="prose prose-sm max-w-none dark:prose-invert sm:prose-base lg:prose-lg prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary-500 hover:prose-a:text-primary-600 prose-img:rounded-xl prose-img:shadow-md prose-p:text-surface-600 dark:prose-p:text-surface-300 prose-li:text-surface-600 dark:prose-li:text-surface-300">
+                  <MarkdownRenderer>{post.extendedDescription}</MarkdownRenderer>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Native FAQs Accordion (Pure Server HTML) */}
+        {post.faqs?.length ? (
+          <div className="mt-16 border-t border-white/80 pt-10 dark:border-white/10 sm:mt-20 sm:pt-16">
+            <div className="mx-auto max-w-4xl">
+              <div className="mb-8 flex items-center gap-3">
+                <div className="h-9 w-1.5 rounded-full bg-primary-500" />
+                <div>
+                  <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">
+                    FAQ
+                  </p>
+                  <h2 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">
+                    Frequently Asked Questions
+                  </h2>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {post.faqs.map((faq, index) => (
+                  <details
+                    key={`${faq.question}-${index}`}
+                    className="group rounded-2xl border border-white/80 bg-white/60 p-5 dark:border-white/10 dark:bg-white/[0.08] backdrop-blur-xl backdrop-saturate-150"
+                  >
+                    <summary className="cursor-pointer list-none text-base font-bold text-surface-900 dark:text-white">
+                      {faq.question}
+                    </summary>
+                    <p className="mt-3 text-sm leading-relaxed text-surface-600 dark:text-surface-300">
+                      {faq.answer}
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Recommended Posts Section */}
+        {showRecommendedPosts && recommendedPosts.length > 0 && (
+          <div className="mt-16 border-t border-white/80 pt-10 dark:border-white/10 sm:mt-20 sm:pt-16">
+            <div className="mb-8 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-500">
+                  <Lightbulb className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">
+                    Next ideas
+                  </p>
+                  <h2 className="text-2xl font-black tracking-tight">Recommended Posts</h2>
+                </div>
+              </div>
+              <Link
+                href="/explore"
+                prefetch={false}
+                className="hidden text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 sm:flex items-center gap-2 group"
+              >
+                Explore More{' '}
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
+            <ScrollReveal>
+              <div className="mb-16">
+                <MasonryGrid posts={recommendedPosts} settings={settings} renderAdSlot={false} />
+              </div>
+            </ScrollReveal>
+          </div>
+        )}
+      </div>
+    </PostPageProvider>
   );
 }

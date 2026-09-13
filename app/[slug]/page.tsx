@@ -389,7 +389,12 @@ export default async function PostPage({ params }: Props) {
           )}
         </>
       )}
-      <PostContent post={post} relatedPosts={relatedPosts} recommendedPosts={recommendedPosts} />
+      <PostContent
+        post={post}
+        settings={settings}
+        relatedPosts={relatedPosts}
+        recommendedPosts={recommendedPosts}
+      />
     </>
   );
 }
