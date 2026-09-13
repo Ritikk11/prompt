@@ -23,8 +23,8 @@ import { usePostPage } from './PostPageProvider';
 const GALLERY_SIZES = '(max-width: 768px) calc(100vw - 48px), 680px';
 const buildGallerySrcSet = (url?: string) => {
   if (!url) return undefined;
-  return [480, 640, 768, 1100]
-    .map((w) => `${getPromptImageUrl(url, { width: w, quality: 78 })} ${w}w`)
+  return [480, 640, 768, 1024]
+    .map((w) => `${getPromptImageUrl(url, { width: w, quality: 74 })} ${w}w`)
     .join(', ');
 };
 
@@ -171,7 +171,7 @@ export default function PromptItemCard({
               onClick={() => openLightbox(images, safeActiveIdx, index, tools)}
             >
               <LoadingImg
-                src={getPromptImageUrl(activeUrl || '', { width: 1100, quality: 78 })}
+                src={getPromptImageUrl(activeUrl || '', { width: 768, quality: 74 })}
                 srcSet={buildGallerySrcSet(activeUrl)}
                 sizes={GALLERY_SIZES}
                 alt={`${post.title}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}`}

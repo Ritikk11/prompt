@@ -32,6 +32,7 @@ import PromptItemCard from '@/components/post/PromptItemCard';
 import PostShareCard from '@/components/post/PostShareCard';
 import CommentsSection from '@/components/post/CommentsSection';
 import CopyCollectionBanner from '@/components/post/CopyCollectionBanner';
+import BackButton from '@/components/post/BackButton';
 
 interface PostContentProps {
   post: Post;
@@ -95,6 +96,8 @@ export default function PostContent({
       : { color: '', logo: '', logoScale: undefined };
   const heroToolInfo = primaryHeroToolInfo;
   const heroToolName = heroTools.join(' + ');
+  const primaryTool = heroTools[0] || '';
+  const toolSlug = primaryTool.toLowerCase().replace(/[\s-]+/g, '-');
 
   const fallbackPromptImageUrl = '';
   const originalMainImageUrl = post.thumbnailUrl || post.images?.[0]?.url || fallbackPromptImageUrl;
@@ -604,16 +607,49 @@ export default function PostContent({
       settings={settings}
     >
       <div className="max-w-6xl mx-auto px-1 py-4 sm:py-6">
-        {/* Breadcrumb Navigation */}
+        {/* Breadcrumb & Navigation Bar */}
         <div className="mb-6 flex items-center justify-between gap-3">
-          <Link
-            href="/explore"
-            prefetch={false}
-            className="group inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/60 px-3 py-1.5 text-xs font-semibold text-surface-600 shadow-sm backdrop-blur-xl transition-all hover:border-primary-400 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-surface-300 dark:hover:border-primary-400 dark:hover:text-primary-400"
+          <nav
+            aria-label="Breadcrumb"
+            className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-surface-500 dark:text-surface-400 font-medium min-w-0 overflow-x-auto no-scrollbar py-0.5"
           >
-            <span className="transition-transform group-hover:-translate-x-0.5">←</span>
-            <span>Back to prompts</span>
-          </Link>
+            <Link
+              href="/"
+              prefetch={false}
+              className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors shrink-0 font-medium text-surface-600 dark:text-surface-300"
+            >
+              Home
+            </Link>
+            <span className="text-surface-300 dark:text-surface-600 shrink-0 select-none">/</span>
+            <Link
+              href="/explore"
+              prefetch={false}
+              className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors shrink-0"
+            >
+              Prompts
+            </Link>
+            {primaryTool && (
+              <>
+                <span className="text-surface-300 dark:text-surface-600 shrink-0 select-none">/</span>
+                <Link
+                  href={`/tool/${toolSlug}`}
+                  prefetch={false}
+                  className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors shrink-0"
+                >
+                  {primaryTool}
+                </Link>
+              </>
+            )}
+            <span className="text-surface-300 dark:text-surface-600 shrink-0 select-none">/</span>
+            <span
+              className="text-surface-900 dark:text-white font-medium truncate max-w-[110px] sm:max-w-[200px] md:max-w-xs"
+              title={post.title}
+            >
+              {post.title}
+            </span>
+          </nav>
+
+          <BackButton fallbackHref="/" />
         </div>
 
         {/* Hero Banner Section (Server Rendered) */}

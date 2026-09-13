@@ -119,7 +119,7 @@ export function getThumbnailSrcSet(
 export function getPromptImageUrl(url?: string, options: ThumbnailOptions = {}) {
   return getCloudflareImageUrl(url, {
     width: options.width ?? 1200,
-    quality: options.quality ?? 78,
+    quality: options.quality ?? 74,
     fit: options.fit ?? 'scale-down',
   });
 }
