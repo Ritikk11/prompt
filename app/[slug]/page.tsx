@@ -198,13 +198,13 @@ export default async function PostPage({ params }: Props) {
   const preloadTargets = [
     mainImage && {
       url: getPromptImageUrl(mainImage, { width: 1280, quality: 78 }),
-      srcSet: buildSrcSet(mainImage, [480, 768, 1280]),
+      srcSet: buildSrcSet(mainImage, [360, 480, 768, 1280]),
       sizes: '(max-width: 640px) 200px, (max-width: 1024px) 240px, 320px',
       priority: 'high' as const,
     },
     (!isSameAsMain && galleryFirstImage) && {
       url: getPromptImageUrl(galleryFirstImage, { width: 1100, quality: 78 }),
-      srcSet: buildSrcSet(galleryFirstImage, [480, 768, 1100]),
+      srcSet: buildSrcSet(galleryFirstImage, [480, 640, 768, 1100]),
       sizes: '(max-width: 768px) calc(100vw - 48px), 680px',
       priority: 'high' as const,
     },

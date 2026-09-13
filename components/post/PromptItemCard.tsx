@@ -23,7 +23,7 @@ import { usePostPage } from './PostPageProvider';
 const GALLERY_SIZES = '(max-width: 768px) calc(100vw - 48px), 680px';
 const buildGallerySrcSet = (url?: string) => {
   if (!url) return undefined;
-  return [480, 768, 1100]
+  return [480, 640, 768, 1100]
     .map((w) => `${getPromptImageUrl(url, { width: w, quality: 78 })} ${w}w`)
     .join(', ');
 };

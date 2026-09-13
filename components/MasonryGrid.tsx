@@ -10,6 +10,7 @@ interface MasonryGridProps {
   cardStyleOverride?: string;
   renderAdSlot?: boolean;
   className?: string;
+  disablePriority?: boolean;
 }
 
 export default function MasonryGrid({
@@ -18,6 +19,7 @@ export default function MasonryGrid({
   cardStyleOverride,
   renderAdSlot = true,
   className = '',
+  disablePriority = false,
 }: MasonryGridProps) {
   const mobileColsSetting = settings?.features?.mobileColumns || 1;
   const desktopColsSetting = settings?.features?.desktopColumns || 4;
@@ -74,7 +76,7 @@ export default function MasonryGrid({
               <PostCard
                 post={post}
                 index={index}
-                priority={index < 2}
+                priority={!disablePriority && index < 2}
                 cardStyleOverride={cardStyleOverride as any}
               />
               {renderAdSlot && (

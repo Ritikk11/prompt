@@ -8,7 +8,9 @@ import { getToolInfo, getAllTools } from '@/lib/constants';
 import { useData } from '@/components/context/DataContext';
 import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
 import ToolBadge from '@/components/ToolBadge';
-import { getThumbnailImageUrl } from '@/lib/image-url';
+import { getThumbnailImageUrl, getThumbnailSrcSet } from '@/lib/image-url';
+
+const THUMBNAIL_SIZES = '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px';
 
 // Alternate, tool-color-independent badge looks selectable via settings.badgeStyle.
 // The glass default (v1 / v2 / unknown) is the shared, site-wide <ToolBadge>.
@@ -69,7 +71,9 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
   const showSkeleton = settings.features?.skeletonLoaders ?? true;
   const showLikeCount = settings.features?.showLikeCount ?? true;
   const showViewCount = settings.features?.showViewCount ?? true;
-  const imageUrl = getThumbnailImageUrl(post.thumbnailUrl || post.images[0]?.url || '');
+  const rawThumbnailUrl = post.thumbnailUrl || post.images[0]?.url || '';
+  const imageUrl = getThumbnailImageUrl(rawThumbnailUrl, { width: 380, quality: 74 });
+  const thumbnailSrcSet = getThumbnailSrcSet(rawThumbnailUrl);
 
   const renderBadges = (className = "") => (
     <div className="flex flex-wrap gap-1">
@@ -104,7 +108,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
               src={imageUrl}
               alt={post.title}
               fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              sizes={THUMBNAIL_SIZES}
               showSkeleton={showSkeleton}
               className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
               referrerPolicy="no-referrer"
@@ -114,6 +118,8 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
           ) : (
             <LoadingImg
               src={imageUrl}
+              srcSet={thumbnailSrcSet}
+              sizes={THUMBNAIL_SIZES}
               alt={post.title}
               showSkeleton={showSkeleton}
               className="block h-auto w-full transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
@@ -189,7 +195,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
           src={imageUrl}
           alt={post.title}
           fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          sizes={THUMBNAIL_SIZES}
           showSkeleton={showSkeleton}
           className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
           referrerPolicy="no-referrer"
@@ -197,16 +203,14 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
           priority={priority}
         />
       ) : (
-        <LoadingImage
+        <LoadingImg
           src={imageUrl}
+          srcSet={thumbnailSrcSet}
+          sizes={THUMBNAIL_SIZES}
           alt={post.title}
-          width={500}
-          height={700}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           showSkeleton={showSkeleton}
           className="block h-auto w-full transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
           referrerPolicy="no-referrer"
-          skeleton={showSkeleton}
           priority={priority}
         />
       )}

@@ -101,7 +101,7 @@ export default function PostContent({
   const mainPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 1280, quality: 78 });
   const backgroundPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 720, quality: 60 });
 
-  const heroImageSrcSet = [480, 768, 1280]
+  const heroImageSrcSet = [360, 480, 768, 1280]
     .map((w) => `${getPromptImageUrl(originalMainImageUrl || fallbackPromptImageUrl, { width: w, quality: 78 })} ${w}w`)
     .join(', ');
 
@@ -428,6 +428,7 @@ export default function PostContent({
             src={itemImageUrl}
             alt={item.title}
             fill
+            sizes="64px"
             showSkeleton={showSkeleton}
             className="object-cover transition-transform group-hover:scale-105"
             referrerPolicy="no-referrer"
@@ -637,6 +638,7 @@ export default function PostContent({
                         src={getThumbnailImageUrl(url, { width: 400, quality: 75 })}
                         alt={`Reference ${idx + 1}`}
                         fill
+                        sizes="(max-width: 640px) 50vw, 200px"
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                         referrerPolicy="no-referrer"
                       />
@@ -809,7 +811,7 @@ export default function PostContent({
             </div>
             <ScrollReveal>
               <div className="mb-16">
-                <MasonryGrid posts={relatedPosts} settings={settings} renderAdSlot={false} />
+                <MasonryGrid posts={relatedPosts} settings={settings} renderAdSlot={false} disablePriority />
               </div>
             </ScrollReveal>
           </div>
@@ -908,7 +910,7 @@ export default function PostContent({
             </div>
             <ScrollReveal>
               <div className="mb-16">
-                <MasonryGrid posts={recommendedPosts} settings={settings} renderAdSlot={false} />
+                <MasonryGrid posts={recommendedPosts} settings={settings} renderAdSlot={false} disablePriority />
               </div>
             </ScrollReveal>
           </div>

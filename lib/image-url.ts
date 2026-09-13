@@ -48,6 +48,16 @@ function normalizeImageUrl(url: string) {
   }
 }
 
+export function unwrapCloudflareImageUrl(url?: string): string {
+  if (!url) return '';
+  const trimmed = url.trim();
+  const match = trimmed.match(/(?:^|https?:\/\/[^/]+)?\/cdn-cgi\/image\/[^/]+\/(.+)$/);
+  if (match) {
+    return match[1];
+  }
+  return trimmed;
+}
+
 function canResizeImage(url: string) {
   if (!url) return false;
   if (url.startsWith('data:') || url.startsWith('blob:')) return false;
@@ -66,7 +76,8 @@ function canResizeImage(url: string) {
 
 export function getCloudflareImageUrl(url?: string, options: ThumbnailOptions = {}) {
   if (!url) return '';
-  const trimmed = normalizeImageUrl(url);
+  const unwrapped = unwrapCloudflareImageUrl(url);
+  const trimmed = normalizeImageUrl(unwrapped);
   if (!canResizeImage(trimmed)) return trimmed;
 
   const resizeOrigin = getResizeOrigin();
@@ -84,10 +95,25 @@ export function getCloudflareImageUrl(url?: string, options: ThumbnailOptions = 
 
 export function getThumbnailImageUrl(url?: string, options: ThumbnailOptions = {}) {
   return getCloudflareImageUrl(url, {
-    width: options.width ?? 720,
+    width: options.width ?? 380,
     quality: options.quality ?? 74,
     fit: options.fit ?? 'scale-down',
   });
+}
+
+export function getThumbnailSrcSet(
+  url?: string,
+  widths: number[] = [240, 360, 480, 720],
+  quality = 74
+): string | undefined {
+  if (!url) return undefined;
+  const unwrapped = unwrapCloudflareImageUrl(url);
+  const trimmed = normalizeImageUrl(unwrapped);
+  if (!canResizeImage(trimmed) || !getResizeOrigin()) return undefined;
+
+  return widths
+    .map((w) => `${getThumbnailImageUrl(trimmed, { width: w, quality })} ${w}w`)
+    .join(', ');
 }
 
 export function getPromptImageUrl(url?: string, options: ThumbnailOptions = {}) {
@@ -105,3 +131,4 @@ export function getArticleImageUrl(url?: string, options: ThumbnailOptions = {})
     fit: options.fit ?? 'scale-down',
   });
 }
+
