@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import Image from 'next/image';
 import {
   Clock,
@@ -68,7 +68,7 @@ export default function PostContent({
         <p className="text-surface-500 mb-8">This prompt might have been moved or deleted.</p>
         <Link
           href="/"
-          prefetch={false}
+          prefetch={true}
           className="px-6 py-3 rounded-xl bg-primary-500 text-white font-semibold hover:bg-primary-600 transition-colors shadow-lg shadow-primary-500/20"
         >
           Return to Gallery
@@ -181,7 +181,7 @@ export default function PostContent({
     return (
       <Link
         href={authorUrl}
-        prefetch={false}
+        prefetch={true}
         className="group flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/20 dark:bg-white/10 hover:bg-white/30 dark:hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all text-xs text-white/90"
       >
         {avatarUrl ? (
@@ -424,7 +424,7 @@ export default function PostContent({
     return (
       <Link
         href={`/${item.slug || item.id}`}
-        prefetch={false}
+        prefetch={true}
         className="group flex gap-3 rounded-2xl border border-white/80 bg-white/60 p-2.5 shadow-sm backdrop-blur-xl backdrop-saturate-150 transition-[border-color,box-shadow] duration-300 hover:border-primary-400/60 hover:shadow-md dark:border-white/10 dark:bg-white/[0.08] dark:hover:border-primary-400/50"
       >
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-black/[0.04] dark:bg-white/[0.06]">
@@ -497,7 +497,7 @@ export default function PostContent({
               <Link
                 key={`${item.label}:${item.href}`}
                 href={item.href}
-                prefetch={false}
+                prefetch={true}
                 className="group flex items-center justify-between rounded-xl border border-white/80 bg-white/25 px-3 py-2.5 text-xs font-bold text-surface-700 hover:border-primary-400/60 hover:bg-white/70 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-surface-300 dark:hover:border-primary-400/50 dark:hover:bg-white/10 dark:hover:text-white"
               >
                 <span className="flex items-center gap-2">
@@ -511,7 +511,7 @@ export default function PostContent({
         </div>
         <Link
           href={keepExploring.ctaHref || '/explore'}
-          prefetch={false}
+          prefetch={true}
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-xs font-black text-white hover:bg-primary-700"
         >
           {keepExploring.ctaLabel} <ArrowRight className="h-3.5 w-3.5" />
@@ -544,7 +544,7 @@ export default function PostContent({
             {/* Big All Prompts Button */}
             <Link
               href="/explore"
-              prefetch={false}
+              prefetch={true}
               className={`group/cta inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full border border-transparent px-8 text-base font-bold ${gradientButton}`}
             >
               <Compass className="h-5 w-5" />
@@ -555,7 +555,7 @@ export default function PostContent({
             {/* ChatGPT Prompts Button */}
             <Link
               href="/tool/chatgpt"
-              prefetch={false}
+              prefetch={true}
               className={`inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full px-8 text-base font-bold text-surface-700 ${glassPill}`}
             >
               {chatGptInfo?.logo ? (
@@ -576,7 +576,7 @@ export default function PostContent({
             {/* Gemini Prompts Button */}
             <Link
               href="/tool/gemini"
-              prefetch={false}
+              prefetch={true}
               className={`inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full px-8 text-base font-bold text-surface-700 ${glassPill}`}
             >
               {geminiInfo?.logo ? (
@@ -615,7 +615,7 @@ export default function PostContent({
           >
             <Link
               href="/"
-              prefetch={false}
+              prefetch={true}
               className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors shrink-0 font-medium text-surface-600 dark:text-surface-300"
             >
               Home
@@ -623,7 +623,7 @@ export default function PostContent({
             <span className="text-surface-300 dark:text-surface-600 shrink-0 select-none">/</span>
             <Link
               href="/explore"
-              prefetch={false}
+              prefetch={true}
               className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors shrink-0"
             >
               Prompts
@@ -633,7 +633,7 @@ export default function PostContent({
                 <span className="text-surface-300 dark:text-surface-600 shrink-0 select-none">/</span>
                 <Link
                   href={`/tool/${toolSlug}`}
-                  prefetch={false}
+                  prefetch={true}
                   className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors shrink-0"
                 >
                   {primaryTool}
@@ -808,7 +808,7 @@ export default function PostContent({
                 <Link
                   key={tag}
                   href={`/tag/${encodeURIComponent(tag.toLowerCase())}`}
-                  prefetch={false}
+                  prefetch={true}
                   className="px-4 py-2 rounded-xl text-xs font-bold bg-black/[0.04] dark:bg-white/[0.06] text-surface-600 dark:text-surface-300 hover:bg-primary-500 hover:text-white dark:hover:bg-primary-500 dark:hover:text-white transition-all transform uppercase tracking-wider"
                 >
                   #{tag}
@@ -839,7 +839,7 @@ export default function PostContent({
               </div>
               <Link
                 href="/explore"
-                prefetch={false}
+                prefetch={true}
                 className="text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center gap-2 group"
               >
                 Explore More{' '}
@@ -938,7 +938,7 @@ export default function PostContent({
               </div>
               <Link
                 href="/explore"
-                prefetch={false}
+                prefetch={true}
                 className="hidden text-sm font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 sm:flex items-center gap-2 group"
               >
                 Explore More{' '}

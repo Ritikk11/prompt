@@ -1,7 +1,7 @@
 export const revalidate = 43200;
 
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import { ArrowRight } from 'lucide-react';
 import { getArticlesForSettings } from '@/lib/content';
 import { fetchSettings } from '@/lib/data';
@@ -34,7 +34,7 @@ export default async function GuidesPage() {
         </div>
       </ScrollReveal>
 
-      <Link href="/explore" prefetch={false} className="mt-10 inline-flex items-center gap-2 rounded-full bg-primary-500 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-600">
+      <Link href="/explore" prefetch={true} className="mt-10 inline-flex items-center gap-2 rounded-full bg-primary-500 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-600">
         Browse prompts <ArrowRight className="h-4 w-4" />
       </Link>
     </div>

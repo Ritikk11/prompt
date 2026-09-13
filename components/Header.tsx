@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect, useCallback, Suspense, type FormEvent } from 'react';
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
@@ -526,7 +526,7 @@ function SiteHeader() {
     return item.kind === 'link' ? (
       <SmartLink key={item.navKey} href={item.href} onClick={onNavigate} className={cls}>{inner}</SmartLink>
     ) : (
-      <Link key={item.navKey} href={item.href} prefetch={false} onClick={onNavigate} className={cls}>{inner}</Link>
+      <Link key={item.navKey} href={item.href} prefetch="intent" onClick={onNavigate} className={cls}>{inner}</Link>
     );
   };
 
@@ -554,7 +554,7 @@ function SiteHeader() {
       >
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-3.5 sm:px-6">
           {/* Brand */}
-          <Link href="/" prefetch={false} className="flex shrink-0 items-center gap-2" onClick={() => setMenuOpen(false)}>
+          <Link href="/" prefetch="intent" className="flex shrink-0 items-center gap-2" onClick={() => setMenuOpen(false)}>
             <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xl sm:h-9 sm:w-9">
               <Image src={settings.siteLogo || '/icon-190x190.webp'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" priority />
             </span>
@@ -569,7 +569,7 @@ function SiteHeader() {
               if (item.kind === 'builtin' && item.key === 'submit') {
                 if (!submissionsEnabled) return null;
                 return (
-                  <Link key={item.navKey} href={item.href} prefetch={false} className={`inline-flex items-center gap-1.5 ${pill}`}>
+                  <Link key={item.navKey} href={item.href} prefetch="intent" className={`inline-flex items-center gap-1.5 ${pill}`}>
                     <Plus className="h-3.5 w-3.5" />
                     {item.label}
                   </Link>
@@ -578,7 +578,7 @@ function SiteHeader() {
               return item.kind === 'link' ? (
                 <SmartLink key={item.navKey} href={item.href} className={pill}>{item.label}</SmartLink>
               ) : (
-                <Link key={item.navKey} href={item.href} prefetch={false} className={pill}>{item.label}</Link>
+                <Link key={item.navKey} href={item.href} prefetch="intent" className={pill}>{item.label}</Link>
               );
             })}
 
@@ -642,7 +642,7 @@ function SiteHeader() {
               <div className="ml-0.5 hidden items-center gap-1.5 border-l border-black/10 pl-2 dark:border-white/10 sm:ml-1 sm:pl-2.5 md:flex">
                 {user ? (
                   <>
-                    <Link href="/profile" prefetch={false} className={`inline-flex h-9 items-center gap-1.5 ${navPill}`}>
+                    <Link href="/profile" prefetch="intent" className={`inline-flex h-9 items-center gap-1.5 ${navPill}`}>
                       <UserIcon className="h-4 w-4" />
                       Profile
                     </Link>
@@ -667,7 +667,7 @@ function SiteHeader() {
             {/* Primary CTA — only once the full row actually fits */}
             <Link
               href="/explore"
-              prefetch={false}
+              prefetch="intent"
               className="grad-shift group relative hidden items-center gap-1.5 overflow-hidden rounded-full px-4 py-2 text-sm font-semibold text-white shadow-md shadow-primary-500/25 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary-500/40 active:scale-[0.98] sm:px-5 min-[1080px]:inline-flex"
             >
               <span className="relative z-10">Browse Prompts</span>
@@ -733,7 +733,7 @@ function SiteHeader() {
                         <Link
                           key={post.id}
                           href={getPostPath(post)}
-                          prefetch={false}
+                          prefetch="intent"
                           onClick={closeSearch}
                           className="group/result flex items-center gap-3 border-b border-black/5 px-3 py-2.5 transition-colors last:border-b-0 hover:bg-black/[0.05] dark:border-white/5 dark:hover:bg-white/[0.08]"
                         >
@@ -801,7 +801,7 @@ function SiteHeader() {
                   return item.kind === 'link' ? (
                     <SmartLink key={item.navKey} href={item.href} onClick={() => setMenuOpen(false)} className={cls}>{inner}</SmartLink>
                   ) : (
-                    <Link key={item.navKey} href={item.href} prefetch={false} onClick={() => setMenuOpen(false)} className={cls}>{inner}</Link>
+                    <Link key={item.navKey} href={item.href} prefetch="intent" onClick={() => setMenuOpen(false)} className={cls}>{inner}</Link>
                   );
                 })}
               </div>
@@ -831,7 +831,7 @@ function SiteHeader() {
                 <div className={`flex flex-col gap-1 pt-1 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${menuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}>
                   {user ? (
                     <>
-                      <Link href="/profile" prefetch={false} onClick={() => setMenuOpen(false)} className={mobileRow}>
+                      <Link href="/profile" prefetch="intent" onClick={() => setMenuOpen(false)} className={mobileRow}>
                         <span className="flex items-center gap-2"><UserIcon className="h-4 w-4" /> Profile</span>
                         <ChevronRight className="h-4 w-4 opacity-40" />
                       </Link>
@@ -858,7 +858,7 @@ function SiteHeader() {
               <div className={`pt-2 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${menuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}>
                 <Link
                   href="/explore"
-                  prefetch={false}
+                  prefetch="intent"
                   onClick={() => setMenuOpen(false)}
                   className="grad-shift flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-white shadow-md shadow-primary-500/25 hover:shadow-lg hover:shadow-primary-500/40 active:scale-[0.98]"
                 >
@@ -890,7 +890,7 @@ function SiteHeader() {
                   <div className="mt-4 flex w-full justify-center border-t border-black/5 pt-3 dark:border-white/10">
                     <Link
                       href="/explore"
-                      prefetch={false}
+                      prefetch="intent"
                       onClick={() => setActiveMenuId(null)}
                       className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-bold text-primary-600 transition-colors hover:bg-black/[0.04] hover:text-primary-700 dark:text-primary-300 dark:hover:bg-white/5 dark:hover:text-white"
                     >

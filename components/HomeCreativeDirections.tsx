@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import { Grid3X3 } from 'lucide-react';
 import type { CreativeDirectionItem, Post, SiteSettings } from '@/lib/types';
 import ScrollReveal from '@/components/ScrollReveal';
@@ -64,7 +64,7 @@ export default function HomeCreativeDirections({ posts, settings }: { posts: Pos
             <Link
               key={`${item.type}-${item.value}`}
               href={itemHref(item)}
-              prefetch={false}
+              prefetch={true}
               /* /test design: compact glass pills, not the old icon cards.
                  Glass pills (backdrop-blur-xl ≙ capped 12px) over flat cards:
                  no nested blur passes, hover scales the pill itself. */

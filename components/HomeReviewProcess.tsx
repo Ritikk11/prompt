@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import { ArrowRight, CheckCircle2, FileCheck2, SearchCheck, ShieldCheck } from 'lucide-react';
 import type { SiteSettings } from '@/lib/types';
 import ScrollReveal from '@/components/ScrollReveal';
@@ -58,7 +58,7 @@ export default function HomeReviewProcess({ settings }: { settings?: SiteSetting
             {content.showCta !== false && (
               <Link
                 href={content.ctaHref || '/submit'}
-                prefetch={false}
+                prefetch={true}
                 className="mt-7 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-google-blue to-[#1a73e8] px-5 py-3 text-sm font-bold text-white shadow-md shadow-primary-500/25 transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg hover:shadow-primary-500/40 hover:brightness-[1.06] active:scale-95"
               >
                 {content.ctaLabel || 'Submit a prompt'}

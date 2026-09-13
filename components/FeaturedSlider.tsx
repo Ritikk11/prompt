@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import Image from 'next/image';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Post } from '@/lib/types';
@@ -103,7 +103,7 @@ export default function FeaturedSlider({ featuredPosts: rawFeatured, settings }:
           <div className="flex w-full flex-row items-center justify-center gap-2 md:justify-start md:gap-4">
             <Link
               href={`/${post.slug || post.id}`}
-              prefetch={false}
+              prefetch={true}
               className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-surface-900/85 px-4 py-2.5 text-xs font-bold text-white shadow-xl backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95 dark:bg-white/85 dark:text-surface-900 md:flex-none md:rounded-2xl md:px-8 md:py-4 md:text-base"
             >
               Get Prompt <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import { ChevronRight } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 import { matchesTag, matchesCategory, matchesTool } from '@/lib/sections';
@@ -148,7 +148,7 @@ export default function SeoPageContent({ seoPage, allPosts, settings }: SeoPageC
 
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 text-sm text-surface-400 mb-8 font-medium">
-        <Link href="/" prefetch={false} className="hover:text-primary-500 transition-colors">Home</Link>
+        <Link href="/" prefetch={true} className="hover:text-primary-500 transition-colors">Home</Link>
         <ChevronRight className="w-3.5 h-3.5 opacity-50" />
         <span className="text-surface-900 dark:text-white truncate max-w-xs sm:max-w-md">{heroTitle}</span>
       </nav>

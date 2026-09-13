@@ -2,7 +2,7 @@
 import React, { useRef } from 'react';
 import type { Section, Post, SiteSettings } from '@/lib/types';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import AdSlot from '@/components/AdSlot';
 import { getSectionPath } from '@/lib/sections';
 import FilterChipRail from '@/components/FilterChipRail';
@@ -45,7 +45,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
       {/* Header */}
       <ScrollReveal slide>
         <div className="mb-5 flex items-center justify-between gap-3">
-          <Link href={getSectionPath(section)} prefetch={false} className="group flex min-w-0 items-center gap-3">
+          <Link href={getSectionPath(section)} prefetch={true} className="group flex min-w-0 items-center gap-3">
             <span className="h-7 w-1.5 shrink-0 rounded-full bg-gradient-to-b from-primary-400 via-primary-500 to-primary-700" />
             <h2 className="truncate text-xl font-black tracking-tight text-surface-950 transition-colors group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-300 md:text-2xl">
               {section.name}
@@ -58,7 +58,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
             {!isLatest && (
               <Link
                 href={getSectionPath(section)}
-                prefetch={false}
+                prefetch={true}
                 className="group inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/75 px-4 py-2 text-xs font-bold text-surface-700 shadow-sm transition hover:border-primary-400/60 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.12] dark:text-surface-200 dark:hover:text-primary-300"
               >
                 View All <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -137,7 +137,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
         <ScrollReveal className="mt-8 flex justify-center">
           <Link
             href="/explore"
-            prefetch={false}
+            prefetch={true}
             className="group inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/25 px-7 py-3 text-sm font-bold text-surface-800 shadow-lg backdrop-blur-md backdrop-saturate-150 transition hover:scale-[1.03] hover:border-primary-400/60 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:text-primary-300"
           >
             Explore All Prompts

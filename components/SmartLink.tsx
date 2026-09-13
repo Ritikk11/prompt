@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import type { ReactNode } from 'react';
 
 export default function SmartLink({ href, className, children, onClick }: { href: string; className?: string; children: ReactNode; onClick?: () => void }) {
@@ -13,7 +13,7 @@ export default function SmartLink({ href, className, children, onClick }: { href
   }
 
   return (
-    <Link href={href || '/'} prefetch={false} className={className} onClick={onClick}>
+    <Link href={href || '/'} prefetch={true} className={className} onClick={onClick}>
       {children}
     </Link>
   );

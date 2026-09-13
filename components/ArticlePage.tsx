@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import { ArrowRight, ArrowLeft, Clock } from 'lucide-react';
 import type { Article } from '@/lib/content/types';
 import { getRelatedArticlesForSettings } from '@/lib/content';
@@ -128,7 +128,7 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
       {faqJsonLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: stringifyJsonLd(faqJsonLd) }} />
       )}
-      <Link href={listHref} prefetch={false} className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-500 hover:text-primary-600">
+      <Link href={listHref} prefetch={true} className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary-500 hover:text-primary-600">
         <ArrowLeft className="h-3.5 w-3.5" /> {listLabel}
       </Link>
       <h1 className="mt-4 text-3xl font-black tracking-tight text-surface-950 dark:text-white md:text-4xl">{article.title}</h1>
@@ -152,7 +152,7 @@ export default function ArticlePage({ article, siteUrl, settings, thumbnailUrl }
         <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-surface-600 dark:text-surface-400">
           Browse copy-ready prompts with example images, model notes, and the exact text behind each result.
         </p>
-        <Link href="/explore" prefetch={false} className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary-500 px-6 py-3 text-sm font-black text-white transition hover:bg-primary-600">
+        <Link href="/explore" prefetch={true} className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary-500 px-6 py-3 text-sm font-black text-white transition hover:bg-primary-600">
           Explore prompts <ArrowRight className="h-4 w-4" />
         </Link>
       </div>

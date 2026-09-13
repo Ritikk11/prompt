@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import Image from 'next/image';
 import { ArrowRight, Cpu, Crown, Heart, Tag } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
@@ -34,7 +34,7 @@ export default function HomePromptOfDay({ post, settings }: { post?: Post; setti
               unlayered and would override the 28px corner. */}
           <div className={`glass-surface mx-auto grid overflow-hidden rounded-[28px] text-left shadow-[0_34px_90px_rgba(15,45,99,0.14)] dark:shadow-[0_34px_90px_rgba(0,0,0,0.35)] ${imageUrl ? 'lg:grid-cols-[0.95fr_1.05fr]' : 'max-w-4xl'}`}>
             {imageUrl && (
-              <Link href={`/${post.slug || post.id}`} prefetch={false} className="group relative flex min-h-[320px] items-center justify-center overflow-hidden p-4 sm:min-h-[420px] sm:p-6 lg:min-h-full">
+              <Link href={`/${post.slug || post.id}`} prefetch={true} className="group relative flex min-h-[320px] items-center justify-center overflow-hidden p-4 sm:min-h-[420px] sm:p-6 lg:min-h-full">
                 <div className="relative flex h-full max-h-[520px] w-full items-center justify-center overflow-hidden rounded-2xl">
                   <Image
                     src={imageUrl}
@@ -75,7 +75,7 @@ export default function HomePromptOfDay({ post, settings }: { post?: Post; setti
               </div>
               <Link
                 href={`/${post.slug || post.id}`}
-                prefetch={false}
+                prefetch={true}
                 className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/70 bg-white/75 py-3 text-sm font-bold text-surface-800 shadow-sm transition hover:border-primary-400/60 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.12] dark:text-white dark:hover:text-primary-300"
               >
                 {content.ctaLabel || 'View This Prompt'}

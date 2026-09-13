@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import Image from 'next/image';
 import { ArrowRight, Bookmark, CheckCircle2, Flame, Heart, Layers, Search } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
@@ -126,7 +126,7 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
                 <Link
                   key={tag}
                   href={`/tag/${encodeURIComponent(tag.toLowerCase())}`}
-                  prefetch={false}
+                  prefetch={true}
                   className={`rounded-full px-3.5 py-1.5 text-xs font-bold text-surface-700 ${glassPill}`}
                 >
                   #{tag}
@@ -138,7 +138,7 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
           <div className="mt-6 flex flex-col items-center justify-center gap-3.5 sm:mt-7 sm:flex-row">
             <Link
               href={content.primaryCtaHref || '/explore'}
-              prefetch={false}
+              prefetch={true}
               className={`group/cta inline-flex h-14 w-full items-center justify-center gap-2 rounded-full border border-transparent px-8 text-base font-bold sm:w-auto ${gradientButton}`}
             >
               <span>{content.primaryCtaLabel || 'Browse All Prompts'}</span>
@@ -198,7 +198,7 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
                   <Link
                     key={tool}
                     href={`/tool/${encodeURIComponent(tool)}`}
-                    prefetch={false}
+                    prefetch={true}
                     className={`inline-flex h-9 origin-center items-center justify-center gap-2 rounded-full px-4 text-xs font-bold text-surface-700 ${glassPill}`}
                   >
                     {info?.logo ? (

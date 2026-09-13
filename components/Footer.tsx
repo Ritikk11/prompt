@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
@@ -119,7 +119,7 @@ function FooterContent() {
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
           {/* Brand: logo, description, then social icons and AI tool chips (no headings) */}
           <div className="lg:col-span-4">
-            <Link href="/" prefetch={false} className="flex items-center gap-2 mb-4 w-fit">
+            <Link href="/" prefetch="intent" className="flex items-center gap-2 mb-4 w-fit">
               <span className="w-9 h-9 shrink-0 relative overflow-hidden rounded-xl">
                 <Image src={settings.siteLogo || '/icon-190x190.webp'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" />
               </span>
@@ -150,7 +150,7 @@ function FooterContent() {
                 <Link
                   key={tool}
                   href={`/tool/${encodeURIComponent(tool)}`}
-                  prefetch={false}
+                  prefetch="intent"
                   className="rounded-full border border-white/80 bg-white/60 px-3 py-1 text-xs font-medium text-surface-700 shadow-sm transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/80 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/12 dark:bg-white/[0.08] dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/[0.14] dark:hover:text-white"
                 >
                   {tool}
@@ -172,7 +172,7 @@ function FooterContent() {
                         {link.label}
                       </a>
                     ) : (
-                      <Link key={`${group.title}-${link.href}-${link.label}`} href={link.href || '/'} prefetch={false} className={footerLinkClass}>
+                      <Link key={`${group.title}-${link.href}-${link.label}`} href={link.href || '/'} prefetch="intent" className={footerLinkClass}>
                         {link.label}
                       </Link>
                     );

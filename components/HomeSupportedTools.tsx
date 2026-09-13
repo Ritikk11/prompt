@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import { ArrowRight, BookmarkCheck, Check, Cpu, Gauge, Layers, Zap } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 import { getAllTools, getDefaultImageModel, getToolInfo } from '@/lib/constants';
@@ -77,7 +77,7 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
             ];
             const statIcons = [Cpu, Gauge, Layers];
             return (
-              <Link key={tool} href={`/tool/${encodeURIComponent(tool)}`} prefetch={false} className="group glass-card flex h-full flex-col p-6 transition hover:scale-[1.02] hover:border-primary-400/60 hover:shadow-2xl dark:hover:border-primary-400/50">
+              <Link key={tool} href={`/tool/${encodeURIComponent(tool)}`} prefetch={true} className="group glass-card flex h-full flex-col p-6 transition hover:scale-[1.02] hover:border-primary-400/60 hover:shadow-2xl dark:hover:border-primary-400/50">
                 <div className={`h-1 rounded-full ${accentBars[index % 4]}`} />
                 <div className="mt-5 flex items-center justify-between gap-2">
                   {!content.hidePromptCounts ? (

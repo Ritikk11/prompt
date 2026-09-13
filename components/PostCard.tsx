@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import Image from 'next/image';
 
 import { Eye, Heart } from 'lucide-react';
@@ -92,7 +92,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
     return (
       <Link
         href={`/${post.slug || post.id}`}
-        prefetch={false}
+        prefetch={true}
         /* Glass frame around an opaque thumbnail: the frost lives on the mat,
            never on the image. Only border-color and box-shadow transition —
            animating the frame's opacity would drop its backdrop-filter for the
@@ -180,7 +180,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
   return (
     <Link
       href={`/${post.slug || post.id}`}
-      prefetch={false}
+      prefetch={true}
       className={`group block relative rounded-2xl overflow-hidden bg-black/[0.04] dark:bg-white/[0.06] transition-all duration-300 hover:shadow-xl active:scale-[0.98] active:shadow-md break-inside-avoid ${aspect ? aspect : ''}`}
       style={{ animationDelay: `${(index || 0) * 80}ms` }}
     >

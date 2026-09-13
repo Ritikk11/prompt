@@ -1,7 +1,7 @@
 'use client';
 import React, { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
+import Link from '@/components/PrefetchLink';
 import { getGridClasses } from '@/lib/utils';
 import { Cpu } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
@@ -83,7 +83,7 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
     <div className="max-w-7xl mx-auto px-2 py-8 md:py-12 fade-in">
       {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-surface-500 mb-6">
-          <Link href="/" prefetch={false} className="hover:text-primary-500 transition-colors">Home</Link>
+          <Link href="/" prefetch={true} className="hover:text-primary-500 transition-colors">Home</Link>
           <span>/</span>
           <span className="text-surface-500 dark:text-surface-400">Tools</span>
           <span>/</span>
