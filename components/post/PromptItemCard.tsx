@@ -176,7 +176,7 @@ export default function PromptItemCard({
                 sizes={GALLERY_SIZES}
                 alt={`${post.title}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}`}
                 showSkeleton={showSkeleton}
-                priority={index === 0 && safeActiveIdx === 0}
+                priority={false}
                 wrapperClassName="w-full"
                 className="block h-auto w-full rounded-xl transition-transform duration-300 ease-out group-hover/img:scale-[1.02]"
                 referrerPolicy="no-referrer"

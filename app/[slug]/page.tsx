@@ -202,23 +202,6 @@ export default async function PostPage({ params }: Props) {
       sizes: '(max-width: 640px) 200px, (max-width: 1024px) 240px, 320px',
       priority: 'high' as const,
     },
-    (!isSameAsMain && galleryFirstImage) && {
-      url: getPromptImageUrl(galleryFirstImage, { width: 1100, quality: 78 }),
-      srcSet: buildSrcSet(galleryFirstImage, [480, 640, 768, 1100]),
-      sizes: '(max-width: 768px) calc(100vw - 48px), 680px',
-      priority: 'high' as const,
-    },
-    // The hero blurred background — same source, smaller size (720w q60).
-    // PostContent.tsx line 473 generates this exact URL. Preloading it ensures
-    // the ToolBadge's backdrop-blur has content to sample on first paint,
-    // eliminating the "frost pop" (transparent → blurred bg) flash.
-    // fetchPriority: low so it doesn't compete with the real LCP image above.
-    mainImage && {
-      url: getPromptImageUrl(mainImage, { width: 720, quality: 60 }),
-      srcSet: undefined,
-      sizes: '720px',
-      priority: 'low' as const,
-    },
   ].filter(Boolean) as { url: string; srcSet?: string; sizes: string; priority: 'high' | 'low' }[];
   const seenUrls = new Set<string>();
   for (const target of preloadTargets) {

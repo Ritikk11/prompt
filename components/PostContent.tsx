@@ -99,7 +99,7 @@ export default function PostContent({
   const fallbackPromptImageUrl = '';
   const originalMainImageUrl = post.thumbnailUrl || post.images?.[0]?.url || fallbackPromptImageUrl;
   const mainPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 1280, quality: 78 });
-  const backgroundPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 720, quality: 60 });
+  const backgroundPromptImageUrl = mainPromptImageUrl;
 
   const heroImageSrcSet = [360, 480, 768, 1280]
     .map((w) => `${getPromptImageUrl(originalMainImageUrl || fallbackPromptImageUrl, { width: w, quality: 78 })} ${w}w`)
@@ -215,14 +215,12 @@ export default function PostContent({
       case 'v2': // Immersive Blur Background
         return (
           <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-white/[0.08] shadow-2xl group min-h-[500px] flex items-end">
-            {/* Decorative background blur with priority so mobile LCP paints immediately without waiting */}
-            <Image
-              src={backgroundPromptImageUrl}
-              alt="bg"
-              fill
-              priority
-              className="object-cover opacity-40 blur-xl scale-110"
-              referrerPolicy="no-referrer"
+            {/* Decorative background blur sharing mainPromptImageUrl to reuse browser cache */}
+            <img
+              src={mainPromptImageUrl}
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40 blur-xl scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
             <div className="relative z-20 w-full max-w-6xl mx-auto flex flex-col items-center gap-8 p-8 pb-12 text-center lg:flex-row lg:items-center lg:gap-12 lg:p-12 lg:text-left">
@@ -286,12 +284,11 @@ export default function PostContent({
                 <div className="flex justify-start">{renderMetaInfo()}</div>
               </div>
               <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-black/[0.04] dark:bg-white/[0.06] flex items-center justify-center p-6 lg:p-10">
-                <Image
-                  src={backgroundPromptImageUrl}
+                <img
+                  src={mainPromptImageUrl}
                   alt=""
-                  fill
-                  className="object-cover blur-3xl opacity-20 scale-125 z-0"
-                  referrerPolicy="no-referrer"
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 h-full w-full object-cover blur-3xl opacity-20 scale-125 z-0"
                 />
                 <div className="max-h-[400px] w-full max-w-[800px] h-full sm:w-[600px] rounded-[24px] shadow-2xl relative z-10 overflow-hidden">
                   <LoadingImage
