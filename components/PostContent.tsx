@@ -153,8 +153,8 @@ export default function PostContent({
           <div className="w-5 h-5 rounded-full bg-primary-500/30 flex items-center justify-center text-[10px] font-bold text-white">
             P
           </div>
-          <span>Curated by</span>
-          <span className="font-semibold text-white">AI PromptMatrix Editorial</span>
+          <span>Published by</span>
+          <span className="font-semibold text-white">{EDITORIAL_TEAM_NAME}</span>
         </div>
       );
     }
@@ -165,7 +165,7 @@ export default function PostContent({
           <div className="w-5 h-5 rounded-full bg-primary-500/30 flex items-center justify-center text-[10px] font-bold text-white">
             {(post.authorUsername || 'C').slice(0, 1).toUpperCase()}
           </div>
-          <span>Curated by</span>
+          <span>Published by</span>
           <span className="font-semibold text-white">@{post.authorUsername || 'creator'}</span>
         </div>
       );
@@ -195,7 +195,7 @@ export default function PostContent({
             {username.slice(0, 1).toUpperCase()}
           </div>
         )}
-        <span className="text-white/70">By</span>
+        <span className="text-white/70">Published by</span>
         <span className="font-semibold text-white leading-tight transition-colors group-hover:text-primary-300">
           @{username}
         </span>
@@ -515,29 +515,84 @@ export default function PostContent({
     );
   };
 
-  const renderLargeExploreShowcase = () => (
-    <section className="my-12 rounded-3xl border border-white/80 bg-white/60 p-8 text-center backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.08] sm:p-12">
-      <div className="mx-auto max-w-2xl">
-        <h2 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">
-          Explore More Prompts
-        </h2>
-        <p className="mt-2 text-sm text-surface-600 dark:text-surface-300">
-          Browse our curated library of tested AI image prompts or filter by your favorite tool.
-        </p>
+  const renderLargeExploreShowcase = () => {
+    const chatGptInfo = getToolInfo('ChatGPT', settings?.toolDetails);
+    const geminiInfo = getToolInfo('Gemini', settings?.toolDetails);
 
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
-          <Link
-            href="/explore"
-            prefetch={false}
-            className="bg-gradient-to-r from-google-blue to-[#1a73e8] text-white shadow-md shadow-primary-500/25 transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg hover:shadow-primary-500/40 hover:brightness-[1.06] active:scale-95 inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold"
-          >
-            <span>Browse All Prompts</span>
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+    const glassPill =
+      'border border-white/60 bg-white/25 shadow-sm backdrop-blur-md backdrop-saturate-150 transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/60 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/[0.10] dark:hover:text-white';
+
+    const gradientButton =
+      'bg-gradient-to-r from-google-blue to-[#1a73e8] text-white shadow-md shadow-primary-500/25 transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg hover:shadow-primary-500/40 hover:brightness-[1.06] active:scale-95';
+
+    return (
+      <section className="my-12 rounded-3xl border border-white/80 bg-white/60 p-8 text-center backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-white/[0.08] sm:p-12">
+        <div className="mx-auto max-w-2xl">
+          <h2 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-white sm:text-3xl">
+            Explore More Prompts
+          </h2>
+          <p className="mt-2 text-sm text-surface-600 dark:text-surface-300">
+            Browse our curated library of tested AI image prompts or filter by your favorite tool.
+          </p>
+
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
+            {/* Big All Prompts Button */}
+            <Link
+              href="/explore"
+              prefetch={false}
+              className={`group/cta inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full border border-transparent px-8 text-base font-bold ${gradientButton}`}
+            >
+              <Compass className="h-5 w-5" />
+              <span>All Prompts</span>
+              <ArrowRight className="h-4 w-4 transition-transform duration-200 ease-out group-hover/cta:translate-x-1" />
+            </Link>
+
+            {/* ChatGPT Prompts Button */}
+            <Link
+              href="/tool/chatgpt"
+              prefetch={false}
+              className={`inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full px-8 text-base font-bold text-surface-700 ${glassPill}`}
+            >
+              {chatGptInfo?.logo ? (
+                <span className="relative h-5 w-5 overflow-hidden rounded-full shrink-0">
+                  <Image
+                    src={chatGptInfo.logo}
+                    alt="ChatGPT"
+                    width={20}
+                    height={20}
+                    className="h-full w-full object-contain dark:invert dark:brightness-200"
+                    referrerPolicy="no-referrer"
+                  />
+                </span>
+              ) : null}
+              <span>ChatGPT</span>
+            </Link>
+
+            {/* Gemini Prompts Button */}
+            <Link
+              href="/tool/gemini"
+              prefetch={false}
+              className={`inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-full px-8 text-base font-bold text-surface-700 ${glassPill}`}
+            >
+              {geminiInfo?.logo ? (
+                <span className="relative h-5 w-5 overflow-hidden rounded-full shrink-0">
+                  <Image
+                    src={geminiInfo.logo}
+                    alt="Gemini"
+                    width={20}
+                    height={20}
+                    className="h-full w-full object-contain"
+                    referrerPolicy="no-referrer"
+                  />
+                </span>
+              ) : null}
+              <span>Gemini</span>
+            </Link>
+          </div>
         </div>
-      </div>
-    </section>
-  );
+      </section>
+    );
+  };
 
   return (
     <PostPageProvider

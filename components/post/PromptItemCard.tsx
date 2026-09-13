@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef } from 'react';
+import Image from 'next/image';
 import {
   Lock,
   Clock,
@@ -142,15 +143,14 @@ export default function PromptItemCard({
   };
 
   const getTryToolsForImage = () => {
-    const list: string[] = [];
-    if (img.aiTool) {
-      img.aiTool.split(',').map((t) => t.trim()).filter(Boolean).forEach((tool) => {
-        if (!list.includes(tool)) list.push(tool);
-      });
-    }
+    const selectedTools = (img.aiTools || []).filter(Boolean);
+    if (selectedTools.length > 0) return selectedTools;
+
+    const fallbackTools = [img.aiTool].filter(Boolean);
     const modelTool = getToolForImageModel(img.model);
-    if (modelTool && !list.includes(modelTool)) list.push(modelTool);
-    return list.slice(0, 3);
+    return modelTool && fallbackTools.some((tool) => tool.toLowerCase() === modelTool.toLowerCase())
+      ? [modelTool]
+      : fallbackTools;
   };
 
   const tryTools = getTryToolsForImage();
@@ -365,22 +365,38 @@ export default function PromptItemCard({
             </span>
           </div>
 
-          {tryTools.length > 0 && (
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-bold text-surface-400 uppercase tracking-wider mr-1">
-                Try in:
-              </span>
-              {tryTools.map((tool) => (
-                <button
-                  key={tool}
-                  type="button"
-                  onClick={() => handleTryTool(tool, img.prompt)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-primary-500/10 hover:bg-primary-500 text-primary-600 hover:text-white dark:text-primary-400 dark:hover:text-white transition-all transform hover:scale-105 active:scale-95"
-                >
-                  {tool}
-                  <ExternalLink className="w-3 h-3 opacity-70" />
-                </button>
-              ))}
+          {settings?.features?.showTryButtons !== false && tryTools.length > 0 && img.prompt.trim() && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {Array.from(new Set(tryTools.filter(Boolean))).map((tool) => {
+                const info = getToolInfo(tool, settings?.toolDetails);
+                return (
+                  <button
+                    key={tool}
+                    type="button"
+                    onClick={() => handleTryTool(tool, img.prompt)}
+                    className="inline-flex items-center gap-2 rounded-xl border border-white/80 bg-white/60 px-3 py-2 text-xs font-bold text-surface-700 hover:border-primary-400 hover:text-primary-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-surface-200 dark:hover:text-white backdrop-blur-xl backdrop-saturate-150 transition-all duration-200"
+                  >
+                    {info.logo && (
+                      <span className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full p-[1px]">
+                        <Image
+                          src={info.logo}
+                          alt={`${tool} logo`}
+                          width={16}
+                          height={16}
+                          className={`h-full w-full object-contain ${
+                            tool.toLowerCase().includes('chatgpt') || info.logo.includes('chatgpt')
+                              ? 'dark:invert dark:brightness-200'
+                              : ''
+                          }`}
+                          referrerPolicy="no-referrer"
+                        />
+                      </span>
+                    )}
+                    Try in {tool}
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
