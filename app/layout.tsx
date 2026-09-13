@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Outfit } from 'next/font/google';
+import { Inter, Outfit, Playfair_Display } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 // Global styles
@@ -23,6 +23,14 @@ const inter = Inter({
 const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-heading',
+  display: 'swap',
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  style: ['italic'],
+  weight: ['600', '700', '800'],
+  variable: '--font-serif-italic',
   display: 'swap',
 });
 
@@ -179,7 +187,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ].filter(Boolean)));
 
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${outfit.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${outfit.variable} ${playfair.variable}`}>
       <head>
         {/* Blocking theme guard — must stay the first node in <head>.
             ThemeProvider applies the stored theme in useEffect, i.e. AFTER the

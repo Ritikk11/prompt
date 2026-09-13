@@ -3,7 +3,6 @@ import { Children, type ReactNode, useState, useEffect } from 'react';
 import { Check, Copy } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import 'highlight.js/styles/github-dark.css';
 
 type CalloutType = 'tip' | 'warning' | 'info' | 'note' | 'success' | 'danger' | 'highlight' | 'quote' | 'prompt' | 'example' | 'creative' | 'model' | 'important';
 type MarkdownBlock =

@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bodoni+Moda:ital,opsz,wght@1,6..96,800&family=Caveat:wght@700&family=Cinzel:wght@800&family=Dancing+Script:wght@700&family=Instrument+Serif:ital@1&family=Playfair+Display:ital,wght@1,600;1,700;1,800&family=Plus+Jakarta+Sans:ital,wght@1,800&family=Space+Grotesk:wght@700&family=Syne:wght@800&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -11,7 +10,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 .font-serif-italic {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-serif-italic), 'Playfair Display', Georgia, serif;
   font-style: italic;
 }
 
@@ -1000,4 +999,91 @@ body {
 /* Google-blue gradient for the Playfair accent words in section titles */
 .accent-gradient {
   @apply bg-gradient-to-r from-primary-800 via-primary-600 to-primary-500 dark:from-primary-200 dark:via-primary-300 dark:to-primary-400 bg-clip-text text-transparent;
+}
+
+/* Highlight.js syntax highlighting theme */
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em;
+}
+code.hljs {
+  padding: 3px 5px;
+}
+.hljs {
+  color: #c9d1d9;
+  background: #0d1117;
+}
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  color: #ff7b72;
+}
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  color: #d2a8ff;
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id,
+.hljs-variable {
+  color: #79c0ff;
+}
+.hljs-meta .hljs-string,
+.hljs-regexp,
+.hljs-string {
+  color: #a5d6ff;
+}
+.hljs-built_in,
+.hljs-symbol {
+  color: #ffa657;
+}
+.hljs-code,
+.hljs-comment,
+.hljs-formula {
+  color: #8b949e;
+}
+.hljs-name,
+.hljs-quote,
+.hljs-selector-pseudo,
+.hljs-selector-tag {
+  color: #7ee787;
+}
+.hljs-subst {
+  color: #c9d1d9;
+}
+.hljs-section {
+  color: #1f6feb;
+  font-weight: 700;
+}
+.hljs-bullet {
+  color: #f2cc60;
+}
+.hljs-emphasis {
+  color: #c9d1d9;
+  font-style: italic;
+}
+.hljs-strong {
+  color: #c9d1d9;
+  font-weight: 700;
+}
+.hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+.hljs-deletion {
+  color: #ffdcd7;
+  background-color: #67060c;
 }
