@@ -98,6 +98,7 @@ export default function PostContent({
   const heroToolName = heroTools.join(' + ');
   const primaryTool = heroTools[0] || '';
   const toolSlug = primaryTool.toLowerCase().replace(/[\s-]+/g, '-');
+  const hasMultipleTools = heroTools.length > 1;
 
   const fallbackPromptImageUrl = '';
   const originalMainImageUrl = post.thumbnailUrl || post.images?.[0]?.url || fallbackPromptImageUrl;
@@ -234,7 +235,7 @@ export default function PostContent({
                 alt={post.title}
                 showSkeleton={showSkeleton}
                 priority
-                wrapperClassName="inline-flex max-w-full shrink-0 justify-center rounded-2xl shadow-2xl aspect-square w-[260px] sm:w-[320px] lg:w-[400px]"
+                wrapperClassName="inline-flex max-w-full shrink-0 justify-center rounded-2xl aspect-square w-[260px] sm:w-[320px] lg:w-[400px]"
                 className="h-auto max-h-[260px] sm:max-h-[320px] lg:max-h-[400px] w-auto max-w-full rounded-2xl object-contain"
                 referrerPolicy="no-referrer"
                 width={1280}
@@ -607,49 +608,55 @@ export default function PostContent({
       settings={settings}
     >
       <div className="max-w-6xl mx-auto px-1 py-4 sm:py-6">
-        {/* Breadcrumb & Navigation Bar */}
+        {/* Breadcrumb */}
         <div className="mb-6 flex items-center justify-between gap-3">
           <nav
             aria-label="Breadcrumb"
-            className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-surface-500 dark:text-surface-400 font-medium min-w-0 overflow-x-auto no-scrollbar py-0.5"
+            className="flex items-center gap-2 text-sm text-surface-500 min-w-0 overflow-x-auto no-scrollbar"
           >
             <Link
               href="/"
               prefetch={true}
-              className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors shrink-0 font-medium text-surface-600 dark:text-surface-300"
+              className="hover:text-primary-500 transition-colors shrink-0"
             >
               Home
             </Link>
-            <span className="text-surface-300 dark:text-surface-600 shrink-0 select-none">/</span>
+            <span className="shrink-0">/</span>
             <Link
               href="/explore"
               prefetch={true}
-              className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors shrink-0"
+              className="hover:text-primary-500 transition-colors shrink-0"
             >
               Prompts
             </Link>
             {primaryTool && (
               <>
-                <span className="text-surface-300 dark:text-surface-600 shrink-0 select-none">/</span>
-                <Link
-                  href={`/tool/${toolSlug}`}
-                  prefetch={true}
-                  className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors shrink-0"
-                >
-                  {primaryTool}
-                </Link>
+                <span className="hidden shrink-0 sm:inline">/</span>
+                {hasMultipleTools ? (
+                  <span className="hidden shrink-0 text-surface-700 dark:text-surface-300 sm:inline">
+                    {heroToolName}
+                  </span>
+                ) : (
+                  <Link
+                    href={`/tool/${toolSlug}`}
+                    prefetch={true}
+                    className="hidden hover:text-primary-500 transition-colors shrink-0 sm:inline"
+                  >
+                    {primaryTool}
+                  </Link>
+                )}
               </>
             )}
-            <span className="text-surface-300 dark:text-surface-600 shrink-0 select-none">/</span>
+            <span className="shrink-0">/</span>
             <span
-              className="text-surface-900 dark:text-white font-medium truncate max-w-[110px] sm:max-w-[200px] md:max-w-xs"
+              className="block max-w-[120px] truncate font-medium text-surface-900 dark:text-surface-100 sm:max-w-[220px] md:max-w-md"
               title={post.title}
             >
               {post.title}
             </span>
           </nav>
 
-          <BackButton fallbackHref="/" />
+          <BackButton fallbackHref="/explore" />
         </div>
 
         {/* Hero Banner Section (Server Rendered) */}
@@ -686,17 +693,28 @@ export default function PostContent({
             )}
 
             {/* Prompt Cards List (Client Island per item for paywall & carousel) */}
-            <div className="space-y-12 mb-12">
-              {(post.images || []).map((img, index) => (
-                <PromptItemCard
-                  key={img.id || index}
-                  img={img}
-                  index={index}
-                  post={post}
-                  settings={settings}
-                  showSkeleton={showSkeleton}
-                />
-              ))}
+            <div className="mb-12">
+              <div className="mb-5 flex items-center gap-2">
+                <div className="w-1.5 h-6 bg-primary-500 rounded-full" />
+                <h2 className="text-xl md:text-2xl font-bold tracking-tight text-surface-900 dark:text-white">
+                  Prompt Gallery{' '}
+                  <span className="ml-1 font-medium text-surface-600 dark:text-surface-400">
+                    ({post.images?.length || 0})
+                  </span>
+                </h2>
+              </div>
+              <div className="space-y-12">
+                {(post.images || []).map((img, index) => (
+                  <PromptItemCard
+                    key={img.id || index}
+                    img={img}
+                    index={index}
+                    post={post}
+                    settings={settings}
+                    showSkeleton={showSkeleton}
+                  />
+                ))}
+              </div>
             </div>
 
             {/* Inline Share Card (on mobile / inline layouts) */}
