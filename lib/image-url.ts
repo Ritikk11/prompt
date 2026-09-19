@@ -7,8 +7,6 @@ type ThumbnailOptions = {
 const DEFAULT_SITE_ORIGIN = 'https://promptsoul.in';
 const DEFAULT_UPLOAD_ORIGIN = 'https://uploads.aipromptmatrix.in';
 const RESIZE_ELIGIBLE_HOSTS = new Set([
-  'promptsoul.in',
-  'www.promptsoul.in',
   'aipromptmatrix.in',
   'www.aipromptmatrix.in',
 ]);
