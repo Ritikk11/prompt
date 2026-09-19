@@ -4,8 +4,8 @@ import { UserX, ArrowLeft } from 'lucide-react';
 import LoginClient from './LoginClient';
 
 export const metadata = {
-  title: 'Sign In | AI PromptMatrix',
-  description: 'Sign in or sign up to access your saved prompts, comments, and public creator profile on AI PromptMatrix.',
+  title: 'Sign In | PromptSoul',
+  description: 'Sign in or sign up to access your saved prompts, comments, and public creator profile on PromptSoul.',
 };
 
 export default async function LoginPage() {

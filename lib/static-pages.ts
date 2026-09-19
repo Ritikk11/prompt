@@ -171,7 +171,41 @@ This Privacy Policy explains how ${siteTitle} ("we", "us", "our") collects, uses
 
 **Cookies and similar technologies.** We and our partners use cookies and similar technologies to operate the Service, remember your preferences, analyze usage, and serve advertising. See our [Cookie Policy](/cookies) for details.
 
-## 2. How We Use Information
+## 2. Google OAuth & User Data Policy
+
+When you choose to sign in to ${siteTitle} using your Google account ("Sign in with Google"), we access specific personal information via Google OAuth APIs to authenticate your identity and provide account functionality.
+
+### What Google Data We Access
+- **Basic Profile Information:** Your name and public profile picture URL.
+- **Email Address:** Your verified Google email address.
+- **Google User Identifier (ID):** A unique numerical identifier provided by Google, used strictly to associate your account session with your saved prompts and bookmarks.
+
+We do **not** request, access, or store your Google account password, Google Drive files, contacts, calendar, or any private data outside of the basic authentication scopes (\`email\`, \`profile\`, \`openid\`).
+
+### How We Use Google User Data
+We use information received from Google APIs solely to:
+- Authenticate your identity and provide secure single sign-on (SSO);
+- Create and maintain your user profile on ${siteTitle};
+- Allow you to save favorite prompts, organize bookmarks, and participate in community discussions;
+- Display your chosen username and avatar on comments or public prompt submissions you author.
+
+### Google API Services User Data Policy Compliance (Limited Use)
+**${siteTitle}'s use and transfer of information received from Google APIs to any other app will adhere to the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including the Limited Use requirements.**
+
+Specifically:
+- **No Sale of Google User Data:** We do **not** sell, rent, or trade your Google user data to any third party, data broker, or advertiser under any circumstances.
+- **No Advertising Transfer:** We do **not** use or transfer Google user data for serving personalized advertising, retargeting, or interest-based ads.
+- **No AI Model Training:** We do **not** use Google user data to train, fine-tune, or improve generalized artificial intelligence or machine learning models.
+- **Strict Human Access Prohibition:** No human employee or contractor reads or accesses your Google user data unless required to resolve a technical support issue explicitly requested by you, to comply with applicable law, or where aggregated and anonymized for internal security auditing.
+
+### Third-Party Service Providers for Authentication
+To securely handle authentication tokens and database storage, we use **Supabase** (hosted on secure cloud infrastructure). Supabase acts as our data processor under strict confidentiality and security commitments. All authentication tokens are transmitted securely over TLS/SSL encryption.
+
+### How to Revoke Access or Delete Your Data
+- **Revoking Google Permissions:** You can revoke ${siteTitle}'s access to your Google account at any time by visiting your [Google Account Third-Party Permissions](https://myaccount.google.com/permissions).
+- **Requesting Account and Data Deletion:** If you wish to delete your ${siteTitle} account and all associated personal data (including your email, profile information, bookmarks, and comments), simply email us at **${contactEmail}** with the subject "Account Deletion Request". We will permanently erase your personal data from our database within 30 days and confirm upon completion.
+
+## 3. How We Use Information
 
 We use the information we collect to:
 - Provide, maintain, operate, and improve the Service;
@@ -183,17 +217,17 @@ We use the information we collect to:
 - Detect, investigate, and prevent fraud, abuse, security incidents, and other harmful or illegal activity;
 - Comply with legal obligations and enforce our terms and policies.
 
-## 3. Legal Bases for Processing (EEA/UK Users)
+## 4. Legal Bases for Processing (EEA/UK Users)
 
 Where the EU/UK General Data Protection Regulation (GDPR) applies, we process personal data on the following bases: your **consent**; the **performance of a contract** with you; our **legitimate interests** (such as securing and improving the Service); and **compliance with legal obligations**. You may withdraw consent at any time where processing is based on consent.
 
-## 4. Cookies and Advertising
+## 5. Cookies and Advertising
 
 We use first- and third-party cookies. Some are strictly necessary for the Service to function; others help us analyze usage and deliver relevant advertising.
 
 **Google AdSense.** We use Google AdSense to display ads. Google, as a third-party vendor, uses cookies (including the DoubleClick cookie) to serve ads based on your prior visits to this and other websites. You may opt out of personalized advertising by visiting [Google Ads Settings](https://adssettings.google.com/authenticated), or opt out of third-party vendor cookies at [aboutads.info](https://www.aboutads.info/choices/).
 
-## 5. Third-Party Services
+## 6. Third-Party Services
 
 We rely on trusted third parties to operate the Service. These may include, among others:
 - **Google AdSense / Google Analytics** — advertising and analytics;
@@ -202,33 +236,33 @@ We rely on trusted third parties to operate the Service. These may include, amon
 
 These providers process data on our behalf or as independent controllers under their own privacy policies. We encourage you to review their policies.
 
-## 6. How We Share Information
+## 7. How We Share Information
 
 We do **not** sell your personal information. We may share information: with service providers who process it on our behalf; to comply with law, regulation, legal process, or enforceable governmental request; to enforce our terms or protect the rights, property, or safety of us, our users, or the public; and in connection with a merger, acquisition, or sale of assets, in which case we will notify you.
 
-## 7. Data Retention
+## 8. Data Retention
 
 We retain personal information only for as long as necessary to fulfil the purposes described in this policy, including to provide the Service, comply with our legal obligations, resolve disputes, and enforce our agreements. When no longer needed, we delete or anonymize it.
 
-## 8. Data Security
+## 9. Data Security
 
 We implement reasonable technical and organizational measures designed to protect your information against unauthorized access, alteration, disclosure, or destruction. However, no method of transmission over the Internet or electronic storage is completely secure, and we cannot guarantee absolute security.
 
-## 9. International Data Transfers
+## 10. International Data Transfers
 
 We may process and store information in countries other than your own, which may have data-protection laws that differ from those in your jurisdiction. Where required, we take steps to ensure an adequate level of protection for transferred data.
 
-## 10. Your Rights
+## 11. Your Rights
 
 Depending on where you live, you may have the right to access, correct, update, or delete your personal information; to object to or restrict certain processing; to data portability; and to withdraw consent. To exercise these rights, contact us at ${contactEmail}.
 
 **California residents (CCPA/CPRA).** You have the right to know what personal information we collect, to request deletion, to correct inaccurate information, and to opt out of the "sale" or "sharing" of personal information. We do not sell personal information. You will not be discriminated against for exercising these rights.
 
-## 11. Children's Privacy
+## 12. Children's Privacy
 
 The Service is not directed to children. You must be at least 18 years old to use the Service, or, where permitted, use it under the involvement and consent of a parent or legal guardian. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information, please contact us and we will take steps to delete it.
 
-## 12. Your Rights Under India's DPDP Act, 2023
+## 13. Your Rights Under India's DPDP Act, 2023
 
 If you are located in India, the Digital Personal Data Protection Act, 2023 ("DPDP Act") applies. As a Data Principal, you have the right to access, correction, and erasure of your personal data, the right to grievance redressal, and the right to nominate another individual to exercise your rights in the event of death or incapacity. We process personal data based on your consent or other lawful grounds, and the personal data of children (under 18) only with verifiable parental or guardian consent.
 

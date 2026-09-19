@@ -234,7 +234,7 @@ function LoginContent({ settings }: { settings: SiteSettings }) {
               />
             </span>
             <span className="text-lg font-black tracking-tight text-surface-950 dark:text-white">
-              {settings.siteTitle || 'PromptMatrix'}
+              {settings.siteTitle || 'PromptSoul'}
             </span>
           </Link>
 
