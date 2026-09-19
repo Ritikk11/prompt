@@ -21,7 +21,7 @@ const defaultArticleThumbnails: Record<string, string> = {
   'couple-portrait-prompts-guide': 'https://uploads.aipromptmatrix.in/thumbnails/couple-portrait-prompts-guide.webp',
   'gemini-photo-editing-guide': 'https://uploads.aipromptmatrix.in/thumbnails/gemini-photo-editing-guide.webp',
   'how-ai-image-generators-work': 'https://uploads.aipromptmatrix.in/thumbnails/how-ai-image-generators-work.webp',
-  'how-to-use-prompts-from-promptmatrix': 'https://uploads.aipromptmatrix.in/thumbnails/how-to-use-prompts-from-promptmatrix.webp',
+  'how-to-use-prompts-from-promptmatrix': '/thumbnails/how-to-use-prompts-from-promptmatrix.webp',
   'how-to-write-better-ai-image-prompts': 'https://uploads.aipromptmatrix.in/thumbnails/how-to-write-better-ai-image-prompts.webp',
   'negative-prompts-explained': 'https://uploads.aipromptmatrix.in/thumbnails/negative-prompts-explained.webp',
   'reference-images-vs-text-prompts': 'https://uploads.aipromptmatrix.in/thumbnails/reference-images-vs-text-prompts.webp',
@@ -477,7 +477,7 @@ const defaultSettings: SiteSettings = {
     "reference-images-vs-text-prompts": "https://uploads.aipromptmatrix.in/thumbnails/reference-images-vs-text-prompts.webp",
     "chatgpt-vs-gemini-image-generation": "https://uploads.aipromptmatrix.in/thumbnails/chatgpt-vs-gemini-image-generation.webp",
     "anatomy-of-a-perfect-ai-image-prompt": "https://uploads.aipromptmatrix.in/thumbnails/anatomy-of-a-perfect-ai-image-prompt.webp",
-    "how-to-use-prompts-from-promptmatrix": "https://uploads.aipromptmatrix.in/thumbnails/how-to-use-prompts-from-promptmatrix.webp",
+    "how-to-use-prompts-from-promptmatrix": "/thumbnails/how-to-use-prompts-from-promptmatrix.webp",
     "how-to-write-better-ai-image-prompts": "https://uploads.aipromptmatrix.in/thumbnails/how-to-write-better-ai-image-prompts.webp"
   },
   "exploreFilterTags": [],

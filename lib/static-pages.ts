@@ -88,14 +88,14 @@ export function staticPageMetadata(page: ReturnType<typeof getStaticPageContent>
 }
 
 export function getDefaultStaticPageBody(key: StaticPageKey, settings?: SiteSettings): string {
-  const siteTitle = settings?.siteTitle || 'Our Site';
-  const contactEmail = settings?.contactEmail || 'contact@aipromptmatrix.in';
+  const siteTitle = settings?.siteTitle || 'PromptSoul';
+  const contactEmail = settings?.contactEmail || 'contact@promptsoul.in';
 
   if (key === 'about') {
     return `
 # About Us
 
-AI PromptMatrix is a curated prompt library for creators who want practical AI image prompts, real examples, model notes, and reusable creative workflows in one place.
+${siteTitle} is a curated prompt library for creators who want practical AI image prompts, real examples, model notes, and reusable creative workflows in one place.
 
 The site exists because prompt discovery is often messy. A useful prompt is not just a block of text. It needs context: which tool it was made for, what kind of image it produced, what tags or style direction it belongs to, and how someone can adapt it without starting from zero.
 
@@ -117,7 +117,7 @@ Before a prompt is featured or organized into a section, we look for clear title
 
 ## Who This Site Is For
 
-AI PromptMatrix is built for creators, designers, social media editors, prompt writers, students, and anyone experimenting with AI image generation. The goal is not to promise identical outputs every time. AI tools can vary. The goal is to give you a stronger starting point and a clearer direction.
+${siteTitle} is built for creators, designers, social media editors, prompt writers, students, and anyone experimenting with AI image generation. The goal is not to promise identical outputs every time. AI tools can vary. The goal is to give you a stronger starting point and a clearer direction.
 
 ## Contact
 

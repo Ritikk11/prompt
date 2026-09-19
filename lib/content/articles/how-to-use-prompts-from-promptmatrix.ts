@@ -15,7 +15,7 @@ const article: Article = {
   dateModified: '2026-09-19',
   icon: 'book',
   featured: true,
-  thumbnailUrl: 'https://uploads.aipromptmatrix.in/thumbnails/how-to-use-prompts-from-promptmatrix.webp',
+  thumbnailUrl: '/thumbnails/how-to-use-prompts-from-promptmatrix.webp',
   body: `
 **PromptSoul** is an open, curated library of tested, copy-ready prompts for state-of-the-art AI image generators — including ChatGPT (DALL-E 3 & GPT-4o), Google Gemini (Imagen 3), Grok Imagine, Midjourney, and Qwen Image. 
 

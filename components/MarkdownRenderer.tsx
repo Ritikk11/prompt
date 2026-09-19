@@ -329,17 +329,19 @@ function renderMarkdown(content: string) {
           </blockquote>
         ),
         img: (props) => (
-          <figure className="my-8 overflow-hidden rounded-2xl border border-white/15 bg-black/5 dark:bg-white/[0.03] shadow-md">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={props.src}
-              alt={props.alt || 'Prompt visual preview'}
-              loading="lazy"
-              decoding="async"
-              className="w-full max-h-[560px] object-cover object-top"
-            />
+          <figure className="my-8 overflow-hidden rounded-2xl border border-white/15 bg-black/[0.02] dark:bg-white/[0.02] shadow-sm">
+            <div className="flex items-center justify-center p-2 sm:p-4 bg-black/[0.02] dark:bg-black/30">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={props.src}
+                alt={props.alt || 'Prompt visual preview'}
+                loading="lazy"
+                decoding="async"
+                className="h-auto max-h-[750px] w-auto max-w-full rounded-xl object-contain shadow-sm"
+              />
+            </div>
             {(props.alt || props.title) && (
-              <figcaption className="border-t border-white/10 bg-black/10 dark:bg-white/[0.02] px-4 py-2 text-center text-xs font-medium text-surface-600 dark:text-surface-400">
+              <figcaption className="border-t border-white/10 bg-black/[0.03] dark:bg-white/[0.02] px-4 py-2.5 text-center text-xs font-medium text-surface-600 dark:text-surface-400">
                 {props.title || props.alt}
               </figcaption>
             )}
