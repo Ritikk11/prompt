@@ -24,7 +24,7 @@ function resolveAbsoluteUrl(url: string, baseUrl: string): string {
 function toJpegFeedUrl(rawUrl: string, baseUrl: string): string {
   const abs = resolveAbsoluteUrl(rawUrl, baseUrl);
   if (!abs) return '';
-  return `https://aipromptmatrix.in/cdn-cgi/image/format=jpeg,quality=85/${abs}?ext=.jpg`;
+  return `${baseUrl}/cdn-cgi/image/format=jpeg,quality=85/${abs}?ext=.jpg`;
 }
 
 function getPostTimestamp(post: Post): number {
@@ -34,12 +34,12 @@ function getPostTimestamp(post: Post): number {
 }
 
 export async function GET() {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in').replace(/\/$/, '');
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in').replace(/\/$/, '');
 
   try {
     // 1. Fetch site settings for title and description
     const settings = (await fetchSettings()) as SiteSettings;
-    const siteTitle = settings?.siteTitle || 'AI PromptMatrix';
+    const siteTitle = settings?.siteTitle || 'PromptSoul';
     const siteDescription = settings?.siteDescription || 'Curated AI Prompts & Generative Art';
 
     // 2. Fetch full posts to access all prompt images

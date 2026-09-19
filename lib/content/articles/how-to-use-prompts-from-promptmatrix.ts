@@ -2,106 +2,177 @@ import type { Article } from '../types';
 
 const article: Article = {
   slug: 'how-to-use-prompts-from-promptmatrix',
-  title: 'How to Use AI PromptMatrix: From Browsing to Your First Image',
+  title: 'How to Use PromptSoul: From Browsing to Your First Masterpiece',
+  seoTitle: 'How to Use PromptSoul: Step-by-Step AI Prompting Guide',
+  seoDescription:
+    'A masterclass walkthrough of PromptSoul: discover verified prompts, inspect prompt cards with real output photos, copy exact syntax, and generate stunning AI art in ChatGPT or Gemini.',
   description:
-    'A step-by-step walkthrough of AI PromptMatrix: find a prompt on the explore page, read the prompt card, copy it, paste it into your AI tool, and refine the result.',
+    'A complete visual walkthrough of PromptSoul: find verified prompts, inspect real output examples, copy exact syntax, and generate flawless AI imagery in ChatGPT and Gemini.',
   category: 'guide',
-  tags: ['getting started', 'promptmatrix', 'copy prompts', 'beginners'],
-  readMinutes: 8,
+  tags: ['getting started', 'promptsoul', 'copy prompts', 'beginners', 'ai art', 'workflow'],
+  readMinutes: 9,
   datePublished: '2026-03-10',
+  dateModified: '2026-09-19',
   icon: 'book',
   featured: true,
+  thumbnailUrl: 'https://uploads.aipromptmatrix.in/thumbnails/how-to-use-prompts-from-promptmatrix.webp',
   body: `
-AI PromptMatrix is a gallery of tested, copy-ready prompts for image tools like ChatGPT, Gemini, Midjourney, Grok, and Qwen Image. Every post shows real example images next to the exact text that produced them, so you never have to guess whether a prompt actually works. This guide walks you from browsing the site to generating your first image, including the small details — like attaching your own photo at the right moment — that decide whether your result looks like the example.
+**PromptSoul** is an open, curated library of tested, copy-ready prompts for state-of-the-art AI image generators — including ChatGPT (DALL-E 3 & GPT-4o), Google Gemini (Imagen 3), Grok Imagine, Midjourney, and Qwen Image. 
 
-## Step 1: Browse the Explore Page or a Tool Page
+Every single entry in our library is paired with **real visual proof**: unedited sample images generated using the exact prompt text shown on the card. You never have to guess whether a prompt actually works, wonder which model generated it, or waste credits on broken syntax.
 
-Start at the [explore page](/explore). It shows the full prompt library as a grid of cards, each with a preview image, a title, and a label for the AI tool it was made with. Scroll until something catches your eye, or use the search and category filters to narrow things down — portrait styles, 3D trends, retro edits, and so on.
+This masterclass guide takes you through the full workflow: discovering the right prompt, decoding card metadata, executing flawless photo-edit transformations, and surgically refining your outputs into breathtaking digital art.
 
-If you already know which tool you use, go straight to that tool's page instead. The [ChatGPT prompts](/tool/chatgpt) page only shows prompts written and tested for ChatGPT; the [Gemini prompts](/tool/gemini) page does the same for Gemini. This matters more than beginners expect: a prompt tuned for Midjourney's parameter syntax will confuse ChatGPT, and a conversational photo-edit prompt written for Gemini won't do anything useful in Midjourney.
+---
 
-:::tip Filter by tool
-If you only have a free account with one tool, filter by that tool first. Every prompt on a tool page is confirmed to work there, so you skip the trial-and-error of adapting prompts across models.
+## Step 1: Discover Tested Prompts on the Explore Page
+
+Your creative journey begins at the [explore page](/explore), where the entire prompt archive is organized into an intuitive visual grid. Each prompt card showcases the primary output thumbnail, the prompt title, the underlying AI tool, and relevant aesthetic tags.
+
+![80s Bollywood Rainy Cinema Portrait](https://uploads.aipromptmatrix.in/thumbnails/80s-bollywood-rainy-cinema-portrait-mtvwnq24kzn6.webp "Verified prompt showcase: '80s Bollywood Rainy Cinema Portrait', tested in ChatGPT with authentic 35mm film grain.")
+
+### Filter by AI Generator Tool
+Different AI models interpret text through entirely different architectural lenses. A prompt packed with Midjourney-style weighting parameters (\`--ar 16:9 --v 6.0 --s 250\`) will confuse ChatGPT, while a natural-language photo transformation written for Gemini won't function inside a pure text-to-image engine.
+
+If you have an active subscription or preference for a specific tool, jump straight to its dedicated collection:
+- [ChatGPT Image Prompts](/tool/chatgpt) — Natural language, conversational instructions, and narrative cinematic portraits.
+- [Gemini Image Prompts](/tool/gemini) — High-fidelity realism, complex lighting physics, and reference photo editing.
+- [Midjourney Prompts](/tool/midjourney) — Stylized aesthetic rendering, parameter-driven lighting, and artistic concept art.
+- [Grok Prompts](/tool/grok) — Fast, candid, unfiltered artistic and meme styles.
+
+:::tip Match the Model First
+If you are using a free account with Gemini or ChatGPT, always start by filtering for that specific tool. Using prompts confirmed to work on your chosen model eliminates frustrating trial-and-error.
 :::
 
-## Step 2: Open a Prompt and Read the Card
+---
 
-Click any card to open the full prompt post. Before you copy anything, take thirty seconds to read the whole card. Each post contains a few distinct pieces of information, and each one changes how you should use the prompt:
+## Step 2: Decode the Prompt Card & Input Requirements
 
-- **The example images.** These show what the prompt actually produces. Look at more than one if the post includes several — the variation between them tells you how consistent the prompt is.
-- **The tool label.** This is the AI tool the prompt was tested in. Use the prompt in that tool for the closest match to the examples.
-- **The model notes.** Some posts mention a specific model or mode — for example, an image-editing model inside Gemini versus plain text chat. If the notes say the prompt needs an uploaded photo, that is not optional; the prompt is written to transform an input image, not to generate one from nothing.
-- **The prompt text itself.** The exact wording, displayed with a copy button so you get it character-for-character.
+Clicking any card opens the complete prompt post. Before tapping the copy button, take thirty seconds to review the card layout. Each card provides critical details that determine your generation success:
 
-:::info Attach reference images
-Reference images matter. If a prompt card's examples clearly show a real person restyled — same face, new outfit or setting — it is a photo-edit prompt. Running it without attaching a photo will produce a generic stranger. If the examples look fully invented, it is a text-to-image prompt and no upload is needed. When in doubt, our post on [reference images vs. text prompts](/blog/reference-images-vs-text-prompts) explains the difference in depth.
+![80s Indian Fashion Saree Portrait](https://uploads.aipromptmatrix.in/thumbnails/80s-indian-fashion-saree-portrait-mtwoh5jrhy2j.webp "Photo-edit transformation showcase: '80s Indian Fashion Saree Portrait', designed to keep your facial identity 100% intact while restyling retro wardrobe.")
+
+### The Two Types of Prompts on PromptSoul
+
+1. **Pure Text-to-Image (T2I):**
+   The prompt synthesizes a completely new subject from scratch. No reference photo is needed. You simply paste the prompt into the chat box and send it.
+2. **Photo-Edit & Identity Preservation (I2I):**
+   The prompt is engineered to transform a real person's photo — restyling their outfit, hairstyle, era, or lighting while strictly locking their facial features. These prompts explicitly state: *"Use the uploaded photo as the ONLY identity reference. Preserve exact facial identity..."*
+
+:::info How to Tell the Difference Immediately
+Look at the prompt instructions. If it references *"this uploaded photo"*, *"preserve facial identity"*, or *"dress the subject in"*, you **must** attach your selfie or portrait. Running a photo-edit prompt without an attachment causes the AI to invent a random stranger. Read our guide on [reference images vs. text prompts](/blog/reference-images-vs-text-prompts) for an in-depth breakdown.
 :::
 
-## Step 3: Copy the Prompt
+---
 
-Hit the copy button on the prompt block. This copies the complete text exactly as tested — line breaks, phrasing, and all. Resist the urge to retype it by hand; small wording changes ("photo" instead of "photograph", dropping a lighting phrase) can shift results more than you would think, and you want your first run to be a faithful baseline.
+## Step 3: Copy the Exact Syntax Without Alteration
 
-## Step 4: Paste It Into Your AI Tool
+On the prompt block, click the **Copy** button. This copies the exact tested prompt string into your clipboard, preserving:
+- Crucial camera instructions (\`85mm lens\`, \`shallow depth of field\`, \`f/1.8 aperture\`).
+- Lighting parameters (\`soft tungsten lighting\`, \`golden hour rim light\`, \`subtle halation\`).
+- Negative guardrails and composition constraints (\`vertical 4:5\`, \`candid posture\`, \`natural skin texture\`).
 
-Open the tool named on the card and paste the prompt into the chat or prompt box.
+Resist the temptation to retype or simplify the text on your first attempt. AI image models are sensitive to word order and subtle descriptive cues; running the exact baseline first gives you a benchmark of what the prompt produces.
 
-If the prompt is a **photo-edit style** — outfit changes, retro portrait looks, figurine transformations — attach your own photo first, then paste the prompt in the same message. Order matters in most chat-based tools: the image should be part of the message the prompt arrives with, so the model treats your photo as the subject of the instructions.
+---
 
-A quick checklist for the photo you attach:
+## Step 4: Paste & Run in Your Chosen AI Tool
 
-- Use a clear, well-lit shot where your face is fully visible.
-- Avoid heavy filters, sunglasses, or extreme angles.
-- One person in frame works far better than a group photo.
+Open ChatGPT or Google Gemini and navigate to a fresh chat session.
 
-If the prompt is pure text-to-image, just paste and send.
+![1980s Bollywood Pink Satin Dress Portrait](https://uploads.aipromptmatrix.in/thumbnails/1980s-bollywood-pink-satin-dress-portrait-mu03a5vd95lu.webp "Atmospheric lighting study: '1980s Bollywood Pink Satin Dress Portrait', demonstrating warm analog grading, authentic fabric folds, and soft bokeh.")
 
-## Step 5: Customize the Placeholder Parts
+### For Photo-Edit & Restyling Prompts:
+1. **Upload your selfie first:** Click the \`+\` or paperclip icon in ChatGPT or Gemini and select your reference photo.
+2. **Attach in the same message:** Paste the copied prompt directly into the caption/message area alongside the image.
+3. **Send together:** Never send the photo in one message and the prompt in a second message. Sending them together forces the vision encoder to treat your image as the direct subject of the prompt text.
 
-Many prompts include parts that are meant to be swapped: a color, a background, a piece of clothing, a text label. These are usually obvious in context — if a prompt says the figure wears a "red traditional saree" and you want blue, change that one word and leave the rest alone.
+#### The Golden Checklist for Reference Photos:
+- **Lighting:** Even, natural daylight or clean indoor lighting (no harsh shadows across the eyes).
+- **Framing:** Waist-up or chest-up portraits work significantly better than extreme close-up crops because the AI has enough body context to drape clothing realistically.
+- **Simplicity:** A single person looking toward the camera without sunglasses, hats, or heavy beauty filters.
 
-The safe way to customize is one change at a time. Swap the color, run it, check the result. Then change the backdrop, run again. If you rewrite four things at once and the output falls apart, you won't know which edit broke it.
+---
 
-:::warning Keep useful phrases
-Don't delete phrases you don't understand. Lines like "shallow depth of field" or "keep the facial features exactly the same" look like filler but are doing real work — the first controls the blurred background look, the second prevents the AI from redrawing your face. Remove them and the result changes in ways you probably didn't want.
+## Step 5: The "One-Variable" Customization Method
+
+Once you generate your baseline image, you can customize details to match your personal vision: colors, backdrops, time of day, or specific accessories.
+
+The secret to reliable prompt customization is **changing only one variable at a time**:
+- **Swap colors:** Change \`hot pink-red satin mini dress\` to \`emerald green silk lehenga\`.
+- **Swap location:** Change \`cozy vintage Indian dressing room\` to \`sunlit European balcony overlooking the sea\`.
+- **Swap time:** Change \`warm late-afternoon sunlight\` to \`rainy midnight neon street\`.
+
+![Dreamy Radha-Inspired Floral Portrait](https://uploads.aipromptmatrix.in/thumbnails/dreamy-radha-inspired-floral-portrait-mu7cjk2abhmh.webp "Aesthetic portrait variation: 'Dreamy Radha-Inspired Floral Portrait', illustrating intricate jewelry, floral garlands, and ethereal lighting accents.")
+
+:::warning Preserve the Technical Anchors
+Never delete descriptive technical phrases that you don't immediately recognize. Phrases like *"subtle halation"*, *"35mm film grain"*, *"volumetric god rays"*, and *"natural skin pores, no plastic smoothing"* prevent the AI from generating waxy, cartoonish skin or generic CGI textures.
 :::
 
-## Step 6: Iterate on the Result
+---
 
-Your first output will often be 80% right. In conversational tools like ChatGPT and Gemini, you fix the remaining 20% by replying, not by starting over. Follow-ups like "make the lighting warmer", "zoom out to show the full outfit", or "same image, but change the background to a beach at sunset" keep everything you liked and adjust only what you asked for.
+## Step 6: Iterate Surgically Through Chat
 
-If the result is badly off — wrong subject, wrong style — don't patch it with five follow-ups. Start a fresh chat, re-paste the original prompt, and re-attach your photo. Long editing threads accumulate drift, and a clean start with the tested prompt is usually faster.
+In conversational tools like ChatGPT and Gemini, you never have to start from scratch if an image is almost perfect. Use conversational follow-up prompts to polish the result:
 
-:::example First session example
-A realistic first session: you copy a retro portrait prompt from the Gemini page, attach a selfie, and get a great image where the outfit color is slightly off. You reply "keep everything identical but make the saree deep emerald green" — done in one follow-up. Total time: about two minutes.
+:::example Real-World Follow-Up Examples
+- **Fixing framing:** *"Keep everything in the previous image exactly the same, but pull the camera back to a medium-wide shot showing the full dress down to the knees."*
+- **Adjusting warmth:** *"Love this generation. Keep the subject, outfit, and background identical, but make the overall color temperature slightly cooler with subtle blue shadows."*
+- **Refining details:** *"Keep her face and hairstyle identical, but remove the necklace and add small pearl studs to the ears."*
 :::
 
-## A Starter Prompt to Try Right Now
+If the output drifts too far or the model misunderstands your changes, don't keep piling on follow-ups. Simply open a fresh conversation, paste the original prompt with your targeted tweak, and re-run.
 
-If you want to test the full workflow immediately, here is a complete text-to-image prompt that works in ChatGPT, Gemini, and most other tools with no photo upload required.
+---
+
+## Step 7: Explore Stylized & Poster Aesthetics
+
+PromptSoul isn't just for portraits. Our catalog spans gaming key-art, retro anime, graphic posters, 3D clay figurines, and editorial fashion.
+
+![GTA VI Style Character Poster](https://uploads.aipromptmatrix.in/thumbnails/gta-vi-style-character-poster-ai-prompt-mst0l36j6j45.webp "Stylized pop-art showcase: 'GTA VI Style Character Poster AI Prompt', showing bold vector lines, vibrant gradients, and action lighting.")
+
+When exploring stylized categories:
+- Check whether the prompt relies on a specific art director or medium (e.g. \`screenprint on textured paper\`, \`cel-shaded vector\`, \`macro clay sculpture\`).
+- Maintain the genre keywords to keep the distinctive graphic punch.
+
+---
+
+## Two Verified Starter Prompts to Try Right Now
+
+Ready to create? Here are two tested, guaranteed prompts you can run immediately:
+
+### Starter A: Cinematic Neon Street Portrait (Pure Text-to-Image)
+*Works universally in ChatGPT, Gemini, Grok, and Midjourney without requiring any photo upload.*
 
 :::prompt
-A cinematic close-up portrait of a street food vendor at a night market, steam rising from a sizzling pan, warm lantern light on one side of the face and cool blue neon on the other, shallow depth of field with glowing bokeh in the background, rich color, shot on a 50mm lens, photorealistic
+A cinematic 35mm street portrait of an introspective young traveler standing in a bustling Tokyo alleyway at twilight, wet asphalt reflecting vibrant magenta and cyan neon signs, light mist in the air, wearing an oversized dark wool coat with collar turned up, soft rain droplets glistening on the fabric, shallow depth of field with creamy bokeh circles, authentic analog film grain, natural skin texture, 85mm portrait lens, photorealistic, evocative atmosphere.
 :::
 
-Paste it in, see what you get, then change one detail — the location, the light colors, the lens — and run it again. That single loop of copy, run, tweak, run is the entire skill. Once it feels natural, you're ready for more advanced techniques in [how to write better AI image prompts](/blog/how-to-write-better-ai-image-prompts).
+### Starter B: 1980s Vintage Bollywood Glamour (Photo-Edit Transformation)
+*Attach your selfie in ChatGPT or Gemini and paste this in the same message to transform your photo into a vintage film still while keeping your face untouched.*
+
+:::prompt
+Use the uploaded photo as the ONLY identity reference. Preserve my exact facial identity, facial proportions, skin tone, eyes, and natural smile. Do not alter or replace my face. Transform this photo into an authentic 1980s Bollywood cinematic portrait. Dress me in an elegant vintage saree with a delicate embroidered border, softly draped over one shoulder. Style my hair in soft retro waves with a fragrant white jasmine gajra pinned behind the ear, classic gold jhumkas, and a subtle traditional bindi. Setting: a warm sunlit verandah with carved wooden pillars and gentle afternoon shadows. Photographed on vintage 35mm color film, soft lens glow, warm amber color grade, gentle analog film grain, timeless candid elegance, photorealistic.
+:::
+
+---
 
 ## Frequently Asked Questions
 
-### Do I need an account on AI PromptMatrix to copy prompts?
+### Do I need a paid account on PromptSoul to copy prompts?
+No. PromptSoul is completely free to explore. Every prompt, example image, model tag, and one-click copy button is accessible without an account or subscription.
 
-No. Browsing and copying are free and open — every prompt's copy button works without signing up.
+### Why does my result look different from the example on the card?
+There are three common reasons:
+1. **Wrong AI Tool:** Running a prompt tuned for Gemini inside Midjourney or ChatGPT produces completely different artistic interpretations.
+2. **Missing Reference Photo:** If the prompt specifies identity preservation or photo editing, running it without attaching a clear selfie forces the AI to invent a random person.
+3. **Premature Customization:** If you change half of the prompt before establishing a baseline, you won't know which phrase caused the distortion. Run the exact prompt first, then modify one detail at a time.
 
-### Can I use a prompt with a different tool than the one on the card?
+### How do I stop the AI from altering my face in photo-edit prompts?
+Place identity preservation constraints at the very start of the prompt: *"Use the uploaded photo as the ONLY identity reference. Preserve exact facial identity, bone structure, and skin tone."* Additionally, ensure your uploaded photo has clean lighting and avoids sunglasses, extreme head angles, or beauty filters.
 
-Often, yes, but expect differences. Descriptive text-to-image prompts transfer reasonably well between ChatGPT, Gemini, and Qwen Image. Prompts with tool-specific syntax or photo-editing instructions transfer poorly, so start with the tool listed on the card.
-
-### Why doesn't my image look like the example?
-
-The three most common reasons: you used a different tool than the card specifies, you didn't attach a photo for a photo-edit prompt, or you modified the prompt before establishing a baseline. Run the exact prompt in the exact tool first, then customize.
-
-### Can I use images I generate from these prompts commercially?
-
-Usage rights come from the AI tool you generate with, not from the prompt. Check the terms of ChatGPT, Gemini, or whichever tool you use — policies differ, especially for images that include a real person's likeness.
+### Can I use images generated from these prompts commercially?
+Commercial usage rights are determined by the AI platform you generate with (e.g., OpenAI's terms for ChatGPT or Google's terms for Gemini), not by PromptSoul. Always check your AI generator's commercial terms of service.
 `,
 };
 

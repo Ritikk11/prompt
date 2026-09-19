@@ -75,7 +75,7 @@ export function buildSitemapIndexXml(sitemaps: { loc: string; lastmod?: Date | s
  * Fetches and builds the Main Pages Sitemap (everything except individual prompt post URLs)
  */
 export async function generateMainSitemapXml(): Promise<string> {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in').replace(/\/$/, '');
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in').replace(/\/$/, '');
   const now = new Date();
   const entries: SitemapItem[] = [
     { url: `${baseUrl}`, lastModified: now },
@@ -178,7 +178,7 @@ export async function generateMainSitemapXml(): Promise<string> {
  * Fetches and builds the dedicated Prompts Sitemap (only published prompt post URLs)
  */
 export async function generatePromptsSitemapXml(): Promise<string> {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in').replace(/\/$/, '');
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in').replace(/\/$/, '');
   const now = new Date();
   const entries: SitemapItem[] = [];
 

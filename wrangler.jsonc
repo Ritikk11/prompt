@@ -43,7 +43,7 @@
   ],
   "vars": {
     "CACHE_PURGE_ZONE_ID": "a33cd99c0aef37417fa37f5c8da6d1f9",
-    "NEXT_PUBLIC_SITE_URL": "https://aipromptmatrix.in",
+    "NEXT_PUBLIC_SITE_URL": "https://promptsoul.in",
     "NEXT_PUBLIC_ENABLE_CLOUDFLARE_IMAGE_RESIZE": "true",
     "NEXT_PUBLIC_SUPABASE_URL": "https://fcmmcgyqovqbxbqfeaho.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjbW1jZ3lxb3ZxYnhicWZlYWhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzA1NjksImV4cCI6MjA5NDk0NjU2OX0.ehK_nECpmlaQCItQFYGoC_uKRrujLInferDOlxZBmus",

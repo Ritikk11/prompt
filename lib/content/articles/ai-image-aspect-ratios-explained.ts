@@ -80,7 +80,7 @@ The most common mistake. A centered square portrait cropped to 9:16 either cuts 
 
 ### One image for every platform
 
-A single image rarely survives feed, story, and thumbnail duty. If a campaign needs all three, generate three versions of the same prompt at 4:5, 9:16, and 16:9 — the model will recompose the scene appropriately each time. Keeping the rest of the prompt identical keeps the set looking related. Our guide on [how to use prompts from PromptMatrix](/guides/how-to-use-prompts-from-promptmatrix) covers adapting one saved prompt across formats.
+A single image rarely survives feed, story, and thumbnail duty. If a campaign needs all three, generate three versions of the same prompt at 4:5, 9:16, and 16:9 — the model will recompose the scene appropriately each time. Keeping the rest of the prompt identical keeps the set looking related. Our guide on [how to use prompts from PromptSoul](/guides/how-to-use-prompts-from-promptmatrix) covers adapting one saved prompt across formats.
 
 ### Edges you cannot trust
 

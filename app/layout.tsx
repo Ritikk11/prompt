@@ -45,7 +45,7 @@ function toOrigin(value?: string | null) {
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await fetchSettings();
-  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+  const siteTitle = settings.siteTitle || 'PromptSoul';
   const homeTitleTemplate = settings.seoSettings?.homeSeoTitleTemplate || '%site_title% - AI Prompts';
   const resolvedTitle = homeTitleTemplate.replace(/%site_title%/g, siteTitle);
   const description =
@@ -56,7 +56,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const ogImage = settings.seoSettings?.defaultOgImage || '/og-image.webp?v=5';
 
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in'),
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in'),
     title: {
       default: resolvedTitle,
       template: `%s | ${siteTitle}`,
@@ -110,8 +110,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     fetchSections(),
   ]);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
-  const orgName = initialSettings.siteTitle || 'AI PromptMatrix';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
+  const orgName = initialSettings.siteTitle || 'PromptSoul';
   const rawLogo = initialSettings.siteLogo || '/icon-256x256.webp';
   const logoUrl = rawLogo.startsWith('http') || rawLogo.startsWith('data:')
     ? rawLogo
@@ -124,10 +124,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // resolves the publisher for Article rich results and brand knowledge panel.
   const customAlternateNames = initialSettings.seoSettings?.alternateSiteNames || [];
   const defaultAlternateNames = [
+    'PromptSoul',
+    'Prompt Soul',
+    'promptsoul.in',
+    'promptsoul',
+    'AI PromptMatrix',
     'PromptMatrix',
-    'AI Prompt Matrix',
     'aipromptmatrix.in',
-    'aipromptmatrix',
   ];
   const alternateNames = Array.from(
     new Set([...defaultAlternateNames, ...customAlternateNames])

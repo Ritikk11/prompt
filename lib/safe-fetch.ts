@@ -3,6 +3,8 @@
 // make the server request internal hosts (metadata endpoints, VPC IPs) and
 // exfiltrate the response through the Gemini prompt.
 const ALLOWED_HOSTS = new Set([
+  'promptsoul.in',
+  'www.promptsoul.in',
   'uploads.aipromptmatrix.in',
   'aipromptmatrix.in',
   'www.aipromptmatrix.in',

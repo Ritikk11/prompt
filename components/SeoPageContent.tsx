@@ -65,7 +65,7 @@ export default function SeoPageContent({ seoPage, allPosts, settings }: SeoPageC
   const heroBadge = seoPage.heroBadge || 'Collection';
 
   // Site URL and clean slug for structured data
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in').replace(/\/$/, '');
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in').replace(/\/$/, '');
   const cleanSlug = String(seoPage.slug || '').replace(/^\/+|\/+$/g, '');
   const pageUrl = `${siteUrl}/${cleanSlug}`;
 
@@ -95,7 +95,7 @@ export default function SeoPageContent({ seoPage, allPosts, settings }: SeoPageC
           isPartOf: {
             '@type': 'WebSite',
             '@id': `${siteUrl}/#website`,
-            name: settings.siteTitle || 'AI PromptMatrix',
+            name: settings.siteTitle || 'PromptSoul',
             url: siteUrl,
           },
         },

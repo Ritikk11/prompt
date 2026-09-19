@@ -29,10 +29,28 @@ export default function PostHeroStats({
   const bookmarkedByUser = contextPost?.bookmarkedByUser ?? post.bookmarkedByUser ?? false;
 
   useEffect(() => {
-    if (!viewIncrementedRef.current) {
-      incrementViews(post.id, post);
+    if (viewIncrementedRef.current) return;
+
+    const requestIdle = (window as any).requestIdleCallback as
+      | ((callback: () => void, options?: { timeout?: number }) => number)
+      | undefined;
+    const cancelIdle = (window as any).cancelIdleCallback as ((id: number) => void) | undefined;
+    const run = () => {
+      if (viewIncrementedRef.current) return;
       viewIncrementedRef.current = true;
-    }
+      incrementViews(post.id, post);
+    };
+    const idleId = requestIdle
+      ? requestIdle(run, { timeout: 3500 })
+      : window.setTimeout(run, 1800);
+
+    return () => {
+      if (requestIdle && cancelIdle) {
+        cancelIdle(idleId);
+      } else {
+        window.clearTimeout(idleId);
+      }
+    };
   }, [post.id, post, incrementViews]);
 
   const handleBookmarkClick = async () => {

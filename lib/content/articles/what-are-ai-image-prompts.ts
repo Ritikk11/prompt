@@ -90,7 +90,7 @@ Start with those five slots and fill each one deliberately. You don't need long 
 Don't fight a bad image by piling more words onto the same prompt. If the result is off, identify which slot failed — wrong subject, wrong light, wrong style — and fix that one phrase. More words without more decisions just adds noise.
 :::
 
-When you're ready to go deeper, learn what each part of a prompt contributes in [the anatomy of a perfect AI image prompt](/blog/anatomy-of-a-perfect-ai-image-prompt), and see [how to use prompts from PromptMatrix](/guides/how-to-use-prompts-from-promptmatrix) for a hands-on walkthrough.
+When you're ready to go deeper, learn what each part of a prompt contributes in [the anatomy of a perfect AI image prompt](/blog/anatomy-of-a-perfect-ai-image-prompt), and see [how to use prompts from PromptSoul](/guides/how-to-use-prompts-from-promptmatrix) for a hands-on walkthrough.
 
 ## Frequently Asked Questions
 

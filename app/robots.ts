@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { fetchSettings } from '@/lib/data';
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
   const settings = await fetchSettings();
   const robotsText = settings.seoSettings?.robotsText || '';
   const allow = robotsText.match(/^Allow:\s*(.+)$/im)?.[1]?.trim() || '/';

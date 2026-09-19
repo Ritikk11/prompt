@@ -13,6 +13,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import type { User, Subscription } from '@supabase/supabase-js';
 import { getSupabaseClient } from '@/lib/supabase-lazy';
+import { hasStoredSupabaseSession } from '@/lib/browser-auth-state';
 import type { LightboxState } from './PostLightboxModal';
 
 const PostLightboxModal = dynamic(() => import('./PostLightboxModal'), { ssr: false });
@@ -63,6 +64,7 @@ export default function PostPageProvider({
   // Delaying by 2s ensures critical initial page paint + LCP completes without auth contention.
   useEffect(() => {
     if (!userProfilesEnabled) return;
+    if (!hasStoredSupabaseSession()) return;
     let cancelled = false;
 
     const timer = window.setTimeout(() => {

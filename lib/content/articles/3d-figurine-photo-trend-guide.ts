@@ -48,7 +48,7 @@ Attach your photo and paste the complete prompt in the same message. Here is a f
 Using the uploaded photo, create a realistic photo of a 1/7 scale collectible figurine of this exact person, keeping the face 100% identical to the photo. The figurine stands on a small round transparent acrylic base on a modern computer desk. Behind it, a collectible toy box with a clear plastic window, featuring stylized character artwork of the same person and the product name in bold letters. Next to the figurine, a computer monitor displays the 3D sculpting software with the figure's wireframe model on screen. Glossy PVC toy texture on the figurine, realistic studio product photography, soft warm lighting, shallow depth of field, sharp focus on the figurine.
 :::
 
-Send it exactly as written first. Get a baseline before you customize — if the baseline works, every later problem is traceable to one of your edits. This copy-first, tweak-second habit is the core method we teach in [how to use prompts from PromptMatrix](/guides/how-to-use-prompts-from-promptmatrix).
+Send it exactly as written first. Get a baseline before you customize — if the baseline works, every later problem is traceable to one of your edits. This copy-first, tweak-second habit is the core method we teach in [how to use prompts from PromptSoul](/guides/how-to-use-prompts-from-promptmatrix).
 
 ## Step 3: Customize the Box Design
 

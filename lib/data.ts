@@ -71,12 +71,12 @@ const defaultSettings: SiteSettings = {
   "authors": [
     {
       "id": "editorial-team",
-      "bio": "The AI PromptMatrix editorial team reviews and organizes prompt collections so creators can find clear examples, model notes, and reusable AI image workflows.",
-      "name": "AI PromptMatrix Editorial Team",
+      "bio": "The PromptSoul editorial team reviews and organizes prompt collections so creators can find clear examples, model notes, and reusable AI image workflows.",
+      "name": "PromptSoul Editorial Team",
       "role": "Editorial Team",
       "slug": "editorial-team",
       "active": true,
-      "website": "https://aipromptmatrix.in",
+      "website": "https://promptsoul.in",
       "avatarUrl": "",
       "createdAt": "2026-06-25T15:17:07.365Z",
       "updatedAt": "2026-07-04T19:05:14.208Z"
@@ -113,7 +113,7 @@ const defaultSettings: SiteSettings = {
   "siteLogo": "",
   "cardStyle": "v2",
   "heroTitle": "Discover AI Prompt Masterpieces",
-  "siteTitle": "AI PromptMatrix",
+  "siteTitle": "PromptSoul",
   "badgeStyle": "v1",
   "categories": [
     "Fantasy",
@@ -155,11 +155,11 @@ const defaultSettings: SiteSettings = {
   "heroEnabled": true,
   "seoSettings": {
     "redirects": [],
-    "robotsText": "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\nDisallow: /api/\nDisallow: /search/\nDisallow: /submit/\nDisallow: /login/\n\nSitemap: https://aipromptmatrix.in/sitemap.xml\nSitemap: https://aipromptmatrix.in/sitemap-prompts.xml",
+    "robotsText": "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\nDisallow: /api/\nDisallow: /search/\nDisallow: /submit/\nDisallow: /login/\n\nSitemap: https://promptsoul.in/sitemap.xml\nSitemap: https://promptsoul.in/sitemap-prompts.xml",
     "schemaType": "Article",
     "enableJsonLd": true,
-    "twitterHandle": "",
-    "defaultOgImage": "",
+    "twitterHandle": "@promptsoul",
+    "defaultOgImage": "/og-image.webp?v=5",
     "sitemapInclude": {
       "tags": false,
       "posts": true,
@@ -168,11 +168,12 @@ const defaultSettings: SiteSettings = {
       "staticPages": true
     },
     "bingVerification": "",
-    "metaTitleTemplate": "%post_title% | AI PromptMatrix",
+    "metaTitleTemplate": "%post_title% | PromptSoul",
+    "homeSeoTitleTemplate": "%site_title% - AI Prompts",
     "googleVerification": "",
     "enableBreadcrumbList": true,
     "pinterestVerification": "",
-    "defaultMetaDescription": "AI PromptMatrix is your ultimate collection of curated image prompts for Chatgpt, Gemini, Nano Banana Pro, Grok, and more. Discover, copy and create stunning artwork instantly.",
+    "defaultMetaDescription": "PromptSoul is your ultimate collection of curated image prompts for ChatGPT, Gemini, Grok, and more. Discover, copy and create stunning artwork instantly.",
     "enableSitelinksSearchbox": true,
     "alternateSiteNames": [
       "PromptMatrix",
@@ -297,7 +298,7 @@ const defaultSettings: SiteSettings = {
     "showHeroStats": false,
     "toolRailItems": [],
     "exploreOgImage": "",
-    "exploreSeoTitle": "Premium AI Image Prompts for ChatGPT, Gemini, Nano Banana Pro & More | AI PromptMatrix",
+    "exploreSeoTitle": "Premium AI Image Prompts for ChatGPT, Gemini & More | PromptSoul",
     "exploreRailItems": [
       {
         "type": "tool",
@@ -733,8 +734,12 @@ function sanitizeSettings(settings: SiteSettings): SiteSettings {
     ),
   };
 
+  const rawTitle = settings.siteTitle || defaultSettings.siteTitle || 'PromptSoul';
+  const siteTitle = (rawTitle === 'AI PromptMatrix' || !rawTitle) ? 'PromptSoul' : rawTitle;
+
   return {
     ...settings,
+    siteTitle,
     siteDescription: cleanPublicCopy(settings.siteDescription) || settings.siteDescription,
     heroSubtitle: cleanPublicCopy(settings.heroSubtitle) || settings.heroSubtitle,
     siteLogo: isInlineImage(settings.siteLogo) ? '' : settings.siteLogo,

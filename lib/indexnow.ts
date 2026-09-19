@@ -23,7 +23,7 @@ export async function submitToIndexNow(
     return { success: false, message: 'No URLs provided for submission' };
   }
 
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in').replace(/\/$/, '');
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in').replace(/\/$/, '');
   const host = customHost || new URL(siteUrl).host;
   const key = (customKey || process.env.INDEXNOW_KEY || DEFAULT_KEY).trim();
   const keyLocation = `${siteUrl}/${key}.txt`;

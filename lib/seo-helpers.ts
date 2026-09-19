@@ -6,8 +6,8 @@ import { SiteSettings } from '@/lib/types';
  * Appends "| SiteTitle" to every page title if it is not already present,
  * avoiding duplicate site titles like "Title | AI PromptMatrix | AI PromptMatrix".
  */
-export function formatTitleWithBrand(title?: string | null, siteTitle: string = 'AI PromptMatrix'): string {
-  const brand = (siteTitle || 'AI PromptMatrix').trim();
+export function formatTitleWithBrand(title?: string | null, siteTitle: string = 'PromptSoul'): string {
+  const brand = (siteTitle || 'PromptSoul').trim();
   if (!title || !title.trim()) return brand;
   
   let cleanedTitle = title.trim();
@@ -37,10 +37,10 @@ export function formatTitleWithBrand(title?: string | null, siteTitle: string = 
 }
 
 export function generateSeoPageMetadata(seoPage: any, settings: SiteSettings, matchingPosts?: any[]): Metadata {
-  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+  const siteTitle = settings.siteTitle || 'PromptSoul';
   const rawTitle = seoPage.seoTitle || seoPage.heroTitle || seoPage.title;
   const title = formatTitleWithBrand(rawTitle, siteTitle);
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in').replace(/\/$/, '');
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in').replace(/\/$/, '');
   const description = seoPage.seoDescription || seoPage.heroDescription || settings.seoSettings?.defaultMetaDescription || `Discover curated AI prompts for ${seoPage.title}`;
 
   const cleanSlug = String(seoPage.slug || '').replace(/^\/+|\/+$/g, '');

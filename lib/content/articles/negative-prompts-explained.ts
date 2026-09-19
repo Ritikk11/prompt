@@ -74,7 +74,7 @@ Asking for "an oil painting" while negating "brushstrokes" or requesting "cozy c
 In ChatGPT or Gemini, a paragraph of "don't do this, don't do that" reads like a list of nouns to a distracted listener. Two or three clear exclusions phrased as sentences work; ten bullet-pointed prohibitions often backfire by flooding the prompt with exactly the concepts you fear.
 
 :::warning Rewrite the scene
-If a specific unwanted element keeps appearing despite your negatives, stop fighting it with longer exclusion lists. Rewrite the positive prompt so the element has no room to exist — change the setting, the framing, or the style — or fix the one bad output with an editing pass instead of regenerating. The [PromptMatrix usage guide](/guides/how-to-use-prompts-from-promptmatrix) covers adapting prompts this way.
+If a specific unwanted element keeps appearing despite your negatives, stop fighting it with longer exclusion lists. Rewrite the positive prompt so the element has no room to exist — change the setting, the framing, or the style — or fix the one bad output with an editing pass instead of regenerating. The [PromptSoul usage guide](/guides/how-to-use-prompts-from-promptmatrix) covers adapting prompts this way.
 :::
 
 ## A Simple Workflow

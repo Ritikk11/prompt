@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode, useMemo } from 'react';
 import type { Post, Section, SiteSettings } from '@/lib/types';
 import { getSupabaseClient } from '@/lib/supabase-lazy';
+import { hasStoredSupabaseSession } from '@/lib/browser-auth-state';
 
 interface DataContextType {
   posts: Post[];
@@ -125,11 +126,12 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | undefined;
     let cancelled = false;
+    if (!settings.features?.userProfiles || !hasStoredSupabaseSession()) {
+      setLocalBookmarks([]);
+      return;
+    }
+
     const applyViewerState = async () => {
-      if (!settings.features?.userProfiles) {
-        setLocalBookmarks([]);
-        return;
-      }
       const supabase = await getSupabaseClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
@@ -378,11 +380,11 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
   }, [settings]);
 
   // Map localLikes onto posts efficiently
-  const enrichedPosts: Post[] = posts.map(p => ({
+  const enrichedPosts: Post[] = useMemo(() => posts.map(p => ({
     ...p,
     likedByUser: localLikes.includes(p.id),
     bookmarkedByUser: localBookmarks.includes(p.id) || p.bookmarkedByUser,
-  }));
+  })), [posts, localLikes, localBookmarks]);
 
   const getPostById = useCallback((id: string) => enrichedPosts.find(p => p.id === id), [enrichedPosts]);
 

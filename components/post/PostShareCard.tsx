@@ -28,7 +28,7 @@ export default function PostShareCard({
 }: PostShareCardProps) {
   const { showFeedback } = usePostPage();
 
-  const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://aipromptmatrix.in';
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://promptsoul.in';
   const pageUrl = `${siteUrl}/${postSlugOrId}`;
 
   const shareButtonMeta: Record<

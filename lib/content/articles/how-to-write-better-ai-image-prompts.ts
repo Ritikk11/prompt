@@ -101,7 +101,7 @@ If your prompt has more than one main subject doing more than one thing in more 
 
 ## 10. Borrow from Prompts That Already Work
 
-The fastest improvement technique isn't writing at all — it's reading. Find a prompt that produced an image close to what you want, copy it, and swap in your subject. The lighting, camera, and style scaffolding keeps doing its job. Every post on PromptMatrix shows the exact prompt next to its result with a copy button; start with [ChatGPT prompts](/tool/chatgpt) or [Gemini prompts](/tool/gemini) and adapt from there.
+The fastest improvement technique isn't writing at all — it's reading. Find a prompt that produced an image close to what you want, copy it, and swap in your subject. The lighting, camera, and style scaffolding keeps doing its job. Every post on PromptSoul shows the exact prompt next to its result with a copy button; start with [ChatGPT prompts](/tool/chatgpt) or [Gemini prompts](/tool/gemini) and adapt from there.
 
 Here's a complete prompt that uses techniques 1 through 7 together — specific subject first, lighting, lens, style anchor, mood, and composition:
 

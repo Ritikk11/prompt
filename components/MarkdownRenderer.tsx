@@ -328,6 +328,23 @@ function renderMarkdown(content: string) {
             {props.children}
           </blockquote>
         ),
+        img: (props) => (
+          <figure className="my-8 overflow-hidden rounded-2xl border border-white/15 bg-black/5 dark:bg-white/[0.03] shadow-md">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={props.src}
+              alt={props.alt || 'Prompt visual preview'}
+              loading="lazy"
+              decoding="async"
+              className="w-full max-h-[560px] object-cover object-top"
+            />
+            {(props.alt || props.title) && (
+              <figcaption className="border-t border-white/10 bg-black/10 dark:bg-white/[0.02] px-4 py-2 text-center text-xs font-medium text-surface-600 dark:text-surface-400">
+                {props.title || props.alt}
+              </figcaption>
+            )}
+          </figure>
+        ),
         code: (props) => <code className="rounded-md border border-white/80 bg-black/[0.04] px-2 py-1 font-mono text-[0.9em] text-primary-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-primary-400" {...props} />,
         pre: (props) => {
           // The single child is react-markdown's <code>; recover its raw text

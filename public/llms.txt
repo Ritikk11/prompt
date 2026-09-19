@@ -1,16 +1,16 @@
-# AI PromptMatrix
+# PromptSoul
 
-> AI PromptMatrix is a curated library of high-quality AI image prompts for ChatGPT, Google Gemini (Nano Banana), Grok, and Qwen. Each prompt includes the exact text, the AI tool it targets, reference images, and copy-paste-ready instructions for recreating the artwork.
+> PromptSoul is a curated library of high-quality AI image prompts for ChatGPT, Google Gemini (Nano Banana), Grok, and Qwen. Each prompt includes the exact text, the AI tool it targets, reference images, and copy-paste-ready instructions for recreating the artwork.
 
 ## About
 
-AI PromptMatrix helps creators discover, copy, and reuse image-generation prompts. Every prompt is organized by the AI image tool it was built for, with example outputs and usage notes.
+PromptSoul helps creators discover, copy, and reuse image-generation prompts. Every prompt is organized by the AI image tool it was built for, with example outputs and usage notes.
 
 ## Sections
 
-- [Explore all prompts](https://aipromptmatrix.in/explore): Browse the full prompt library, filter by AI tool and category.
-- [Guides](https://aipromptmatrix.in/guides): Step-by-step tutorials on getting the best results from AI image tools.
-- [Blog](https://aipromptmatrix.in/blog): AI image trends, techniques, and prompt-writing tips.
+- [Explore all prompts](https://promptsoul.in/explore): Browse the full prompt library, filter by AI tool and category.
+- [Guides](https://promptsoul.in/guides): Step-by-step tutorials on getting the best results from AI image tools.
+- [Blog](https://promptsoul.in/blog): AI image trends, techniques, and prompt-writing tips.
 
 ## Supported AI tools
 
@@ -21,4 +21,4 @@ AI PromptMatrix helps creators discover, copy, and reuse image-generation prompt
 
 ## Usage
 
-Prompts are free to browse and copy. See https://aipromptmatrix.in/terms for licensing and https://aipromptmatrix.in/contact for questions.
+Prompts are free to browse and copy. See https://promptsoul.in/terms for licensing and https://promptsoul.in/contact for questions.

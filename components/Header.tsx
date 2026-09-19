@@ -13,6 +13,7 @@ import type { Post } from '@/lib/types';
 import { getPostPath } from '@/lib/sections';
 import { getToolInfo } from '@/lib/constants';
 import { buildHeaderNavItems } from '@/lib/header-nav';
+import { hasStoredSupabaseSession } from '@/lib/browser-auth-state';
 import SmartLink from '@/components/SmartLink';
 
 /* Shared chrome recipes. Module scope so they are not rebuilt per render. */
@@ -98,10 +99,10 @@ const toolBrandName = (label: string) => label.replace(/Prompts/gi, '').trim() |
  * Exported for the footer, which shows the same lockup.
  */
 export function SiteTitle({ title, className = '' }: { title?: string; className?: string }) {
-  const text = (title || 'AI PromptMatrix').trim();
+  const text = (title || 'PromptSoul').trim();
   const lastSpace = text.lastIndexOf(' ');
   const lastWord = text.slice(lastSpace + 1);
-  // Last capital inside the final word, e.g. the "M" of "PromptMatrix".
+  // Last capital inside the final word, e.g. the "S" of "PromptSoul".
   let splitAt = -1;
   for (let i = lastWord.length - 1; i > 0; i -= 1) {
     const ch = lastWord[i];
@@ -357,6 +358,7 @@ function SiteHeader() {
   useEffect(() => {
     // Skip loading the Supabase auth client entirely when accounts are off.
     if (!accountFeaturesEnabled) return;
+    if (!hasStoredSupabaseSession()) return;
 
     let subscription: { unsubscribe: () => void } | undefined;
     let cancelled = false;
@@ -381,7 +383,7 @@ function SiteHeader() {
       window.clearTimeout(timeoutId);
       subscription?.unsubscribe();
     };
-  }, [accountFeaturesEnabled]);
+  }, [accountFeaturesEnabled, pathname]);
 
   // Search: post summaries load on demand the first time search is used.
   const activateSearch = useCallback(() => {

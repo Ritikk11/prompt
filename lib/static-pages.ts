@@ -7,44 +7,44 @@ const defaults: Record<StaticPageKey, Pick<StaticPageSettings, 'title' | 'subtit
   about: {
     title: 'About Us',
     subtitle: 'Discover our mission, our story, and what makes this platform the ultimate destination for AI creators.',
-    metaTitle: 'About Us | AI PromptMatrix',
-    metaDescription: 'Learn about AI PromptMatrix and our mission to curate useful AI prompts.',
+    metaTitle: 'About Us | PromptSoul',
+    metaDescription: 'Learn about PromptSoul and our mission to curate useful AI prompts.',
   },
   contact: {
     title: 'Contact Us',
     subtitle: "Have a question or want to work together? We'd love to hear from you.",
-    metaTitle: 'Contact Us | AI PromptMatrix',
-    metaDescription: 'Contact AI PromptMatrix for support, partnerships, and media inquiries.',
+    metaTitle: 'Contact Us | PromptSoul',
+    metaDescription: 'Contact PromptSoul for support, partnerships, and media inquiries.',
   },
   privacy: {
     title: 'Privacy Policy',
     subtitle: 'Learn how we collect, use, and protect your personal information.',
-    metaTitle: 'Privacy Policy | AI PromptMatrix',
-    metaDescription: 'Read the AI PromptMatrix privacy policy.',
+    metaTitle: 'Privacy Policy | PromptSoul',
+    metaDescription: 'Read the PromptSoul privacy policy.',
   },
   terms: {
     title: 'Terms of Service',
     subtitle: 'The rules and terms that apply when using this website.',
-    metaTitle: 'Terms of Service | AI PromptMatrix',
-    metaDescription: 'Read the AI PromptMatrix terms of service.',
+    metaTitle: 'Terms of Service | PromptSoul',
+    metaDescription: 'Read the PromptSoul terms of service.',
   },
   dmca: {
     title: 'DMCA Notice',
     subtitle: 'Information regarding copyright infringement claims.',
-    metaTitle: 'DMCA Notice | AI PromptMatrix',
-    metaDescription: 'Read the AI PromptMatrix DMCA notice.',
+    metaTitle: 'DMCA Notice | PromptSoul',
+    metaDescription: 'Read the PromptSoul DMCA notice.',
   },
   disclaimer: {
     title: 'Disclaimer',
     subtitle: 'Important limitations and usage notes for this website.',
-    metaTitle: 'Disclaimer | AI PromptMatrix',
-    metaDescription: 'Read the AI PromptMatrix disclaimer.',
+    metaTitle: 'Disclaimer | PromptSoul',
+    metaDescription: 'Read the PromptSoul disclaimer.',
   },
   cookies: {
     title: 'Cookies Policy',
     subtitle: 'How and why we use cookies and similar technologies.',
-    metaTitle: 'Cookies Policy | AI PromptMatrix',
-    metaDescription: 'Read the AI PromptMatrix cookies policy.',
+    metaTitle: 'Cookies Policy | PromptSoul',
+    metaDescription: 'Read the PromptSoul cookies policy.',
   },
 };
 
@@ -70,7 +70,7 @@ export function getStaticPageContent(
 import { formatTitleWithBrand } from './seo-helpers';
 
 export function staticPageMetadata(page: ReturnType<typeof getStaticPageContent>, settings?: SiteSettings): Metadata {
-  const siteTitle = settings?.siteTitle || 'AI PromptMatrix';
+  const siteTitle = settings?.siteTitle || 'PromptSoul';
   const title = formatTitleWithBrand(page.metaTitle, siteTitle);
   const ogImage = page.ogImage || settings?.seoSettings?.defaultOgImage;
 

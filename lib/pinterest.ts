@@ -309,7 +309,7 @@ export function formatPinterestDescription(post: Post): string {
     if (hashtags) parts.push(hashtags);
   }
 
-  parts.push('Explore more copy-ready AI image prompts at AI PromptMatrix.');
+  parts.push('Explore more copy-ready AI image prompts at PromptSoul.');
 
   let desc = parts.join('\n\n');
   if (desc.length > 800) {
