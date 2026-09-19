@@ -7,6 +7,8 @@ type ThumbnailOptions = {
 const DEFAULT_SITE_ORIGIN = 'https://promptsoul.in';
 const DEFAULT_UPLOAD_ORIGIN = 'https://uploads.aipromptmatrix.in';
 const RESIZE_ELIGIBLE_HOSTS = new Set([
+  'promptsoul.in',
+  'www.promptsoul.in',
   'aipromptmatrix.in',
   'www.aipromptmatrix.in',
 ]);
@@ -18,6 +20,12 @@ function getUploadOrigin() {
 function getResizeOrigin() {
   if (process.env.NEXT_PUBLIC_ENABLE_CLOUDFLARE_IMAGE_RESIZE !== 'true') {
     return '';
+  }
+
+  // Use the upload domain (uploads.aipromptmatrix.in) which already has Cloudflare Image Resizing enabled and active
+  const uploadOrigin = getUploadOrigin();
+  if (uploadOrigin) {
+    return uploadOrigin;
   }
 
   const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_ORIGIN;
