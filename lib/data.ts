@@ -180,7 +180,7 @@ const defaultSettings: SiteSettings = {
       "Prompt Soul",
       "PromptSoul AI"
     ],
-    "indexNowKey": "f758ffa479794b339f86d7830b83ebfe",
+    "indexNowKey": "d2725a72cddd4faba71fcc50a0d414cc",
     "enableIndexNow": true
   },
   "socialLinks": {

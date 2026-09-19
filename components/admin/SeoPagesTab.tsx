@@ -49,7 +49,7 @@ const defaultSeoSettings: SeoSettings = {
   schemaType: 'Article',
   enableBreadcrumbList: true,
   alternateSiteNames: ['PromptSoul', 'Prompt Soul', 'PromptSoul AI'],
-  indexNowKey: 'f758ffa479794b339f86d7830b83ebfe',
+  indexNowKey: 'd2725a72cddd4faba71fcc50a0d414cc',
   enableIndexNow: true,
   redirects: [],
 };
@@ -641,16 +641,16 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
               <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-end">
                 <Field label="IndexNow API Key">
                   <input
-                    value={seoSettings.indexNowKey || 'f758ffa479794b339f86d7830b83ebfe'}
+                    value={seoSettings.indexNowKey || 'd2725a72cddd4faba71fcc50a0d414cc'}
                     onChange={e => updateSeoSettings({ indexNowKey: e.target.value.trim() })}
                     className={adminInput}
-                    placeholder="f758ffa479794b339f86d7830b83ebfe"
+                    placeholder="d2725a72cddd4faba71fcc50a0d414cc"
                   />
                 </Field>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => window.open(`/${seoSettings.indexNowKey || 'f758ffa479794b339f86d7830b83ebfe'}.txt`, '_blank')}
+                    onClick={() => window.open(`/${seoSettings.indexNowKey || 'd2725a72cddd4faba71fcc50a0d414cc'}.txt`, '_blank')}
                     className="rounded-xl px-3 py-2 text-xs font-bold border border-black/10 dark:border-white/10 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors"
                   >
                     Verify Key File

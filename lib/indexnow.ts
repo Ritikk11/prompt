@@ -6,7 +6,7 @@ export interface IndexNowResponse {
   key?: string;
 }
 
-const DEFAULT_KEY = 'f758ffa479794b339f86d7830b83ebfe';
+const DEFAULT_KEY = 'd2725a72cddd4faba71fcc50a0d414cc';
 
 /**
  * Submits one or more URLs to the IndexNow API (notifying Bing, Yandex, Naver, Seznam, etc.)
