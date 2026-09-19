@@ -56,7 +56,7 @@ export async function GET(request: Request) {
 
     const response = NextResponse.json({
       connected: isConnected,
-      username: pSettings.username || 'aipromptmatrix',
+      username: pSettings.username || 'promptsoul',
       appId,
       boardId: pSettings.boardId || DEFAULT_PINTEREST_BOARD_ID,
       boardName: pSettings.boardName || DEFAULT_PINTEREST_BOARD_NAME,

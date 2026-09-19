@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
 
     const siteSettings: SiteSettings = settingsRow?.data || {
-      siteTitle: 'AI PromptMatrix',
+      siteTitle: 'PromptSoul',
       siteDescription: 'Prompt library',
       heroEnabled: true,
       heroAutoPlay: false,
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken || currentPinterest.refreshToken,
       tokenExpiresAt: Date.now() + tokens.expiresIn * 1000,
-      username: userProfile?.username || currentPinterest.username || 'aipromptmatrix',
+      username: userProfile?.username || currentPinterest.username || 'promptsoul',
       scope: tokens.scope,
       isConnected: true,
       autoPublishNewPosts: currentPinterest.autoPublishNewPosts ?? true,
