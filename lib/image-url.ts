@@ -22,21 +22,22 @@ function getResizeOrigin() {
     return '';
   }
 
-  // Use the upload domain (uploads.aipromptmatrix.in) which already has Cloudflare Image Resizing enabled and active
+  const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_ORIGIN;
+  try {
+    const siteUrl = new URL(rawSiteUrl);
+    if (siteUrl.protocol === 'https:' && RESIZE_ELIGIBLE_HOSTS.has(siteUrl.hostname)) {
+      return siteUrl.origin;
+    }
+  } catch {
+    // Fall through to uploadOrigin
+  }
+
   const uploadOrigin = getUploadOrigin();
   if (uploadOrigin) {
     return uploadOrigin;
   }
 
-  const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_ORIGIN;
-  try {
-    const siteUrl = new URL(rawSiteUrl);
-    if (siteUrl.protocol !== 'https:') return '';
-    if (!RESIZE_ELIGIBLE_HOSTS.has(siteUrl.hostname)) return '';
-    return siteUrl.origin;
-  } catch {
-    return '';
-  }
+  return '';
 }
 
 function normalizeImageUrl(url: string) {
