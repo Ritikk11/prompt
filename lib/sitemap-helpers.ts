@@ -18,10 +18,10 @@ function escapeXml(unsafe: string): string {
 }
 
 function toW3cDate(d?: Date | string): string {
-  if (!d) return new Date().toISOString();
+  if (!d) return new Date().toISOString().split('T')[0];
   const dateObj = d instanceof Date ? d : new Date(d);
-  if (isNaN(dateObj.getTime())) return new Date().toISOString();
-  return dateObj.toISOString();
+  if (isNaN(dateObj.getTime())) return new Date().toISOString().split('T')[0];
+  return dateObj.toISOString().split('T')[0];
 }
 
 /**
@@ -207,7 +207,7 @@ export async function generatePromptsSitemapXml(): Promise<string> {
  * Builds the Master Sitemap Index linking to /sitemap-main.xml and /sitemap-prompts.xml
  */
 export async function generateSitemapIndexXml(): Promise<string> {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in').replace(/\/$/, '');
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in').replace(/\/$/, '');
   const now = new Date();
 
   // Find latest prompt update date if available
