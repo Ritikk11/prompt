@@ -95,6 +95,9 @@ const nextConfig: NextConfig = {
       // are still indexed (ranking pages that now 404) and split signals with the
       // canonical /:slug routes, so fold them together permanently.
       { source: '/explore/:slug', destination: '/:slug', permanent: true },
+      // Canonical lowercase tool URLs to prevent duplicate indexing
+      { source: '/tool/ChatGPT', destination: '/tool/chatgpt', permanent: true },
+      { source: '/tool/Gemini', destination: '/tool/gemini', permanent: true },
     ];
   },
   async headers() {
