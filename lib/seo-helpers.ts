@@ -97,3 +97,53 @@ export function generateSeoPageMetadata(seoPage: any, settings: SiteSettings, ma
     },
   };
 }
+
+export function generateCollectionJsonLd({
+  title,
+  description,
+  url,
+  posts,
+  siteTitle = 'PromptSoul',
+  siteUrl = 'https://promptsoul.in',
+}: {
+  title: string;
+  description: string;
+  url: string;
+  posts: any[];
+  siteTitle?: string;
+  siteUrl?: string;
+}) {
+  const topPosts = (posts || [])
+    .filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private')
+    .slice(0, 30);
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: title,
+    description,
+    url,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: siteTitle,
+      url: siteUrl,
+    },
+    mainEntity: {
+      '@type': 'ItemList',
+      name: title,
+      itemListOrder: 'https://schema.org/ItemListOrderDescending',
+      numberOfItems: topPosts.length,
+      itemListElement: topPosts.map((post, index) => {
+        const postImage = post.images?.[0]?.url || post.thumbnailUrl || '';
+        return {
+          '@type': 'ListItem',
+          position: index + 1,
+          name: post.title,
+          url: `${siteUrl}/${post.slug || post.id}`,
+          ...(postImage ? { image: postImage } : {}),
+        };
+      }),
+    },
+  };
+}
+

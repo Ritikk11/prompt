@@ -8,7 +8,8 @@ import { notFound } from 'next/navigation';
 import TagContent from './TagContent';
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
-import { formatTitleWithBrand } from '@/lib/seo-helpers';
+import { formatTitleWithBrand, generateCollectionJsonLd } from '@/lib/seo-helpers';
+import { stringifyJsonLd } from '@/lib/json-ld';
 
 interface Props {
   params: Promise<{ tag: string }>;
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [posts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
   const discovery = settings.discoveryPages || {};
   const count = getPublicTagPosts(posts, decodedTag).length;
-  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+  const siteTitle = settings.siteTitle || 'PromptSoul';
 
   if (count === 0) {
     return {
@@ -52,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     discovery.tagSeoDescriptionTemplate || discovery.tagDescriptionTemplate || 'Browse curated AI prompts for %tag%.',
     { tag: decodedTag, count, site_title: siteTitle }
   );
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
 
   return {
     title: { absolute: title },
@@ -75,12 +76,43 @@ export default async function TagPage({ params }: Props) {
   const decodedTag = decodeURIComponent(tag).trim();
   const posts = await fetchPostSummaries();
   const settings = await fetchSettings();
+  const matchingPosts = getPublicTagPosts(posts, decodedTag);
 
-  if (getPublicTagPosts(posts, decodedTag).length === 0) {
+  if (matchingPosts.length === 0) {
     notFound();
   }
+
+  const siteTitle = settings.siteTitle || 'PromptSoul';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
+  const discovery = settings.discoveryPages || {};
+
+  const pageTitle = fillDiscoveryTemplate(
+    discovery.tagSeoTitleTemplate || discovery.tagTitleTemplate || '%tag% AI Prompts',
+    { tag: decodedTag, count: matchingPosts.length, site_title: siteTitle }
+  );
+  const description = fillDiscoveryTemplate(
+    discovery.tagSeoDescriptionTemplate || discovery.tagDescriptionTemplate || 'Browse curated AI prompts for %tag%.',
+    { tag: decodedTag, count: matchingPosts.length, site_title: siteTitle }
+  );
+
+  const jsonLd = generateCollectionJsonLd({
+    title: pageTitle,
+    description,
+    url: `${siteUrl}/tag/${encodeURIComponent(decodedTag)}`,
+    posts: matchingPosts,
+    siteTitle,
+    siteUrl,
+  });
   
-  return <TagContent posts={posts} settings={settings} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: stringifyJsonLd(jsonLd) }}
+      />
+      <TagContent posts={posts} settings={settings} />
+    </>
+  );
 }
 
 export async function generateStaticParams() {

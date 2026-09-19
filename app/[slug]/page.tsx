@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   if (!isSafePublicSlug(slug)) {
     return {
-      title: 'Page Not Found | AI PromptMatrix',
+      title: 'Page Not Found | PromptSoul',
       description: 'The requested page could not be found.',
     };
   }
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!post && !seoPage) {
     return {
-      title: 'Page Not Found | AI PromptMatrix',
+      title: 'Page Not Found | PromptSoul',
       description: 'The requested page could not be found.',
     };
   }
@@ -81,7 +81,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const firstImageUrl = post!.images[0]?.url || '';
   const isBase64 = firstImageUrl.startsWith('data:');
 
-  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+  const siteTitle = settings.siteTitle || 'PromptSoul';
   const rawTitle = post!.seoTitle || (seoSettings?.metaTitleTemplate || '%post_title%')
     .replace(/%post_title%/g, post!.title)
     .replace(/%site_title%/g, siteTitle);
@@ -90,7 +90,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     post!.seoDescription || post!.description || seoSettings?.defaultMetaDescription || settings.siteDescription || '',
     post!
   );
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
   const ogImage = isBase64 ? `${siteUrl}/og-image.webp` : firstImageUrl || seoSettings?.defaultOgImage || `${siteUrl}/og-image.webp`;
 
   return {
@@ -179,7 +179,7 @@ export default async function PostPage({ params }: Props) {
   const relatedPosts = getRelatedPosts(post, allPosts as Post[], { limit: 16 });
   const recommendedPosts = getRecommendedPosts(post, allPosts as Post[], relatedPosts, { limit: 6 });
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
   const schemaType = post.schemaType || settings.seoSettings?.schemaType || 'Article';
   const mainImage = post.thumbnailUrl || post.images[0]?.url;
 
@@ -231,6 +231,8 @@ export default async function PostPage({ params }: Props) {
     ? rawLogo
     : `${siteUrl}${rawLogo.startsWith('/') ? '' : '/'}${rawLogo}`;
 
+  const siteTitle = settings.siteTitle || 'PromptSoul';
+
   const mainJsonLd: any = {
     '@context': 'https://schema.org',
     '@type': schemaType,
@@ -240,12 +242,12 @@ export default async function PostPage({ params }: Props) {
     description: post.description,
     author: {
       '@type': 'Organization',
-      name: settings.siteTitle || 'AI PromptMatrix',
+      name: siteTitle,
       url: siteUrl,
     },
     publisher: {
       '@type': 'Organization',
-      name: settings.siteTitle || 'AI PromptMatrix',
+      name: siteTitle,
       logo: {
         '@type': 'ImageObject',
         url: publisherLogoUrl,
@@ -267,13 +269,13 @@ export default async function PostPage({ params }: Props) {
         description: img.prompt || post.description,
         creator: {
           '@type': 'Organization',
-          name: settings.siteTitle || 'AI PromptMatrix',
+          name: siteTitle,
           url: siteUrl,
         },
-        creditText: settings.siteTitle || 'AI PromptMatrix',
+        creditText: siteTitle,
         license: `${siteUrl}/terms`,
         acquireLicensePage: `${siteUrl}/contact`,
-        copyrightNotice: `© ${new Date().getFullYear()} ${settings.siteTitle || 'AI PromptMatrix'}`,
+        copyrightNotice: `© ${new Date().getFullYear()} ${siteTitle}`,
       }));
   } else if (mainImage) {
     mainJsonLd.image = [{
@@ -284,13 +286,13 @@ export default async function PostPage({ params }: Props) {
       description: post.description,
       creator: {
         '@type': 'Organization',
-        name: settings.siteTitle || 'AI PromptMatrix',
+        name: siteTitle,
         url: siteUrl,
       },
-      creditText: settings.siteTitle || 'AI PromptMatrix',
+      creditText: siteTitle,
       license: `${siteUrl}/terms`,
       acquireLicensePage: `${siteUrl}/contact`,
-      copyrightNotice: `© ${new Date().getFullYear()} ${settings.siteTitle || 'AI PromptMatrix'}`,
+      copyrightNotice: `© ${new Date().getFullYear()} ${siteTitle}`,
     }];
   }
 

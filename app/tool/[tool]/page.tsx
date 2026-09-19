@@ -8,7 +8,8 @@ import { notFound } from 'next/navigation';
 import ToolContent from './ToolContent';
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
-import { formatTitleWithBrand } from '@/lib/seo-helpers';
+import { formatTitleWithBrand, generateCollectionJsonLd } from '@/lib/seo-helpers';
+import { stringifyJsonLd } from '@/lib/json-ld';
 import { getAllTools } from '@/lib/constants';
 
 interface Props {
@@ -71,7 +72,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const toolDetails = settings.toolDetails?.[displayTool] || {};
   
-  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+  const siteTitle = settings.siteTitle || 'PromptSoul';
   const rawTitle = fillDiscoveryTemplate(
     toolDetails.seoTitle || discovery.toolSeoTitleTemplate || discovery.toolTitleTemplate || 'Best %tool% AI Prompts',
     { tool: displayTool, count, site_title: siteTitle }
@@ -79,9 +80,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = formatTitleWithBrand(rawTitle, siteTitle);
   const description = fillDiscoveryTemplate(
     toolDetails.seoDescription || discovery.toolSeoDescriptionTemplate || discovery.toolDescriptionTemplate || 'Explore the best AI prompts and images for %tool%.',
-    { tool: displayTool, count, site_title: settings.siteTitle || 'AI PromptMatrix' }
+    { tool: displayTool, count, site_title: siteTitle }
   );
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
 
   return {
     title: { absolute: title },
@@ -107,8 +108,41 @@ export default async function ToolPage({ params }: Props) {
   if (!isKnownTool(decodedTool, posts, settings)) {
     notFound();
   }
+
+  const displayTool = getDisplayTool(decodedTool, posts, settings);
+  const matchingPosts = getPublicToolPosts(posts, decodedTool);
+  const siteTitle = settings.siteTitle || 'PromptSoul';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
+  const toolDetails = settings.toolDetails?.[displayTool] || {};
+  const discovery = settings.discoveryPages || {};
+
+  const pageTitle = fillDiscoveryTemplate(
+    toolDetails.seoTitle || discovery.toolSeoTitleTemplate || discovery.toolTitleTemplate || 'Best %tool% AI Prompts',
+    { tool: displayTool, count: matchingPosts.length, site_title: siteTitle }
+  );
+  const description = fillDiscoveryTemplate(
+    toolDetails.seoDescription || discovery.toolSeoDescriptionTemplate || discovery.toolDescriptionTemplate || 'Explore the best AI prompts and images for %tool%.',
+    { tool: displayTool, count: matchingPosts.length, site_title: siteTitle }
+  );
+
+  const jsonLd = generateCollectionJsonLd({
+    title: pageTitle,
+    description,
+    url: `${siteUrl}/tool/${encodeURIComponent(decodedTool)}`,
+    posts: matchingPosts,
+    siteTitle,
+    siteUrl,
+  });
   
-  return <ToolContent posts={posts} settings={settings} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: stringifyJsonLd(jsonLd) }}
+      />
+      <ToolContent posts={posts} settings={settings} />
+    </>
+  );
 }
 
 export async function generateStaticParams() {

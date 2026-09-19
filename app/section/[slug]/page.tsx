@@ -9,7 +9,8 @@ import type { Post, Section } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import { filterPostsForSection } from '@/lib/sections';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
-import { formatTitleWithBrand } from '@/lib/seo-helpers';
+import { formatTitleWithBrand, generateCollectionJsonLd } from '@/lib/seo-helpers';
+import { stringifyJsonLd } from '@/lib/json-ld';
 import SectionContent from './SectionContent';
 
 interface Props {
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     fetchSettings(),
   ]);
 
-  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+  const siteTitle = settings.siteTitle || 'PromptSoul';
 
   if (!section) {
     return {
@@ -43,7 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     { section: section.name, count: filteredPosts.length, site_title: siteTitle }
   );
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
 
   return {
     title: { absolute: title },
@@ -74,23 +75,37 @@ export default async function SectionPage({ params }: Props) {
 
   const filteredPosts = filterPostsForSection(section, allPosts, settings, false);
   const discovery = settings.discoveryPages || {};
-  // Hero fields are independent of SEO fields (Explore-page pattern):
-  // heroTitle/heroDescription drive the visible hero, seoTitle/seoDescription
-  // drive metadata (see generateMetadata above).
   const heroTitle = section.heroTitle || section.name;
   const heroDescription = section.heroDescription || fillDiscoveryTemplate(
     discovery.sectionDescriptionTemplate || 'Discover a curated collection of %count% prompts.',
     { count: filteredPosts.length, section: section.name }
   );
+  const siteTitle = settings.siteTitle || 'PromptSoul';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
+
+  const jsonLd = generateCollectionJsonLd({
+    title: section.seoTitle || heroTitle,
+    description: section.seoDescription || heroDescription,
+    url: `${siteUrl}/section/${encodeURIComponent(slug)}`,
+    posts: filteredPosts,
+    siteTitle,
+    siteUrl,
+  });
 
   return (
-    <SectionContent
-      section={section}
-      posts={filteredPosts}
-      heroTitle={heroTitle}
-      heroDescription={heroDescription}
-      settings={settings}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: stringifyJsonLd(jsonLd) }}
+      />
+      <SectionContent
+        section={section}
+        posts={filteredPosts}
+        heroTitle={heroTitle}
+        heroDescription={heroDescription}
+        settings={settings}
+      />
+    </>
   );
 }
 

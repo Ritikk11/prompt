@@ -126,11 +126,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const defaultAlternateNames = [
     'PromptSoul',
     'Prompt Soul',
-    'promptsoul.in',
+    'PromptSoul AI',
     'promptsoul',
-    'AI PromptMatrix',
-    'PromptMatrix',
-    'aipromptmatrix.in',
   ];
   const alternateNames = Array.from(
     new Set([...defaultAlternateNames, ...customAlternateNames])
