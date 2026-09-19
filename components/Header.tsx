@@ -98,7 +98,7 @@ const toolBrandName = (label: string) => label.replace(/Prompts/gi, '').trim() |
  *
  * Exported for the footer, which shows the same lockup.
  */
-export function SiteTitle({ title, className = '' }: { title?: string; className?: string }) {
+export function SiteTitle({ title, className = '', showDot = true }: { title?: string; className?: string; showDot?: boolean }) {
   const text = (title || 'PromptSoul').trim();
   const lastSpace = text.lastIndexOf(' ');
   const lastWord = text.slice(lastSpace + 1);
@@ -112,11 +112,16 @@ export function SiteTitle({ title, className = '' }: { title?: string; className
   const accent = splitAt > 0 ? lastWord.slice(splitAt) : lastWord;
 
   return (
-    <span className={`whitespace-nowrap font-bold tracking-tight text-surface-900 dark:text-white ${className}`}>
-      {head}
-      <span className="bg-gradient-to-r from-[#1a73e8] to-google-blue bg-clip-text text-transparent dark:from-[#669df6] dark:to-[#aecbfa]">
+    <span className={`inline-flex items-center font-heading font-black tracking-[-0.035em] select-none whitespace-nowrap leading-none ${className}`}>
+      <span className="text-surface-950 transition-colors duration-200 group-hover:text-surface-900 dark:text-white">
+        {head}
+      </span>
+      <span className="relative bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-600 bg-clip-text text-transparent transition-all duration-300 group-hover:drop-shadow-[0_2px_10px_rgba(99,102,241,0.35)] dark:from-blue-400 dark:via-indigo-300 dark:to-violet-400">
         {accent}
       </span>
+      {showDot && (
+        <span className="ml-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-tr from-blue-500 to-violet-500 shadow-[0_0_8px_rgba(79,70,229,0.8)] animate-pulse" />
+      )}
     </span>
   );
 }
@@ -556,11 +561,26 @@ function SiteHeader() {
       >
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-3.5 sm:px-6">
           {/* Brand */}
-          <Link href="/" prefetch="eager" className="flex shrink-0 items-center gap-2" onClick={() => setMenuOpen(false)}>
-            <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xl sm:h-9 sm:w-9">
-              <Image src={settings.siteLogo || '/icon-190x190.webp'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" priority />
+          <Link
+            href="/"
+            prefetch="eager"
+            className="group flex shrink-0 items-center gap-2.5 transition-transform duration-200 active:scale-[0.98]"
+            onClick={() => setMenuOpen(false)}
+          >
+            <span className="relative flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:rounded-2xl p-[1.5px] bg-gradient-to-br from-primary-500/30 via-indigo-500/20 to-purple-500/30 ring-1 ring-black/5 dark:ring-white/10 shadow-sm shadow-primary-500/10 group-hover:shadow-md group-hover:shadow-primary-500/25 group-hover:scale-105 transition-all duration-300">
+              <span className="relative h-full w-full overflow-hidden rounded-[10px] sm:rounded-[14px] bg-surface-100 dark:bg-surface-900">
+                <Image
+                  src={settings.siteLogo || '/icon-190x190.webp'}
+                  alt={settings.siteTitle || 'Site Logo'}
+                  fill
+                  sizes="36px"
+                  className="object-cover transition-transform duration-300 group-hover:scale-110"
+                  referrerPolicy="no-referrer"
+                  priority
+                />
+              </span>
             </span>
-            <SiteTitle title={settings.siteTitle} className="text-base sm:text-xl" />
+            <SiteTitle title={settings.siteTitle} className="text-lg sm:text-[22px]" />
           </Link>
 
           {/* Desktop nav */}
