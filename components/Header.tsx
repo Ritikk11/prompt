@@ -98,7 +98,7 @@ const toolBrandName = (label: string) => label.replace(/Prompts/gi, '').trim() |
  *
  * Exported for the footer, which shows the same lockup.
  */
-export function SiteTitle({ title, className = '', showDot = true }: { title?: string; className?: string; showDot?: boolean }) {
+export function SiteTitle({ title, className = '' }: { title?: string; className?: string }) {
   const text = (title || 'PromptSoul').trim();
   const lastSpace = text.lastIndexOf(' ');
   const lastWord = text.slice(lastSpace + 1);
@@ -108,24 +108,15 @@ export function SiteTitle({ title, className = '', showDot = true }: { title?: s
     const ch = lastWord[i];
     if (ch >= 'A' && ch <= 'Z') { splitAt = i; break; }
   }
-  // prefix = everything before the last word's capital (e.g. "Prompt")
-  // accent = last camelCase segment (e.g. "Soul")
-  const prefix = splitAt > 0 ? text.slice(0, lastSpace + 1 + splitAt) : text.slice(0, lastSpace + 1);
+  const head = splitAt > 0 ? text.slice(0, lastSpace + 1 + splitAt) : text.slice(0, lastSpace + 1);
   const accent = splitAt > 0 ? lastWord.slice(splitAt) : lastWord;
 
   return (
-    <span className={`inline-flex items-center font-heading font-black tracking-[-0.035em] select-none whitespace-nowrap leading-none ${className}`}>
-      {/* "Prompt" — blue → indigo → violet */}
-      <span className="bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500 bg-clip-text text-transparent transition-all duration-300 group-hover:drop-shadow-[0_2px_12px_rgba(99,102,241,0.4)] dark:from-blue-400 dark:via-indigo-300 dark:to-violet-400">
-        {prefix}
-      </span>
-      {/* "Soul" — violet → purple → fuchsia */}
-      <span className="bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 bg-clip-text text-transparent transition-all duration-300 group-hover:drop-shadow-[0_2px_12px_rgba(168,85,247,0.4)] dark:from-violet-400 dark:via-purple-400 dark:to-fuchsia-400">
+    <span className={`whitespace-nowrap font-bold tracking-tight text-surface-900 dark:text-white ${className}`}>
+      {head}
+      <span className="bg-gradient-to-r from-[#1a73e8] to-google-blue bg-clip-text text-transparent dark:from-[#669df6] dark:to-[#aecbfa]">
         {accent}
       </span>
-      {showDot && (
-        <span className="ml-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-tr from-indigo-500 to-fuchsia-500 shadow-[0_0_8px_rgba(139,92,246,0.8)] animate-pulse" />
-      )}
     </span>
   );
 }
@@ -565,26 +556,11 @@ function SiteHeader() {
       >
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-3.5 sm:px-6">
           {/* Brand */}
-          <Link
-            href="/"
-            prefetch="eager"
-            className="group flex shrink-0 items-center gap-2.5 transition-transform duration-200 active:scale-[0.98]"
-            onClick={() => setMenuOpen(false)}
-          >
-            <span className="relative flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:rounded-2xl p-[1.5px] bg-gradient-to-br from-primary-500/30 via-indigo-500/20 to-purple-500/30 ring-1 ring-black/5 dark:ring-white/10 shadow-sm shadow-primary-500/10 group-hover:shadow-md group-hover:shadow-primary-500/25 group-hover:scale-105 transition-all duration-300">
-              <span className="relative h-full w-full overflow-hidden rounded-[10px] sm:rounded-[14px] bg-surface-100 dark:bg-surface-900">
-                <Image
-                  src={settings.siteLogo || '/icon-190x190.webp'}
-                  alt={settings.siteTitle || 'Site Logo'}
-                  fill
-                  sizes="36px"
-                  className="object-cover transition-transform duration-300 group-hover:scale-110"
-                  referrerPolicy="no-referrer"
-                  priority
-                />
-              </span>
+          <Link href="/" prefetch="eager" className="flex shrink-0 items-center gap-2" onClick={() => setMenuOpen(false)}>
+            <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xl sm:h-9 sm:w-9">
+              <Image src={settings.siteLogo || '/icon-190x190.webp'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" priority />
             </span>
-            <SiteTitle title={settings.siteTitle} className="text-lg sm:text-[22px]" />
+            <SiteTitle title={settings.siteTitle} className="text-base sm:text-xl" />
           </Link>
 
           {/* Desktop nav */}
