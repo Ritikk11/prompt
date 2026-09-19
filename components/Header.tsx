@@ -108,19 +108,23 @@ export function SiteTitle({ title, className = '', showDot = true }: { title?: s
     const ch = lastWord[i];
     if (ch >= 'A' && ch <= 'Z') { splitAt = i; break; }
   }
-  const head = splitAt > 0 ? text.slice(0, lastSpace + 1 + splitAt) : text.slice(0, lastSpace + 1);
+  // prefix = everything before the last word's capital (e.g. "Prompt")
+  // accent = last camelCase segment (e.g. "Soul")
+  const prefix = splitAt > 0 ? text.slice(0, lastSpace + 1 + splitAt) : text.slice(0, lastSpace + 1);
   const accent = splitAt > 0 ? lastWord.slice(splitAt) : lastWord;
 
   return (
     <span className={`inline-flex items-center font-heading font-black tracking-[-0.035em] select-none whitespace-nowrap leading-none ${className}`}>
-      <span className="text-surface-950 transition-colors duration-200 group-hover:text-surface-900 dark:text-white">
-        {head}
+      {/* "Prompt" — blue → indigo → violet */}
+      <span className="bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500 bg-clip-text text-transparent transition-all duration-300 group-hover:drop-shadow-[0_2px_12px_rgba(99,102,241,0.4)] dark:from-blue-400 dark:via-indigo-300 dark:to-violet-400">
+        {prefix}
       </span>
-      <span className="relative bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-600 bg-clip-text text-transparent transition-all duration-300 group-hover:drop-shadow-[0_2px_10px_rgba(99,102,241,0.35)] dark:from-blue-400 dark:via-indigo-300 dark:to-violet-400">
+      {/* "Soul" — violet → purple → fuchsia */}
+      <span className="bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 bg-clip-text text-transparent transition-all duration-300 group-hover:drop-shadow-[0_2px_12px_rgba(168,85,247,0.4)] dark:from-violet-400 dark:via-purple-400 dark:to-fuchsia-400">
         {accent}
       </span>
       {showDot && (
-        <span className="ml-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-tr from-blue-500 to-violet-500 shadow-[0_0_8px_rgba(79,70,229,0.8)] animate-pulse" />
+        <span className="ml-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-tr from-indigo-500 to-fuchsia-500 shadow-[0_0_8px_rgba(139,92,246,0.8)] animate-pulse" />
       )}
     </span>
   );
