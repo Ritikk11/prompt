@@ -59,7 +59,7 @@ export const HUMAN_WRITING_RULES = `STRICT HUMAN WRITING RULES (mandatory — wr
    - Use facts, numbers, visual descriptions, and specific tips instead of piling on hype adjectives.
    - Prioritize clear, direct, human communication. Focus on human plausibility: write what a knowledgeable person would actually write.`;
 
-export const SITE_PREAMBLE = `You are the in-house copywriter for 'AI PromptMatrix' (aipromptmatrix.in), a curated gallery of AI image-generation prompts for tools like ChatGPT, Gemini, Grok, and Qwen. Visitors browse ready-to-use prompts with real example images. The tone is confident, practical, and human — never robotic.
+export const SITE_PREAMBLE = `You are the in-house copywriter for 'PromptSoul' (promptsoul.in), a curated gallery of AI image-generation prompts for tools like ChatGPT, Gemini, Grok, and Qwen. Visitors browse ready-to-use prompts with real example images. The tone is confident, practical, and human — never robotic.
 
 ${HUMAN_WRITING_RULES}
 
@@ -132,7 +132,7 @@ export const articlePrompts = {
 
 export const generalPrompts = {
   siteDescription: (siteTitle: string) =>
-    `${SITE_PREAMBLE}\n${META_DESC_RULES}\nWrite the sitewide default meta description for "${siteTitle || 'AI PromptMatrix'}" — what the site is (curated AI image prompt gallery with real examples) and why to visit. ${RAW_ONLY}`,
+    `${SITE_PREAMBLE}\n${META_DESC_RULES}\nWrite the sitewide default meta description for "${siteTitle || 'PromptSoul'}" — what the site is (curated AI image prompt gallery with real examples) and why to visit. ${RAW_ONLY}`,
 };
 
 // ---------- Discovery settings ----------
@@ -226,8 +226,8 @@ export const featurePrompts = {
 // ---------- Static pages tab ----------
 
 const staticPageBriefs: Record<string, string> = {
-  about: 'the About page: what AI PromptMatrix is, its mission (make AI image prompting easy to understand, test, reuse), what makes it different (curation, tool context, visual examples, editorial review), and how to get in touch',
-  contact: 'the Contact page: what kinds of messages are welcome (corrections, copyright, submissions, partnerships, feedback) and what to include; the contact email is contact@aipromptmatrix.in',
+  about: 'the About page: what PromptSoul is, its mission (make AI image prompting easy to understand, test, reuse), what makes it different (curation, tool context, visual examples, editorial review), and how to get in touch',
+  contact: 'the Contact page: what kinds of messages are welcome (corrections, copyright, submissions, partnerships, feedback) and what to include; the contact email is contact@promptsoul.in',
   privacy: 'the Privacy Policy: what information is collected (directly provided, usage, technical), how it is used (operate site, review submissions, improve content, respond, protect platform), cookies/analytics/ads, and how to raise privacy questions',
   terms: 'the Terms of Service: responsible/lawful use, content is for creative and informational use, AI output varies, acceptable-use rules, and that terms may change',
   dmca: 'the DMCA page: respect for IP, what a takedown notice must include (the work, the URL, contact info, good-faith statement, signature), and that the Contact page is the channel',
@@ -241,9 +241,9 @@ export const staticPagePrompts = {
   heroSubtitle: (pageKey: string, pageLabel: string) =>
     `${SITE_PREAMBLE}\nWrite a one-sentence hero subtitle (max 140 chars) for ${staticPageBriefs[pageKey] || `the ${pageLabel} page`}. ${RAW_ONLY}`,
   metaTitle: (pageKey: string, pageLabel: string) =>
-    `${SITE_PREAMBLE}\n${META_TITLE_RULES}\nWrite it for ${staticPageBriefs[pageKey] || `the ${pageLabel} page`} on AI PromptMatrix. ${RAW_ONLY}`,
+    `${SITE_PREAMBLE}\n${META_TITLE_RULES}\nWrite it for ${staticPageBriefs[pageKey] || `the ${pageLabel} page`} on PromptSoul. ${RAW_ONLY}`,
   metaDescription: (pageKey: string, pageLabel: string) =>
-    `${SITE_PREAMBLE}\n${META_DESC_RULES}\nWrite it for ${staticPageBriefs[pageKey] || `the ${pageLabel} page`} on AI PromptMatrix. ${RAW_ONLY}`,
+    `${SITE_PREAMBLE}\n${META_DESC_RULES}\nWrite it for ${staticPageBriefs[pageKey] || `the ${pageLabel} page`} on PromptSoul. ${RAW_ONLY}`,
   body: (pageKey: string, pageLabel: string) => {
     const legalNote = LEGAL_PAGE_KEYS.has(pageKey)
       ? ` Write in plain English a site visitor can understand — this is a general template, not legal advice, and the site owner must review it before relying on it. Do not invent specific legal claims, jurisdictions, company registration details, or dates.`

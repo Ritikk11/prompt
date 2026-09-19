@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 // posts. Grounds the AI in this site's structure and markdown conventions.
 // ---------------------------------------------------------------------------
 const getSiteContext = (siteTools: string) => `SITE CONTEXT (read this before writing anything):
-- This is aipromptmatrix.in, a gallery/library of AI image-generation prompts (for tools like ${siteTools}). Visitors come to find ready-to-use prompts and see the example images those prompts produce.
+- This is promptsoul.in (PromptSoul), a gallery/library of AI image-generation prompts (for tools like ${siteTools}). Visitors come to find ready-to-use prompts and see the example images those prompts produce.
 - ${TOOLS_MODELS_RULES}
 - ${HUMAN_WRITING_RULES}
 - An "article" is a standalone long-form page, separate from prompt posts. Category "blog" articles are editorial/news/opinion pieces; category "guide" articles are practical how-to tutorials about prompt writing and AI image tools.

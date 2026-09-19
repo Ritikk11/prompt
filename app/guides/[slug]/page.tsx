@@ -8,12 +8,12 @@ import ArticlePage from '@/components/ArticlePage';
 
 import { formatTitleWithBrand } from '@/lib/seo-helpers';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const settings = await fetchSettings();
-  const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+  const siteTitle = settings.siteTitle || 'PromptSoul';
   const article = getArticleForSettings(settings, 'guide', slug);
   if (!article) return { title: formatTitleWithBrand('Guide Not Found', siteTitle) };
   const title = formatTitleWithBrand(article.seoTitle || article.title, siteTitle);

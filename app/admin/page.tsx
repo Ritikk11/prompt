@@ -5925,7 +5925,7 @@ function AdminInner() {
                     value={siteTitle}
                     onChange={e => setSiteTitle(e.target.value)}
                     className={`${adminInput} flex-1`}
-                    placeholder="AI PromptMatrix"
+                    placeholder="PromptSoul"
                   />
                   <button
                     onClick={async () => {

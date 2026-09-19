@@ -57,7 +57,7 @@ export async function submitToIndexNow(
         method: 'POST',
         headers: {
           'Content-Type': 'application/json; charset=utf-8',
-          'User-Agent': 'AIPromptMatrix-IndexNow/1.0 (+https://aipromptmatrix.in)',
+          'User-Agent': 'PromptSoul-IndexNow/1.0 (+https://promptsoul.in)',
         },
         body: JSON.stringify(payload),
         signal: AbortSignal.timeout(10000),

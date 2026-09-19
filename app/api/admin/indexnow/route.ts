@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const settings = await fetchSettings();
     const key = settings.seoSettings?.indexNowKey;
-    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in').replace(/\/$/, '');
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in').replace(/\/$/, '');
 
     let urlsToSubmit: string[] = [];
 

@@ -342,12 +342,12 @@ export default function PinterestTab({
             </p>
             <div className="p-2.5 rounded-xl bg-white/80 dark:bg-black/30 border border-emerald-500/20 flex items-center justify-between gap-2">
               <code className="font-mono text-[11px] text-emerald-700 dark:text-emerald-300 truncate">
-                https://aipromptmatrix.in/feed.xml
+                https://promptsoul.in/feed.xml
               </code>
               <button
                 type="button"
                 onClick={() => {
-                  navigator.clipboard.writeText('https://aipromptmatrix.in/feed.xml');
+                  navigator.clipboard.writeText('https://promptsoul.in/feed.xml');
                   showToast('RSS Feed URL copied to clipboard!', 'success');
                 }}
                 className="shrink-0 px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-500 transition-colors"
@@ -469,7 +469,7 @@ export default function PinterestTab({
           <div>
             <span className="font-bold text-surface-700 dark:text-surface-300">Redirect URI in Pinterest Developer Portal:</span>
             <code className="ml-2 px-2 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono text-[11px] select-all">
-              https://aipromptmatrix.in/api/pinterest/callback
+              https://promptsoul.in/api/pinterest/callback
             </code>
           </div>
           <a

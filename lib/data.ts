@@ -176,9 +176,9 @@ const defaultSettings: SiteSettings = {
     "defaultMetaDescription": "PromptSoul is your ultimate collection of curated image prompts for ChatGPT, Gemini, Grok, and more. Discover, copy and create stunning artwork instantly.",
     "enableSitelinksSearchbox": true,
     "alternateSiteNames": [
-      "PromptMatrix",
-      "AI Prompt Matrix",
-      "aipromptmatrix.in"
+      "PromptSoul",
+      "Prompt Soul",
+      "PromptSoul AI"
     ],
     "indexNowKey": "f758ffa479794b339f86d7830b83ebfe",
     "enableIndexNow": true

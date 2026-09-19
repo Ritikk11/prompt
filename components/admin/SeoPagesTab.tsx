@@ -43,12 +43,12 @@ const defaultSeoSettings: SeoSettings = {
   googleVerification: '',
   bingVerification: '',
   pinterestVerification: '',
-  robotsText: 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\n\nSitemap: https://aipromptmatrix.in/sitemap.xml\nSitemap: https://aipromptmatrix.in/sitemap-prompts.xml',
+  robotsText: 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\n\nSitemap: https://promptsoul.in/sitemap.xml\nSitemap: https://promptsoul.in/sitemap-prompts.xml',
   sitemapInclude: { posts: true, sections: true, tags: true, tools: true, staticPages: true },
   enableJsonLd: true,
   schemaType: 'Article',
   enableBreadcrumbList: true,
-  alternateSiteNames: ['PromptMatrix', 'AI Prompt Matrix', 'aipromptmatrix.in'],
+  alternateSiteNames: ['PromptSoul', 'Prompt Soul', 'PromptSoul AI'],
   indexNowKey: 'f758ffa479794b339f86d7830b83ebfe',
   enableIndexNow: true,
   redirects: [],
@@ -287,7 +287,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
             </Field>
             <Field label="URL Slug (path)">
               <input value={slug} onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-/]/g, ''))} className={adminInput} placeholder="e.g. trending-80s-look-ai-photo-prompts" />
-              <p className="mt-1 text-xs text-surface-500">Live URL: aipromptmatrix.in/{slug.replace(/^\/+/, '')}</p>
+              <p className="mt-1 text-xs text-surface-500">Live URL: promptsoul.in/{slug.replace(/^\/+/, '')}</p>
             </Field>
             <Field
               label="Intro content (optional, markdown guide shown below hero)"
@@ -544,7 +544,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                       type="button"
                       onClick={() => {
                         const current = (seoSettings.robotsText || '').trim();
-                        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://aipromptmatrix.in';
+                        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://promptsoul.in';
                         const addition = `\nSitemap: ${baseUrl}/sitemap-prompts.xml`;
                         updateSeoSettings({
                           robotsText: current ? `${current}${addition}` : `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\nDisallow: /api/\nDisallow: /search/\nDisallow: /submit/\nDisallow: /login/\n\nSitemap: ${baseUrl}/sitemap.xml\nSitemap: ${baseUrl}/sitemap-prompts.xml`,
@@ -558,7 +558,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                   <button
                     type="button"
                     onClick={() => {
-                      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://aipromptmatrix.in';
+                      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://promptsoul.in';
                       updateSeoSettings({
                         robotsText: `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\nDisallow: /api/\nDisallow: /search/\nDisallow: /submit/\nDisallow: /login/\n\nSitemap: ${baseUrl}/sitemap.xml\nSitemap: ${baseUrl}/sitemap-prompts.xml`,
                       });
@@ -608,7 +608,7 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                     alternateSiteNames: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                   })}
                   className={adminInput}
-                  placeholder="PromptMatrix, AI Prompt Matrix, aipromptmatrix.in"
+                  placeholder="PromptSoul, Prompt Soul, PromptSoul AI"
                 />
                 <p className="mt-1 text-[11px] text-surface-500 dark:text-surface-400">
                   Comma-separated alias/fallback names for Google Search. Google displays your preferred site name above search result snippet URLs based on these.

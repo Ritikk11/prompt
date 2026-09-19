@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 // structure so it doesn't treat every field as generic blog copy.
 // ---------------------------------------------------------------------------
 const getSiteContext = (siteTools: string) => `SITE CONTEXT (read this before writing anything):
-- This is aipromptmatrix.in, a gallery/library of AI image-generation prompts (for tools like ${siteTools}). Visitors come to find ready-to-use prompts and see the example images those prompts produce.
+- This is promptsoul.in (PromptSoul), a gallery/library of AI image-generation prompts (for tools like ${siteTools}). Visitors come to find ready-to-use prompts and see the example images those prompts produce.
 - ${TOOLS_MODELS_RULES}
 - ${HUMAN_WRITING_RULES}
 - A "post" bundles one or more images generated from a text prompt, plus editorial content around it.

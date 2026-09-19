@@ -29,16 +29,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!user) {
     return {
-      title: 'Creator Not Found | AI PromptMatrix',
+      title: 'Creator Not Found | PromptSoul',
       description: 'The requested creator profile does not exist.',
     };
   }
 
   const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Creator';
   const username = user.user_metadata?.username || user.email?.split('@')[0] || 'creator';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aipromptmatrix.in';
-  const profileTitle = `${displayName} (@${username}) — AI Prompts | AI PromptMatrix`;
-  const profileDescription = user.user_metadata?.bio || `Browse AI prompts and workflows created by ${displayName} (@${username}) on AI PromptMatrix.`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
+  const profileTitle = `${displayName} (@${username}) — AI Prompts | PromptSoul`;
+  const profileDescription = user.user_metadata?.bio || `Browse AI prompts and workflows created by ${displayName} (@${username}) on PromptSoul.`;
 
   return {
     title: profileTitle,
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: profileTitle,
       description: profileDescription,
-      siteName: 'AI PromptMatrix',
+      siteName: 'PromptSoul',
       type: 'profile',
       url: `${siteUrl}/user/${encodeURIComponent(username)}`,
     },

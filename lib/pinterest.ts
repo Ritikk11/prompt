@@ -3,7 +3,7 @@ import type { Post, SiteSettings, PinterestSettings } from './types';
 export const DEFAULT_PINTEREST_APP_ID = '1610432';
 export const DEFAULT_PINTEREST_BOARD_ID = '1124703775633314110';
 export const DEFAULT_PINTEREST_BOARD_NAME = 'Ai Image Prompts';
-export const DEFAULT_PINTEREST_REDIRECT_URI = 'https://aipromptmatrix.in/api/pinterest/callback';
+export const DEFAULT_PINTEREST_REDIRECT_URI = 'https://promptsoul.in/api/pinterest/callback';
 export const PINTEREST_API_BASE = 'https://api.pinterest.com/v5';
 export const PINTEREST_SANDBOX_API_BASE = 'https://api-sandbox.pinterest.com/v5';
 
@@ -394,7 +394,8 @@ export async function publishPostToPinterest(
 
   const title = formatPinterestTitle(post);
   const description = formatPinterestDescription(post);
-  const link = `https://aipromptmatrix.in/${post.slug || post.id}`;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in').replace(/\/$/, '');
+  const link = `${siteUrl}/${post.slug || post.id}`;
 
   let pin;
   try {

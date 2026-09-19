@@ -7,7 +7,7 @@ import ArticleCard from '@/components/ArticleCard';
 import ScrollReveal from '@/components/ScrollReveal';
 
 export const metadata: Metadata = {
-  title: 'AI Prompting Blog | AI PromptMatrix',
+  title: 'AI Prompting Blog | PromptSoul',
   description: 'Practical articles on writing better AI image prompts — techniques, tool comparisons, trends, and how image generation actually works.',
   alternates: { canonical: '/blog' },
 };

@@ -9,7 +9,7 @@ import ArticleCard from '@/components/ArticleCard';
 import ScrollReveal from '@/components/ScrollReveal';
 
 export const metadata: Metadata = {
-  title: 'AI Prompt Guides & Tutorials | AI PromptMatrix',
+  title: 'AI Prompt Guides & Tutorials | PromptSoul',
   description: 'Step-by-step AI image tutorials — trending photo styles, Gemini and ChatGPT walkthroughs, photo restoration, headshots, and more.',
   alternates: { canonical: '/guides' },
 };

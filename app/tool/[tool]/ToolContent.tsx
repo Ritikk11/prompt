@@ -62,11 +62,11 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
   const toolDetails = settings.toolDetails?.[displayTool] || {};
   const heroCopy = fillDiscoveryTemplate(
     toolDetails.heroDescription || discovery.toolDescriptionTemplate || toolHeroCopy[normalizedTool] || `Browse %count% prompt collections organized for %tool%.`,
-    { tool: displayTool, count: filtered.length, site_title: settings.siteTitle || 'AI PromptMatrix' }
+    { tool: displayTool, count: filtered.length, site_title: settings.siteTitle || 'PromptSoul' }
   );
   const heroTitle = fillDiscoveryTemplate(
     toolDetails.heroTitle || discovery.toolTitleTemplate || '%tool% Prompts', 
-    { tool: displayTool, count: filtered.length, site_title: settings.siteTitle || 'AI PromptMatrix' }
+    { tool: displayTool, count: filtered.length, site_title: settings.siteTitle || 'PromptSoul' }
   );
   
   if (sortBy === 'latest') {

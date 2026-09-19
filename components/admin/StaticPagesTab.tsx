@@ -40,7 +40,7 @@ function pageDefaults(key: PageKey, settings?: SiteSettings): StaticPageSettings
     title: pageLabels[key],
     subtitle: '',
     body: getDefaultStaticPageBody(key, settings),
-    metaTitle: `${pageLabels[key]} | AI PromptMatrix`,
+    metaTitle: `${pageLabels[key]} | ${settings?.siteTitle || 'PromptSoul'}`,
     metaDescription: '',
     ogImage: '',
     visible: true,

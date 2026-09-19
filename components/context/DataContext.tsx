@@ -206,7 +206,7 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const siteTitle = settings.siteTitle || 'AI PromptMatrix';
+      const siteTitle = settings.siteTitle || 'PromptSoul';
       const homeTitleTemplate = settings.seoSettings?.homeSeoTitleTemplate || '%site_title% - AI Prompts';
       document.title = homeTitleTemplate.replace(/%site_title%/g, siteTitle);
       
