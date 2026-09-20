@@ -16,7 +16,7 @@ export function isNearbySlide(index: number, current: number, total: number) {
 }
 
 export const promptImageUrl = (item?: Post, fallback = '') => (
-  getPromptImageUrl(item?.thumbnailUrl || item?.images[0]?.url || fallback, { width: 960, quality: 78 })
+  getPromptImageUrl(item?.thumbnailUrl || item?.images?.[0]?.url || fallback, { width: 720, quality: 74 })
 );
 
 export const SLIDE_DURATION_MS = 4000;

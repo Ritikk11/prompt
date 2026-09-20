@@ -73,11 +73,13 @@ export default function PromptItemCard({
   const handleTouchEnd = () => {
     if (!touchStartX.current || !touchEndX.current || images.length <= 1) return;
     const diff = touchStartX.current - touchEndX.current;
-    if (Math.abs(diff) > 45) {
+    if (Math.abs(diff) > 40) {
       if (diff > 0) {
-        setActiveIdx((prev) => (prev + 1) % images.length);
+        // Swiped left (finger right -> left): move to next image
+        setActiveIdx((prev) => Math.min(images.length - 1, prev + 1));
       } else {
-        setActiveIdx((prev) => (prev - 1 + images.length) % images.length);
+        // Swiped right (finger left -> right): move to previous image
+        setActiveIdx((prev) => Math.max(0, prev - 1));
       }
     }
     touchStartX.current = 0;
@@ -161,7 +163,7 @@ export default function PromptItemCard({
         {/* Left: Interactive Image Gallery */}
         <div className="relative self-start p-3 sm:p-4">
           <div
-            className="relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-white/60 bg-white/25 p-2 dark:border-white/10 dark:bg-white/[0.06] group/img select-none"
+            className="relative mx-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-white/60 bg-white/25 p-2 dark:border-white/10 dark:bg-white/[0.06] group/img select-none touch-pan-y"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -170,20 +172,32 @@ export default function PromptItemCard({
               className="relative flex w-full min-h-[300px] sm:min-h-[420px] cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-black/[0.04] dark:bg-white/[0.06]"
               onClick={() => openLightbox(images, safeActiveIdx, index, tools)}
             >
-              <LoadingImg
-                src={getPromptImageUrl(activeUrl || '', { width: 768, quality: 74 })}
-                srcSet={buildGallerySrcSet(activeUrl)}
-                sizes={GALLERY_SIZES}
-                alt={`${post.title}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}`}
-                showSkeleton={showSkeleton}
-                priority={index === 0}
-                loading={index < 2 ? 'eager' : 'lazy'}
-                fetchPriority={index === 0 ? 'high' : 'auto'}
-                decoding={index === 0 ? 'sync' : 'async'}
-                wrapperClassName="w-full"
-                className="block h-auto w-full rounded-xl transition-transform duration-300 ease-out group-hover/img:scale-[1.02]"
-                referrerPolicy="no-referrer"
-              />
+              <div
+                className="flex w-full transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-transform"
+                style={{ transform: `translateX(-${safeActiveIdx * 100}%)` }}
+              >
+                {images.map((url, i) => (
+                  <div
+                    key={url || i}
+                    className="w-full flex-none min-w-full flex items-center justify-center"
+                  >
+                    <LoadingImg
+                      src={getPromptImageUrl(url || '', { width: 768, quality: 74 })}
+                      srcSet={buildGallerySrcSet(url)}
+                      sizes={GALLERY_SIZES}
+                      alt={`${post.title}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}${images.length > 1 ? ` variation ${i + 1}` : ''}`}
+                      showSkeleton={showSkeleton && i === 0}
+                      priority={index === 0 && i === 0}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      fetchPriority={index === 0 && i === 0 ? 'high' : 'auto'}
+                      decoding={index === 0 && i === 0 ? 'sync' : 'async'}
+                      wrapperClassName="w-full"
+                      className="block h-auto w-full rounded-xl transition-transform duration-300 ease-out group-hover/img:scale-[1.02]"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Top-Left Tool Badges */}

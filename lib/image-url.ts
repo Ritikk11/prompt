@@ -112,7 +112,7 @@ export function getThumbnailImageUrl(url?: string, options: ThumbnailOptions = {
 
 export function getThumbnailSrcSet(
   url?: string,
-  widths: number[] = [240, 360, 480, 720],
+  widths: number[] = [240, 360, 480, 640, 720],
   quality = 74
 ): string | undefined {
   if (!url) return undefined;
@@ -140,4 +140,3 @@ export function getArticleImageUrl(url?: string, options: ThumbnailOptions = {})
     fit: options.fit ?? 'scale-down',
   });
 }
-

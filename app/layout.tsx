@@ -65,16 +65,12 @@ export async function generateMetadata(): Promise<Metadata> {
     applicationName: siteTitle,
     icons: {
       icon: [
-        { url: '/favicon.ico?v=6' },
-        { url: '/favicon-16x16.webp?v=6', sizes: '16x16', type: 'image/webp' },
-        { url: '/favicon-32x32.webp?v=6', sizes: '32x32', type: 'image/webp' },
-        { url: '/favicon-48x48.webp?v=6', sizes: '48x48', type: 'image/webp' },
-        { url: '/icon-256x256.webp?v=6', sizes: '256x256', type: 'image/webp' },
+        { url: '/favicon.ico', sizes: '48x48' },
+        { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
       ],
       apple: [
-        { url: '/apple-touch-icon.webp?v=6', sizes: '180x180', type: 'image/webp' },
+        { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
       ],
-      shortcut: '/favicon.ico?v=6',
     },
     manifest: '/site.webmanifest',
     robots: {
@@ -126,8 +122,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const defaultAlternateNames = [
     'PromptSoul',
     'Prompt Soul',
-    'PromptSoul AI',
-    'promptsoul',
+    'Promptsoul',
+    'prompt soul',
   ];
   const alternateNames = Array.from(
     new Set([...defaultAlternateNames, ...customAlternateNames])
@@ -245,7 +241,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: stringifyJsonLd(jsonLd) }}
         />
-        
+
         {/* Google tag (gtag.js) — lazyOnload defers it to browser idle time.
             afterInteractive ran gtag's 165 KiB eval inside the LCP window
             (Lighthouse: 122ms main-thread block, 70KiB unused JS on prompt

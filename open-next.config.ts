@@ -10,7 +10,7 @@ export default defineCloudflareConfig({
   // Keep tag validation enabled so admin revalidation remains authoritative.
   incrementalCache: withRegionalCache(r2IncrementalCache, {
     mode: 'short-lived',
-    bypassTagCacheOnCacheHit: false,
+    bypassTagCacheOnCacheHit: true,
   }),
   // revalidatePath/revalidateTag need a real tag cache; without one they are
   // silent no-ops and pages only refresh when their ISR TTL expires.

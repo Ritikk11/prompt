@@ -1,6 +1,5 @@
 'use client';
 import Link from '@/components/PrefetchLink';
-import Image from 'next/image';
 
 import { Eye, Heart } from 'lucide-react';
 import type { Post } from '@/lib/types';
@@ -10,7 +9,13 @@ import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
 import ToolBadge from '@/components/ToolBadge';
 import { getThumbnailImageUrl, getThumbnailSrcSet } from '@/lib/image-url';
 
-const THUMBNAIL_SIZES = '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px';
+// Match MasonryGrid's breakpoints and configured columns. Lazy images can use
+// their measured width in supporting browsers; this is the eager/fallback hint.
+export function masonryImageSizes(mobileColumns: number, desktopColumns: number, inset: number) {
+  const slot = (columns: number, gap: number, container: string) =>
+    `calc((${container} - 24px - ${(columns - 1) * gap}px) / ${columns} - ${inset}px)`;
+  return `(max-width: 639px) ${slot(mobileColumns, 12, '100vw')}, (max-width: 767px) ${slot(2, 16, '100vw')}, (max-width: 1023px) ${slot(Math.min(desktopColumns, 3), 16, '100vw')}, (max-width: 1279px) ${slot(desktopColumns, 16, '100vw')}, ${slot(desktopColumns, 16, '1280px')}`;
+}
 
 // Alternate, tool-color-independent badge looks selectable via settings.badgeStyle.
 // The glass default (v1 / v2 / unknown) is the shared, site-wide <ToolBadge>.
@@ -53,7 +58,7 @@ const Badge = ({ style, toolName, toolInfo, className = "" }: { style: string; t
   );
 };
 
-export default function PostCard({ post: initialPost, index, aspect, cardStyleOverride, badgeStyleOverride, priority = false }: { post: Post; index?: number; aspect?: string; cardStyleOverride?: 'v1' | 'v2'; badgeStyleOverride?: string; priority?: boolean }) {
+export default function PostCard({ post: initialPost, index, aspect, cardStyleOverride, badgeStyleOverride, priority = false, imageSizes }: { post: Post; index?: number; aspect?: string; cardStyleOverride?: 'v1' | 'v2'; badgeStyleOverride?: string; priority?: boolean; imageSizes?: string }) {
   const { settings, posts } = useData();
   const post = posts.find(p => p.id === initialPost.id) || initialPost;
   
@@ -71,9 +76,10 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
   const showSkeleton = settings.features?.skeletonLoaders ?? true;
   const showLikeCount = settings.features?.showLikeCount ?? true;
   const showViewCount = settings.features?.showViewCount ?? true;
-  const rawThumbnailUrl = post.thumbnailUrl || post.images[0]?.url || '';
+  const rawThumbnailUrl = post?.thumbnailUrl || post?.images?.[0]?.url || '';
   const imageUrl = getThumbnailImageUrl(rawThumbnailUrl, { width: 380, quality: 74 });
   const thumbnailSrcSet = getThumbnailSrcSet(rawThumbnailUrl);
+  const thumbnailSizes = imageSizes || masonryImageSizes(settings.features?.mobileColumns || 1, settings.features?.desktopColumns || 4, cardStyle === 'v2' ? 14 : 0);
 
   const renderBadges = (className = "") => (
     <div className="flex flex-wrap gap-1">
@@ -104,22 +110,22 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
             and white-on-glass reads as a hole in the card. */}
         <div className={`relative overflow-hidden rounded-[12px] bg-black/[0.04] dark:bg-white/[0.06] ${aspect ? 'h-full' : ''}`}>
           {aspect ? (
-            <LoadingImage
+            <LoadingImg
               src={imageUrl}
+              srcSet={thumbnailSrcSet}
               alt={post.title}
-              fill
-              sizes={THUMBNAIL_SIZES}
+              wrapperClassName="absolute inset-0 h-full w-full"
+              sizes={thumbnailSizes}
               showSkeleton={showSkeleton}
-              className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
+              className="h-full w-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
               referrerPolicy="no-referrer"
-              skeleton={showSkeleton}
               priority={priority}
             />
           ) : (
             <LoadingImg
               src={imageUrl}
               srcSet={thumbnailSrcSet}
-              sizes={THUMBNAIL_SIZES}
+              sizes={thumbnailSizes}
               alt={post.title}
               showSkeleton={showSkeleton}
               className="block h-auto w-full transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
@@ -191,22 +197,22 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
           look ragged. Without a forced frame (masonry) it keeps intrinsic flow
           sizing so heights stay varied. */}
       {aspect ? (
-        <LoadingImage
+        <LoadingImg
           src={imageUrl}
+          srcSet={thumbnailSrcSet}
           alt={post.title}
-          fill
-          sizes={THUMBNAIL_SIZES}
+          wrapperClassName="absolute inset-0 h-full w-full"
+          sizes={thumbnailSizes}
           showSkeleton={showSkeleton}
-          className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
+          className="h-full w-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
           referrerPolicy="no-referrer"
-          skeleton={showSkeleton}
           priority={priority}
         />
       ) : (
         <LoadingImg
           src={imageUrl}
           srcSet={thumbnailSrcSet}
-          sizes={THUMBNAIL_SIZES}
+          sizes={thumbnailSizes}
           alt={post.title}
           showSkeleton={showSkeleton}
           className="block h-auto w-full transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"

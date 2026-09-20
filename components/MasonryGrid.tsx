@@ -1,8 +1,9 @@
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Post, SiteSettings } from '@/lib/types';
-import PostCard from '@/components/PostCard';
+import PostCard, { masonryImageSizes } from '@/components/PostCard';
 import AdSlot from '@/components/AdSlot';
+import { useData } from '@/components/context/DataContext';
 
 interface MasonryGridProps {
   posts: Post[];
@@ -21,8 +22,16 @@ export default function MasonryGrid({
   className = '',
   disablePriority = false,
 }: MasonryGridProps) {
-  const mobileColsSetting = settings?.features?.mobileColumns || 1;
-  const desktopColsSetting = settings?.features?.desktopColumns || 4;
+  const { settings: contextSettings } = useData();
+  const effectiveSettings = settings || contextSettings;
+  const mobileColsSetting = effectiveSettings?.features?.mobileColumns || 1;
+  const desktopColsSetting = effectiveSettings?.features?.desktopColumns || 4;
+  const effectiveCardStyle = (cardStyleOverride || effectiveSettings?.cardStyle || 'v2') as 'v1' | 'v2';
+  const imageSizes = masonryImageSizes(
+    mobileColsSetting,
+    desktopColsSetting,
+    effectiveCardStyle === 'v2' ? 14 : 0
+  );
 
   const [columnCount, setColumnCount] = useState<number>(desktopColsSetting);
 
@@ -78,6 +87,7 @@ export default function MasonryGrid({
                 index={index}
                 priority={!disablePriority && index < 2}
                 cardStyleOverride={cardStyleOverride as any}
+                imageSizes={imageSizes}
               />
               {renderAdSlot && (
                 <AdSlot

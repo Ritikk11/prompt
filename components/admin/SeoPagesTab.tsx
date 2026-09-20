@@ -48,7 +48,7 @@ const defaultSeoSettings: SeoSettings = {
   enableJsonLd: true,
   schemaType: 'Article',
   enableBreadcrumbList: true,
-  alternateSiteNames: ['PromptSoul', 'Prompt Soul', 'PromptSoul AI'],
+  alternateSiteNames: ['PromptSoul', 'Prompt Soul', 'Promptsoul', 'prompt soul'],
   indexNowKey: 'd2725a72cddd4faba71fcc50a0d414cc',
   enableIndexNow: true,
   redirects: [],

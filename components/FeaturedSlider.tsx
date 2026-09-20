@@ -1,11 +1,13 @@
 'use client';
 import Link from '@/components/PrefetchLink';
-import Image from 'next/image';
+import { getThumbnailImageUrl, getThumbnailSrcSet } from '@/lib/image-url';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Post } from '@/lib/types';
 import { getAllTools, getToolInfo } from '@/lib/constants';
 import ToolBadge from '@/components/ToolBadge';
-import { isNearbySlide, promptImageUrl, useFeaturedSlider, type HeroProps } from '@/components/hero/sliderShared';
+import { isNearbySlide, useFeaturedSlider, type HeroProps } from '@/components/hero/sliderShared';
+
+const slideSource = (post?: Post) => post?.thumbnailUrl || post?.images?.[0]?.url || '';
 
 /**
  * Featured carousel: text column beside a diagonal card stack, inside one large
@@ -33,7 +35,7 @@ export default function FeaturedSlider({ featuredPosts: rawFeatured, settings }:
   // each new poster on every advance — a large, visible shift (~40 RGB channels).
   // The glow is blurred beyond recognition, so a constant source keeps the look
   // with zero per-slide re-tinting.
-  const backdropUrl = promptImageUrl(featured[0]);
+  const backdropUrl = getThumbnailImageUrl(slideSource(featured[0]), { width: 320, quality: 60 });
 
   return (
     <div
@@ -44,19 +46,19 @@ export default function FeaturedSlider({ featuredPosts: rawFeatured, settings }:
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Frosted glow bleeding through the glass. Small src (20vw) — it is
+      {/* Frosted glow bleeding through the glass. Small 320px source — it is
           blurred anyway. Eager, NOT lazy: this sits just below the fold, and
           lazy-loading it made the whole panel visibly darken the moment the
           slider scrolled into view. */}
       <div className="absolute inset-0 z-0">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={backdropUrl}
           alt=""
-          fill
-          sizes="20vw"
+          decoding="async"
           loading="eager"
           referrerPolicy="no-referrer"
-          className="scale-125 object-cover opacity-30 blur-[16px] dark:opacity-25"
+          className="absolute inset-0 h-full w-full scale-125 object-cover opacity-30 blur-[16px] dark:opacity-25"
         />
       </div>
 
@@ -146,14 +148,16 @@ export default function FeaturedSlider({ featuredPosts: rawFeatured, settings }:
                 }`}
               >
                 <div className="group relative block aspect-[4/5] h-full max-h-[360px] overflow-hidden rounded-2xl border border-white/80 bg-surface-900/10 shadow-2xl transition-transform duration-500 hover:scale-[1.02] dark:border-white/15 md:max-h-[380px]">
-                  <Image
-                    src={promptImageUrl(p)}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={getThumbnailImageUrl(slideSource(p), { width: 480, quality: 74 })}
+                    srcSet={getThumbnailSrcSet(slideSource(p))}
                     alt={p.title}
-                    fill
-                    sizes="(max-width: 768px) 80vw, 40vw"
+                    sizes="(max-width: 767px) 238px, 302px"
+                    decoding="async"
                     loading="lazy"
                     referrerPolicy="no-referrer"
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
                 </div>

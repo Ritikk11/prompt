@@ -27,6 +27,7 @@ function revalidateNewPost(post: Post) {
   revalidatePath('/sitemap.xml');
   revalidatePath('/sitemap-main.xml');
   revalidatePath('/sitemap-prompts.xml');
+  revalidatePath('/api/posts');
 
   // Purge all SEO landing pages so the new post displays on them immediately
   fetchSeoPages().then((pages) => {
@@ -92,7 +93,13 @@ export async function GET() {
   const posts = await fetchPostSummaries();
   return NextResponse.json(
     { posts },
-    { headers: { 'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600' } },
+    {
+      headers: {
+        'Cache-Control': 'public, max-age=120, s-maxage=43200, stale-while-revalidate=86400',
+        'CDN-Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=86400',
+        'Cloudflare-CDN-Cache-Control': 'public, s-maxage=43200, stale-while-revalidate=86400',
+      },
+    },
   );
 }
 

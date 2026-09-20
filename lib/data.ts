@@ -178,7 +178,8 @@ const defaultSettings: SiteSettings = {
     "alternateSiteNames": [
       "PromptSoul",
       "Prompt Soul",
-      "PromptSoul AI"
+      "Promptsoul",
+      "prompt soul"
     ],
     "indexNowKey": "d2725a72cddd4faba71fcc50a0d414cc",
     "enableIndexNow": true

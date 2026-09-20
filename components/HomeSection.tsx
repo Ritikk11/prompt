@@ -115,7 +115,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
             {sectionPosts.map((post, i) => (
               <React.Fragment key={post.id}>
                 <div className="w-56 flex-none pr-1.5 sm:w-72 sm:pr-0 md:w-80 lg:w-96">
-                  <PostCard post={post} index={i} aspect="aspect-[3/4]" cardStyleOverride={section.cardStyle} />
+                  <PostCard post={post} index={i} aspect="aspect-[3/4]" cardStyleOverride={section.cardStyle} imageSizes="(max-width: 639px) 218px, (max-width: 767px) 288px, (max-width: 1023px) 320px, 384px" />
                 </div>
                 <AdSlot placement="inFeed" inFeedIndex={i} className="w-56 flex-none rounded-[18px] bg-black/[0.03] dark:bg-white/[0.04] sm:w-72 md:w-80 lg:w-96" />
               </React.Fragment>
