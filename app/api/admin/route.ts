@@ -30,6 +30,7 @@ function revalidateContent(resource: string, data: any, id?: string, admin?: any
     getAllToolsFromPost(data || {}).forEach((tool) => revalidatePath(`/tool/${encodeURIComponent(tool.toLowerCase())}`));
     revalidatePath('/');
     revalidatePath('/explore');
+    revalidatePath('/api/posts');
 
     // Automatically purge all active SEO landing pages so the new post appears immediately without manual page edits
     if (admin) {
