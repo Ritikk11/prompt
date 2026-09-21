@@ -1,5 +1,3 @@
-'use client';
-import { useState } from 'react';
 import Link from '@/components/PrefetchLink';
 import Image from 'next/image';
 import { ArrowRight, Bookmark, CheckCircle2, Flame, Heart, Layers, Search } from 'lucide-react';
@@ -24,17 +22,11 @@ const gradientButton =
  * Landing hero: kicker, headline, instant search, popular tags, CTAs, trust
  * line, live stat tiles and the tool row.
  *
- * Client component for the search input's state. The section is transparent —
- * the site canvas (components/SiteBackground) is the backdrop every glass
- * surface here frosts.
- *
- * Deliberately has NO entrance animation. The H1 is the LCP element, and any
- * animation on it (even transform-only with a backwards fill) makes Lighthouse
- * wait before counting it as painted. Reveals start below the fold.
+ * Rendered purely as a Server Component for instant LCP with 0 JS hydration delay.
+ * The search input submits natively via GET to /search?q=...
+ * Deliberately has NO entrance animation. The H1 is the LCP element.
  */
 export default function HomeLibraryHero({ featuredPosts, settings, postCount }: HomeLibraryHeroProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-
   const content = settings.heroContent || {};
   const totalLikes = featuredPosts.reduce((sum, post) => sum + (post.likes || 0), 0);
   const totalSaves = featuredPosts.reduce((sum, post) => sum + (post.bookmarkedBy?.length || 0), 0);
@@ -93,18 +85,14 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
 
         <div className="mt-7 w-full max-w-2xl sm:mt-9">
           <form
-            onSubmit={e => {
-              e.preventDefault();
-              if (searchQuery.trim()) {
-                window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
-              }
-            }}
+            action="/search"
+            method="GET"
             className="group/search relative flex items-center rounded-full border border-white/60 bg-white/45 p-1.5 shadow-xl shadow-slate-900/5 backdrop-blur-md backdrop-saturate-150 transition-all duration-300 ease-out hover:border-primary-400 hover:shadow-2xl focus-within:scale-[1.02] focus-within:border-primary-500 focus-within:shadow-2xl focus-within:shadow-primary-500/20 focus-within:ring-4 focus-within:ring-primary-500/15 dark:border-white/10 dark:bg-white/[0.06] dark:shadow-black/50 dark:hover:border-white/30"
           >
             <input
               type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              name="q"
+              required
               placeholder={content.searchPlaceholder || 'Search prompts by style, tool or subject...'}
               aria-label="Search prompts"
               className="w-full bg-transparent px-2 py-2 text-sm text-surface-900 placeholder-surface-400 outline-none dark:text-white dark:placeholder-surface-400 sm:px-3 sm:text-base"
