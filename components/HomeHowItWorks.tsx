@@ -61,7 +61,7 @@ export default function HomeHowItWorks({ settings }: { settings?: SiteSettings }
   const ActiveIcon = active.icon;
 
   return (
-    <section id="how-it-works" className="relative w-full px-5 py-16 sm:px-8">
+    <section id="how-it-works" className="relative w-full scroll-mt-20 px-5 py-16 sm:scroll-mt-24 sm:px-8">
       <div className="mx-auto max-w-6xl">
         <ScrollReveal slide>
           <SectionHeader

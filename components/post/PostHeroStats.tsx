@@ -10,12 +10,14 @@ interface PostHeroStatsProps {
   post: Post;
   showViewCount?: boolean;
   showLikeCount?: boolean;
+  showSaveButton?: boolean;
 }
 
 export default function PostHeroStats({
   post,
   showViewCount = true,
   showLikeCount = true,
+  showSaveButton = true,
 }: PostHeroStatsProps) {
   const { incrementViews, toggleLike, toggleBookmark, posts } = useData();
   const { user, handleLogin } = usePostPage();
@@ -103,25 +105,28 @@ export default function PostHeroStats({
         {showLikeCount ? `${likes.toLocaleString()} ${likes === 1 ? 'like' : 'likes'}` : likedByUser ? 'Liked' : 'Like'}
       </button>
 
-      <span className="h-5 w-px bg-white/15" />
-
-      <button
-        onClick={handleBookmarkClick}
-        type="button"
-        aria-label={bookmarkedByUser ? 'Remove bookmark' : 'Bookmark this post'}
-        className="flex items-center gap-2 sm:gap-2.5 transition-all duration-300 hover:text-white hover:scale-105 active:scale-95"
-      >
-        <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
-          <Bookmark
-            className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${
-              bookmarkedByUser
-                ? 'text-indigo-300 fill-indigo-300'
-                : 'text-indigo-400'
-            } drop-shadow-[0_0_8px_rgba(129,140,248,0.7)]`}
-          />
-        </span>
-        {bookmarkedByUser ? 'Saved' : 'Save'}
-      </button>
+      {showSaveButton && (
+        <>
+          <span className="h-5 w-px bg-white/15" />
+          <button
+            onClick={handleBookmarkClick}
+            type="button"
+            aria-label={bookmarkedByUser ? 'Remove bookmark' : 'Bookmark this post'}
+            className="flex items-center gap-2 sm:gap-2.5 transition-all duration-300 hover:text-white hover:scale-105 active:scale-95"
+          >
+            <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+              <Bookmark
+                className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${
+                  bookmarkedByUser
+                    ? 'text-indigo-300 fill-indigo-300'
+                    : 'text-indigo-400'
+                } drop-shadow-[0_0_8px_rgba(129,140,248,0.7)]`}
+              />
+            </span>
+            {bookmarkedByUser ? 'Saved' : 'Save'}
+          </button>
+        </>
+      )}
     </div>
   );
 }

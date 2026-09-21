@@ -80,6 +80,7 @@ export default function PostContent({
   const showSkeleton = settings.features?.skeletonLoaders ?? false;
   const showLikeCount = settings.features?.showLikeCount ?? true;
   const showViewCount = settings.features?.showViewCount ?? true;
+  const showSaveButton = settings.features?.showSaveButton ?? true;
   const showCopyCollection = settings.features?.showCopyCollection ?? true;
   const showHowTo = settings.features?.showHowTo ?? true;
   const showRecommendedPosts = settings.features?.showRecommendedPosts ?? true;
@@ -209,7 +210,7 @@ export default function PostContent({
 
   const renderMetaInfo = (align: 'center' | 'start' = 'center') => (
     <div className={`flex flex-col items-center gap-5 sm:gap-4 ${align === 'start' ? 'lg:items-start' : ''}`}>
-      <PostHeroStats post={post} showViewCount={showViewCount} showLikeCount={showLikeCount} />
+      <PostHeroStats post={post} showViewCount={showViewCount} showLikeCount={showLikeCount} showSaveButton={showSaveButton} />
       {renderAuthorByline()}
     </div>
   );
@@ -219,14 +220,11 @@ export default function PostContent({
       case 'v2': // Immersive Blur Background
         return (
           <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-white/[0.08] shadow-2xl group min-h-[500px] flex items-end">
-            {/* Decorative background blur sharing heroImageSrcSet and HERO_SIZES to reuse browser cache */}
-            <img
-              src={mainPromptImageUrl}
-              srcSet={heroImageSrcSet}
-              sizes={HERO_SIZES}
-              alt=""
+            {/* Decorative background blur using CSS background-image so it is excluded from LCP calculation */}
+            <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-40 blur-xl scale-110"
+              className="pointer-events-none absolute inset-0 h-full w-full bg-cover bg-center opacity-40 blur-xl scale-110"
+              style={{ backgroundImage: `url(${mainPromptImageUrl})` }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
             <div className="relative z-20 w-full max-w-6xl mx-auto flex flex-col items-center gap-8 p-8 pb-12 text-center lg:flex-row lg:items-center lg:gap-12 lg:p-12 lg:text-left">

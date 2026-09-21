@@ -1378,6 +1378,7 @@ function AdminInner() {
       showTryButtons: true,
       showLikeCount: true,
       showViewCount: true,
+      showSaveButton: true,
       showYouMightAlsoLike: true,
       showHomepageLibraryHero: true,
       showHomepageHowTo: true,
@@ -9286,6 +9287,7 @@ function AdminInner() {
                     ['showTryButtons', 'Try it on buttons'],
                     ['showLikeCount', 'Show like count'],
                     ['showViewCount', 'Show view count'],
+                    ['showSaveButton', 'Show save button in hero'],
                     ['showYouMightAlsoLike', 'You might also like'],
                     ['showScrollProgress', 'Scroll progress bar'],
                     ['showFaqSchema', 'FAQ + HowTo schema'],
@@ -9295,7 +9297,7 @@ function AdminInner() {
                   ].map(([key, label]) => (
                     <Toggle
                       key={key}
-                      checked={Boolean((features as any)[key] ?? ['showPostSidebar', 'showShareButtons', 'showTryButtons', 'showLikeCount', 'showViewCount', 'showYouMightAlsoLike', 'showScrollProgress', 'showFaqSchema', 'showPublicProfiles'].includes(key))}
+                      checked={Boolean((features as any)[key] ?? ['showPostSidebar', 'showShareButtons', 'showTryButtons', 'showLikeCount', 'showViewCount', 'showSaveButton', 'showYouMightAlsoLike', 'showScrollProgress', 'showFaqSchema', 'showPublicProfiles'].includes(key))}
                       onChange={(checked) => setFeatures(prev => ({ ...prev, [key]: checked }))}
                       label={label}
                     />

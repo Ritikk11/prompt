@@ -9,6 +9,10 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+html {
+  scroll-behavior: smooth;
+}
+
 .font-serif-italic {
   font-family: var(--font-serif-italic), 'Playfair Display', Georgia, serif;
   font-style: italic;

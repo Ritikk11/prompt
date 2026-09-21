@@ -89,6 +89,7 @@ const defaultSettings: SiteSettings = {
     "mobileColumns": 1,
     "showLikeCount": false,
     "showViewCount": false,
+    "showSaveButton": true,
     "infiniteScroll": true,
     "premiumPrompts": false,
     "smartTemplates": true,
@@ -1016,33 +1017,7 @@ export const getPostBySlugOrId = cache(async (idOrSlug: string) => {
     const post = (data as { id: string; data: Post }).data;
     if (!post || !isPublicPost(post)) return null;
 
-    // Fetch only this post's approved comments instead of every comment
-    // site-wide (the old path merged the full comments table in JS).
-    const { data: commentRows, error: commentsError } = await supabase
-      .from('comments')
-      .select('id, post_id, user_id, user_name, user_avatar, text, status, created_at')
-      .eq('status', 'approved')
-      .eq('post_id', post.id);
-    if (commentsError && !isMissingTableError(commentsError)) {
-      console.error('Supabase comments fetch error:', commentsError);
-    }
-    const tableComments: PostComment[] = (commentRows || []).map((row) => ({
-      id: row.id,
-      postId: row.post_id,
-      userId: row.user_id,
-      userName: row.user_name,
-      userAvatar: row.user_avatar,
-      text: row.text,
-      status: row.status,
-      createdAt: row.created_at,
-    }));
-    const legacyComments = post.comments || [];
-    const mergedComments = [
-      ...legacyComments.filter((c) => !tableComments.some((t) => t.id === c.id)),
-      ...tableComments,
-    ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-
-    return toPublicPost({ ...post, comments: mergedComments });
+    return toPublicPost({ ...post, comments: [] });
   } catch (error) {
     if (isNextDynamicServerError(error)) throw error;
     console.error('Supabase post lookup error:', error);

@@ -175,11 +175,26 @@ export default async function PostPage({ params }: Props) {
 
   if (!post) notFound();
 
-  const [allPosts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
-  const relatedPosts = getRelatedPosts(post, allPosts as Post[], { limit: 16 });
-  const recommendedPosts = getRecommendedPosts(post, allPosts as Post[], relatedPosts, { limit: 6 });
-
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
+  const [allPosts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
+  const rawRelatedPosts = getRelatedPosts(post, allPosts as Post[], { limit: 16 });
+  const rawRecommendedPosts = getRecommendedPosts(post, allPosts as Post[], rawRelatedPosts, { limit: 6 });
+
+  const stripHeavyPostData = (p: Post): Post => ({
+    ...p,
+    description: '',
+    faqs: [],
+    comments: [],
+    images: (p.images || []).map(img => ({
+      id: img.id,
+      url: img.url,
+      aiTool: img.aiTool,
+    })),
+  });
+
+  const relatedPosts = rawRelatedPosts.map(stripHeavyPostData);
+  const recommendedPosts = rawRecommendedPosts.map(stripHeavyPostData);
+
   const schemaType = post.schemaType || settings.seoSettings?.schemaType || 'Article';
   const mainImage = post.thumbnailUrl || post.images[0]?.url;
 
@@ -218,7 +233,7 @@ export default async function PostPage({ params }: Props) {
     // image is served straight from uploads.aipromptmatrix.in.
     try {
       const origin = new URL(target.url).origin;
-      if (!origin.includes('aipromptmatrix.in') && !origin.includes('localhost')) {
+      if (origin !== siteUrl && !origin.includes('aipromptmatrix.in') && !origin.includes('localhost')) {
         preconnect(origin);
       }
     } catch {

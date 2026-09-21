@@ -138,6 +138,7 @@ export interface SiteFeatures {
   showTryButtons?: boolean;
   showLikeCount?: boolean;
   showViewCount?: boolean;
+  showSaveButton?: boolean;
   showYouMightAlsoLike?: boolean;
   showHomepageLibraryHero?: boolean;
   showHomepageHowTo?: boolean;

@@ -185,7 +185,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ].filter(Boolean)));
 
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${outfit.variable} ${playfair.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`scroll-smooth ${inter.variable} ${outfit.variable} ${playfair.variable}`}>
       <head>
         {/* Blocking theme guard — must stay the first node in <head>.
             ThemeProvider applies the stored theme in useEffect, i.e. AFTER the
@@ -244,22 +244,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{ __html: stringifyJsonLd(jsonLd) }}
         />
 
-        {/* Google tag (gtag.js) — lazyOnload defers it to browser idle time.
-            afterInteractive ran gtag's 165 KiB eval inside the LCP window
-            (Lighthouse: 122ms main-thread block, 70KiB unused JS on prompt
-            pages); idle loading keeps analytics while freeing the critical path. */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-3SM2DNE8VW"
-          strategy="lazyOnload"
+        {/* Google tag (gtag.js) — queue events immediately while deferring
+            external network fetch to first user interaction or idle to protect FCP/LCP */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-3SM2DNE8VW');(function(){var l=false;function init(){if(l)return;l=true;['scroll','touchstart','pointerdown','keydown'].forEach(function(e){window.removeEventListener(e,init,{passive:true})});var s=document.createElement('script');s.src='https://www.googletagmanager.com/gtag/js?id=G-3SM2DNE8VW';s.async=true;document.head.appendChild(s);};['scroll','touchstart','pointerdown','keydown'].forEach(function(e){window.addEventListener(e,init,{passive:true,once:true})});setTimeout(init,7000);})();`,
+          }}
         />
-        <Script id="gtag-init" strategy="lazyOnload">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-3SM2DNE8VW');
-          `}
-        </Script>
       </head>
       {/* overflow-x-clip on body (not -hidden): `hidden` turns body into a
           scroll container, so any transient vertical overflow (scroll-reveal
