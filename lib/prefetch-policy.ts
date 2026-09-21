@@ -22,7 +22,7 @@ export function getPrefetchHref(href: string, currentHref: string): string | nul
     const current = new URL(currentHref);
     const target = new URL(href, current);
     if (!/^https?:$/.test(target.protocol) || target.origin !== current.origin) return null;
-    if (/^\/(api|admin|profile|login|submit|user|auth|test)(\/|$)/i.test(target.pathname)) return null;
+    if (/^\/(api|admin|profile|login|submit|user|auth)(\/|$)/i.test(target.pathname)) return null;
     const key = normalizeDiscoveryHref(target.pathname + target.search);
     return key === normalizeDiscoveryHref(current.pathname + current.search) ? null : key;
   } catch {

@@ -29,7 +29,9 @@ const outfit = Outfit({
 const playfair = Playfair_Display({
   subsets: ['latin'],
   style: ['italic'],
-  weight: ['600', '700', '800'],
+  // The accent spans use font-bold only. Loading three declarations for the
+  // same variable was enlarging the render-blocking font stylesheet.
+  weight: ['700'],
   variable: '--font-serif-italic',
   display: 'swap',
 });

@@ -78,6 +78,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
           cardStyleOverride={section.cardStyle}
           gridLimit={isLatest ? displayLimit : undefined}
           renderGrid
+          disableGridPriority
         />
       ) : isLatest ? (
         /* Latest — one batch of the masonry grid. `plain`: the card mats are
@@ -87,6 +88,7 @@ export default function HomeSection({ section, initialPosts, settings }: { secti
             posts={visibleLatest}
             settings={settings}
             cardStyleOverride={section.cardStyle}
+            disablePriority
           />
         </ScrollReveal>
       ) : (

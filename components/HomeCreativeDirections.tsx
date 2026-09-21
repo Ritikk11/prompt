@@ -65,8 +65,8 @@ export default function HomeCreativeDirections({ posts, settings }: { posts: Pos
               key={`${item.type}-${item.value}`}
               href={itemHref(item)}
               prefetch={true}
-              /* /test design: compact glass pills, not the old icon cards.
-                 Glass pills (backdrop-blur-xl ≙ capped 12px) over flat cards:
+              /* Compact glass pills rather than icon cards. Glass pills
+                 (backdrop-blur-xl ≙ capped 12px) over flat cards:
                  no nested blur passes, hover scales the pill itself. */
               className="group inline-flex items-center gap-2.5 rounded-full border border-white/60 bg-white/25 px-5 py-2.5 text-sm font-bold text-surface-700 shadow-sm backdrop-blur-md backdrop-saturate-150 transition-all duration-200 hover:scale-105 hover:border-primary-400 hover:bg-white/60 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/[0.10] dark:hover:text-white"
             >

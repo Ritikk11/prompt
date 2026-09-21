@@ -41,6 +41,7 @@ export default function FilterChipRail({
   showTools = true,
   showTags = true,
   renderGrid = false,
+  disableGridPriority = false,
   sticky = false,
   gridLimit,
   sortValue,
@@ -56,6 +57,8 @@ export default function FilterChipRail({
   showTools?: boolean;
   showTags?: boolean;
   renderGrid?: boolean;
+  /** Keep below-the-fold grids from marking their first images as high priority. */
+  disableGridPriority?: boolean;
   /** Pin the chip rail below the header: hides on scroll down, slides back on scroll up. */
   sticky?: boolean;
   /** Cap how many posts the grid renders (homepage teaser sections). */
@@ -483,6 +486,7 @@ export default function FilterChipRail({
             posts={filteredPosts}
             settings={settings}
             cardStyleOverride={cardStyleOverride}
+            disablePriority={disableGridPriority}
           />
           {filteredPosts.length === 0 && (
             <div className="py-14 text-center">

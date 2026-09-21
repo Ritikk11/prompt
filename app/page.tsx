@@ -131,35 +131,36 @@ export default async function Home() {
         </section>
       )}
 
-      {/* Each block below owns its own ScrollReveal entrances — do NOT wrap
-          them here. A wrapper reveal would nest inside the block's own,
-          compounding the transforms and holding the inner ones at opacity 0
-          until the outer one fires. */}
-      <div className="mx-auto max-w-7xl px-2 py-0">
-        <HomeLinkBlocks blocks={settings.homeLinkBlocks} />
-      </div>
-
-      {homepageOrder.map(token => {
-        if (token.startsWith('block:')) {
-          const key = token.replace('block:', '');
-          if (!homepageBlocks[key]) return null;
-          return <Fragment key={token}>{homepageBlocks[key]}</Fragment>;
-        }
-        const sectionId = token.replace('section:', '');
-        const section = homepageSectionsById.get(sectionId);
-        if (!section) return null;
-        return (
-          <div key={token} className="mx-auto max-w-7xl px-2 py-0">
-            <HomeSection section={section} initialPosts={homepageSectionPosts.get(sectionId) || []} settings={settings} />
-          </div>
-        );
-      })}
-
-      {homepageSections.length === 0 && (
-        <div className="text-center py-12 text-surface-400">
-          No sections found. Create one in the admin panel.
+      <div className="home-deferred-content">
+        {/* Each block below owns its own ScrollReveal entrances — do NOT wrap
+            them in another reveal. A wrapper reveal would compound transforms
+            and hold inner content at opacity 0 until the outer one fires. */}
+        <div className="mx-auto max-w-7xl px-2 py-0">
+          <HomeLinkBlocks blocks={settings.homeLinkBlocks} />
         </div>
-      )}
+
+        {homepageOrder.map(token => {
+          if (token.startsWith('block:')) {
+            const key = token.replace('block:', '');
+            if (!homepageBlocks[key]) return null;
+            return <Fragment key={token}>{homepageBlocks[key]}</Fragment>;
+          }
+          const sectionId = token.replace('section:', '');
+          const section = homepageSectionsById.get(sectionId);
+          if (!section) return null;
+          return (
+            <div key={token} className="mx-auto max-w-7xl px-2 py-0">
+              <HomeSection section={section} initialPosts={homepageSectionPosts.get(sectionId) || []} settings={settings} />
+            </div>
+          );
+        })}
+
+        {homepageSections.length === 0 && (
+          <div className="text-center py-12 text-surface-400">
+            No sections found. Create one in the admin panel.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

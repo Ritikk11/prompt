@@ -69,7 +69,7 @@ test('external URLs, non-web schemes and private/action routes never prefetch', 
   const current = 'https://aipromptmatrix.in/';
   for (const href of ['https://example.com/a', '//example.com/a', 'mailto:a@b.com',
     'javascript:alert(1)', '/api/posts', '/admin', '/profile?setup=true', '/login',
-    '/submit', '/auth/callback', '/user/123', '/test']) {
+    '/submit', '/auth/callback', '/user/123']) {
     assert.equal(getPrefetchHref(href, current), null, href);
   }
 });

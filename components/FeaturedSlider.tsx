@@ -46,17 +46,16 @@ export default function FeaturedSlider({ featuredPosts: rawFeatured, settings }:
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Frosted glow bleeding through the glass. Small 320px source — it is
-          blurred anyway. Eager, NOT lazy: this sits just below the fold, and
-          lazy-loading it made the whole panel visibly darken the moment the
-          slider scrolled into view. */}
+      {/* Frosted glow bleeding through the glass. It sits below the full-height
+          hero, so it must not compete with the heading/CSS critical path. */}
       <div className="absolute inset-0 z-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={backdropUrl}
           alt=""
           decoding="async"
-          loading="eager"
+          loading="lazy"
+          fetchPriority="low"
           referrerPolicy="no-referrer"
           className="absolute inset-0 h-full w-full scale-125 object-cover opacity-30 blur-[16px] dark:opacity-25"
         />

@@ -1,9 +1,11 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 @import "tw-animate-css";
 
 @source "../app";
 @source "../components";
 @source "../lib";
+@source not "../app/admin";
+@source not "../components/admin";
 
 @plugin "@tailwindcss/typography";
 
@@ -510,11 +512,9 @@ textarea {
 
 /* ══════════════════════════════════════════════════════════════════════════
    GLASSMORPHISM FOUNDATION
-   Moved out of the /test sandbox's inline <style> blobs. Living here means the
-   rules arrive in the render-blocking <link> in <head>, so they hold from the
-   very first paint instead of being injected at hydration (the class of flash
-   bug the sandbox kept fighting), and ~400 lines leave the client JS bundle.
-   All `#test-sandbox-root` / `html:has(#test-sandbox-root)` scoping stripped.
+   Kept in the global stylesheet so the rules arrive in the render-blocking
+   <link> in <head>, holding from the first paint instead of being injected at
+   hydration. This also keeps the shared visual foundation out of client JS.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Animated background canvas (components/SiteBackground.tsx) ─────────────
@@ -735,6 +735,14 @@ textarea {
 html,
 body {
   overflow-x: clip;
+}
+
+/* Skip layout and paint work for the long homepage body until it approaches
+   the viewport. The server-rendered content remains in the HTML for crawlers
+   and no JavaScript is required to reveal it. */
+.home-deferred-content {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 6000px;
 }
 
 /* ── Reveal model ──────────────────────────────────────────────────────────

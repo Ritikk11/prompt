@@ -43,7 +43,7 @@ const mobileRow =
 const mobileRowActive =
   'flex items-center justify-between rounded-2xl border border-primary-500/40 bg-primary-500/[0.15] px-4 py-2.5 text-sm font-semibold text-primary-600 dark:text-primary-300';
 
-/* Collapsible panel wrapper — grid-rows 0fr→1fr, the /test header's glide.
+/* Collapsible panel wrapper — grid-rows 0fr→1fr for a natural-height glide.
    The panel animates at its ACTUAL content height, so a 60px search panel
    glides over the full 300ms instead of finishing in the first 5% of it the
    way a max-height→80vh cap does. Requires the grid's single child to be the
@@ -121,13 +121,7 @@ export function SiteTitle({ title, className = '' }: { title?: string; className
   );
 }
 
-// Pathname-based early return must live in a wrapper so the real header's
-// hook order stays identical on every route (Rules of Hooks).
 export default function Header() {
-  const pathname = usePathname();
-  if (pathname === '/test' || pathname?.startsWith('/test/')) {
-    return null;
-  }
   return <SiteHeader />;
 }
 
@@ -558,7 +552,15 @@ function SiteHeader() {
           {/* Brand */}
           <Link href="/" prefetch="eager" className="flex shrink-0 items-center gap-2" onClick={() => setMenuOpen(false)}>
             <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xl sm:h-9 sm:w-9">
-              <Image src={settings.siteLogo || '/icon-190x190.webp'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" priority />
+              <Image
+                src={!settings.siteLogo || settings.siteLogo === '/icon-190x190.webp' ? '/favicon-48x48.webp' : settings.siteLogo}
+                alt={settings.siteTitle || 'Site Logo'}
+                fill
+                sizes="36px"
+                className="object-cover"
+                referrerPolicy="no-referrer"
+                priority
+              />
             </span>
             <SiteTitle title={settings.siteTitle} className="text-base sm:text-xl" />
           </Link>
