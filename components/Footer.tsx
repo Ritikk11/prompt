@@ -116,14 +116,7 @@ function FooterContent() {
             <Link href="/" prefetch="intent" className="group flex items-center gap-2.5 mb-4 w-fit transition-transform duration-200 active:scale-[0.98]">
               <span className="relative flex w-9 h-9 shrink-0 items-center justify-center overflow-hidden rounded-2xl p-[1.5px] bg-gradient-to-br from-primary-500/30 via-indigo-500/20 to-purple-500/30 ring-1 ring-black/5 dark:ring-white/10 shadow-sm shadow-primary-500/10 group-hover:shadow-md group-hover:shadow-primary-500/20 group-hover:scale-105 transition-all duration-300">
                 <span className="relative h-full w-full overflow-hidden rounded-[14px] bg-surface-100 dark:bg-surface-900">
-                  <Image
-                    src={!settings.siteLogo || settings.siteLogo === '/icon-190x190.webp' ? '/favicon-48x48.webp' : settings.siteLogo}
-                    alt={settings.siteTitle || 'Site Logo'}
-                    fill
-                    sizes="36px"
-                    className="object-cover transition-transform duration-300 group-hover:scale-110"
-                    referrerPolicy="no-referrer"
-                  />
+                  <Image src={settings.siteLogo || '/icon-190x190.webp'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover transition-transform duration-300 group-hover:scale-110" referrerPolicy="no-referrer" />
                 </span>
               </span>
               <SiteTitle title={settings.siteTitle} className="text-xl sm:text-2xl" />

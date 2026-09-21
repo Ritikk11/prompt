@@ -1,11 +1,9 @@
-@import "tailwindcss" source(none);
+@import "tailwindcss";
 @import "tw-animate-css";
 
 @source "../app";
 @source "../components";
 @source "../lib";
-@source not "../app/admin";
-@source not "../components/admin";
 
 @plugin "@tailwindcss/typography";
 
@@ -737,13 +735,7 @@ body {
   overflow-x: clip;
 }
 
-/* Skip layout and paint work for the long homepage body until it approaches
-   the viewport. The server-rendered content remains in the HTML for crawlers
-   and no JavaScript is required to reveal it. */
-.home-deferred-content {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 6000px;
-}
+
 
 /* ── Reveal model ──────────────────────────────────────────────────────────
    Glass surfaces (backdrop-filter) must never be opacity-hidden or

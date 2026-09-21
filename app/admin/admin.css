@@ -1,5 +1,0 @@
-@import "tailwindcss/utilities" source(none);
-@reference "../globals.css";
-
-@source "./";
-@source "../../components/admin";
