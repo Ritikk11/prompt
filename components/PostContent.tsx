@@ -17,7 +17,7 @@ import {
 import type { Post, SiteSettings } from '@/lib/types';
 import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
 import { isUserOwnedPost, EDITORIAL_TEAM_NAME } from '@/lib/authors';
-import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
+import { getPromptImageUrl, getThumbnailImageUrl, getThumbnailSrcSet } from '@/lib/image-url';
 import { sanitizeHeroPalette, DEFAULT_HERO_PALETTE } from '@/lib/hero-palette';
 import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
 import ToolBadge from '@/components/ToolBadge';
@@ -54,7 +54,7 @@ const defaultKeepExploring = {
   ],
 };
 
-const HERO_SIZES = '(max-width: 640px) 200px, (max-width: 1024px) 240px, 320px';
+const HERO_SIZES = '(max-width: 640px) 280px, (max-width: 1024px) 340px, 440px';
 
 function alphaHex(hex: string, alpha: number) {
   const clean = hex.replace('#', '');
@@ -263,8 +263,15 @@ export default function PostContent({
           >
             {mainImage ? (
               <img
-                src={mainImage}
+                src={getPromptImageUrl(mainImage, { width: 700, quality: 74 })}
+                srcSet={getThumbnailSrcSet(mainImage, [280, 440, 700, 880], 74)}
+                sizes={HERO_SIZES}
                 alt={post.title}
+                width={700}
+                height={800}
+                fetchPriority="high"
+                loading="eager"
+                decoding="async"
                 className="block w-auto h-auto max-w-[280px] sm:max-w-[340px] lg:max-w-[440px] max-h-[380px] sm:max-h-[460px] lg:max-h-[500px] rounded-[28px] object-contain"
               />
             ) : (
