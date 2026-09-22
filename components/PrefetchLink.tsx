@@ -2,7 +2,7 @@
 
 import NextLink from 'next/link';
 import { useRouter } from 'next/navigation';
-import { forwardRef, useEffect, type ComponentProps } from 'react';
+import { forwardRef, useEffect, useRef, type ComponentProps } from 'react';
 import { normalizeDiscoveryHref } from '@/lib/prefetch-policy';
 
 type Props = Omit<ComponentProps<typeof NextLink>, 'prefetch'> & {
@@ -10,6 +10,7 @@ type Props = Omit<ComponentProps<typeof NextLink>, 'prefetch'> & {
 };
 
 const prefetchedUrls = new Set<string>();
+const INTENT_HOVER_DELAY_MS = 500;
 
 function canPrefetch() {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
@@ -24,11 +25,16 @@ function canPrefetch() {
   );
 }
 
+function hasFineHoverPointer() {
+  return typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+}
+
 const PrefetchLink = forwardRef<HTMLAnchorElement, Props>(function PrefetchLink(
-  { prefetch = true, onMouseEnter, onFocus, onTouchStart, onPointerDown, href: rawHref, ...props },
+  { prefetch = true, onMouseEnter, onMouseLeave, onFocus, onTouchStart, onPointerDown, href: rawHref, ...props },
   forwardedRef
 ) {
   const router = useRouter();
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const href = typeof rawHref === 'string'
     ? normalizeDiscoveryHref(rawHref)
@@ -57,6 +63,23 @@ const PrefetchLink = forwardRef<HTMLAnchorElement, Props>(function PrefetchLink(
     }
   };
 
+  const cancelHoverWarm = () => {
+    if (hoverTimerRef.current === null) return;
+    clearTimeout(hoverTimerRef.current);
+    hoverTimerRef.current = null;
+  };
+
+  const scheduleIntentWarm = () => {
+    if (!hasFineHoverPointer()) return;
+    cancelHoverWarm();
+    hoverTimerRef.current = setTimeout(() => {
+      hoverTimerRef.current = null;
+      warm();
+    }, INTENT_HOVER_DELAY_MS);
+  };
+
+  useEffect(() => cancelHoverWarm, [hrefString, prefetch]);
+
   useEffect(() => {
     if (prefetch === 'eager' && canPrefetch()) {
       const win = typeof window !== 'undefined' ? window : null;
@@ -78,19 +101,28 @@ const PrefetchLink = forwardRef<HTMLAnchorElement, Props>(function PrefetchLink(
       prefetch={false}
       onMouseEnter={(event) => {
         onMouseEnter?.(event);
-        if (!event.defaultPrevented) warm();
+        if (!event.defaultPrevented) {
+          if (prefetch === 'intent') scheduleIntentWarm();
+          else warm();
+        }
+      }}
+      onMouseLeave={(event) => {
+        onMouseLeave?.(event);
+        cancelHoverWarm();
       }}
       onFocus={(event) => {
         onFocus?.(event);
-        if (!event.defaultPrevented) warm();
+        // For intent links, only keyboard focus is a useful signal. Touch focus
+        // must not turn an ordinary scroll gesture into a post-page request.
+        if (!event.defaultPrevented && (prefetch !== 'intent' || event.currentTarget.matches(':focus-visible'))) warm();
       }}
       onTouchStart={(event) => {
         onTouchStart?.(event);
-        if (!event.defaultPrevented) warm();
+        if (!event.defaultPrevented && prefetch !== 'intent') warm();
       }}
       onPointerDown={(event) => {
         onPointerDown?.(event);
-        if (!event.defaultPrevented) warm();
+        if (!event.defaultPrevented && prefetch !== 'intent') warm();
       }}
     />
   );
