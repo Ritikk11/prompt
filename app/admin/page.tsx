@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback, Suspense } from 'react';
 import { useData } from '@/components/context/DataContext';
 
-import type { Post, Section, ImagePrompt, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, CreativeDirectionItem, ShareTarget, DiscoveryPageSettings, ArticleSettingsOverride, CategoryPreset } from '@/lib/types';
+import type { Post, Section, ImagePrompt, HeroPalette, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, CreativeDirectionItem, ShareTarget, DiscoveryPageSettings, ArticleSettingsOverride, CategoryPreset } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
@@ -31,7 +31,9 @@ import { postPrompts, articlePrompts, generalPrompts, discoveryPrompts, homepage
 import { filterPostsForSection, getSectionPath } from '@/lib/sections';
 import { buildHeaderNavItems, headerLinkKey } from '@/lib/header-nav';
 import { getFilterTagsFromPosts } from '@/lib/filter-tags';
+import { getThumbnailImageUrl } from '@/lib/image-url';
 import { optimizeImageFile, type ImageOptimizePreset } from '@/lib/client-image-optimizer';
+import { extractHeroPalette } from '@/lib/client-hero-palette';
 import { uploadImageFileToProvider, type UploadProvider } from '@/lib/client-upload';
 import PostCard from '@/components/PostCard';
 import HomeHowItWorks from '@/components/HomeHowItWorks';
@@ -1132,6 +1134,7 @@ function AdminInner() {
   const [description, setDescription] = useState('');
   const [extendedDescription, setExtendedDescription] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
+  const [heroPalette, setHeroPalette] = useState<HeroPalette | undefined>();
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
@@ -1158,7 +1161,7 @@ function AdminInner() {
     try {
       const draft = {
         editingPostId: editingPost?.id || null,
-        title, slug, description, extendedDescription, thumbnailUrl,
+        title, slug, description, extendedDescription, thumbnailUrl, heroPalette,
         referenceImages, seoTitle, seoDescription, schemaType, faqs,
         tagsStr, category, categoriesStr, selectedAiTools, featured,
         status, visibility, images, assignedSections,
@@ -1168,7 +1171,7 @@ function AdminInner() {
     } catch { /* quota exceeded — ignore */ }
   }, [
     showPostForm, editingPost, title, slug, description, extendedDescription,
-    thumbnailUrl, referenceImages, seoTitle, seoDescription, schemaType, faqs,
+    thumbnailUrl, heroPalette, referenceImages, seoTitle, seoDescription, schemaType, faqs,
     tagsStr, category, categoriesStr, selectedAiTools, featured, status,
     visibility, images, assignedSections,
   ]);
@@ -1210,6 +1213,7 @@ function AdminInner() {
       if (draft.description) setDescription(draft.description);
       if (draft.extendedDescription) setExtendedDescription(draft.extendedDescription);
       if (draft.thumbnailUrl) setThumbnailUrl(draft.thumbnailUrl);
+      if (draft.heroPalette) setHeroPalette(draft.heroPalette);
       if (draft.referenceImages) setReferenceImages(draft.referenceImages);
       if (draft.seoTitle) setSeoTitle(draft.seoTitle);
       if (draft.seoDescription) setSeoDescription(draft.seoDescription);
@@ -1738,7 +1742,7 @@ function AdminInner() {
   };
 
   const resetForm = () => {
-    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setSchemaType((settings.seoSettings?.schemaType as Post['schemaType']) || 'Article'); setFaqs([]); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
+    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setHeroPalette(undefined); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setSchemaType((settings.seoSettings?.schemaType as Post['schemaType']) || 'Article'); setFaqs([]); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
     setStatus('published'); setVisibility('public');
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
@@ -1764,6 +1768,7 @@ function AdminInner() {
     setDescription(post.description);
     setExtendedDescription(post.extendedDescription || '');
     setThumbnailUrl(post.thumbnailUrl || '');
+    setHeroPalette(post.heroPalette);
     setReferenceImages(post.referenceImages || []);
     setSeoTitle(post.seoTitle || '');
     setSeoDescription(post.seoDescription || '');
@@ -1917,6 +1922,7 @@ function AdminInner() {
       setIsBackfillingModels(false);
     }
   };
+
 
   const removeImage = (idx: number) => {
     setImages(prev => prev.filter((_, i) => i !== idx));
@@ -2222,6 +2228,12 @@ function AdminInner() {
       finalStatus = 'draft';
     }
 
+    let resolvedHeroPalette = heroPalette;
+    if (!resolvedHeroPalette && thumbnailUrl && !thumbnailUrl.startsWith('Uploading')) {
+      resolvedHeroPalette = await extractHeroPalette(getThumbnailImageUrl(thumbnailUrl, { width: 64, quality: 50 }));
+      if (resolvedHeroPalette) setHeroPalette(resolvedHeroPalette);
+    }
+
     const post: any = {
       id: postId,
       slug: finalSlug,
@@ -2233,6 +2245,7 @@ function AdminInner() {
         .map(item => ({ question: item.question.trim(), answer: item.answer.trim() }))
         .filter(item => item.question && item.answer),
       thumbnailUrl,
+      heroPalette: resolvedHeroPalette,
       referenceImages: referenceImages.filter(Boolean),
       images: images.filter(i => i.url || i.prompt || i.aiTool),
       tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
@@ -4174,14 +4187,26 @@ function AdminInner() {
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       value={thumbnailUrl}
-                      onChange={e => setThumbnailUrl(e.target.value)}
+                      onChange={e => {
+                        setThumbnailUrl(e.target.value);
+                        setHeroPalette(undefined);
+                      }}
+                      onBlur={async e => {
+                        const palette = await extractHeroPalette(getThumbnailImageUrl(e.currentTarget.value, { width: 64, quality: 50 }));
+                        if (palette) setHeroPalette(palette);
+                      }}
                       className="flex-1 px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-sm min-w-0 placeholder:text-surface-400"
                       placeholder="https://..."
                     />
                     <div className="flex gap-2 shrink-0">
                       <button 
                         type="button" 
-                        onClick={() => setMediaLibraryCallback(() => setThumbnailUrl)}
+                        onClick={() => setMediaLibraryCallback(() => async (url: string) => {
+                          setThumbnailUrl(url);
+                          setHeroPalette(undefined);
+                          const palette = await extractHeroPalette(getThumbnailImageUrl(url, { width: 64, quality: 50 }));
+                          if (palette) setHeroPalette(palette);
+                        })}
                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] cursor-pointer hover:border-primary-500 transition-colors shrink-0"
                       >
                         <ImageIcon className="w-4 h-4 text-surface-400 shrink-0" />
@@ -4199,8 +4224,12 @@ function AdminInner() {
                           if (file) {
                              try {
                                setThumbnailUrl('Uploading...');
-                               const url = await uploadImageFile(file, 'thumbnail', title || slug);
+                               const [url, palette] = await Promise.all([
+                                 uploadImageFile(file, 'thumbnail', title || slug),
+                                 extractHeroPalette(file),
+                               ]);
                                setThumbnailUrl(url);
+                               setHeroPalette(palette);
                              } catch (err: any) {
                                console.error(err);
                                showToast(`Failed to process thumbnail: ${err?.message || err}`, 'error');
@@ -4217,7 +4246,7 @@ function AdminInner() {
                       <Image src={thumbnailUrl} alt="Thumbnail preview" fill className="object-cover" unoptimized />
                       <button
                         type="button"
-                        onClick={() => setThumbnailUrl('')}
+                        onClick={() => { setThumbnailUrl(''); setHeroPalette(undefined); }}
                         className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 md:opacity-0 md:group-hover:opacity-100 transition-all"
                         title="Remove Image"
                       >

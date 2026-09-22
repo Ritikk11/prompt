@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { isCurrentUserAdmin } from '@/lib/admin-auth';
 import { fetchPostSummaries, fetchSeoPages } from '@/lib/data';
 import { submitToIndexNow } from '@/lib/indexnow';
+import { sanitizeHeroPalette } from '@/lib/hero-palette';
 import type { Post, PostComment, SiteSettings } from '@/lib/types';
 
 function getAllToolsFromPost(post: Partial<Post>) {
@@ -180,6 +181,7 @@ export async function POST(request: Request) {
       description: cleanTextValue(post.description, 2000),
       extendedDescription: cleanTextValue(post.extendedDescription, 30000) || undefined,
       thumbnailUrl: cleanTextValue(post.thumbnailUrl, 2000) || images[0]?.url,
+      heroPalette: sanitizeHeroPalette(post.heroPalette),
       referenceImages: cleanStringArray(post.referenceImages, 10, 2000),
       images,
       tags: cleanStringArray(post.tags, 30, 80),

@@ -10,6 +10,12 @@ export interface ImagePrompt {
   model?: string;
 }
 
+export interface HeroPalette {
+  primary: string;
+  secondary: string;
+  background: string;
+}
+
 export interface PostFaq {
   question: string;
   answer: string;
@@ -27,6 +33,7 @@ export interface Post {
   schemaType?: 'Article' | 'CreativeWork' | 'HowTo';
   faqs?: PostFaq[];
   thumbnailUrl?: string;
+  heroPalette?: HeroPalette;
   referenceImages?: string[];
   images: ImagePrompt[];
   tags: string[];

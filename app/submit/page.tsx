@@ -7,9 +7,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Upload, Plus, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
-import { ImagePrompt } from '@/lib/types';
+import type { HeroPalette, ImagePrompt } from '@/lib/types';
 import { getImageModelForTools } from '@/lib/constants';
 import { optimizeImageFile } from '@/lib/client-image-optimizer';
+import { extractHeroPalette } from '@/lib/client-hero-palette';
 import { uploadImageFileToProvider } from '@/lib/client-upload';
 import { showToast } from '@/components/ui/ToastContainer';
 
@@ -23,6 +24,7 @@ export default function SubmitPage() {
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
   const [images, setImages] = useState<ImagePrompt[]>([]);
+  const [heroPalette, setHeroPalette] = useState<HeroPalette | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -84,7 +86,10 @@ export default function SubmitPage() {
 
   const handleImageUpload = async (file: File) => {
     try {
-      const optimizedFile = await optimizeImageFile(file, 'prompt');
+      const [optimizedFile, palette] = await Promise.all([
+        optimizeImageFile(file, 'prompt'),
+        extractHeroPalette(file),
+      ]);
       const url = await uploadImageFileToProvider(
         optimizedFile,
         settings.imageProvider === 'cloudflare' ? 'cloudflare' : 'supabase',
@@ -94,6 +99,7 @@ export default function SubmitPage() {
       
       const defaultTool = settings.aiTools[0] || 'ChatGPT';
       setImages(prev => [...prev, { id: generateId(), url, prompt: '', aiTool: defaultTool, model: getImageModelForTools([defaultTool]) }]);
+      if (palette) setHeroPalette(current => current || palette);
     } catch (e: any) {
       showToast(e.message || "Error uploading image", 'error');
     }
@@ -121,6 +127,7 @@ export default function SubmitPage() {
         title,
         description,
         thumbnailUrl: images[0]?.url || '',
+        heroPalette,
         images,
         tags: tags.split(',').map(t => t.trim()).filter(Boolean),
         authorId: user?.id,

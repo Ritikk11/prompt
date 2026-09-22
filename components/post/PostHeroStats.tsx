@@ -75,57 +75,57 @@ export default function PostHeroStats({
   };
 
   return (
-    <div className="flex flex-nowrap items-center justify-center gap-2 sm:gap-5 rounded-[32px] border border-white/20 bg-black/25 py-2 px-3 sm:py-3 sm:px-7 text-xs sm:text-sm font-medium text-white/75 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_-1px_0_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.5),0_0_30px_rgba(129,140,248,0.25),0_0_60px_rgba(139,92,246,0.15)] transition-shadow duration-300 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_-1px_0_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.5),0_0_40px_rgba(129,140,248,0.35),0_0_80px_rgba(139,92,246,0.2)]">
+    <div className="flex flex-nowrap items-center justify-center gap-1.5 sm:gap-2.5 max-w-full shrink-0">
       {showViewCount && (
-        <>
-          <span className="flex items-center gap-2 sm:gap-2.5">
-            <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
-              <Eye className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.7)]" />
-            </span>
-            {views.toLocaleString()} {views === 1 ? 'view' : 'views'}
-          </span>
-          <span className="h-5 w-px bg-white/15" />
-        </>
+        <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-2xl border border-white/15 bg-white/[0.08] px-3 py-2 sm:px-3.5 sm:py-2.5 text-[11px] sm:text-xs font-semibold text-white/90 backdrop-blur-xl shadow-sm transition-all duration-300 ease-out hover:scale-105 hover:border-white/30 hover:bg-white/15 hover:text-white select-none antialiased transform-gpu will-change-transform [backface-visibility:hidden] origin-center shrink-0">
+          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-white/80" strokeWidth={2} />
+          <span className="tabular-nums">{views.toLocaleString()} Views</span>
+        </div>
       )}
 
       <button
         onClick={handleLikeClick}
         type="button"
-        className="flex items-center gap-2 sm:gap-2.5 transition-all duration-300 hover:text-white hover:scale-105 active:scale-95"
+        className={`group inline-flex items-center gap-1.5 sm:gap-2 rounded-2xl border px-3 py-2 sm:px-4 sm:py-2.5 text-[11px] sm:text-xs font-semibold backdrop-blur-xl transition-all duration-300 ease-out hover:scale-105 active:scale-95 shadow-sm select-none cursor-pointer antialiased transform-gpu will-change-transform [backface-visibility:hidden] origin-center shrink-0 ${
+          likedByUser
+            ? 'border-rose-500/60 bg-rose-500/25 text-rose-200 shadow-rose-500/25 hover:border-rose-500/80 hover:bg-rose-500/35 hover:text-white'
+            : 'border-white/15 bg-white/10 text-white/90 hover:border-white/30 hover:bg-white/20 hover:text-white'
+        }`}
       >
-        <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
-          <Heart
-            className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${
-              likedByUser
-                ? 'text-red-500 fill-red-500 animate-heart-pop drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]'
-                : 'text-violet-400 drop-shadow-[0_0_8px_rgba(167,139,250,0.7)]'
-            }`}
-          />
+        <Heart
+          className={`h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 transition-colors duration-300 ${
+            likedByUser
+              ? 'fill-rose-500 text-rose-500 animate-heart-pop'
+              : 'text-white/80 group-hover:text-rose-400'
+          }`}
+          strokeWidth={2}
+        />
+        <span className="tabular-nums">
+          {showLikeCount ? `${likes.toLocaleString()} Like` : 'Like'}
         </span>
-        {showLikeCount ? `${likes.toLocaleString()} ${likes === 1 ? 'like' : 'likes'}` : likedByUser ? 'Liked' : 'Like'}
       </button>
 
       {showSaveButton && (
-        <>
-          <span className="h-5 w-px bg-white/15" />
-          <button
-            onClick={handleBookmarkClick}
-            type="button"
-            aria-label={bookmarkedByUser ? 'Remove bookmark' : 'Bookmark this post'}
-            className="flex items-center gap-2 sm:gap-2.5 transition-all duration-300 hover:text-white hover:scale-105 active:scale-95"
-          >
-            <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
-              <Bookmark
-                className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${
-                  bookmarkedByUser
-                    ? 'text-indigo-300 fill-indigo-300'
-                    : 'text-indigo-400'
-                } drop-shadow-[0_0_8px_rgba(129,140,248,0.7)]`}
-              />
-            </span>
-            {bookmarkedByUser ? 'Saved' : 'Save'}
-          </button>
-        </>
+        <button
+          onClick={handleBookmarkClick}
+          type="button"
+          aria-label={bookmarkedByUser ? 'Remove bookmark' : 'Bookmark this post'}
+          className={`group inline-flex items-center gap-1.5 sm:gap-2 rounded-2xl border px-3 py-2 sm:px-4 sm:py-2.5 text-[11px] sm:text-xs font-semibold backdrop-blur-xl transition-all duration-300 ease-out hover:scale-105 active:scale-95 shadow-sm select-none cursor-pointer antialiased transform-gpu will-change-transform [backface-visibility:hidden] origin-center shrink-0 ${
+            bookmarkedByUser
+              ? 'border-indigo-500/60 bg-indigo-500/25 text-indigo-200 shadow-indigo-500/25 hover:border-indigo-500/80 hover:bg-indigo-500/35 hover:text-white'
+              : 'border-white/15 bg-white/10 text-white/90 hover:border-white/30 hover:bg-white/20 hover:text-white'
+          }`}
+        >
+          <Bookmark
+            className={`h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 transition-colors duration-300 ${
+              bookmarkedByUser
+                ? 'fill-indigo-400 text-indigo-400'
+                : 'text-white/80 group-hover:text-white'
+            }`}
+            strokeWidth={2}
+          />
+          <span>{bookmarkedByUser ? 'Saved' : 'Save'}</span>
+        </button>
       )}
     </div>
   );

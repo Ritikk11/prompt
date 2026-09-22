@@ -18,6 +18,7 @@ import type { Post, SiteSettings } from '@/lib/types';
 import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
 import { isUserOwnedPost, EDITORIAL_TEAM_NAME } from '@/lib/authors';
 import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
+import { sanitizeHeroPalette, DEFAULT_HERO_PALETTE } from '@/lib/hero-palette';
 import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
 import ToolBadge from '@/components/ToolBadge';
 import AdSlot from '@/components/AdSlot';
@@ -54,6 +55,14 @@ const defaultKeepExploring = {
 };
 
 const HERO_SIZES = '(max-width: 640px) 200px, (max-width: 1024px) 240px, 320px';
+
+function alphaHex(hex: string, alpha: number) {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.slice(0, 2), 16) || 0;
+  const g = parseInt(clean.slice(2, 4), 16) || 0;
+  const b = parseInt(clean.slice(4, 6), 16) || 0;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 export default function PostContent({
   post,
@@ -144,7 +153,6 @@ export default function PostContent({
     },
   ];
 
-  const postHeroStyle = settings.postHeroStyle || 'v1';
   const sharePosition = settings.shareSettings?.position || 'floating-sidebar';
   const showInlineShareButtons = showShareButtons;
   const showSidebarShareButtons = showShareButtons && sharePosition === 'floating-sidebar';
@@ -152,12 +160,20 @@ export default function PostContent({
   const renderAuthorByline = () => {
     const isUserOwned = isUserOwnedPost(post.authorId);
     if (!isUserOwned) {
+      const siteLogo = settings.siteLogo || '/icon-190x190.webp';
       return (
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-md border border-white/20 text-xs text-white/90">
-          <div className="w-5 h-5 rounded-full bg-primary-500/30 flex items-center justify-center text-[10px] font-bold text-white">
-            P
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-xs text-white/90 backdrop-blur-xl shadow-sm transition-all duration-300 ease-out hover:scale-105 hover:border-white/30 hover:bg-white/15 hover:text-white antialiased transform-gpu will-change-transform [backface-visibility:hidden] origin-center">
+          <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full ring-1 ring-white/30 bg-black/40">
+            <Image
+              src={siteLogo}
+              alt={EDITORIAL_TEAM_NAME}
+              width={20}
+              height={20}
+              className="h-full w-full object-cover"
+              unoptimized
+            />
           </div>
-          <span>Published by</span>
+          <span className="text-white/60">Published by</span>
           <span className="font-semibold text-white">{EDITORIAL_TEAM_NAME}</span>
         </div>
       );
@@ -165,11 +181,11 @@ export default function PostContent({
 
     if (!settings.features?.showPublicProfiles) {
       return (
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-md border border-white/20 text-xs text-white/90">
-          <div className="w-5 h-5 rounded-full bg-primary-500/30 flex items-center justify-center text-[10px] font-bold text-white">
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-xs text-white/90 backdrop-blur-xl shadow-sm transition-all duration-300 ease-out hover:scale-105 hover:border-white/30 hover:bg-white/15 hover:text-white antialiased transform-gpu will-change-transform [backface-visibility:hidden] origin-center">
+          <div className="w-5 h-5 shrink-0 rounded-full bg-primary-500/30 flex items-center justify-center text-[10px] font-bold text-white">
             {(post.authorUsername || 'C').slice(0, 1).toUpperCase()}
           </div>
-          <span>Published by</span>
+          <span className="text-white/60">Published by</span>
           <span className="font-semibold text-white">@{post.authorUsername || 'creator'}</span>
         </div>
       );
@@ -183,7 +199,7 @@ export default function PostContent({
       <Link
         href={authorUrl}
         prefetch={true}
-        className="group flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/20 dark:bg-white/10 hover:bg-white/30 dark:hover:bg-white/20 backdrop-blur-md border border-white/20 transition-all text-xs text-white/90"
+        className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-xs text-white/90 backdrop-blur-xl shadow-sm transition-all duration-300 ease-out hover:scale-105 active:scale-95 hover:border-white/30 hover:bg-white/15 hover:text-white antialiased transform-gpu will-change-transform [backface-visibility:hidden] origin-center cursor-pointer"
       >
         {avatarUrl ? (
           <Image
@@ -191,15 +207,16 @@ export default function PostContent({
             alt={username}
             width={20}
             height={20}
-            className="w-5 h-5 rounded-full object-cover ring-1 ring-white/40"
+            className="w-5 h-5 shrink-0 rounded-full object-cover ring-1 ring-white/40 group-hover:ring-primary-400"
             referrerPolicy="no-referrer"
+            unoptimized
           />
         ) : (
-          <div className="w-5 h-5 rounded-full bg-primary-500/40 flex items-center justify-center text-[10px] font-bold text-white ring-1 ring-white/40">
+          <div className="w-5 h-5 shrink-0 rounded-full bg-primary-500/40 flex items-center justify-center text-[10px] font-bold text-white ring-1 ring-white/40 group-hover:ring-primary-400">
             {username.slice(0, 1).toUpperCase()}
           </div>
         )}
-        <span className="text-white/70">Published by</span>
+        <span className="text-white/60">Published by</span>
         <span className="font-semibold text-white leading-tight transition-colors group-hover:text-primary-300">
           @{username}
         </span>
@@ -207,209 +224,98 @@ export default function PostContent({
     );
   };
 
-  const renderMetaInfo = (align: 'center' | 'start' = 'center') => (
-    <div className={`flex flex-col items-center gap-5 sm:gap-4 ${align === 'start' ? 'lg:items-start' : ''}`}>
-      <PostHeroStats post={post} showViewCount={showViewCount} showLikeCount={showLikeCount} showSaveButton={showSaveButton} />
-      {renderAuthorByline()}
-    </div>
-  );
-
   const renderHero = () => {
-    switch (postHeroStyle) {
-      case 'v2': // Immersive Blur Background
-        return (
-          <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-[#080d1d] shadow-2xl group min-h-[500px] flex items-end">
-            {/* Keep the full-bleed atmosphere CSS-only. A large decorative
-                background image competes with the real hero image and can be
-                selected as LCP even when blurred or marked aria-hidden. */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background:
-                  'radial-gradient(circle at 18% 20%, rgba(99, 102, 241, 0.34), transparent 42%), radial-gradient(circle at 82% 16%, rgba(14, 165, 233, 0.24), transparent 38%), linear-gradient(135deg, #111827 0%, #080d1d 52%, #020617 100%)',
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
-            <div className="relative z-20 w-full max-w-6xl mx-auto flex flex-col items-center gap-8 p-8 pb-12 text-center lg:flex-row lg:items-center lg:gap-12 lg:p-12 lg:text-left">
-              <LoadingImg
-                src={mainPromptImageUrl}
+    const palette = sanitizeHeroPalette(post.heroPalette) || DEFAULT_HERO_PALETTE;
+    const mainImage = post.thumbnailUrl || post.images?.[0]?.url || '';
+    const cardBg = alphaHex('#070a14', 0.9);
+
+    return (
+      <div
+        className="relative mb-12 w-full overflow-hidden rounded-[32px] border border-white/10 text-white shadow-2xl backdrop-blur-2xl p-5 sm:p-8 lg:p-12"
+        style={{ backgroundColor: cardBg }}
+      >
+        {/* Aurora Nebula: Compact centered on mobile, expansive corner-reaching only on desktop */}
+        <div
+          className="pointer-events-none absolute -top-28 left-1/4 w-[600px] h-[600px] blur-[130px] opacity-65 lg:-top-52 lg:-left-32 lg:w-[1050px] lg:h-[850px] lg:blur-[160px] lg:opacity-75 rounded-full"
+          style={{ backgroundColor: palette.primary }}
+        />
+        <div
+          className="pointer-events-none absolute -bottom-28 right-1/4 w-[600px] h-[600px] blur-[130px] opacity-55 lg:-bottom-52 lg:-right-32 lg:w-[1050px] lg:h-[850px] lg:blur-[160px] lg:opacity-70 rounded-full"
+          style={{ backgroundColor: palette.secondary }}
+        />
+        <div
+          className="pointer-events-none absolute -top-28 -right-24 w-[700px] h-[650px] rounded-full blur-[150px] opacity-35 hidden lg:block"
+          style={{ backgroundColor: palette.secondary }}
+        />
+        <div
+          className="pointer-events-none absolute -bottom-28 -left-24 w-[700px] h-[650px] rounded-full blur-[150px] opacity-35 hidden lg:block"
+          style={{ backgroundColor: palette.primary }}
+        />
+
+        {/* Content expanded to full (no outer extra layer) */}
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center text-center lg:text-left gap-7 lg:gap-14">
+          {/* Thumbnail Artwork Box: Natural fluid aspect ratio (Portrait 4:5, Landscape 16:9, Square 1:1) */}
+          <div
+            className="relative shrink-0 w-fit max-w-full mx-auto lg:mx-0 rounded-[28px] overflow-hidden border border-white/20 shadow-2xl"
+            style={{
+              boxShadow: `0 20px 60px -15px ${alphaHex(palette.primary, 0.45 * 0.8)}`,
+            }}
+          >
+            {mainImage ? (
+              <img
+                src={mainImage}
                 alt={post.title}
-                showSkeleton={showSkeleton}
-                priority
-                wrapperClassName="inline-flex max-w-full shrink-0 justify-center rounded-2xl aspect-square w-[260px] sm:w-[320px] lg:w-[400px]"
-                className="h-auto max-h-[260px] sm:max-h-[320px] lg:max-h-[400px] w-auto max-w-full rounded-2xl object-contain"
-                referrerPolicy="no-referrer"
-                width={1280}
-                height={1280}
-                srcSet={heroImageSrcSet}
-                sizes={HERO_SIZES}
-                decoding="sync"
+                className="block w-auto h-auto max-w-[280px] sm:max-w-[340px] lg:max-w-[440px] max-h-[380px] sm:max-h-[460px] lg:max-h-[500px] rounded-[28px] object-contain"
               />
-              <div className="flex min-w-0 flex-col items-center lg:items-start">
-                <div className="flex flex-wrap justify-center gap-2 mb-6 lg:justify-start">
-                  {heroTools.map((tool) => {
-                    const info = getToolInfo(tool, settings?.toolDetails);
-                    return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
-                  })}
-                </div>
-                <h1 className="text-4xl md:text-5xl xl:text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight drop-shadow-lg">
-                  {post.title}
-                </h1>
-                <p className="text-white/80 text-lg md:text-xl max-w-2xl leading-relaxed mb-8 drop-shadow">
-                  {post.description}
-                </p>
-                {renderMetaInfo('start')}
-              </div>
-            </div>
-          </div>
-        );
+            ) : (
+              <div className="flex h-64 w-64 items-center justify-center text-white/40">No Image</div>
+            )}
 
-      case 'v3': // Diagonal Split
-        return (
-          <div className="relative mb-12 w-full rounded-[32px] overflow-hidden bg-white/25 dark:bg-white/[0.08] border border-white/80 dark:border-white/10 shadow-xl backdrop-blur-md backdrop-saturate-150">
-            <div className="grid grid-cols-1 md:grid-cols-2 min-h-[400px]">
-              <div className="flex flex-col justify-center p-8 md:p-12 order-2 md:order-1">
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  <div className="flex flex-wrap gap-2">
-                    {heroTools.map((tool) => {
-                      const info = getToolInfo(tool, settings?.toolDetails);
-                      return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
-                    })}
-                  </div>
-                  {post.featured && (
-                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-black/[0.07] dark:bg-white/[0.09] text-surface-700 dark:text-surface-300">
-                      ⭐ Featured
-                    </span>
-                  )}
-                </div>
-                <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 leading-tight">
-                  {post.title}
-                </h1>
-                <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg mb-8 line-clamp-4">
-                  {post.description}
-                </p>
-                <div className="flex justify-start">{renderMetaInfo()}</div>
-              </div>
-              <div className="relative order-1 md:order-2 h-64 md:h-auto min-h-[300px] bg-black/[0.04] dark:bg-white/[0.06] flex items-center justify-center p-6 lg:p-10">
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-primary-500/15 via-transparent to-cyan-500/15"
-                />
-                <div className="max-h-[400px] w-full max-w-[800px] h-full sm:w-[600px] rounded-[24px] shadow-2xl relative z-10 overflow-hidden">
-                  <LoadingImage
-                    src={mainPromptImageUrl}
-                    alt={post.title}
-                    fill
-                    showSkeleton={showSkeleton}
-                    className="object-contain"
-                    referrerPolicy="no-referrer"
-                    priority
-                    fetchPriority="high"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'v4': // Minimalist Text
-        return (
-          <div className="mb-12 flex flex-col items-center text-center mt-6 md:mt-10">
-            <ToolBadge toolName={heroToolName} toolInfo={heroToolInfo} size="lg" className="mb-6" />
-            <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 tracking-tight leading-tight max-w-4xl">
-              {post.title}
-            </h1>
-            <p className="text-surface-600 dark:text-surface-400 text-lg md:text-2xl max-w-3xl leading-relaxed mb-8 font-medium">
-              {post.description}
-            </p>
-            <div className="relative w-full max-w-2xl aspect-video mb-10 rounded-3xl overflow-hidden shadow-xl bg-black/[0.04] dark:bg-white/[0.06] p-4">
-              <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-inner">
-                <LoadingImage
-                  src={mainPromptImageUrl}
-                  alt={post.title}
-                  fill
-                  showSkeleton={showSkeleton}
-                  className="object-contain"
-                  referrerPolicy="no-referrer"
-                  priority
-                  fetchPriority="high"
-                  sizes="(max-width: 768px) 100vw, 672px"
-                />
-              </div>
-            </div>
-            {renderMetaInfo()}
-          </div>
-        );
-
-      case 'v5': // Asymmetric Offset
-        return (
-          <div className="relative mb-12 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-8">
-            <div className="lg:col-span-7 order-2 lg:order-1">
-              <div className="flex flex-wrap gap-2 mb-4">
+            {/* In Phone: Standard tool badges kept at bottom of thumbnail with subtle scrim */}
+            {heroTools.length > 0 && (
+              <div className="lg:hidden absolute inset-x-0 bottom-0 z-20 p-3 pt-8 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex flex-wrap items-center justify-center gap-2">
                 {heroTools.map((tool) => {
                   const info = getToolInfo(tool, settings?.toolDetails);
                   return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
                 })}
               </div>
-              <h1 className="text-4xl md:text-6xl font-black text-surface-900 dark:text-white mb-6 leading-[1.1] tracking-tight">
-                {post.title}
-              </h1>
-              <p className="text-surface-600 dark:text-surface-400 text-lg md:text-xl mb-10 leading-relaxed max-w-2xl border-l-4 border-primary-500 pl-6">
-                {post.description}
-              </p>
-              <div className="flex justify-start">{renderMetaInfo()}</div>
+            )}
+          </div>
+
+          {/* Info Side */}
+          <div className="flex flex-1 flex-col min-w-0 items-center lg:items-start">
+            {/* Tool Badges on Desktop */}
+            <div className="hidden lg:flex flex-wrap items-center gap-2 mb-4 justify-start">
+              {heroTools.map((tool) => {
+                const info = getToolInfo(tool, settings?.toolDetails);
+                return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
+              })}
             </div>
-            <div className="lg:col-span-5 order-1 lg:order-2 relative aspect-[3/4] lg:aspect-auto lg:h-[600px] rounded-[40px] overflow-hidden shadow-2xl skew-y-2 lg:skew-y-0 lg:-rotate-2 hover:rotate-0 transition-transform duration-700">
-              <LoadingImage
-                src={mainPromptImageUrl}
-                alt={post.title}
-                fill
-                showSkeleton={showSkeleton}
-                className="object-contain lg:object-cover"
-                referrerPolicy="no-referrer"
-                priority
-                fetchPriority="high"
-                sizes="(max-width: 1024px) 100vw, 42vw"
+
+            {/* Post Title */}
+            <h1 className="font-black tracking-tight text-white mb-4 text-2xl sm:text-3xl lg:text-5xl leading-snug lg:leading-[1.15]">
+              {post.title}
+            </h1>
+
+            {/* Post Description */}
+            <p className="text-white/80 line-clamp-3 mb-8 font-normal leading-relaxed text-xs sm:text-sm lg:text-base max-w-2xl">
+              {post.description}
+            </p>
+
+            {/* Stats & Actions (Row 1) and Author Byline (Row 2: centered on mobile, left-aligned on desktop) */}
+            <div className="flex flex-col items-center lg:items-start gap-2.5 sm:gap-3">
+              <PostHeroStats
+                post={post}
+                showViewCount={showViewCount}
+                showLikeCount={showLikeCount}
+                showSaveButton={showSaveButton}
               />
+              {renderAuthorByline()}
             </div>
           </div>
-        );
-
-      case 'v1':
-      default: // Natural layout
-        return (
-          <>
-            <div className="mb-6 flex flex-col items-center text-center">
-              <h1 className="text-3xl md:text-5xl font-extrabold text-surface-900 dark:text-white mb-4 tracking-tight leading-tight max-w-4xl">
-                {post.title}
-              </h1>
-              <p className="text-surface-600 dark:text-surface-300 text-base md:text-lg max-w-3xl leading-relaxed mb-6">
-                {post.description}
-              </p>
-              {renderMetaInfo()}
-            </div>
-            <div className="relative mb-12 w-full max-w-5xl mx-auto flex justify-center">
-              <div className="relative w-full flex justify-center rounded-[32px] overflow-hidden bg-black/[0.04] dark:bg-white/[0.06] p-2 sm:p-4">
-                <div className="relative aspect-[4/5] min-h-0 w-full overflow-hidden rounded-[24px] shadow-md sm:aspect-auto sm:h-[70vh] sm:min-h-[520px] sm:max-h-[760px]">
-                  <LoadingImage
-                    src={mainPromptImageUrl}
-                    alt={post.title}
-                    fill
-                    showSkeleton={showSkeleton}
-                    priority
-                    fetchPriority="high"
-                    sizes="(max-width: 768px) 100vw, 960px"
-                    className="object-contain"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-              </div>
-            </div>
-          </>
-        );
-    }
+        </div>
+      </div>
+    );
   };
 
   const SidebarCard = ({ item }: { item: Post }) => {
