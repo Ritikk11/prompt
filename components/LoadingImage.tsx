@@ -48,6 +48,10 @@ export default function LoadingImage({
   // opacity-0, or the browser can't paint them until hydration + onLoad, which
   // adds seconds of LCP render delay on mobile.
   const enabled = (skeleton ?? showSkeleton) && !props.priority;
+  // Fade/scale in on load for every non-priority image (independent of the
+  // skeleton setting) so images don't pop in abruptly. Priority/LCP images are
+  // never gated, keeping first paint instant.
+  const reveal = !props.priority;
   const srcValue = props.src;
   const [imageState, setImageState] = useState<ImageLoadState>({
     src: srcValue,
@@ -74,7 +78,7 @@ export default function LoadingImage({
         return;
       }
     }
-    if (!enabled) return;
+    if (!reveal) return;
     let completeCheck = 0;
     let interval: number | undefined;
     let timer: number | undefined;
@@ -121,12 +125,12 @@ export default function LoadingImage({
       stopWatching();
     }, IMAGE_WAIT_TIMEOUT_MS);
     return stopWatching;
-  }, [enabled, srcValue]);
+  }, [enabled, reveal, srcValue]);
 
   const settled = loaded || failed || timedOut;
   const hasTransition = /\btransition\b|\btransition-/.test(className);
-  const transitionClass = enabled
-    ? `${hasTransition ? '' : 'transition-opacity duration-300 '}${settled ? 'opacity-100' : 'opacity-0'}`
+  const transitionClass = reveal
+    ? `${hasTransition ? '' : 'transition-[opacity,transform,filter] duration-500 ease-out '}${settled ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-[8px] scale-[1.01]'}`
     : '';
   const image = (
     <Image
@@ -195,6 +199,10 @@ export function LoadingImg({
 }: LoadingImgProps) {
   const imageRef = useRef<HTMLImageElement | null>(null);
   const enabled = showSkeleton && !priority;
+  // Fade/scale the image in on load for every non-priority image, regardless of
+  // the skeleton setting — otherwise images "pop" in abruptly. Priority (LCP)
+  // images are never gated, so first paint stays instant.
+  const reveal = !priority;
   const srcValue = props.src;
   const [imageState, setImageState] = useState<ImageLoadState>({
     src: srcValue,
@@ -221,7 +229,7 @@ export function LoadingImg({
         return;
       }
     }
-    if (!enabled) return;
+    if (!reveal) return;
     let completeCheck = 0;
     let interval: number | undefined;
     let timer: number | undefined;
@@ -268,12 +276,12 @@ export function LoadingImg({
       stopWatching();
     }, IMAGE_WAIT_TIMEOUT_MS);
     return stopWatching;
-  }, [srcValue, enabled]);
+  }, [srcValue, reveal]);
 
   const settled = loaded || failed || timedOut;
   const hasTransition = /\btransition\b|\btransition-/.test(className);
-  const transitionClass = enabled
-    ? `${hasTransition ? '' : 'transition-opacity duration-300 '}${settled ? 'opacity-100' : 'opacity-0'}`
+  const transitionClass = reveal
+    ? `${hasTransition ? '' : 'transition-[opacity,transform,filter] duration-500 ease-out '}${settled ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-[8px] scale-[1.01]'}`
     : '';
   // While loading or on failure, an unrendered/broken image contributes no
   // intrinsic height, which collapses the wrapper to a thin sliver and squashes
