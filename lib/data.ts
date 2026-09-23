@@ -804,6 +804,8 @@ export function toPostSummary(post: Post): Post {
     title: post.title,
     description: post.description,
     thumbnailUrl: imageUrl,
+    thumbnailWidth: post.thumbnailWidth,
+    thumbnailHeight: post.thumbnailHeight,
     images: [
       {
         id: primaryImage?.id || post.id,
@@ -812,6 +814,8 @@ export function toPostSummary(post: Post): Post {
         aiTool: primaryImage?.aiTool || post.aiTools?.[0] || '',
         aiTools: allTools,
         model: primaryImage?.model,
+        width: primaryImage?.width,
+        height: primaryImage?.height,
       },
     ],
     tags: post.tags || [],
@@ -858,6 +862,8 @@ type PostSummaryRow = {
   description: string | null;
   seo_keywords: string[] | null;
   thumbnail_url: string | null;
+  thumbnail_width: number | null;
+  thumbnail_height: number | null;
   tags: string[] | null;
   category: string | null;
   categories: string[] | null;
@@ -878,6 +884,8 @@ type PostSummaryRow = {
     aiTool: string;
     aiTools: string[] | null;
     model: string | null;
+    width: number | null;
+    height: number | null;
   }> | null;
 };
 
@@ -898,6 +906,9 @@ function mapSummaryRow(row: PostSummaryRow): PostSummary {
   const primaryImage = row.images?.[0];
   const thumbnailUrl = getThumbnailImageUrl(resolveSummaryThumbnail(row));
   const allTools = row.ai_tools || [];
+  // A 0 in the view means "no stored dimension" — surface as undefined so the
+  // UI falls back to a default ratio rather than reserving a 0-height box.
+  const dim = (n: number | null | undefined) => (n && n > 0 ? n : undefined);
 
   return {
     id: row.id,
@@ -906,6 +917,8 @@ function mapSummaryRow(row: PostSummaryRow): PostSummary {
     description: row.description || '',
     seoKeywords: row.seo_keywords || [],
     thumbnailUrl,
+    thumbnailWidth: dim(row.thumbnail_width),
+    thumbnailHeight: dim(row.thumbnail_height),
     images: [
       {
         id: primaryImage?.id || row.id,
@@ -914,6 +927,8 @@ function mapSummaryRow(row: PostSummaryRow): PostSummary {
         aiTool: primaryImage?.aiTool || allTools[0] || '',
         aiTools: allTools,
         model: primaryImage?.model || undefined,
+        width: dim(primaryImage?.width),
+        height: dim(primaryImage?.height),
       },
     ],
     tags: row.tags || [],

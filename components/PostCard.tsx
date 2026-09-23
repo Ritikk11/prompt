@@ -80,6 +80,12 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
   const imageUrl = getThumbnailImageUrl(rawThumbnailUrl, { width: 380, quality: 74 });
   const thumbnailSrcSet = getThumbnailSrcSet(rawThumbnailUrl);
   const thumbnailSizes = imageSizes || masonryImageSizes(settings.features?.mobileColumns || 1, settings.features?.desktopColumns || 4, cardStyle === 'v2' ? 14 : 0);
+  // Reserve the card's true ratio in masonry mode so the shimmer matches the
+  // image and the tile doesn't reflow when it loads. Prefer standalone thumbnail
+  // dims, else the primary image's; undefined (legacy) keeps the old fallback.
+  const cardW = post?.thumbnailWidth || post?.images?.[0]?.width;
+  const cardH = post?.thumbnailHeight || post?.images?.[0]?.height;
+  const cardRatio = cardW && cardH ? cardW / cardH : undefined;
 
   const renderBadges = (className = "") => (
     <div className="flex flex-wrap gap-1">
@@ -215,6 +221,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
           sizes={thumbnailSizes}
           alt={post.title}
           showSkeleton={showSkeleton}
+          aspectRatio={cardRatio}
           className="block h-auto w-full transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
           referrerPolicy="no-referrer"
           priority={priority}

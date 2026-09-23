@@ -8,6 +8,11 @@ export interface ImagePrompt {
   aiTool: string;
   aiTools?: string[];
   model?: string;
+  // Intrinsic pixel dimensions of the primary `url`. Used to reserve the layout
+  // box before the image loads (zero CLS) and to shape the loading shimmer to
+  // match the final image. Optional: legacy posts backfill lazily.
+  width?: number;
+  height?: number;
 }
 
 export interface HeroPalette {
@@ -33,6 +38,10 @@ export interface Post {
   schemaType?: 'Article' | 'CreativeWork' | 'HowTo';
   faqs?: PostFaq[];
   thumbnailUrl?: string;
+  // Intrinsic pixel dimensions of `thumbnailUrl` when it is a standalone upload
+  // (not one of the gallery images). Reserves the hero/card box before load.
+  thumbnailWidth?: number;
+  thumbnailHeight?: number;
   heroPalette?: HeroPalette;
   referenceImages?: string[];
   images: ImagePrompt[];
@@ -76,6 +85,8 @@ export type PostSummary = Pick<
   | 'description'
   | 'seoKeywords'
   | 'thumbnailUrl'
+  | 'thumbnailWidth'
+  | 'thumbnailHeight'
   | 'images'
   | 'tags'
   | 'category'

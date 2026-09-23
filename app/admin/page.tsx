@@ -32,7 +32,7 @@ import { filterPostsForSection, getSectionPath } from '@/lib/sections';
 import { buildHeaderNavItems, headerLinkKey } from '@/lib/header-nav';
 import { getFilterTagsFromPosts } from '@/lib/filter-tags';
 import { getThumbnailImageUrl } from '@/lib/image-url';
-import { optimizeImageFile, type ImageOptimizePreset } from '@/lib/client-image-optimizer';
+import { optimizeImageFile, optimizeImageFileWithMeta, type ImageOptimizePreset } from '@/lib/client-image-optimizer';
 import { extractHeroPalette } from '@/lib/client-hero-palette';
 import { uploadImageFileToProvider, type UploadProvider } from '@/lib/client-upload';
 import PostCard from '@/components/PostCard';
@@ -1134,6 +1134,8 @@ function AdminInner() {
   const [description, setDescription] = useState('');
   const [extendedDescription, setExtendedDescription] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
+  const [thumbnailWidth, setThumbnailWidth] = useState<number | undefined>();
+  const [thumbnailHeight, setThumbnailHeight] = useState<number | undefined>();
   const [heroPalette, setHeroPalette] = useState<HeroPalette | undefined>();
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [seoTitle, setSeoTitle] = useState('');
@@ -1742,7 +1744,7 @@ function AdminInner() {
   };
 
   const resetForm = () => {
-    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setHeroPalette(undefined); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setSchemaType((settings.seoSettings?.schemaType as Post['schemaType']) || 'Article'); setFaqs([]); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
+    setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setThumbnailWidth(undefined); setThumbnailHeight(undefined); setHeroPalette(undefined); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setSchemaType((settings.seoSettings?.schemaType as Post['schemaType']) || 'Article'); setFaqs([]); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
     setStatus('published'); setVisibility('public');
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
@@ -1768,6 +1770,8 @@ function AdminInner() {
     setDescription(post.description);
     setExtendedDescription(post.extendedDescription || '');
     setThumbnailUrl(post.thumbnailUrl || '');
+    setThumbnailWidth(post.thumbnailWidth);
+    setThumbnailHeight(post.thumbnailHeight);
     setHeroPalette(post.heroPalette);
     setReferenceImages(post.referenceImages || []);
     setSeoTitle(post.seoTitle || '');
@@ -1937,6 +1941,42 @@ function AdminInner() {
     return uploadImageFileToProvider(optimizedFile, imageProvider, preset, baseName);
   };
 
+  // Upload variant that also returns the stored image's intrinsic dimensions,
+  // captured for free during client-side optimization. Persisted so the public
+  // pages can reserve the exact layout box (zero CLS) before the image loads.
+  const uploadImageFileWithMeta = async (
+    file: File,
+    preset: ImageOptimizePreset = 'prompt',
+    baseName?: string
+  ): Promise<{ url: string; width?: number; height?: number }> => {
+    const { file: optimizedFile, width, height } = await optimizeImageFileWithMeta(file, preset);
+    const url = await uploadImageFileToProvider(optimizedFile, imageProvider, preset, baseName);
+    return { url, width: width || undefined, height: height || undefined };
+  };
+
+  // Decode a remote/stored image URL to read its intrinsic pixel size without
+  // downloading twice on the visitor side. naturalWidth/Height is readable
+  // cross-origin (only pixel data is tainted), so this works for pasted URLs and
+  // when re-selecting a gallery cover. Returns undefined on failure.
+  const getImageDimensions = async (
+    url: string
+  ): Promise<{ width: number; height: number } | undefined> => {
+    if (!url || url.startsWith('Uploading')) return undefined;
+    try {
+      const img = new window.Image();
+      img.decoding = 'async';
+      img.referrerPolicy = 'no-referrer';
+      img.src = url;
+      await img.decode();
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        return { width: img.naturalWidth, height: img.naturalHeight };
+      }
+    } catch {
+      // Non-fatal: dims stay unset and the box falls back to a default ratio.
+    }
+    return undefined;
+  };
+
   const handleImageUpload = async (idx: number, file: File) => {
     try {
       const currentUrls = (images[idx].urls && images[idx].urls!.length > 0 ? images[idx].urls! : [images[idx].url]).filter(Boolean);
@@ -1944,11 +1984,15 @@ function AdminInner() {
         urls: [...currentUrls, 'Uploading...'],
         url: currentUrls[0] || 'Uploading...'
       });
-      const url = await uploadImageFile(file, 'prompt', title || slug);
+      const { url, width, height } = await uploadImageFileWithMeta(file, 'prompt', title || slug);
       const updated = [...currentUrls, url];
+      const becomesPrimary = updated[0] === url;
       updateImage(idx, {
         urls: updated,
-        url: updated[0] || ''
+        url: updated[0] || '',
+        // Only record dims when the uploaded image is the primary/cover — width
+        // and height describe `url`, not the appended variations.
+        ...(becomesPrimary ? { width, height } : {}),
       });
     } catch (err) {
       console.error(err);
@@ -1971,14 +2015,19 @@ function AdminInner() {
         url: currentUrls[0] || 'Uploading...'
       });
 
-      const newUrls = await Promise.all(
-        files.map(file => uploadImageFile(file, 'prompt', title || slug))
+      const uploaded = await Promise.all(
+        files.map(file => uploadImageFileWithMeta(file, 'prompt', title || slug))
       );
+      const newUrls = uploaded.map(u => u.url);
 
       const finalUrls = [...currentUrls, ...newUrls];
+      // If the batch became the primary/cover (no prior images), record the
+      // dims of that first uploaded image so `url` has a reserved box.
+      const primaryMeta = currentUrls.length === 0 ? uploaded[0] : undefined;
       updateImage(idx, {
         urls: finalUrls,
-        url: finalUrls[0] || ''
+        url: finalUrls[0] || '',
+        ...(primaryMeta ? { width: primaryMeta.width, height: primaryMeta.height } : {}),
       });
       showToast(`Uploaded ${newUrls.length} image${newUrls.length === 1 ? '' : 's'}`);
     } catch (err: any) {
@@ -1992,28 +2041,39 @@ function AdminInner() {
     }
   };
 
-  const addPromptImageUrl = (idx: number, url: string) => {
+  const addPromptImageUrl = async (idx: number, url: string) => {
     if (!url.trim()) return;
     const currentUrls = (images[idx].urls && images[idx].urls!.length > 0 ? images[idx].urls! : [images[idx].url]).filter(Boolean);
     if (!currentUrls.includes(url.trim())) {
       const updated = [...currentUrls, url.trim()];
+      const becomesPrimary = updated[0] === url.trim();
       updateImage(idx, {
         urls: updated,
         url: updated[0] || ''
       });
+      // Pasted URLs carry no upload metadata; decode to reserve the box.
+      if (becomesPrimary) {
+        const dims = await getImageDimensions(url.trim());
+        if (dims) updateImage(idx, dims);
+      }
     }
   };
 
-  const removePromptImageUrl = (promptIdx: number, imgIdx: number) => {
+  const removePromptImageUrl = async (promptIdx: number, imgIdx: number) => {
     const currentUrls = (images[promptIdx].urls && images[promptIdx].urls!.length > 0 ? images[promptIdx].urls! : [images[promptIdx].url]).filter(Boolean);
     const updated = currentUrls.filter((_, i) => i !== imgIdx);
     updateImage(promptIdx, {
       urls: updated,
       url: updated[0] || ''
     });
+    // Removing the cover promotes a new primary — refresh its reserved-box dims.
+    if (imgIdx === 0 && updated[0]) {
+      const dims = await getImageDimensions(updated[0]);
+      if (dims) updateImage(promptIdx, dims);
+    }
   };
 
-  const setPromptCoverImage = (promptIdx: number, imgIdx: number) => {
+  const setPromptCoverImage = async (promptIdx: number, imgIdx: number) => {
     const currentUrls = (images[promptIdx].urls && images[promptIdx].urls!.length > 0 ? images[promptIdx].urls! : [images[promptIdx].url]).filter(Boolean);
     if (imgIdx === 0 || !currentUrls[imgIdx]) return;
     const target = currentUrls[imgIdx];
@@ -2023,6 +2083,49 @@ function AdminInner() {
       urls: reordered,
       url: target
     });
+    // The cover drives width/height; the new primary usually differs in ratio,
+    // so decode it to keep the reserved box accurate.
+    const dims = await getImageDimensions(target);
+    if (dims) updateImage(promptIdx, dims);
+  };
+
+  // "Use as thumbnail": re-encode the chosen prompt image at thumbnail size into
+  // the thumbnails dir and set it as the post thumbnail — no second manual
+  // upload, and it records the thumbnail's dimensions for a zero-CLS hero/card.
+  // Falls back to linking the original URL (still edge-resized per device) if the
+  // source cannot be re-fetched (e.g. CORS), so the action never hard-fails.
+  const handleSetAsThumbnail = async (url: string) => {
+    if (!url || url.startsWith('Uploading')) return;
+    setThumbnailUrl('Uploading...');
+    setHeroPalette(undefined);
+    try {
+      const res = await fetch(url, { referrerPolicy: 'no-referrer' });
+      if (!res.ok) throw new Error(`fetch ${res.status}`);
+      const blob = await res.blob();
+      const srcFile = new File([blob], 'thumbnail.webp', {
+        type: blob.type || 'image/webp',
+      });
+      const [{ url: thumbUrl, width, height }, palette] = await Promise.all([
+        uploadImageFileWithMeta(srcFile, 'thumbnail', title || slug),
+        extractHeroPalette(srcFile),
+      ]);
+      setThumbnailUrl(thumbUrl);
+      setThumbnailWidth(width);
+      setThumbnailHeight(height);
+      if (palette) setHeroPalette(palette);
+      showToast('Set as thumbnail');
+    } catch (err) {
+      console.warn('Thumbnail re-encode failed, linking original:', err);
+      const dims = await getImageDimensions(url);
+      setThumbnailUrl(url);
+      setThumbnailWidth(dims?.width);
+      setThumbnailHeight(dims?.height);
+      const palette = await extractHeroPalette(
+        getThumbnailImageUrl(url, { width: 64, quality: 50 })
+      ).catch(() => undefined);
+      if (palette) setHeroPalette(palette);
+      showToast('Set as thumbnail (linked original image)');
+    }
   };
 
   const handleArticleThumbnailUpload = async (slug: string, file: File) => {
@@ -2245,6 +2348,8 @@ function AdminInner() {
         .map(item => ({ question: item.question.trim(), answer: item.answer.trim() }))
         .filter(item => item.question && item.answer),
       thumbnailUrl,
+      thumbnailWidth: thumbnailWidth || undefined,
+      thumbnailHeight: thumbnailHeight || undefined,
       heroPalette: resolvedHeroPalette,
       referenceImages: referenceImages.filter(Boolean),
       images: images.filter(i => i.url || i.prompt || i.aiTool),
@@ -4189,11 +4294,18 @@ function AdminInner() {
                       value={thumbnailUrl}
                       onChange={e => {
                         setThumbnailUrl(e.target.value);
+                        setThumbnailWidth(undefined);
+                        setThumbnailHeight(undefined);
                         setHeroPalette(undefined);
                       }}
                       onBlur={async e => {
-                        const palette = await extractHeroPalette(getThumbnailImageUrl(e.currentTarget.value, { width: 64, quality: 50 }));
+                        const value = e.currentTarget.value;
+                        const [palette, dims] = await Promise.all([
+                          extractHeroPalette(getThumbnailImageUrl(value, { width: 64, quality: 50 })),
+                          getImageDimensions(value),
+                        ]);
                         if (palette) setHeroPalette(palette);
+                        if (dims) { setThumbnailWidth(dims.width); setThumbnailHeight(dims.height); }
                       }}
                       className="flex-1 px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-sm min-w-0 placeholder:text-surface-400"
                       placeholder="https://..."
@@ -4204,8 +4316,13 @@ function AdminInner() {
                         onClick={() => setMediaLibraryCallback(() => async (url: string) => {
                           setThumbnailUrl(url);
                           setHeroPalette(undefined);
-                          const palette = await extractHeroPalette(getThumbnailImageUrl(url, { width: 64, quality: 50 }));
+                          const [palette, dims] = await Promise.all([
+                            extractHeroPalette(getThumbnailImageUrl(url, { width: 64, quality: 50 })),
+                            getImageDimensions(url),
+                          ]);
                           if (palette) setHeroPalette(palette);
+                          setThumbnailWidth(dims?.width);
+                          setThumbnailHeight(dims?.height);
                         })}
                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] cursor-pointer hover:border-primary-500 transition-colors shrink-0"
                       >
@@ -4224,16 +4341,20 @@ function AdminInner() {
                           if (file) {
                              try {
                                setThumbnailUrl('Uploading...');
-                               const [url, palette] = await Promise.all([
-                                 uploadImageFile(file, 'thumbnail', title || slug),
+                               const [meta, palette] = await Promise.all([
+                                 uploadImageFileWithMeta(file, 'thumbnail', title || slug),
                                  extractHeroPalette(file),
                                ]);
-                               setThumbnailUrl(url);
+                               setThumbnailUrl(meta.url);
+                               setThumbnailWidth(meta.width);
+                               setThumbnailHeight(meta.height);
                                setHeroPalette(palette);
                              } catch (err: any) {
                                console.error(err);
                                showToast(`Failed to process thumbnail: ${err?.message || err}`, 'error');
                                setThumbnailUrl('');
+                               setThumbnailWidth(undefined);
+                               setThumbnailHeight(undefined);
                              }
                           }
                         }}
@@ -4246,7 +4367,7 @@ function AdminInner() {
                       <Image src={thumbnailUrl} alt="Thumbnail preview" fill className="object-cover" unoptimized />
                       <button
                         type="button"
-                        onClick={() => { setThumbnailUrl(''); setHeroPalette(undefined); }}
+                        onClick={() => { setThumbnailUrl(''); setThumbnailWidth(undefined); setThumbnailHeight(undefined); setHeroPalette(undefined); }}
                         className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 md:opacity-0 md:group-hover:opacity-100 transition-all"
                         title="Remove Image"
                       >
@@ -4727,7 +4848,7 @@ function AdminInner() {
                                     ) : (
                                       <>
                                         <Image src={u} alt="" fill className="object-cover" sizes="100px" referrerPolicy="no-referrer" />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-1 p-1">
                                           {imgIndex !== 0 && (
                                             <button
                                               type="button"
@@ -4738,6 +4859,14 @@ function AdminInner() {
                                               ★ Cover
                                             </button>
                                           )}
+                                          <button
+                                            type="button"
+                                            onClick={() => handleSetAsThumbnail(u)}
+                                            className="p-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-[9px] font-bold shadow"
+                                            title="Use this image as the post thumbnail"
+                                          >
+                                            ⬧ Thumb
+                                          </button>
                                           <button
                                             type="button"
                                             onClick={() => removePromptImageUrl(idx, imgIndex)}

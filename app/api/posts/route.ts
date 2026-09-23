@@ -21,7 +21,6 @@ function getAllToolsFromPost(post: Partial<Post>) {
 function revalidateNewPost(post: Post) {
   const slug = post.slug || post.id;
   if (slug) revalidatePath(`/${slug}`);
-  (post.tags || []).forEach((tag) => tag && revalidatePath(`/tag/${encodeURIComponent(tag.toLowerCase())}`));
   getAllToolsFromPost(post).forEach((tool) => revalidatePath(`/tool/${encodeURIComponent(tool.toLowerCase())}`));
   revalidatePath('/');
   revalidatePath('/explore');
@@ -77,6 +76,13 @@ function cleanStringArray(value: unknown, maxItems = 30, maxLength = 80) {
         .filter(Boolean)
         .slice(0, maxItems)
     : [];
+}
+
+// Positive integer pixel dimension (1..10000); undefined otherwise.
+function cleanDimension(value: unknown) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
+  const n = Math.round(value);
+  return n > 0 && n <= 10000 ? n : undefined;
 }
 
 function slugifySubmission(value: string) {
@@ -167,6 +173,8 @@ export async function POST(request: Request) {
         aiTool: cleanTextValue(image?.aiTool, 80),
         aiTools: cleanStringArray(image?.aiTools || [image?.aiTool], 12, 80),
         model: cleanTextValue(image?.model, 120) || undefined,
+        width: cleanDimension(image?.width),
+        height: cleanDimension(image?.height),
       }))
       .filter((image) => image.url && image.prompt);
 
@@ -181,6 +189,8 @@ export async function POST(request: Request) {
       description: cleanTextValue(post.description, 2000),
       extendedDescription: cleanTextValue(post.extendedDescription, 30000) || undefined,
       thumbnailUrl: cleanTextValue(post.thumbnailUrl, 2000) || images[0]?.url,
+      thumbnailWidth: cleanDimension(post.thumbnailWidth),
+      thumbnailHeight: cleanDimension(post.thumbnailHeight),
       heroPalette: sanitizeHeroPalette(post.heroPalette),
       referenceImages: cleanStringArray(post.referenceImages, 10, 2000),
       images,

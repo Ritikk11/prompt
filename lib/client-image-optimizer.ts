@@ -36,8 +36,22 @@ function canvasToBlob(canvas: HTMLCanvasElement, mimeType: string, quality: numb
   });
 }
 
-export async function optimizeImageFile(file: File, preset: ImageOptimizePreset = 'prompt') {
-  if (!file.type.startsWith('image/')) return file;
+export type OptimizedImage = {
+  file: File;
+  /** Intrinsic pixel dimensions of the returned `file`. 0 when input is not an image. */
+  width: number;
+  height: number;
+};
+
+// Same pipeline as optimizeImageFile, but also reports the intrinsic pixel
+// dimensions of the file it returns. The dimensions always match the returned
+// file: scaled dims when re-encoded, original dims when the source is returned
+// unchanged. Callers persist these to reserve the layout box before load.
+export async function optimizeImageFileWithMeta(
+  file: File,
+  preset: ImageOptimizePreset = 'prompt'
+): Promise<OptimizedImage> {
+  if (!file.type.startsWith('image/')) return { file, width: 0, height: 0 };
 
   const options = presets[preset];
   const objectUrl = URL.createObjectURL(file);
@@ -48,7 +62,10 @@ export async function optimizeImageFile(file: File, preset: ImageOptimizePreset 
     img.src = objectUrl;
     await img.decode();
 
-    let { width, height } = img;
+    const origWidth = img.width;
+    const origHeight = img.height;
+    let width = origWidth;
+    let height = origHeight;
     if (options.targetWidth) {
       // Fixed-width scaling: consistent widths across aspect ratios, with
       // maxDimension as a height backstop for extreme portraits.
@@ -65,7 +82,7 @@ export async function optimizeImageFile(file: File, preset: ImageOptimizePreset 
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext('2d', { alpha: options.mimeType === 'image/webp' });
-    if (!ctx) return file;
+    if (!ctx) return { file, width: origWidth, height: origHeight };
 
     if (options.mimeType === 'image/jpeg') {
       ctx.fillStyle = '#fff';
@@ -81,18 +98,28 @@ export async function optimizeImageFile(file: File, preset: ImageOptimizePreset 
       blob = await canvasToBlob(canvas, options.mimeType || 'image/webp', quality);
     }
 
-    if (blob.size >= file.size && file.type !== 'image/png') return file;
+    // Re-encoded output is larger than the source: keep the original file, so
+    // the reported dimensions must be the original (unscaled) ones too.
+    if (blob.size >= file.size && file.type !== 'image/png') {
+      return { file, width: origWidth, height: origHeight };
+    }
 
-    return new File([blob], outputName(file.name, blob.type), {
+    const outFile = new File([blob], outputName(file.name, blob.type), {
       type: blob.type,
       lastModified: Date.now(),
     });
+    return { file: outFile, width, height };
   } catch (error) {
     console.warn('Image optimization skipped:', error);
-    return file;
+    return { file, width: 0, height: 0 };
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
+}
+
+export async function optimizeImageFile(file: File, preset: ImageOptimizePreset = 'prompt') {
+  const { file: optimized } = await optimizeImageFileWithMeta(file, preset);
+  return optimized;
 }
 
 export async function optimizeImageToDataUrl(file: File, preset: ImageOptimizePreset = 'prompt') {

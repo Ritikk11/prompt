@@ -17,7 +17,7 @@ import {
 import type { Post, SiteSettings } from '@/lib/types';
 import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
 import { isUserOwnedPost, EDITORIAL_TEAM_NAME } from '@/lib/authors';
-import { getPromptImageUrl, getThumbnailImageUrl, getThumbnailSrcSet } from '@/lib/image-url';
+import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
 import { sanitizeHeroPalette, DEFAULT_HERO_PALETTE } from '@/lib/hero-palette';
 import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
 import ToolBadge from '@/components/ToolBadge';
@@ -54,7 +54,7 @@ const defaultKeepExploring = {
   ],
 };
 
-const HERO_SIZES = '(max-width: 640px) 280px, (max-width: 1024px) 340px, 440px';
+const HERO_SIZES = '(max-width: 640px) 200px, (max-width: 1024px) 240px, 320px';
 
 function alphaHex(hex: string, alpha: number) {
   const clean = hex.replace('#', '');
@@ -229,18 +229,30 @@ export default function PostContent({
     const mainImage = post.thumbnailUrl || post.images?.[0]?.url || '';
     const cardBg = alphaHex('#070a14', 0.9);
 
+    // Reserve the thumbnail's exact box before load (zero CLS). We clamp very
+    // tall ratios (9:16 etc.) down so the portrait never towers — `object-cover`
+    // crops the excess instead of letterboxing. Missing dims (legacy posts)
+    // fall back to 3/4 so the box is still reserved pre-backfill.
+    const heroDims = post.thumbnailUrl
+      ? { width: post.thumbnailWidth, height: post.thumbnailHeight }
+      : { width: post.images?.[0]?.width, height: post.images?.[0]?.height };
+    const heroRawRatio = heroDims.width && heroDims.height ? heroDims.width / heroDims.height : 0.75;
+    const heroRatio = Math.max(heroRawRatio, 0.75);
+
     return (
       <div
-        className="relative mb-12 w-full overflow-hidden rounded-[32px] border border-white/10 text-white shadow-2xl backdrop-blur-2xl p-5 sm:p-8 lg:p-12"
+        className="relative mb-12 w-full overflow-hidden rounded-[32px] border border-white/10 text-white shadow-2xl backdrop-blur-md lg:backdrop-blur-2xl p-5 sm:p-8 lg:p-12"
         style={{ backgroundColor: cardBg }}
       >
-        {/* Aurora Nebula: Compact centered on mobile, expansive corner-reaching only on desktop */}
+        {/* Aurora Nebula: Compact centered on mobile, expansive corner-reaching only on desktop.
+            Mobile uses a smaller blur radius — cheaper GPU paint on low-end phones, and visually
+            near-identical since the glow is diffuse and the card bg is ~90% opaque. */}
         <div
-          className="pointer-events-none absolute -top-28 left-1/4 w-[600px] h-[600px] blur-[130px] opacity-65 lg:-top-52 lg:-left-32 lg:w-[1050px] lg:h-[850px] lg:blur-[160px] lg:opacity-75 rounded-full"
+          className="pointer-events-none absolute -top-28 left-1/4 w-[600px] h-[600px] blur-[70px] opacity-65 lg:-top-52 lg:-left-32 lg:w-[1050px] lg:h-[850px] lg:blur-[160px] lg:opacity-75 rounded-full"
           style={{ backgroundColor: palette.primary }}
         />
         <div
-          className="pointer-events-none absolute -bottom-28 right-1/4 w-[600px] h-[600px] blur-[130px] opacity-55 lg:-bottom-52 lg:-right-32 lg:w-[1050px] lg:h-[850px] lg:blur-[160px] lg:opacity-70 rounded-full"
+          className="pointer-events-none absolute -bottom-28 right-1/4 w-[600px] h-[600px] blur-[70px] opacity-55 lg:-bottom-52 lg:-right-32 lg:w-[1050px] lg:h-[850px] lg:blur-[160px] lg:opacity-70 rounded-full"
           style={{ backgroundColor: palette.secondary }}
         />
         <div
@@ -254,36 +266,36 @@ export default function PostContent({
 
         {/* Content expanded to full (no outer extra layer) */}
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center text-center lg:text-left gap-7 lg:gap-14">
-          {/* Thumbnail Artwork Box: Natural fluid aspect ratio (Portrait 4:5, Landscape 16:9, Square 1:1) */}
+          {/* Thumbnail Artwork Box: reserved aspect-ratio box (no CLS); the image
+              object-covers it so tall portraits are capped, not tower. */}
           <div
-            className="relative shrink-0 w-fit max-w-full mx-auto lg:mx-0 rounded-[28px] overflow-hidden border border-white/20 shadow-2xl"
+            className="relative shrink-0 w-full max-w-[280px] sm:max-w-[340px] lg:max-w-[440px] mx-auto lg:mx-0 rounded-[28px] overflow-hidden border border-white/20 shadow-2xl"
             style={{
+              aspectRatio: `${heroRatio}`,
               boxShadow: `0 20px 60px -15px ${alphaHex(palette.primary, 0.45 * 0.8)}`,
             }}
           >
             {mainImage ? (
               <img
-                src={getPromptImageUrl(mainImage, { width: 700, quality: 74 })}
-                srcSet={getThumbnailSrcSet(mainImage, [280, 440, 700, 880], 74)}
+                src={mainPromptImageUrl || mainImage}
+                srcSet={heroImageSrcSet || undefined}
                 sizes={HERO_SIZES}
                 alt={post.title}
-                width={700}
-                height={800}
                 fetchPriority="high"
-                loading="eager"
-                decoding="async"
-                className="block w-auto h-auto max-w-[280px] sm:max-w-[340px] lg:max-w-[440px] max-h-[380px] sm:max-h-[460px] lg:max-h-[500px] rounded-[28px] object-contain"
+                decoding="sync"
+                className="absolute inset-0 h-full w-full rounded-[28px] object-cover"
               />
             ) : (
-              <div className="flex h-64 w-64 items-center justify-center text-white/40">No Image</div>
+              <div className="flex h-full w-full items-center justify-center text-white/40">No Image</div>
             )}
 
-            {/* In Phone: Standard tool badges kept at bottom of thumbnail with subtle scrim */}
+            {/* In Phone: tool badges stay on one inline row (no wrap), with a
+                subtle scrim so they read over the artwork */}
             {heroTools.length > 0 && (
-              <div className="lg:hidden absolute inset-x-0 bottom-0 z-20 p-3 pt-8 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex flex-wrap items-center justify-center gap-2">
+              <div className="lg:hidden absolute inset-x-0 bottom-0 z-20 p-2 pt-8 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex flex-nowrap items-center justify-start gap-1.5 overflow-x-auto no-scrollbar">
                 {heroTools.map((tool) => {
                   const info = getToolInfo(tool, settings?.toolDetails);
-                  return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
+                  return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="sm" />;
                 })}
               </div>
             )}
@@ -736,7 +748,7 @@ export default function PostContent({
               {(post.tags || []).map((tag) => (
                 <Link
                   key={tag}
-                  href={`/tag/${encodeURIComponent(tag.toLowerCase())}`}
+                  href={`/explore?tag=${encodeURIComponent(tag.toLowerCase())}`}
                   prefetch={true}
                   className="px-4 py-2 rounded-xl text-xs font-bold bg-black/[0.04] dark:bg-white/[0.06] text-surface-600 dark:text-surface-300 hover:bg-primary-500 hover:text-white dark:hover:bg-primary-500 dark:hover:text-white transition-all transform uppercase tracking-wider"
                 >

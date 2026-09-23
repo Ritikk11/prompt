@@ -192,6 +192,7 @@ export default function PromptItemCard({
                       fetchPriority={index === 0 && i === 0 ? 'high' : 'auto'}
                       decoding={index === 0 && i === 0 ? 'sync' : 'async'}
                       wrapperClassName="w-full"
+                      aspectRatio={i === 0 && img.width && img.height ? img.width / img.height : undefined}
                       className="block h-auto w-full rounded-xl transition-transform duration-300 ease-out group-hover/img:scale-[1.02]"
                       referrerPolicy="no-referrer"
                     />

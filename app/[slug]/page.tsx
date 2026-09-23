@@ -190,6 +190,8 @@ export default async function PostPage({ params }: Props) {
       url: img.url,
       aiTool: img.aiTool,
       prompt: '',
+      width: img.width,
+      height: img.height,
     })),
   });
 

@@ -172,6 +172,10 @@ export default function LoadingImage({
 type LoadingImgProps = ImgHTMLAttributes<HTMLImageElement> & {
   showSkeleton?: boolean;
   wrapperClassName?: string;
+  // When provided (real width/height known), the wrapper reserves this exact
+  // ratio so the shimmer box matches the final image shape — zero layout shift,
+  // and the image fills it (no crop, since the ratio is the image's own).
+  aspectRatio?: number;
   // LCP candidates: loads eagerly with fetchpriority=high and skips the
   // skeleton's opacity-0 gating (same rationale as LoadingImage's priority —
   // hiding the image until hydration + onLoad adds seconds of LCP render delay).
@@ -181,6 +185,7 @@ type LoadingImgProps = ImgHTMLAttributes<HTMLImageElement> & {
 export function LoadingImg({
   showSkeleton = false,
   wrapperClassName = '',
+  aspectRatio,
   className = '',
   alt = '',
   priority = false,
@@ -274,14 +279,23 @@ export function LoadingImg({
   // intrinsic height, which collapses the wrapper to a thin sliver and squashes
   // the shimmer/fallback. Reserve real space until settled so the skeleton
   // presents a full card preview and the browser can measure layout accurately.
-  const hasExplicitSizing = /\b(aspect-|h-|max-h-)\b/.test(wrapperClassName);
+  const hasExplicitSizing = /\b(aspect-|h-|max-h-)\b/.test(wrapperClassName) || !!aspectRatio;
   const placeholderSizing =
     (!settled || failed) && !hasExplicitSizing
       ? ' flex aspect-[4/5] sm:aspect-square max-h-[85vh] min-h-[280px] w-full items-center justify-center'
       : (failed ? ' flex aspect-[4/5] max-h-[85vh] w-full items-center justify-center' : '');
+  // With a reserved ratio, the image fills the box (cover == contain here since
+  // the ratio is the image's own, so nothing is cropped). Otherwise keep the
+  // caller-provided classes (legacy natural-height flow).
+  const imgClassName = aspectRatio
+    ? `absolute inset-0 h-full w-full object-cover ${className}`
+    : className;
 
   return (
-    <span className={`relative block overflow-hidden${placeholderSizing} ${wrapperClassName}`}>
+    <span
+      className={`relative block overflow-hidden${placeholderSizing} ${wrapperClassName}`}
+      style={aspectRatio ? { aspectRatio: `${aspectRatio}` } : undefined}
+    >
       {(enabled || failed) && !settled ? (
         <span className="pointer-events-none absolute inset-0 z-[1] image-shimmer" aria-hidden="true" />
       ) : null}
@@ -302,7 +316,7 @@ export function LoadingImg({
           setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
           onError?.(event);
         }}
-        className={`${className} ${transitionClass} ${failed ? 'sr-only h-0 w-0' : ''}`.trim()}
+        className={`${imgClassName} ${transitionClass} ${failed ? 'sr-only h-0 w-0' : ''}`.trim()}
       />
     </span>
   );
