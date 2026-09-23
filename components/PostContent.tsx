@@ -31,7 +31,7 @@ import PostPageProvider from '@/components/post/PostPageProvider';
 import PostHeroStats from '@/components/post/PostHeroStats';
 import PromptItemCard from '@/components/post/PromptItemCard';
 import PostShareCard from '@/components/post/PostShareCard';
-import CommentsSection from '@/components/post/CommentsSection';
+import CommentsSection from '@/components/post/CommentsSectionLazy';
 import CopyCollectionBanner from '@/components/post/CopyCollectionBanner';
 import BackButton from '@/components/post/BackButton';
 
@@ -292,10 +292,10 @@ export default function PostContent({
             {/* In Phone: tool badges stay on one inline row (no wrap), with a
                 subtle scrim so they read over the artwork */}
             {heroTools.length > 0 && (
-              <div className="lg:hidden absolute inset-x-0 bottom-0 z-20 p-2 pt-8 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex flex-nowrap items-center justify-start gap-1.5 overflow-x-auto no-scrollbar">
+              <div className="lg:hidden absolute inset-x-0 bottom-0 z-20 p-2 pt-8 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex flex-nowrap items-center justify-center gap-1.5 overflow-x-auto no-scrollbar">
                 {heroTools.map((tool) => {
                   const info = getToolInfo(tool, settings?.toolDetails);
-                  return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="sm" />;
+                  return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="md" />;
                 })}
               </div>
             )}

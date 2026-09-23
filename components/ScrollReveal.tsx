@@ -24,26 +24,43 @@ import { useEffect, useRef, type CSSProperties, type ReactNode, type Ref } from 
 
 const pending = new Set<HTMLElement>();
 let observer: IntersectionObserver | null = null;
+let scheduledSweep: number | null = null;
 
-// Reveal every registered node already above the trigger line. Runs on any
-// intersection, not just the node that reported it.
-function sweep() {
-  const trigger = window.innerHeight - 80;
-  // Read every rect BEFORE mutating any class. Interleaving the two makes each
-  // classList.add() invalidate layout, so the next getBoundingClientRect()
-  // forces a fresh full-document layout — up to one per revealed node, all in
-  // a single scroll frame, which shows as jitter while nodes cross the line.
-  // Batching makes it one layout pass no matter how many cross at once.
-  const ready: HTMLElement[] = [];
-  pending.forEach(node => {
-    const rect = node.getBoundingClientRect();
-    if (rect.width === 0 && rect.height === 0) return;
-    if (rect.top < trigger) ready.push(node);
+// Debounced sweep for stranded elements, batched in a single animation frame
+// to avoid forced synchronous layout recalculation during hydration.
+function scheduleSweep() {
+  if (typeof window === 'undefined' || scheduledSweep !== null || pending.size === 0) return;
+  scheduledSweep = window.requestAnimationFrame(() => {
+    scheduledSweep = null;
+    const trigger = window.innerHeight - 80;
+    const ready: HTMLElement[] = [];
+    pending.forEach(node => {
+      const rect = node.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) return;
+      if (rect.top < trigger) ready.push(node);
+    });
+    for (const node of ready) {
+      node.classList.add('revealed');
+      pending.delete(node);
+      observer?.unobserve(node);
+    }
   });
-  for (const node of ready) {
-    node.classList.add('revealed');
-    pending.delete(node);
-    observer?.unobserve(node);
+}
+
+function handleIntersection(entries: IntersectionObserverEntry[]) {
+  let hasIntersecting = false;
+  for (const entry of entries) {
+    if (entry.isIntersecting) {
+      hasIntersecting = true;
+      const node = entry.target as HTMLElement;
+      node.classList.add('revealed');
+      pending.delete(node);
+      observer?.unobserve(node);
+    }
+  }
+  // If fast-scrolling crossed an element, schedule a single batched check for any stranded siblings
+  if (hasIntersecting && pending.size > 0) {
+    scheduleSweep();
   }
 }
 
@@ -62,14 +79,13 @@ function register(node: HTMLElement) {
   }
 
   if (!observer) {
-    observer = new IntersectionObserver(() => sweep(), {
+    observer = new IntersectionObserver(handleIntersection, {
       threshold: 0,
       rootMargin: '0px 0px -80px 0px',
     });
   }
   pending.add(node);
   observer.observe(node);
-  sweep();
 }
 
 function unregister(node: HTMLElement) {

@@ -61,6 +61,26 @@ const panelClosed = 'grid-rows-[0fr] opacity-0 border-t-0 pointer-events-none';
    component, the server HTML had no header at all and the page jumped down
    by the header height once React mounted it. Isolate the hook in a
    render-nothing child so the header itself stays in the server HTML. */
+let isPopStateNavigation = false;
+if (typeof window !== 'undefined') {
+  window.addEventListener('popstate', () => {
+    isPopStateNavigation = true;
+  }, { passive: true });
+
+  let scrollSaveTimer: any = null;
+  window.addEventListener('scroll', () => {
+    if (scrollSaveTimer) return;
+    scrollSaveTimer = setTimeout(() => {
+      scrollSaveTimer = null;
+      if (window.scrollY > 0) {
+        try {
+          sessionStorage.setItem('ps_scroll_' + window.location.pathname, String(Math.round(window.scrollY)));
+        } catch {}
+      }
+    }, 120);
+  }, { passive: true });
+}
+
 function RouteChangeComplete({ onRouteChange }: { onRouteChange: () => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -69,6 +89,25 @@ function RouteChangeComplete({ onRouteChange }: { onRouteChange: () => void }) {
   useEffect(() => {
     if (!didMountRef.current) {
       didMountRef.current = true;
+      return;
+    }
+    if (isPopStateNavigation) {
+      isPopStateNavigation = false;
+      try {
+        const saved = sessionStorage.getItem('ps_scroll_' + pathname);
+        if (saved) {
+          const y = parseInt(saved, 10);
+          if (y > 0) {
+            requestAnimationFrame(() => {
+              window.scrollTo({ top: y, behavior: 'instant' });
+            });
+            setTimeout(() => {
+              window.scrollTo({ top: y, behavior: 'instant' });
+            }, 60);
+          }
+        }
+      } catch {}
+      onRouteChange();
       return;
     }
     if (!window.location.hash) {
@@ -331,6 +370,9 @@ function SiteHeader() {
     setSearchOpen(false);
     setShowLiveResults(false);
     if (!window.location.hash) {
+      if (isPopStateNavigation) {
+        return;
+      }
       lastScrollYRef.current = 0;
       setScrolled(false);
       setIsVisible(true);

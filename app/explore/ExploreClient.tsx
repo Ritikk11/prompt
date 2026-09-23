@@ -12,6 +12,7 @@ import { Clock, Flame, X } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import DiscoveryPageHero from '@/components/DiscoveryPageHero';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
+import { consumeBackNav } from '@/lib/back-nav';
 import ScrollReveal from '@/components/ScrollReveal';
 
 export default function ExploreClient({
@@ -41,8 +42,77 @@ export default function ExploreClient({
   }, [urlTag]);
 
   const itemsPerLoad = settings.features?.infiniteScrollItems || 20;
-  const [displayedCount, setDisplayedCount] = useState(itemsPerLoad);
+  // Only restore the saved infinite-scroll count + scroll position when the user
+  // arrived via browser Back/Forward. On a fresh link/URL navigation to /explore
+  // we start at the top with a clean count (consumeBackNav clears the flag).
+  const [isBackNav] = useState(() => (typeof window !== 'undefined' ? consumeBackNav() : false));
+  const [displayedCount, setDisplayedCount] = useState(() => {
+    if (isBackNav && typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('ps_explore_count');
+        if (saved) {
+          const count = parseInt(saved, 10);
+          if (count >= itemsPerLoad && count <= 500) return count;
+        }
+      } catch {}
+    }
+    return itemsPerLoad;
+  });
   const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Restore scroll position only on Back/Forward navigation to explore.
+  useEffect(() => {
+    if (!isBackNav) return;
+    try {
+      const savedScroll = sessionStorage.getItem('ps_explore_scroll') || sessionStorage.getItem('ps_scroll_/explore');
+      if (savedScroll) {
+        const targetY = parseInt(savedScroll, 10);
+        if (targetY > 0) {
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: targetY, behavior: 'instant' });
+          });
+          const timer = setTimeout(() => {
+            window.scrollTo({ top: targetY, behavior: 'instant' });
+          }, 80);
+          const timer2 = setTimeout(() => {
+            window.scrollTo({ top: targetY, behavior: 'instant' });
+          }, 200);
+          return () => {
+            clearTimeout(timer);
+            clearTimeout(timer2);
+          };
+        }
+      }
+    } catch {}
+  }, []);
+
+  // Save displayed count and scroll position periodically
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('ps_explore_count', String(displayedCount));
+    } catch {}
+  }, [displayedCount]);
+
+  useEffect(() => {
+    let scrollTimer: any = null;
+    const handleScroll = () => {
+      if (scrollTimer) return;
+      scrollTimer = setTimeout(() => {
+        scrollTimer = null;
+        if (window.scrollY > 0) {
+          try {
+            sessionStorage.setItem('ps_explore_scroll', String(Math.round(window.scrollY)));
+            sessionStorage.setItem('ps_scroll_/explore', String(Math.round(window.scrollY)));
+          } catch {}
+        }
+      }, 100);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimer) clearTimeout(scrollTimer);
+    };
+  }, []);
 
   const publicPosts = posts.filter(p => (p.status === 'published' || !p.status) && p.visibility !== 'private');
   const tools = Array.from(new Set(publicPosts.flatMap(p => getAllTools(p))));

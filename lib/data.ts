@@ -677,9 +677,8 @@ export async function fetchPosts() {
   }
 }
 
-export function isPublicPost(post: Pick<Post, 'status' | 'visibility'>) {
-  return (post.status === 'published' || !post.status) && post.visibility !== 'private';
-}
+import { isPublicPost } from './post-filter';
+export { isPublicPost };
 
 function isInlineImage(url?: string) {
   return !!url && url.startsWith('data:image');

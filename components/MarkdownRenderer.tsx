@@ -1,8 +1,7 @@
-'use client';
-import { Children, type ReactNode, useState, useEffect } from 'react';
-import { Check, Copy } from 'lucide-react';
+import { Children, type ReactNode } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { CodeBlock, CopyButton } from '@/components/MarkdownInteractive';
 
 type CalloutType = 'tip' | 'warning' | 'info' | 'note' | 'success' | 'danger' | 'highlight' | 'quote' | 'prompt' | 'example' | 'creative' | 'model' | 'important';
 type MarkdownBlock =
@@ -185,102 +184,10 @@ function nodeToText(node: ReactNode): string {
   return '';
 }
 
-// A few common aliases → highlight.js language ids.
-const LANG_ALIASES: Record<string, string> = {
-  js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
-  ts: 'typescript', tsx: 'typescript',
-  py: 'python', sh: 'bash', shell: 'bash', zsh: 'bash',
-  yml: 'yaml', md: 'markdown', html: 'xml', htm: 'xml',
-};
-
-// Highlighted, copyable code block. highlight.js is dynamically imported inside
-// an effect so it only ships in the browser bundle — never the SSR worker
-// bundle (which must stay under Cloudflare's 3 MiB limit). JSON is pretty-printed
-// before highlighting.
-function CodeBlock({ raw, lang }: { raw: string; lang: string }) {
-  const [copied, setCopied] = useState(false);
-  const [html, setHtml] = useState<string | null>(null);
-
-  const language = LANG_ALIASES[lang] || lang;
-
-  // Pretty-print JSON payloads (explicit ```json or unlabeled-but-parses).
-  let code = raw.replace(/\n$/, '');
-  let effectiveLang = language;
-  if (language === 'json' || (!language && /^[\s]*[{[]/.test(code))) {
-    try {
-      code = JSON.stringify(JSON.parse(code), null, 2);
-      effectiveLang = 'json';
-    } catch {
-      /* leave as-is if not valid JSON */
-    }
-  }
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const hljs = (await import('highlight.js/lib/core')).default;
-        const langs: Record<string, () => Promise<any>> = {
-          javascript: () => import('highlight.js/lib/languages/javascript'),
-          typescript: () => import('highlight.js/lib/languages/typescript'),
-          python: () => import('highlight.js/lib/languages/python'),
-          json: () => import('highlight.js/lib/languages/json'),
-          bash: () => import('highlight.js/lib/languages/bash'),
-          xml: () => import('highlight.js/lib/languages/xml'),
-          css: () => import('highlight.js/lib/languages/css'),
-          markdown: () => import('highlight.js/lib/languages/markdown'),
-          sql: () => import('highlight.js/lib/languages/sql'),
-        };
-        // Register the curated set once (registerLanguage is idempotent).
-        await Promise.all(
-          Object.entries(langs).map(async ([name, load]) => {
-            if (!hljs.getLanguage(name)) hljs.registerLanguage(name, (await load()).default);
-          })
-        );
-        const result = effectiveLang && hljs.getLanguage(effectiveLang)
-          ? hljs.highlight(code, { language: effectiveLang })
-          : hljs.highlightAuto(code);
-        if (active) setHtml(result.value);
-      } catch {
-        if (active) setHtml(null);
-      }
-    })();
-    return () => { active = false; };
-  }, [code, effectiveLang]);
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1500);
-    } catch {
-      setCopied(false);
-    }
-  };
-
-  return (
-    <div className="group my-6 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.08] shadow-inner">
-      <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-2">
-        <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-surface-400">
-          {effectiveLang || 'code'}
-        </span>
-        <button
-          type="button"
-          onClick={copy}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-bold text-surface-400 transition-colors hover:bg-white/10 hover:text-surface-100"
-        >
-          {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-          {copied ? 'Copied' : 'Copy'}
-        </button>
-      </div>
-      <pre className="overflow-x-auto p-4 text-[13px] leading-relaxed text-surface-100">
-        {html !== null
-          ? <code className={`hljs ${effectiveLang ? `language-${effectiveLang}` : ''}`} dangerouslySetInnerHTML={{ __html: html }} />
-          : <code className="hljs">{code}</code>}
-      </pre>
-    </div>
-  );
-}
+// A few common aliases and the highlighted, copyable CodeBlock live in the
+// client island (components/MarkdownInteractive). Everything else in this file
+// renders on the server, so react-markdown + remark-gfm never ship to the
+// browser bundle — only the tiny CodeBlock/CopyButton islands do.
 
 function renderMarkdown(content: string) {
   return (
@@ -383,19 +290,7 @@ function renderMarkdown(content: string) {
 
 function Callout({ block }: { block: Extract<MarkdownBlock, { type: 'callout' }> }) {
   const style = calloutStyles[block.calloutType];
-  const [copied, setCopied] = useState(false);
   const canCopy = block.calloutType === 'prompt';
-
-  const copyContent = async () => {
-    try {
-      await navigator.clipboard.writeText(block.content);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1400);
-    } catch {
-      setCopied(false);
-    }
-  };
-
   const hasHeader = Boolean(block.title) || canCopy;
 
   return (
@@ -408,16 +303,7 @@ function Callout({ block }: { block: Extract<MarkdownBlock, { type: 'callout' }>
               {renderStyledText(block.title)}
             </p>
           ) : <span />}
-          {canCopy && (
-            <button
-              type="button"
-              onClick={copyContent}
-              className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-current/25 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide transition-colors hover:bg-white/50 dark:hover:bg-white/10 ${style.titleClassName}`}
-            >
-              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied ? 'Copied' : 'Copy'}
-            </button>
-          )}
+          {canCopy && <CopyButton text={block.content} className={style.titleClassName} />}
         </div>
       )}
       <div className="callout-content text-current prose-p:my-2 prose-p:leading-relaxed prose-p:text-current prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-li:text-current">

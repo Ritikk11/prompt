@@ -429,12 +429,12 @@ textarea {
 
 .image-shimmer {
   overflow: hidden;
-  background: rgba(226, 232, 240, 0.7);
+  background: rgba(224, 231, 240, 0.9);
   contain: paint;
 }
 
 .dark .image-shimmer {
-  background: rgba(30, 41, 59, 0.75);
+  background: rgba(30, 41, 59, 0.9);
 }
 
 .image-shimmer::before {
@@ -442,13 +442,13 @@ textarea {
   position: absolute;
   inset: 0;
   transform: translateX(-120%);
-  background: linear-gradient(110deg, transparent 8%, rgba(248, 250, 252, 0.95) 45%, transparent 72%);
-  animation: imageShimmer 2.4s ease-in-out infinite;
+  background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.85) 50%, transparent 80%);
+  animation: imageShimmer 1.5s ease-in-out infinite;
   will-change: transform;
 }
 
 .dark .image-shimmer::before {
-  background: linear-gradient(110deg, transparent 8%, rgba(51, 65, 85, 0.95) 45%, transparent 72%);
+  background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.14) 50%, transparent 80%);
 }
 
 /* Snappy, Feather-Light Lightbox Modal Animations */
@@ -975,6 +975,26 @@ body {
   box-shadow:
     0 8px 32px 0 rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.glass-shelf {
+  @apply bg-white/60 backdrop-blur-[14px] backdrop-saturate-150 rounded-b-2xl sm:rounded-b-3xl;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+  border-left: 1px solid rgba(255, 255, 255, 0.7);
+  border-right: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 10px 28px -4px rgba(0, 0, 0, 0.07),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.dark .glass-shelf {
+  @apply bg-[#090b1c]/65 backdrop-blur-[16px] rounded-b-2xl sm:rounded-b-3xl;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 14px 36px 0 rgba(0, 0, 0, 0.45),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Floating panels (the sort dropdown) reuse the bar's frost — 50-60%

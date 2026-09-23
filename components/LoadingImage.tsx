@@ -128,9 +128,8 @@ export default function LoadingImage({
   }, [enabled, reveal, srcValue]);
 
   const settled = loaded || failed || timedOut;
-  const hasTransition = /\btransition\b|\btransition-/.test(className);
   const transitionClass = reveal
-    ? `${hasTransition ? '' : 'transition-[opacity,transform,filter] duration-500 ease-out '}${settled ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-[8px] scale-[1.01]'}`
+    ? `transition-[opacity,transform,filter] duration-[600ms] ease-out ${settled ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-md scale-[1.03]'}`
     : '';
   const image = (
     <Image
@@ -279,9 +278,8 @@ export function LoadingImg({
   }, [srcValue, reveal]);
 
   const settled = loaded || failed || timedOut;
-  const hasTransition = /\btransition\b|\btransition-/.test(className);
   const transitionClass = reveal
-    ? `${hasTransition ? '' : 'transition-[opacity,transform,filter] duration-500 ease-out '}${settled ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-[8px] scale-[1.01]'}`
+    ? `transition-[opacity,transform,filter] duration-[600ms] ease-out ${settled ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-md scale-[1.03]'}`
     : '';
   // While loading or on failure, an unrendered/broken image contributes no
   // intrinsic height, which collapses the wrapper to a thin sliver and squashes

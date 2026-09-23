@@ -5,7 +5,7 @@ import Link from '@/components/PrefetchLink';
 import { ChevronRight } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
 import { matchesTag, matchesCategory, matchesTool } from '@/lib/sections';
-import { isPublicPost } from '@/lib/data';
+import { isPublicPost } from '@/lib/post-filter';
 import DiscoveryPageHero from '@/components/DiscoveryPageHero';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import ScrollReveal from '@/components/ScrollReveal';

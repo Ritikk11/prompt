@@ -52,6 +52,47 @@ export default function PromptItemCard({
   const [expanded, setExpanded] = useState(false);
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
+  const promptSectionRef = useRef<HTMLDivElement>(null);
+  const promptBoxRef = useRef<HTMLDivElement>(null);
+
+  const COLLAPSED_MAX = 260;
+
+  // Smooth, non-clipping accordion for the mobile "show full/less" toggle.
+  // We drive max-height in JS (only on mobile — desktop keeps its own
+  // md:max-h scroll box) so it animates to the prompt's natural height without a
+  // guessed cap: expand grows to scrollHeight then releases to `none`; collapse
+  // snaps to the measured height first so the shrink transition has somewhere to
+  // start, then eases down to the peek and scrolls the prompt back into view.
+  const toggleExpanded = () => {
+    const box = promptBoxRef.current;
+    const next = !expanded;
+    setExpanded(next);
+
+    const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+    if (!box || !isMobile) return;
+
+    if (next) {
+      box.style.maxHeight = `${box.scrollHeight}px`;
+      const onEnd = () => {
+        box.style.maxHeight = 'none';
+        box.removeEventListener('transitionend', onEnd);
+      };
+      box.addEventListener('transitionend', onEnd);
+    } else {
+      box.style.maxHeight = `${box.scrollHeight}px`;
+      // Force a reflow so the browser registers the start height before we
+      // transition down to the collapsed peek.
+      void box.offsetHeight;
+      box.style.maxHeight = `${COLLAPSED_MAX}px`;
+      requestAnimationFrame(() => {
+        const el = promptSectionRef.current;
+        if (el) {
+          const top = el.getBoundingClientRect().top + window.scrollY - 72;
+          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        }
+      });
+    }
+  };
 
   const images = useMemo(() => {
     if (img.urls && img.urls.length > 0) return img.urls.filter(Boolean);
@@ -340,7 +381,7 @@ export default function PromptItemCard({
               <TemplatePrompt originalPrompt={img.prompt} />
             ) : (
               <>
-                <div className="mb-4 flex items-center justify-between">
+                <div ref={promptSectionRef} className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-4 bg-primary-500 rounded-full" />
                     <h3 className="font-bold text-base tracking-tight">Prompt</h3>
@@ -349,9 +390,8 @@ export default function PromptItemCard({
                 </div>
                 <div className="relative mb-4">
                   <div
-                    className={`no-scrollbar overflow-hidden rounded-2xl border border-primary-500/20 bg-primary-50/25 p-5 transition-colors group-hover:bg-primary-50/40 dark:border-primary-400/20 dark:bg-primary-950/25 dark:group-hover:bg-primary-900/30 sm:p-6 md:max-h-[460px] md:overflow-y-auto ${
-                      expanded ? 'max-h-none md:max-h-[460px]' : 'max-h-[260px]'
-                    }`}
+                    ref={promptBoxRef}
+                    className={`no-scrollbar overflow-hidden rounded-2xl border border-primary-500/20 bg-primary-50/25 p-5 transition-[max-height,background-color] duration-500 ease-in-out group-hover:bg-primary-50/40 dark:border-primary-400/20 dark:bg-primary-950/25 dark:group-hover:bg-primary-900/30 sm:p-6 max-h-[260px] md:max-h-[460px] md:overflow-y-auto`}
                   >
                     <p className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-surface-800 dark:text-surface-200 md:text-base selection:bg-primary-500/20">
                       {img.prompt}
@@ -360,13 +400,13 @@ export default function PromptItemCard({
                   {!expanded && (
                     <div
                       aria-hidden
-                      className="pointer-events-none absolute inset-x-0 bottom-0 h-20 rounded-b-2xl bg-gradient-to-t from-surface-50 to-transparent dark:from-surface-800 md:hidden"
+                      className="pointer-events-none absolute inset-x-0 bottom-0 h-20 rounded-b-2xl bg-gradient-to-t from-surface-50 to-transparent dark:from-surface-800 md:hidden transition-opacity duration-300"
                     />
                   )}
                 </div>
                 <button
                   type="button"
-                  onClick={() => setExpanded((prev) => !prev)}
+                  onClick={toggleExpanded}
                   className="btn-glow mb-6 inline-flex w-full items-center justify-center rounded-full border border-white/80 px-4 py-2 text-xs font-semibold text-surface-700 transition-colors dark:border-white/15 dark:text-surface-200 md:hidden"
                 >
                   {expanded ? 'Show less prompt' : 'Show full prompt'}

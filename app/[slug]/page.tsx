@@ -11,14 +11,12 @@ import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
 import { stringifyJsonLd } from '@/lib/json-ld';
 import { isSafePublicSlug } from '@/lib/slug-guard';
 import PostContent from '@/components/PostContent';
-import PostCard from '@/components/PostCard';
-import FilterChipRail from '@/components/FilterChipRail';
-import MarkdownRenderer from '@/components/MarkdownRenderer';
-import ScrollReveal from '@/components/ScrollReveal';
+import dynamic from 'next/dynamic';
 import type { Post } from '@/lib/types';
-import SeoPageContent from '@/components/SeoPageContent';
 import { generateSeoPageMetadata, formatTitleWithBrand } from '@/lib/seo-helpers';
 import { getRelatedPosts, getRecommendedPosts } from '@/lib/related-posts';
+
+const SeoPageContent = dynamic(() => import('@/components/SeoPageContent'));
 
 interface Props {
   params: Promise<{ slug: string }>;

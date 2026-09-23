@@ -56,14 +56,18 @@ async function adminRequest(payload?: any) {
 }
 
 async function postRequest(payload: any) {
-  const supabase = await getSupabaseClient();
-  let { data: { session } } = await supabase.auth.getSession();
-  if (!session?.access_token) {
-    const { data } = await supabase.auth.refreshSession().catch(() => ({ data: { session: null } as any }));
-    session = data.session;
-  }
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+  if (hasStoredSupabaseSession()) {
+    try {
+      const supabase = await getSupabaseClient();
+      let { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        const { data } = await supabase.auth.refreshSession().catch(() => ({ data: { session: null } as any }));
+        session = data.session;
+      }
+      if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+    } catch {}
+  }
 
   const res = await fetch('/api/posts', {
     method: 'POST',

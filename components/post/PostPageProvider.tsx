@@ -11,9 +11,7 @@ import {
 } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import type { User, Subscription } from '@supabase/supabase-js';
-import { getSupabaseClient } from '@/lib/supabase-lazy';
-import { hasStoredSupabaseSession } from '@/lib/browser-auth-state';
+import type { User } from '@supabase/supabase-js';
 import type { LightboxState } from './PostLightboxModal';
 
 const PostLightboxModal = dynamic(() => import('./PostLightboxModal'), { ssr: false });
@@ -58,37 +56,8 @@ export default function PostPageProvider({
   const [lightboxState, setLightboxState] = useState<LightboxState | null>(null);
 
   const feedbackTimerRef = useRef<number | null>(null);
-  const subRef = useRef<Subscription | null>(null);
 
-  // Single deferred Supabase auth session initialization for the whole post page.
-  // Delaying by 2s ensures critical initial page paint + LCP completes without auth contention.
-  useEffect(() => {
-    if (!userProfilesEnabled) return;
-    if (!hasStoredSupabaseSession()) return;
-    let cancelled = false;
-
-    const timer = window.setTimeout(() => {
-      getSupabaseClient().then((supabase) => {
-        if (cancelled) return;
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (!cancelled) setUser(session?.user ?? null);
-        });
-
-        const {
-          data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
-          setUser(session?.user ?? null);
-        });
-        subRef.current = subscription;
-      });
-    }, 2000);
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-      subRef.current?.unsubscribe();
-    };
-  }, [userProfilesEnabled]);
+  // Public prompt browsing runs with zero auth overhead.
 
   const handleLogin = useCallback(() => {
     router.push(`/login?redirectTo=${encodeURIComponent(pathname)}`);

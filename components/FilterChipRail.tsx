@@ -189,10 +189,10 @@ export default function FilterChipRail({
       if (railBackdropRef.current) {
         if (pinned) {
           railBackdropRef.current.classList.remove('hidden');
-          railBackdropRef.current.classList.add('glass-bar');
+          railBackdropRef.current.classList.add('glass-shelf');
         } else {
           railBackdropRef.current.classList.add('hidden');
-          railBackdropRef.current.classList.remove('glass-bar');
+          railBackdropRef.current.classList.remove('glass-shelf');
         }
       }
       if (!pinned) {
@@ -312,18 +312,15 @@ export default function FilterChipRail({
   return (
     <>
       {sticky && <div ref={railAnchorRef} aria-hidden className="h-0" />}
-      {/* Rail: no bounding box — chips scroll edge-to-edge.
-          The pinned frosted-glass backdrop is decoupled as an independent layer
-          without `isolate` so child dropdowns and chips never suffer from backdrop-root
-          cancellation in Chromium/WebKit. */}
+      {/* Rail: chips scroll edge-to-edge within container.
+          When pinned, the container corners are gracefully rounded with .glass-shelf. */}
       <div className={`relative -mx-4 mb-6 flex items-center gap-2.5 px-4 py-2.5 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8${stickyClasses}`}>
-        {/* Pinned rail frosted glass backdrop — instant paint with zero delay */}
         {sticky && (
           <div
             ref={railBackdropRef}
             aria-hidden
             className={`pointer-events-none absolute inset-0 z-0 transform-gpu [backface-visibility:hidden] [transform:translateZ(0)] ${
-              railPinned ? 'glass-bar' : 'hidden'
+              railPinned ? 'glass-shelf' : 'hidden'
             }`}
           />
         )}
