@@ -143,7 +143,7 @@ function FooterContent() {
               {footerTools.map(tool => (
                 <Link
                   key={tool}
-                  href={`/tool/${encodeURIComponent(tool)}`}
+                  href={`/tool/${encodeURIComponent(tool.toLowerCase())}`}
                   prefetch="intent"
                   className="rounded-full border border-white/80 bg-white/60 px-3 py-1 text-xs font-medium text-surface-700 shadow-sm transition-all duration-200 ease-out hover:scale-105 hover:border-primary-400 hover:bg-white/80 hover:text-primary-600 hover:shadow-md active:scale-95 dark:border-white/12 dark:bg-white/[0.08] dark:text-white/85 dark:hover:border-primary-400/60 dark:hover:bg-white/[0.14] dark:hover:text-white"
                 >

@@ -4,7 +4,7 @@
 export const revalidate = 43200;
 
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import ToolContent from './ToolContent';
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
@@ -87,13 +87,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: { absolute: title },
     description,
-    alternates: { canonical: `${siteUrl}/tool/${encodeURIComponent(decodedTool)}` },
+    alternates: { canonical: `${siteUrl}/tool/${encodeURIComponent(decodedTool.toLowerCase())}` },
     openGraph: {
       title,
       description,
       siteName: siteTitle,
       type: 'website',
-      url: `${siteUrl}/tool/${encodeURIComponent(decodedTool)}`,
+      url: `${siteUrl}/tool/${encodeURIComponent(decodedTool.toLowerCase())}`,
       ...(settings.seoSettings?.defaultOgImage ? { images: [{ url: settings.seoSettings.defaultOgImage }] } : {}),
     },
   };
@@ -102,6 +102,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ToolPage({ params }: Props) {
   const { tool } = await params;
   const decodedTool = decodeURIComponent(tool).trim();
+  // Canonicalize to lowercase so /tool/ChatGPT and /tool/chatgpt don't both get
+  // indexed. generateStaticParams only emits lowercase; a mixed-case request is
+  // rendered on demand, caught here, and 301'd to the lowercase URL.
+  if (decodedTool && decodedTool !== decodedTool.toLowerCase()) {
+    permanentRedirect(`/tool/${encodeURIComponent(decodedTool.toLowerCase())}`);
+  }
   const posts = await fetchPostSummaries();
   const settings = await fetchSettings();
 
@@ -128,7 +134,7 @@ export default async function ToolPage({ params }: Props) {
   const jsonLd = generateCollectionJsonLd({
     title: pageTitle,
     description,
-    url: `${siteUrl}/tool/${encodeURIComponent(decodedTool)}`,
+    url: `${siteUrl}/tool/${encodeURIComponent(decodedTool.toLowerCase())}`,
     posts: matchingPosts,
     siteTitle,
     siteUrl,
@@ -150,16 +156,10 @@ export async function generateStaticParams() {
     const [posts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
     const tools = new Set<string>();
     (settings.aiTools || []).forEach(t => {
-      if (t) {
-        tools.add(t);
-        tools.add(t.toLowerCase());
-      }
+      if (t) tools.add(t.toLowerCase());
     });
     (posts || []).forEach(p => getAllTools(p).forEach(t => {
-      if (t) {
-        tools.add(t);
-        tools.add(t.toLowerCase());
-      }
+      if (t) tools.add(t.toLowerCase());
     }));
     return Array.from(tools).filter(Boolean).map(tool => ({ tool }));
   } catch (error) {

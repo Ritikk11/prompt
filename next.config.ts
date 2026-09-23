@@ -94,9 +94,15 @@ const nextConfig: NextConfig = {
       // are still indexed (ranking pages that now 404) and split signals with the
       // canonical /:slug routes, so fold them together permanently.
       { source: '/explore/:slug', destination: '/:slug', permanent: true },
-      // Canonical lowercase tool URLs to prevent duplicate indexing
-      { source: '/tool/ChatGPT', destination: '/tool/chatgpt', permanent: true },
-      { source: '/tool/Gemini', destination: '/tool/gemini', permanent: true },
+      // Tags are filter-only (no dedicated slug pages). Fold any already-indexed
+      // /tag/* URLs into the explore filter so they leave the index and
+      // consolidate. The explore filter matches case-insensitively.
+      { source: '/tag/:tag', destination: '/explore?tag=:tag', permanent: true },
+      // NOTE: tool case-canonicalization (/tool/ChatGPT -> /tool/chatgpt) is done
+      // by an in-page permanentRedirect in app/tool/[tool]/page.tsx, NOT here.
+      // A next.config redirect can't do it: `source` matching is
+      // case-INSENSITIVE, so `/tool/Gemini` -> `/tool/gemini` also matches the
+      // lowercase target and loops (ERR_TOO_MANY_REDIRECTS).
     ];
   },
   async headers() {

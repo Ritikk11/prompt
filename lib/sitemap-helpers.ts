@@ -121,21 +121,8 @@ export async function generateMainSitemapXml(): Promise<string> {
       });
     }
 
-    // 3. Tags
-    if (include.tags ?? true) {
-      const tags = Array.from(new Set(publishedPosts.flatMap(post => post.tags || []).filter(Boolean)));
-      tags.forEach(tag => {
-        const tagPosts = publishedPosts.filter(post => post.tags?.some(item => item.toLowerCase() === tag.toLowerCase()));
-        const lastModified = tagPosts
-          .map(post => new Date(post.createdAt).getTime())
-          .filter(Number.isFinite)
-          .sort((a, b) => b - a)[0];
-        entries.push({
-          url: `${baseUrl}/tag/${encodeURIComponent(tag.toLowerCase())}`,
-          lastModified: lastModified ? new Date(lastModified) : now,
-        });
-      });
-    }
+    // 3. Tags — filter-only (no dedicated /tag/* pages), so nothing to list here.
+    // The tags block was intentionally removed when tags became an explore filter.
 
     // 4. SEO Pages & Static Pages
     if (include.staticPages ?? true) {

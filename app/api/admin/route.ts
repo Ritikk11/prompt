@@ -26,7 +26,6 @@ function revalidateContent(resource: string, data: any, id?: string, admin?: any
       revalidatePath(`/${slug}`);
       submitToIndexNow([`/${slug}`, '/explore']).catch(() => {});
     }
-    (data?.tags || []).forEach((tag: string) => tag && revalidatePath(`/tag/${encodeURIComponent(tag.toLowerCase())}`));
     getAllToolsFromPost(data || {}).forEach((tool) => revalidatePath(`/tool/${encodeURIComponent(tool.toLowerCase())}`));
     revalidatePath('/');
     revalidatePath('/explore');

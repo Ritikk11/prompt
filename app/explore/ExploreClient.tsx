@@ -25,14 +25,20 @@ export default function ExploreClient({
 }) {
   const searchParams = useSearchParams();
   const urlCategory = searchParams ? searchParams.get('category') : null;
+  const urlTag = searchParams ? searchParams.get('tag') : null;
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'trending'>('latest');
   const [activeCategory, setActiveCategory] = useState<string | null>(initialCategory || (urlCategory ? decodeURIComponent(urlCategory) : null));
+  const [activeTag, setActiveTag] = useState<string | null>(urlTag ? decodeURIComponent(urlTag) : null);
 
   useEffect(() => {
     if (urlCategory) {
       setActiveCategory(decodeURIComponent(urlCategory));
     }
   }, [urlCategory]);
+
+  useEffect(() => {
+    setActiveTag(urlTag ? decodeURIComponent(urlTag) : null);
+  }, [urlTag]);
 
   const itemsPerLoad = settings.features?.infiniteScrollItems || 20;
   const [displayedCount, setDisplayedCount] = useState(itemsPerLoad);
@@ -62,6 +68,10 @@ export default function ExploreClient({
       (p.category && p.category.toLowerCase() === target) ||
       (p.categories && p.categories.some(c => c.toLowerCase() === target))
     );
+  }
+  if (activeTag) {
+    const target = activeTag.toLowerCase();
+    filtered = filtered.filter(p => p.tags?.some(t => t.toLowerCase() === target));
   }
 
   if (sortBy === 'latest') {
@@ -118,6 +128,22 @@ export default function ExploreClient({
             title="Clear category filter"
           >
             <span className="capitalize">{activeCategory}</span>
+            <X className="w-3.5 h-3.5 opacity-80" />
+          </button>
+        </div>
+      )}
+
+      {/* Active Tag Filter Pill */}
+      {activeTag && (
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-surface-400 select-none">Tag:</span>
+          <button
+            type="button"
+            onClick={() => setActiveTag(null)}
+            className="inline-flex h-8 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border border-primary-600 bg-primary-600 px-3.5 text-[13px] font-medium text-white shadow-sm outline-none transition-[background-color,border-color,color,transform,opacity] duration-150 ease-out transform-gpu hover:opacity-90 active:scale-[0.98] dark:border-primary-500 dark:bg-primary-500"
+            title="Clear tag filter"
+          >
+            <span className="capitalize">{activeTag}</span>
             <X className="w-3.5 h-3.5 opacity-80" />
           </button>
         </div>

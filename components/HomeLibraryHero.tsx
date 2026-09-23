@@ -113,7 +113,7 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
               {popularTags.map(tag => (
                 <Link
                   key={tag}
-                  href={`/tag/${encodeURIComponent(tag.toLowerCase())}`}
+                  href={`/explore?tag=${encodeURIComponent(tag.toLowerCase())}`}
                   prefetch={true}
                   className={`rounded-full px-3.5 py-1.5 text-xs font-bold text-surface-700 ${glassPill}`}
                 >
@@ -185,7 +185,7 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
                 return (
                   <Link
                     key={tool}
-                    href={`/tool/${encodeURIComponent(tool)}`}
+                    href={`/tool/${encodeURIComponent(tool.toLowerCase())}`}
                     prefetch={true}
                     className={`inline-flex h-9 origin-center items-center justify-center gap-2 rounded-full px-4 text-xs font-bold text-surface-700 ${glassPill}`}
                   >
