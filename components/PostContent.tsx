@@ -237,7 +237,7 @@ export default function PostContent({
 
     return (
       <div
-        className="relative mb-12 w-full overflow-hidden rounded-[32px] border border-white/10 text-white shadow-2xl backdrop-blur-md lg:backdrop-blur-2xl p-5 sm:p-8 lg:p-12"
+        className="relative mb-12 w-full overflow-hidden rounded-[32px] border border-white/10 text-white shadow-2xl lg:backdrop-blur-2xl p-5 sm:p-8 lg:p-12"
         style={{ backgroundColor: cardBg }}
       >
         {/* Aurora Nebula: Compact centered on mobile, expansive corner-reaching only on desktop.
@@ -279,7 +279,7 @@ export default function PostContent({
                 height={Math.round(1000 / heroRatio)}
                 fetchPriority="high"
                 loading="eager"
-                decoding="sync"
+                decoding="async"
                 className="absolute inset-0 h-full w-full rounded-[28px] object-cover"
               />
             ) : (

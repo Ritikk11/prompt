@@ -184,7 +184,7 @@ export default async function PostPage({ params }: Props) {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
   const [allPosts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
-  const rawRelatedPosts = getRelatedPosts(post, allPosts as Post[], { limit: 16 });
+  const rawRelatedPosts = getRelatedPosts(post, allPosts as Post[], { limit: 8 });
   const rawRecommendedPosts = getRecommendedPosts(post, allPosts as Post[], rawRelatedPosts, { limit: 6 });
 
   const stripHeavyPostData = (p: Post): Post => ({
