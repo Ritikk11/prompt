@@ -115,7 +115,7 @@ function FooterContent() {
           <div className="lg:col-span-4">
             <Link href="/" prefetch="intent" className="group flex items-center gap-2.5 mb-4 w-fit transition-transform duration-200 active:scale-[0.98]">
               <span className="relative h-8 w-8 sm:h-9 sm:w-9 shrink-0 overflow-hidden rounded-xl transition-transform duration-300 group-hover:scale-105">
-                <Image src={settings.siteLogo || '/icon-190x190.webp'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" />
+                <Image src={settings.siteLogo || '/icon-72x72.webp'} alt={settings.siteTitle || 'Site Logo'} fill sizes="36px" className="object-cover" referrerPolicy="no-referrer" />
               </span>
               <SiteTitle title={settings.siteTitle} className="text-xl sm:text-2xl" />
             </Link>
