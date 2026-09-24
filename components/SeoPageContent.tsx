@@ -7,7 +7,6 @@ import type { Post, SiteSettings } from '@/lib/types';
 import { matchesTag, matchesCategory, matchesTool } from '@/lib/sections';
 import { isPublicPost } from '@/lib/post-filter';
 import DiscoveryPageHero from '@/components/DiscoveryPageHero';
-import MarkdownRenderer from '@/components/MarkdownRenderer';
 import ScrollReveal from '@/components/ScrollReveal';
 import FilterChipRail from '@/components/FilterChipRail';
 import MasonryGrid from '@/components/MasonryGrid';
@@ -18,9 +17,10 @@ interface SeoPageContentProps {
   seoPage: any;
   allPosts: Post[];
   settings: SiteSettings;
+  introContent?: React.ReactNode;
 }
 
-export default function SeoPageContent({ seoPage, allPosts, settings }: SeoPageContentProps) {
+export default function SeoPageContent({ seoPage, allPosts, settings, introContent }: SeoPageContentProps) {
   const { tags = [], categories = [], aiTools = [] } = seoPage;
 
   // Filter posts that match page matching rules
@@ -165,7 +165,7 @@ export default function SeoPageContent({ seoPage, allPosts, settings }: SeoPageC
       {/* Optional Markdown Intro Content */}
       {seoPage.introContent && (
         <div className="max-w-3xl mb-10 prose dark:prose-invert">
-          <MarkdownRenderer>{seoPage.introContent}</MarkdownRenderer>
+          {introContent}
         </div>
       )}
 

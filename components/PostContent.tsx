@@ -1,4 +1,5 @@
 import Link from '@/components/PrefetchLink';
+import { Suspense } from 'react';
 import Image from 'next/image';
 import {
   Clock,
@@ -17,7 +18,8 @@ import {
 import type { Post, SiteSettings } from '@/lib/types';
 import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
 import { isUserOwnedPost, EDITORIAL_TEAM_NAME } from '@/lib/authors';
-import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
+import { getThumbnailImageUrl } from '@/lib/image-url';
+import { getPostHeroImageProps } from '@/lib/post-image';
 import { sanitizeHeroPalette, DEFAULT_HERO_PALETTE } from '@/lib/hero-palette';
 import LoadingImage, { LoadingImg } from '@/components/LoadingImage';
 import ToolBadge from '@/components/ToolBadge';
@@ -53,8 +55,6 @@ const defaultKeepExploring = {
     { label: 'Browse by AI Tool', href: '/tool/chatgpt', icon: 'clipboard' },
   ],
 };
-
-const HERO_SIZES = '(max-width: 640px) 200px, (max-width: 1024px) 240px, 320px';
 
 function alphaHex(hex: string, alpha: number) {
   const clean = hex.replace('#', '');
@@ -112,11 +112,7 @@ export default function PostContent({
 
   const fallbackPromptImageUrl = '';
   const originalMainImageUrl = post.thumbnailUrl || post.images?.[0]?.url || fallbackPromptImageUrl;
-  const mainPromptImageUrl = getPromptImageUrl(originalMainImageUrl, { width: 768, quality: 78 });
-
-  const heroImageSrcSet = [360, 480, 768, 1280]
-    .map((w) => `${getPromptImageUrl(originalMainImageUrl || fallbackPromptImageUrl, { width: w, quality: 78 })} ${w}w`)
-    .join(', ');
+  const heroImage = getPostHeroImageProps(originalMainImageUrl);
 
   const toolLabel =
     heroTools.length === 0
@@ -277,11 +273,12 @@ export default function PostContent({
           >
             {mainImage ? (
               <img
-                src={mainPromptImageUrl || mainImage}
-                srcSet={heroImageSrcSet || undefined}
-                sizes={HERO_SIZES}
+                {...heroImage}
                 alt={post.title}
+                width={1000}
+                height={Math.round(1000 / heroRatio)}
                 fetchPriority="high"
+                loading="eager"
                 decoding="sync"
                 className="absolute inset-0 h-full w-full rounded-[28px] object-cover"
               />
@@ -342,7 +339,7 @@ export default function PostContent({
     const firstTool = tools[0];
     const firstToolInfo = firstTool ? getToolInfo(firstTool, settings?.toolDetails) : null;
     const itemImageUrl = getThumbnailImageUrl(item.thumbnailUrl || item.images?.[0]?.url || '', {
-      width: 220,
+      width: 128,
       quality: 72,
     });
     return (
@@ -628,14 +625,15 @@ export default function PostContent({
               </div>
               <div className="space-y-12">
                 {(post.images || []).map((img, index) => (
-                  <PromptItemCard
-                    key={img.id || index}
-                    img={img}
-                    index={index}
-                    post={post}
-                    settings={settings}
-                    showSkeleton={showSkeleton}
-                  />
+                  <Suspense key={img.id || index} fallback={null}>
+                    <PromptItemCard
+                      img={img}
+                      index={index}
+                      post={post}
+                      settings={settings}
+                      showSkeleton={showSkeleton}
+                    />
+                  </Suspense>
                 ))}
               </div>
             </div>
@@ -772,7 +770,7 @@ export default function PostContent({
 
         {/* Related Posts Section (MasonryGrid unchanged client island, 0 CLS risk) */}
         {showRecommendedPosts && relatedPosts.length > 0 && (
-          <div className="border-t border-white/80 dark:border-white/10 pt-16">
+          <div className="border-t border-white/80 dark:border-white/10 pt-16" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 1600px' }}>
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
                 <div className="w-1.5 h-8 bg-primary-500 rounded-full underline-offset-8" />
@@ -789,7 +787,9 @@ export default function PostContent({
             </div>
             <ScrollReveal>
               <div className="mb-16">
-                <MasonryGrid posts={relatedPosts} settings={settings} renderAdSlot={false} disablePriority />
+                <Suspense fallback={null}>
+                  <MasonryGrid posts={relatedPosts} settings={settings} renderAdSlot={false} disablePriority />
+                </Suspense>
               </div>
             </ScrollReveal>
           </div>
@@ -864,7 +864,7 @@ export default function PostContent({
 
         {/* Recommended Posts Section */}
         {showRecommendedPosts && recommendedPosts.length > 0 && (
-          <div className="mt-16 border-t border-white/80 pt-10 dark:border-white/10 sm:mt-20 sm:pt-16">
+          <div className="mt-16 border-t border-white/80 pt-10 dark:border-white/10 sm:mt-20 sm:pt-16" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 800px' }}>
             <div className="mb-8 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-500">
@@ -888,7 +888,9 @@ export default function PostContent({
             </div>
             <ScrollReveal>
               <div className="mb-16">
-                <MasonryGrid posts={recommendedPosts} settings={settings} renderAdSlot={false} disablePriority />
+                <Suspense fallback={null}>
+                  <MasonryGrid posts={recommendedPosts} settings={settings} renderAdSlot={false} disablePriority />
+                </Suspense>
               </div>
             </ScrollReveal>
           </div>

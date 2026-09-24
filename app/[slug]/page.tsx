@@ -7,10 +7,12 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { preload, preconnect } from 'react-dom';
 import { getPostBySlugOrId, fetchPostSummaries, fetchSeoPages, getSeoPageBySlug, isPublicPost, fetchSettings } from '@/lib/data';
-import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
+import { getThumbnailImageUrl } from '@/lib/image-url';
+import { getPostHeroImageProps } from '@/lib/post-image';
 import { stringifyJsonLd } from '@/lib/json-ld';
 import { isSafePublicSlug } from '@/lib/slug-guard';
 import PostContent from '@/components/PostContent';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import dynamic from 'next/dynamic';
 import type { Post } from '@/lib/types';
 import { generateSeoPageMetadata, formatTitleWithBrand } from '@/lib/seo-helpers';
@@ -168,7 +170,14 @@ export default async function PostPage({ params }: Props) {
         }
       }
     }
-    return <SeoPageContent seoPage={seoPage} allPosts={allPosts as Post[]} settings={settings} />;
+    return (
+      <SeoPageContent
+        seoPage={seoPage}
+        allPosts={allPosts as Post[]}
+        settings={settings}
+        introContent={seoPage.introContent ? <MarkdownRenderer>{seoPage.introContent}</MarkdownRenderer> : null}
+      />
+    );
   }
 
   if (!post) notFound();
@@ -199,23 +208,14 @@ export default async function PostPage({ params }: Props) {
   const schemaType = post.schemaType || settings.seoSettings?.schemaType || 'Article';
   const mainImage = post.thumbnailUrl || post.images[0]?.url;
 
-  // Preload the LCP candidates so the browser fetches them before PostContent
-  // hydrates. Two candidates: the hero image (thumbnail) and the first gallery
-  // image, which Lighthouse identifies as the mobile LCP element. The srcset
-  // widths/sizes MUST match the strings in PostContent.tsx (heroImageSrcSet /
-  // buildGallerySrcSet) or the browser fetches the LCP image twice — the
-  // preload key is the fully resolved URL, which srcset selection changes.
-  const buildSrcSet = (url: string | undefined, widths: number[]) =>
-    url
-      ? widths.map((w) => `${getPromptImageUrl(url, { width: w, quality: 78 })} ${w}w`).join(', ')
-      : undefined;
-  const galleryFirstImage = post.images[0]?.url;
-  const isSameAsMain = galleryFirstImage && (galleryFirstImage === mainImage || !post.thumbnailUrl || post.thumbnailUrl === galleryFirstImage);
+  // The hero is the measured LCP element. Share its exact responsive source
+  // with the markup so the preload cannot select a different image variant.
+  const heroImage = getPostHeroImageProps(mainImage);
   const preloadTargets = [
     mainImage && {
-      url: getPromptImageUrl(mainImage, { width: 768, quality: 78 }),
-      srcSet: buildSrcSet(mainImage, [360, 480, 768, 1280]),
-      sizes: '(max-width: 640px) 200px, (max-width: 1024px) 240px, 320px',
+      url: heroImage.src,
+      srcSet: heroImage.srcSet,
+      sizes: heroImage.sizes,
       priority: 'high' as const,
     },
   ].filter(Boolean) as { url: string; srcSet?: string; sizes: string; priority: 'high' | 'low' }[];

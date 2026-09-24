@@ -20,10 +20,12 @@ import { LoadingImg } from '@/components/LoadingImage';
 import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
 import { usePostPage } from './PostPageProvider';
 
-const GALLERY_SIZES = '(max-width: 768px) calc(100vw - 48px), 680px';
+// Native lazy images can use their actual laid-out width. The fallback matches
+// the padded two-column card, including the 320px sidebar from lg upwards.
+const GALLERY_SIZES = 'auto, (max-width: 639px) calc(100vw - 56px), (max-width: 767px) calc(100vw - 64px), (max-width: 1023px) calc(50vw - 60px), (max-width: 1151px) calc(50vw - 236px), 340px';
 const buildGallerySrcSet = (url?: string) => {
   if (!url) return undefined;
-  return [480, 640, 768, 1024]
+  return [320, 360, 480, 640, 768, 1024]
     .map((w) => `${getPromptImageUrl(url, { width: w, quality: 74 })} ${w}w`)
     .join(', ');
 };
@@ -199,7 +201,7 @@ export default function PromptItemCard({
   const tryTools = getTryToolsForImage();
 
   return (
-    <div className="group relative overflow-hidden rounded-3xl border border-white/80 bg-white/60 shadow-lg backdrop-blur-xl backdrop-saturate-150 transition-all duration-300 hover:shadow-2xl dark:border-white/10 dark:bg-white/[0.08]">
+    <div className="group relative overflow-hidden rounded-3xl border border-white/80 bg-white/60 shadow-lg backdrop-blur-xl backdrop-saturate-150 transition-all duration-300 hover:shadow-2xl dark:border-white/10 dark:bg-white/[0.08]" style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 800px' }}>
       <div className="grid grid-cols-1 md:grid-cols-2">
         {/* Left: Interactive Image Gallery */}
         <div className="relative self-start p-3 sm:p-4">
@@ -229,9 +231,9 @@ export default function PromptItemCard({
                       alt={`${post.title}${img.aiTool ? ` — ${img.aiTool}` : ''} prompt ${index + 1}${images.length > 1 ? ` variation ${i + 1}` : ''}`}
                       showSkeleton={showSkeleton && i === 0}
                       priority={index === 0 && i === 0}
-                      loading={index === 0 ? 'eager' : 'lazy'}
-                      fetchPriority={index === 0 && i === 0 ? 'high' : 'auto'}
-                      decoding={index === 0 && i === 0 ? 'sync' : 'async'}
+                      loading="lazy"
+                      fetchPriority="auto"
+                      decoding="async"
                       wrapperClassName="w-full"
                       aspectRatio={i === 0 && img.width && img.height ? img.width / img.height : undefined}
                       className="block h-auto w-full rounded-xl transition-transform duration-300 ease-out group-hover/img:scale-[1.02]"

@@ -302,7 +302,7 @@ export function LoadingImg({
       className={`relative block overflow-hidden${placeholderSizing} ${wrapperClassName}`}
       style={aspectRatio ? { aspectRatio: `${aspectRatio}` } : undefined}
     >
-      {(enabled || failed) && !settled ? (
+      {(reveal || failed) && !settled ? (
         <span className="pointer-events-none absolute inset-0 z-[1] image-shimmer" aria-hidden="true" />
       ) : null}
       {failed && !loaded ? <ImageFallback compact /> : null}
@@ -314,6 +314,12 @@ export function LoadingImg({
         loading={props.loading ?? (priority ? 'eager' : 'lazy')}
         fetchPriority={props.fetchPriority ?? (priority ? 'high' : undefined)}
         decoding={props.decoding ?? 'async'}
+        // Explicit intrinsic width/height (derived from the reserved ratio when
+        // real dims aren't passed) so Lighthouse's "explicit width and height"
+        // audit passes and the browser knows the ratio before load. CSS still
+        // controls the displayed size.
+        width={props.width ?? (aspectRatio ? 1000 : undefined)}
+        height={props.height ?? (aspectRatio ? Math.round(1000 / aspectRatio) : undefined)}
         onLoad={(event) => {
           setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
           onLoad?.(event);
