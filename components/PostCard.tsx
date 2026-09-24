@@ -134,6 +134,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
               sizes={thumbnailSizes}
               alt={post.title}
               showSkeleton={showSkeleton}
+              aspectRatio={cardRatio}
               className="block h-auto w-full transition-transform duration-700 ease-in-out group-hover:scale-[1.02]"
               referrerPolicy="no-referrer"
               priority={priority}
