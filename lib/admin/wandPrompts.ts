@@ -2,17 +2,15 @@
 // All wands share SITE_PREAMBLE so brand voice changes happen in one place.
 
 // Shared across every generation path (wands, post/article generators, AI
-// Studio). The model names and the "only 4 tools" rule must be identical
+// Studio). The model names and the "only 2 tools" rule must be identical
 // everywhere or generated content drifts back to generic internet knowledge.
 export const TOOLS_MODELS_RULES = `SUPPORTED TOOLS & MODELS (strict — never deviate):
-- This site supports ONLY these AI image tools: ChatGPT, Gemini, Grok, Qwen.
+- This site supports ONLY these AI image tools: ChatGPT, Gemini.
 - Current models, name them exactly like this:
   - ChatGPT → "GPT Image 2" (never "DALL-E", "DALL-E 3", or "GPT-4o image")
   - Gemini → "Nano Banana 2" or "Nano Banana Pro" (never "Imagen")
-  - Grok → "Grok Imagine"
-  - Qwen → "Qwen-Image"
-- NEVER mention or recommend any other AI tool or model — no Midjourney, DALL-E, Stable Diffusion, Claude, Leonardo, Ideogram, Flux, Firefly, Perplexity, Imagen, etc. Not in prose, examples, comparisons, tables, :::model callouts, FAQs, or tags.
-- If existing content or the instruction mentions an unsupported tool, silently swap it for the closest supported tool instead of repeating it.`;
+- NEVER mention or recommend any other AI tool or model — no Grok, Qwen, Grok Imagine, Qwen-Image, Midjourney, DALL-E, Stable Diffusion, Claude, Leonardo, Ideogram, Flux, Firefly, Perplexity, Imagen, etc. Not in prose, examples, comparisons, tables, :::model callouts, FAQs, or tags.
+- If existing content or the instruction mentions an unsupported tool, silently swap it for the closest supported tool (Grok → ChatGPT, Qwen → Gemini) instead of repeating it.`;
 
 export const HUMAN_WRITING_RULES = `STRICT HUMAN WRITING RULES (mandatory — write like a real person, never like an AI):
 1. USE NATURAL LANGUAGE & ORDINARY WORDS:
@@ -59,7 +57,7 @@ export const HUMAN_WRITING_RULES = `STRICT HUMAN WRITING RULES (mandatory — wr
    - Use facts, numbers, visual descriptions, and specific tips instead of piling on hype adjectives.
    - Prioritize clear, direct, human communication. Focus on human plausibility: write what a knowledgeable person would actually write.`;
 
-export const SITE_PREAMBLE = `You are the in-house copywriter for 'PromptSoul' (promptsoul.in), a curated gallery of AI image-generation prompts for tools like ChatGPT, Gemini, Grok, and Qwen. Visitors browse ready-to-use prompts with real example images. The tone is confident, practical, and human — never robotic.
+export const SITE_PREAMBLE = `You are the in-house copywriter for 'PromptSoul' (promptsoul.in), a curated gallery of AI image-generation prompts for ChatGPT and Gemini. Visitors browse ready-to-use prompts with real example images. The tone is confident, practical, and human — never robotic.
 
 ${HUMAN_WRITING_RULES}
 
@@ -70,7 +68,12 @@ export const RAW_ONLY = `Return ONLY the requested text — no quotes, no markdo
 export const CALLOUT_RULES = `Article bodies support custom markdown callouts: :::tip, :::creative, :::model, :::prompt, :::warning, :::info, :::note, :::important — plus inline highlights {mark:...}, {primary:...}, {green:...}, {red:...}, {kbd:...}. The word after ::: only sets the block color and is never shown as a label. Either add a short, specific title on the same line (e.g. ":::tip Lock the pose with a reference") or leave the block untitled; NEVER title a block with the bare words "Tip", "Warning", "Note", etc. Close each block with ::: on its own line. Never use H1 (#); start at H2 (##).`;
 
 const META_TITLE_RULES = `Strict SEO title, max 55-60 characters, front-load the main keyword in a natural, cohesive phrase. NEVER write a comma-less list of disconnected keywords (e.g. avoid 'Word Word Word Word Prompts'); make it read like a genuine compelling title with prepositions/conjunctions (e.g. 'for', 'with', '&') so search engines do not rewrite it.`;
-const META_DESC_RULES = `Strict SEO meta description, 140-160 characters, natural sentence with a reason to click.`;
+const META_DESC_RULES = `Strict SEO meta description (this is conversion copy, not ranking copy — it earns the click):
+- 120-155 characters total, with the full core message inside the first ~110 (mobile SERPs truncate near 120; desktop near 160).
+- Unique to this page: expand on the title, never repeat or paraphrase it. Zero boilerplate — no "Discover the best...", "Welcome to...", "Explore our..." openings, and never the same sentence shape as another page's description. If the copy is generic, Google rewrites it or replaces it with generated text.
+- Active voice, verb-led where natural, the searcher as the subject ("Copy the prompt, paste it into GPT Image 2, and...") — passive and stuffed phrasing reads dull and gets skipped.
+- One concrete hook: a number, a visual detail from the images, the exact model name, or what's included free. No exclamation marks, no false urgency.
+- Weave the main keyword in once, naturally; never list keywords. No double quotes (they break the HTML attribute).`;
 
 // ---------- AI Studio (free-form admin chat) ----------
 
@@ -106,9 +109,9 @@ export const postPrompts = {
   title: (tagsStr: string) =>
     `${SITE_PREAMBLE}\nWrite a single catchy, highly clickable, human-sounding title (max 60 chars) for a new AI prompt post with these tags: ${tagsStr || 'various ai tools'}. ${RAW_ONLY}`,
   description: (title: string) =>
-    `${SITE_PREAMBLE}\nWrite a short, punchy 1-2 sentence summary for the AI prompt post titled "${title}". Focus on the visual aesthetic and what the prompt achieves. ${RAW_ONLY}`,
+    `${SITE_PREAMBLE}\nWrite a short, punchy 1-2 sentence summary for the AI prompt post titled "${title}". Focus on the visual aesthetic and what the prompt achieves. Vary the shape every post: rotate among openings (the subject itself, the mood or setting, the finished result, the technique that makes it work) and NEVER default to "Create a..." / "Generate a..." / "Discover..." — that template is banned. One sentence may be enough; stop when it's said. ${RAW_ONLY}`,
   extendedDescription: (title: string) =>
-    `${SITE_PREAMBLE}\n${CALLOUT_RULES}\nWrite a detailed, Markdown-formatted article about the AI prompt post titled "${title}". Make it conversational and focused on art direction, visual style, and practical tips for using the prompt. Use H2/H3 structure and the custom callouts where genuinely useful — don't overuse them. ${RAW_ONLY}`,
+    `${SITE_PREAMBLE}\n${CALLOUT_RULES}\nWrite the extended description (the long-form body shown on the post page) for the AI prompt post titled "${title}".\n\nSEO JOB:\n- Answer the search intent in the first two sentences: name the look/subject and what the prompt produces, in the words a searcher would type, woven into natural prose (never a keyword list).\n- 350-650 words of Markdown. Every paragraph earns its place; keep paragraphs short and self-contained so they read well as search snippets and can be quoted by AI answers.\n- Descriptive H2/H3 headings phrased like real queries or concrete observations about THIS subject (e.g. "Lighting that makes the lehenga read on camera"), never generic labels like "Introduction", "Tips", "How to Use", "Conclusion".\n- Cover what actually changes the output: prompt wording choices, the exact supported model to pick, subject-specific details (lighting, wardrobe, pose, framing, palette), and the common failure modes with their fixes. Concrete detail ranks and converts; adjectives do neither.\n- Use 1-2 callouts (:::tip / :::model / :::prompt) only where they genuinely help — never as decoration.\n\nANTI-REPETITION (mandatory — every post must read differently):\n- Never reuse one article skeleton. Pick the approach that fits THIS subject and rotate across posts: open with a visual scene-setter, or with the plain answer of what you get, or mid-walkthrough on the first prompt line, or with the mistake most people make first.\n- Vary the section set and order per post — some posts get three H2s, some four with an H3 under one, some two plus a callout-led block. Never emit the same heading sequence or the same callout placement as a previous post.\n- Vary sentence rhythm and paragraph lengths; finish where the content finishes — no wrap-up paragraph.\n\n${RAW_ONLY}`,
   seoTitle: (title: string) =>
     `${SITE_PREAMBLE}\n${META_TITLE_RULES}\nWrite it for an AI prompt post titled "${title}", using high-volume search keywords for AI art and the visual subject. ${RAW_ONLY}`,
   seoDescription: (title: string) =>
@@ -173,7 +176,7 @@ const homepageBlockContext: Record<string, string> = {
   howTo: 'the "How it works" block: 3 steps showing visitors how to find a prompt, copy it, and generate their own image',
   reviewProcess: 'the "Review process" block: cards explaining how prompts are curated and quality-checked before publishing',
   promptOfDay: 'the "Prompt of the day" block: a daily featured prompt pick',
-  supportedTools: 'the "Supported tools" block: which AI generators (ChatGPT, Gemini, Grok, Qwen, etc.) the prompts work with',
+  supportedTools: 'the "Supported tools" block: which AI generators (ChatGPT, Gemini) the prompts work with',
   guides: 'the "Guides" block: long-form how-to articles about AI image prompting',
   blog: 'the "Blog" block: latest articles and prompt news',
   creatorFeedback: 'the "Creator feedback" block: testimonials from people using the prompts',
