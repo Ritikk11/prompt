@@ -21,9 +21,12 @@ import { downloadImage, getPromptImageUrl, getThumbnailImageUrl } from '@/lib/im
 import { showToast } from '@/components/ui/ToastContainer';
 import { usePostPage } from './PostPageProvider';
 
-// Native lazy images can use their actual laid-out width. The fallback matches
-// the padded two-column card, including the 320px sidebar from lg upwards.
-const GALLERY_SIZES = 'auto, (max-width: 639px) calc(100vw - 56px), (max-width: 767px) calc(100vw - 64px), (max-width: 1023px) calc(50vw - 60px), (max-width: 1151px) calc(50vw - 236px), 340px';
+// Viewport-based sizes (NOT `sizes="auto"`): these images live inside a
+// content-visibility:auto card and a translateX carousel, so `auto` measured a
+// ~0 rendered width for off-screen/variant slides and picked the smallest srcset
+// candidate — upscaled to a blurry image when shown. Explicit media widths pick
+// the right variant at parse time regardless of layout/measurement timing.
+const GALLERY_SIZES = '(max-width: 639px) calc(100vw - 56px), (max-width: 767px) calc(100vw - 64px), (max-width: 1023px) calc(50vw - 60px), (max-width: 1151px) calc(50vw - 236px), 340px';
 const buildGallerySrcSet = (url?: string) => {
   if (!url) return undefined;
   return [320, 360, 480, 640, 768, 1024]
