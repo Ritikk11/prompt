@@ -124,12 +124,15 @@ export function getToolInfo(tool: string, customDetails?: Record<string, {logo?:
   return { color: localFallback?.color || 'bg-surface-500', logo: localFallback?.logo || '', logoScale: localFallback?.logoScale };
 }
 
-// Server-only settings bodies (legal/static page markdown, article overrides)
-// that no client component reads. Stripping them wherever full settings
-// crosses into a client tree keeps ~80 kB out of every page's flight payload.
+// Server-only settings bodies (legal/static page markdown) that no client
+// component reads. Stripping them wherever full settings crosses into a client
+// tree keeps ~60 kB out of every page's flight payload.
+// NOTE: articleThumbnails + articleOverrides are NOT server-only — lib/content
+// reads them client-side to resolve guide/blog card thumbnails, so they stay in
+// the client settings or homepage article thumbs fall back to gradients.
 const SERVER_ONLY_SETTINGS_KEYS = [
   'staticPages', 'pageTerms', 'pagePrivacy', 'pageCookies', 'pageDisclaimer',
-  'pageAbout', 'pageContact', 'pageDmca', 'articleOverrides', 'articleThumbnails',
+  'pageAbout', 'pageContact', 'pageDmca',
 ] as const;
 
 export function getClientSettings<T extends Record<string, any>>(settings: T): T {
