@@ -4933,25 +4933,56 @@ function AdminInner() {
                                 Attached Images ({promptUrls.length}) — First is Cover
                               </label>
                               <div className="flex flex-wrap gap-2.5">
-                                {promptUrls.map((u, imgIndex) => (
-                                  <div 
-                                    key={imgIndex} 
-                                    className={`relative w-24 h-24 rounded-xl overflow-hidden border-2 bg-surface-100 dark:bg-surface-800 group/thumb shadow-sm transition-all ${
-                                      imgIndex === 0 ? 'border-primary-500 ring-2 ring-primary-500/20' : 'border-surface-200 dark:border-surface-700'
-                                    }`}
-                                  >
-                                    {u === 'Uploading...' ? (
-                                      <div className="w-full h-full flex items-center justify-center text-[10px] text-surface-400 font-medium">Uploading...</div>
-                                    ) : (
-                                      <>
-                                        <Image src={u} alt="" fill className="object-cover" sizes="100px" referrerPolicy="no-referrer" />
-                                        {/* Touch devices never fire hover, so the actions (Cover / Thumb / delete) must stay visible there; pointing devices keep the clean hover reveal. */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/40 to-black/10 opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-1 p-1 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/thumb:opacity-100">
-                                          {imgIndex !== 0 && (
+                                {promptUrls.map((u, imgIndex) => {
+                                  const isUploading = u === 'Uploading...';
+                                  const isCover = imgIndex === 0;
+                                  return (
+                                    <div 
+                                      key={imgIndex} 
+                                      className={`flex flex-col w-32 sm:w-36 rounded-xl border bg-white/70 dark:bg-white/[0.04] p-1.5 shadow-sm transition-all ${
+                                        isCover 
+                                          ? 'border-primary-500/60 ring-2 ring-primary-500/20' 
+                                          : 'border-black/[0.08] dark:border-white/10 hover:border-black/20 dark:hover:border-white/20'
+                                      }`}
+                                    >
+                                      {/* Clean Image Preview (Zero Overlays Blocking View) */}
+                                      <div 
+                                        className="relative w-full aspect-square rounded-lg overflow-hidden border border-black/5 dark:border-white/5 bg-surface-100 dark:bg-surface-800 shrink-0 group/img cursor-pointer"
+                                        onClick={() => !isUploading && window.open(u, '_blank')}
+                                        title={isUploading ? 'Uploading...' : 'Click to preview full image'}
+                                      >
+                                        {isUploading ? (
+                                          <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-[10px] text-surface-400 font-medium">
+                                            <Loader2 className="w-4 h-4 animate-spin text-primary-500" />
+                                            <span>Uploading...</span>
+                                          </div>
+                                        ) : (
+                                          <>
+                                            <Image 
+                                              src={u} 
+                                              alt={`Attached ${imgIndex + 1}`} 
+                                              fill 
+                                              className="object-cover transition-transform duration-200 group-hover/img:scale-105" 
+                                              sizes="(max-width: 640px) 128px, 144px" 
+                                              referrerPolicy="no-referrer" 
+                                            />
+                                            {isCover && (
+                                              <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-primary-600/90 text-white text-[8px] font-bold uppercase tracking-wider shadow-xs pointer-events-none backdrop-blur-xs">
+                                                Cover
+                                              </span>
+                                            )}
+                                          </>
+                                        )}
+                                      </div>
+
+                                      {/* Action Controls Outside of the Image */}
+                                      {!isUploading && (
+                                        <div className="flex items-center gap-1 mt-1.5 w-full">
+                                          {!isCover && (
                                             <button
                                               type="button"
                                               onClick={() => setPromptCoverImage(idx, imgIndex)}
-                                              className="p-1 rounded-md bg-primary-600 text-white hover:bg-primary-700 text-[9px] font-bold shadow"
+                                              className="flex-1 py-1 px-1 rounded-md bg-primary-500/10 hover:bg-primary-500/20 text-primary-600 dark:text-primary-400 border border-primary-500/20 text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-colors active:scale-95"
                                               title="Make Primary Cover"
                                             >
                                               ★ Cover
@@ -4960,29 +4991,24 @@ function AdminInner() {
                                           <button
                                             type="button"
                                             onClick={() => handleSetAsThumbnail(u)}
-                                            className="p-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-[9px] font-bold shadow"
+                                            className="flex-1 py-1 px-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-colors active:scale-95"
                                             title="Use this image as the post thumbnail"
                                           >
-                                            ⬧ Thumb
+                                            ✦ Thumb
                                           </button>
                                           <button
                                             type="button"
                                             onClick={() => removePromptImageUrl(idx, imgIndex)}
-                                            className="p-1 rounded-md bg-red-600 text-white hover:bg-red-700 shadow"
+                                            className="p-1 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20 transition-colors shrink-0 active:scale-95"
                                             title="Delete image"
                                           >
                                             <X className="w-3.5 h-3.5" />
                                           </button>
                                         </div>
-                                        {imgIndex === 0 && (
-                                          <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-primary-600 text-white text-[8px] font-bold uppercase tracking-wider shadow">
-                                            Cover
-                                          </div>
-                                        )}
-                                      </>
-                                    )}
-                                  </div>
-                                ))}
+                                      )}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           );
