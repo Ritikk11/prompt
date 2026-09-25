@@ -15,24 +15,21 @@ import { fetchSections, fetchSettings } from '@/lib/data';
 import { getClientSettings } from '@/lib/constants';
 import { stringifyJsonLd } from '@/lib/json-ld';
 
-// preload: false on all three — in production Next emits one
-// <link rel="preload" as="font"> per family, so every page (including posts
-// that never render the italic accent) fires three high-priority font
-// downloads that race the LCP hero image on slow connections. CSS-triggered
-// loading with display:swap and metrics-matched local fallbacks keeps layout
-// stable (no CLS) while the early bandwidth goes to the hero.
+// Inter (body) + Outfit (headings) render above the fold on every page, so
+// they ARE preloaded: otherwise the fallback paints first and the real font
+// swaps in late, reflowing text (the desktop <aside>) into a small CLS.
+// Playfair is the italic accent only (rarely above the fold), so it stays
+// preload:false to avoid a third high-priority font download racing the hero.
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',
-  preload: false,
 });
 
 const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-heading',
   display: 'swap',
-  preload: false,
 });
 
 const playfair = Playfair_Display({
