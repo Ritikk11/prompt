@@ -749,6 +749,17 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                   <button title="View page" onClick={() => window.open(`/${page.slug}`,'_blank')} className="p-2 hover:bg-surface-200 dark:hover:bg-surface-800 rounded-xl text-primary-500 transition-colors">
                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                   </button>
+                  <button
+                    title="Copy page link"
+                    onClick={() => {
+                      const url = `${window.location.origin}/${page.slug}`;
+                      navigator.clipboard.writeText(url);
+                      showToast('Link copied to clipboard!');
+                    }}
+                    className="p-2 hover:bg-surface-200 dark:hover:bg-surface-800 rounded-xl text-surface-400 transition-colors"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                  </button>
                   <button title="Edit page" onClick={() => startEdit(page)} className="p-2 hover:bg-surface-200 dark:hover:bg-surface-800 rounded-xl text-primary-500 transition-colors"><Edit3 className="w-4 h-4" /></button>
                   <button title="Delete page" onClick={() => handleDelete(page.id)} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
                 </div>

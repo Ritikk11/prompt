@@ -51,11 +51,11 @@ import MediaLibraryModal from '@/components/admin/MediaLibraryModal';
 type AdminTab = 'dashboard' | 'stats' | 'posts' | 'sections' | 'articles' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages' | 'ai-studio';
 const DiscoveryPageIds = ['explore', 'tool', 'tag'] as const;
 export type DiscoveryPageId = typeof DiscoveryPageIds[number];
-type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share' | 'categories' | 'pinterest';
+type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share' | 'categories' | 'tags' | 'pinterest';
 type SectionLocationFilter = 'homepage' | 'header' | 'footer' | 'all';
 
 const adminTabKeys: AdminTab[] = ['dashboard', 'stats', 'posts', 'sections', 'articles', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages', 'ai-studio'];
-const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'discovery', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share', 'categories', 'pinterest'];
+const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'discovery', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share', 'categories', 'tags', 'pinterest'];
 const sectionLocationKeys: SectionLocationFilter[] = ['homepage', 'header', 'footer', 'all'];
 
 function parseAdminTab(value: string | null): AdminTab {
@@ -1353,6 +1353,14 @@ function AdminInner() {
   const [editCategoryName, setEditCategoryName] = useState('');
   const [editCategorySlug, setEditCategorySlug] = useState('');
   const [editCategoryDesc, setEditCategoryDesc] = useState('');
+  const [tagPresets, setTagPresets] = useState<CategoryPreset[]>(
+    settings.tagPresets || []
+  );
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagDesc, setNewTagDesc] = useState('');
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
+  const [editTagName, setEditTagName] = useState('');
+  const [editTagDesc, setEditTagDesc] = useState('');
   const [footerLinkGroups, setFooterLinkGroups] = useState<FooterLinkGroup[]>(settings.footerLinkGroups || defaultFooterLinkGroups);
   const [socialLinks, setSocialLinks] = useState<NonNullable<SiteSettings['socialLinks']>>(settings.socialLinks || {});
   const [imageProvider, setImageProvider] = useState<UploadProvider>(
@@ -1569,6 +1577,7 @@ function AdminInner() {
     if (settings.discoveryPages?.sectionRailItems !== undefined) setSectionRailItems(settings.discoveryPages.sectionRailItems || []);
     if (settings.creativeDirectionItems !== undefined) setCreativeDirectionItems(settings.creativeDirectionItems || []);
     if (settings.categoryPresets !== undefined) setCategoryPresets(settings.categoryPresets || []);
+    if (settings.tagPresets !== undefined) setTagPresets(settings.tagPresets || []);
     if (settings.footerLinkGroups !== undefined) setFooterLinkGroups(settings.footerLinkGroups || defaultFooterLinkGroups);
     if (settings.socialLinks !== undefined) setSocialLinks(settings.socialLinks || {});
     if (settings.imageProvider !== undefined) {
@@ -1689,6 +1698,14 @@ function AdminInner() {
 
   const allTagOptions = useMemo(() => {
     const counts = new Map<string, { label: string; value: string; count: number }>();
+    // Saved tag presets always appear (even at 0 uses) so they power the
+    // 1-click pills and suggestions in post editors, same as category presets.
+    tagPresets.forEach(preset => {
+      const name = (preset.name || '').trim();
+      if (!name) return;
+      const key = name.toLowerCase();
+      if (!counts.has(key)) counts.set(key, { label: name, value: name, count: 0 });
+    });
     posts.forEach(p => {
       (p.tags || []).forEach(t => {
         if (!t) return;
@@ -1705,7 +1722,7 @@ function AdminInner() {
     });
     return Array.from(counts.values())
       .sort((a, b) => b.count - a.count);
-  }, [posts]);
+  }, [posts, tagPresets]);
 
   const allToolOptions = useMemo(() => {
     const toolMap = new Map<string, { label: string; value: string; count: number }>();
@@ -2951,6 +2968,7 @@ function AdminInner() {
       exploreFilterItems: cleanRailItems(exploreFilterItems),
       creativeDirectionItems: cleanCreativeDirectionItems(creativeDirectionItems),
       categoryPresets: cleanCategoryPresets(categoryPresets),
+      tagPresets: cleanCategoryPresets(tagPresets),
       footerLinkGroups: cleanFooterGroups(footerLinkGroups),
       socialLinks: {
         twitter: socialLinks.twitter?.trim() || undefined,
@@ -3198,6 +3216,85 @@ function AdminInner() {
     setCategoryPresets(updated);
     updateSettings({ ...settings, categoryPresets: cleanCategoryPresets(updated) });
     showToast(`Imported ${imported.length} categories from posts!`);
+  };
+
+  // Tag Presets Management (mirrors category presets, slug-less: tags are plain labels)
+  const addTagPreset = () => {
+    const name = newTagName.trim();
+    if (!name) return;
+    if (tagPresets.some(t => t.name.toLowerCase() === name.toLowerCase())) {
+      showToast('Tag already exists in presets', 'error');
+      return;
+    }
+    const updated = [...tagPresets, {
+      id: `tag-${Date.now()}-${slugify(name)}`,
+      name,
+      slug: slugify(name),
+      description: newTagDesc.trim() || undefined,
+    }];
+    setTagPresets(updated);
+    updateSettings({ ...settings, tagPresets: cleanCategoryPresets(updated) });
+    setNewTagName('');
+    setNewTagDesc('');
+    showToast(`Added tag preset "${name}"`);
+  };
+
+  const saveEditTag = (id: string) => {
+    const name = editTagName.trim();
+    if (!name) return;
+    const updated = tagPresets.map(t => (
+      (t.id || t.slug) === id
+        ? { ...t, name, slug: slugify(name), description: editTagDesc.trim() || undefined }
+        : t
+    ));
+    setTagPresets(updated);
+    updateSettings({ ...settings, tagPresets: cleanCategoryPresets(updated) });
+    setEditingTagId(null);
+    showToast('Updated tag preset');
+  };
+
+  const deleteTagPreset = (id: string) => {
+    const updated = tagPresets.filter(t => (t.id || t.slug) !== id);
+    setTagPresets(updated);
+    updateSettings({ ...settings, tagPresets: cleanCategoryPresets(updated) });
+    showToast('Tag preset removed');
+  };
+
+  const moveTagPreset = (index: number, delta: number) => {
+    const next = [...tagPresets];
+    const target = index + delta;
+    if (target < 0 || target >= next.length) return;
+    const temp = next[index];
+    next[index] = next[target];
+    next[target] = temp;
+    setTagPresets(next);
+    updateSettings({ ...settings, tagPresets: cleanCategoryPresets(next) });
+  };
+
+  const importTagsFromPosts = () => {
+    const existingSet = new Set(tagPresets.map(t => t.name.toLowerCase()));
+    const imported: CategoryPreset[] = [];
+    posts.forEach(p => {
+      (p.tags || []).forEach(item => {
+        const trimmed = (item || '').trim();
+        if (trimmed && !existingSet.has(trimmed.toLowerCase())) {
+          existingSet.add(trimmed.toLowerCase());
+          imported.push({
+            id: `tag-${Date.now()}-${slugify(trimmed)}`,
+            name: trimmed,
+            slug: slugify(trimmed),
+          });
+        }
+      });
+    });
+    if (imported.length === 0) {
+      showToast('No new tags found in posts', 'info');
+      return;
+    }
+    const updated = [...tagPresets, ...imported];
+    setTagPresets(updated);
+    updateSettings({ ...settings, tagPresets: cleanCategoryPresets(updated) });
+    showToast(`Imported ${imported.length} tags from posts!`);
   };
 
   // Custom Sections Management
@@ -4848,7 +4945,8 @@ function AdminInner() {
                                     ) : (
                                       <>
                                         <Image src={u} alt="" fill className="object-cover" sizes="100px" referrerPolicy="no-referrer" />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-1 p-1">
+                                        {/* Touch devices never fire hover, so the actions (Cover / Thumb / delete) must stay visible there; pointing devices keep the clean hover reveal. */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/40 to-black/10 opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-1 p-1 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/thumb:opacity-100">
                                           {imgIndex !== 0 && (
                                             <button
                                               type="button"
@@ -6008,6 +6106,7 @@ function AdminInner() {
                   { id: 'ads', label: 'Ads & Scripts', icon: <BarChart2 className="w-4 h-4" /> },
                   { id: 'ai-tools', label: 'AI Tools', icon: <Wand2 className="w-4 h-4" /> },
                   { id: 'categories', label: 'Categories Preset', icon: <FolderTree className="w-4 h-4" /> },
+                  { id: 'tags', label: 'Tags Preset', icon: <Tag className="w-4 h-4" /> },
                   { id: 'comments', label: 'Comments', icon: <MessageCircle className="w-4 h-4" /> },
                   { id: 'share', label: 'Share Targets', icon: <ArrowRight className="w-4 h-4" /> },
                   { id: 'pinterest', label: 'Pinterest', icon: <Share2 className="w-4 h-4 text-rose-500" /> },
@@ -8729,7 +8828,13 @@ function AdminInner() {
                 {(settings.aiTools || []).map(tool => {
                   const details = settings.toolDetails?.[tool] || {};
                   const info = getToolInfo(tool, settings.toolDetails);
-                  const imgCount = posts.reduce((acc, p) => acc + (p.aiTools?.includes(tool) ? 1 : 0) + p.images.filter(img => img.aiTools ? img.aiTools.includes(tool) : img.aiTool === tool).length, 0);
+                  // Per-post count: a post counts once no matter how many of its
+                  // images (or its post-level list) carry the tool. Summing images
+                  // on top of the post triple-counted multi-image posts.
+                  const imgCount = posts.filter(p =>
+                    p.aiTools?.some(t => t.toLowerCase() === tool.toLowerCase()) ||
+                    p.images.some(img => (img.aiTools || []).some(t => t.toLowerCase() === tool.toLowerCase()) || img.aiTool?.toLowerCase() === tool.toLowerCase())
+                  ).length;
                   const isEditing = editingAiTool === tool;
                   const isActive = details.active ?? true;
                   const isFeatured = details.featured ?? true;
@@ -9376,6 +9481,225 @@ function AdminInner() {
                   </p>
                   <ActionButton onClick={handleSaveSettings}>
                     <Save className="w-4 h-4" /> Save Categories
+                  </ActionButton>
+                </div>
+              </Panel>
+            </div>
+          )}
+
+          {settingsSubTab === 'tags' && (
+            <div className="space-y-6">
+              <TabBanner
+                icon={<Tag />}
+                title="Tags Preset Registry"
+                text="Define saved tags manually. Tag presets power 1-click pills and suggestions in post editors and keep your tagging vocabulary consistent. Tags stay filter-only — they have no public pages."
+                action={(
+                  <div className="flex flex-wrap items-center gap-2">
+                    <ActionButton
+                      variant="outline"
+                      onClick={importTagsFromPosts}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" /> Import from current posts
+                    </ActionButton>
+                    <ActionButton onClick={handleSaveSettings}>
+                      <Save className="w-3.5 h-3.5" /> Save Tags
+                    </ActionButton>
+                  </div>
+                )}
+              />
+
+              <Panel>
+                <PanelHeader
+                  title="Manage Tag Presets"
+                  count={tagPresets.length}
+                  subtitle="Saved tags available across the admin. Edit to rename, reorder, or remove a preset."
+                  actions={(
+                    <ActionButton
+                      variant="outline"
+                      onClick={importTagsFromPosts}
+                      title="Scan all posts and add any tags not yet in presets"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-primary-500" />
+                      Sync from posts
+                    </ActionButton>
+                  )}
+                />
+
+                {/* Add new preset form */}
+                <div className="p-4 sm:p-5 rounded-2xl border border-primary-500/20 bg-primary-500/[0.04] dark:border-primary-400/20 dark:bg-primary-500/[0.03] space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Plus className="w-4 h-4 text-primary-500" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-surface-900 dark:text-white">
+                      Add New Tag Preset
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className={adminLabel}>Tag Name</label>
+                      <input
+                        value={newTagName}
+                        onChange={e => setNewTagName(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addTagPreset()}
+                        className={adminInput}
+                        placeholder="e.g. saree, portrait, festival"
+                      />
+                    </div>
+                    <div>
+                      <label className={adminLabel}>Description (Optional)</label>
+                      <input
+                        value={newTagDesc}
+                        onChange={e => setNewTagDesc(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addTagPreset()}
+                        className={adminInput}
+                        placeholder="What this tag covers..."
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end pt-1">
+                    <ActionButton
+                      onClick={addTagPreset}
+                      disabled={!newTagName.trim()}
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Add Tag Preset
+                    </ActionButton>
+                  </div>
+                </div>
+
+                {/* Presets List */}
+                <div className="space-y-3">
+                  {tagPresets.length === 0 && (
+                    <div className="rounded-2xl border border-dashed border-black/10 dark:border-white/10 p-8 text-center space-y-3">
+                      <Tag className="w-8 h-8 text-surface-400 mx-auto" />
+                      <div>
+                        <p className="text-sm font-bold text-surface-800 dark:text-surface-200">No tag presets yet</p>
+                        <p className="text-xs text-surface-500 mt-1">Add your first saved tag above, or import every tag currently used in your posts.</p>
+                      </div>
+                      <ActionButton onClick={importTagsFromPosts}>
+                        <Sparkles className="w-3.5 h-3.5" /> Import from posts
+                      </ActionButton>
+                    </div>
+                  )}
+
+                  {tagPresets.map((tag, index) => {
+                    const isEditing = editingTagId === (tag.id || tag.slug);
+                    const usageCount = posts.filter(p =>
+                      (p.tags || []).some(t => t.trim().toLowerCase() === tag.name.trim().toLowerCase())
+                    ).length;
+
+                    return (
+                      <EditableCard key={tag.id || tag.slug || index} isEditing={isEditing}>
+                        {isEditing ? (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between border-b border-black/[0.06] dark:border-white/[0.08] pb-3">
+                              <h4 className="text-xs font-bold uppercase tracking-wider text-surface-900 dark:text-white">
+                                Editing Preset: {tag.name}
+                              </h4>
+                              <div className="flex items-center gap-2">
+                                <ActionButton variant="ghost" onClick={() => setEditingTagId(null)}>
+                                  Cancel
+                                </ActionButton>
+                                <ActionButton onClick={() => saveEditTag(tag.id || tag.slug)}>
+                                  <Save className="w-3.5 h-3.5" /> Save
+                                </ActionButton>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label className={adminLabel}>Tag Name</label>
+                                <input
+                                  value={editTagName}
+                                  onChange={e => setEditTagName(e.target.value)}
+                                  className={adminInput}
+                                  placeholder="Tag name"
+                                />
+                              </div>
+                              <div>
+                                <label className={adminLabel}>Description</label>
+                                <input
+                                  value={editTagDesc}
+                                  onChange={e => setEditTagDesc(e.target.value)}
+                                  className={adminInput}
+                                  placeholder="Description..."
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="flex flex-col shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => moveTagPreset(index, -1)}
+                                  disabled={index === 0}
+                                  className="p-1 rounded text-surface-500 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] disabled:opacity-20 disabled:cursor-not-allowed"
+                                  title="Move up"
+                                >
+                                  <ChevronUp className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => moveTagPreset(index, 1)}
+                                  disabled={index === tagPresets.length - 1}
+                                  className="p-1 rounded text-surface-500 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] disabled:opacity-20 disabled:cursor-not-allowed"
+                                  title="Move down"
+                                >
+                                  <ChevronDown className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                              <div className="w-9 h-9 rounded-xl border border-primary-500/20 bg-primary-500/10 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0">
+                                <Tag className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="font-extrabold text-sm text-surface-900 dark:text-white truncate">
+                                    {tag.name}
+                                  </h4>
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                    usageCount > 0
+                                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                      : 'bg-surface-100 dark:text-surface-400 dark:bg-surface-800 text-surface-400'
+                                  }`}>
+                                    {usageCount} {usageCount === 1 ? 'prompt' : 'prompts'}
+                                  </span>
+                                </div>
+                                {tag.description && (
+                                  <p className="text-xs text-surface-500 mt-0.5 truncate">{tag.description}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                              <ActionButton
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingTagId(tag.id || tag.slug);
+                                  setEditTagName(tag.name);
+                                  setEditTagDesc(tag.description || '');
+                                }}
+                              >
+                                <Edit3 className="w-3.5 h-3.5" /> Edit
+                              </ActionButton>
+                              <ActionButton
+                                variant="danger"
+                                onClick={() => deleteTagPreset(tag.id || tag.slug)}
+                                title="Remove preset (posts keep the tag)"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </ActionButton>
+                            </div>
+                          </div>
+                        )}
+                      </EditableCard>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-4 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between">
+                  <p className="text-xs text-surface-500">
+                    Tag presets appear as suggestions and 1-click pills in post editors. Removing a preset here does not touch posts that already use the tag.
+                  </p>
+                  <ActionButton onClick={handleSaveSettings}>
+                    <Save className="w-4 h-4" /> Save Tags
                   </ActionButton>
                 </div>
               </Panel>

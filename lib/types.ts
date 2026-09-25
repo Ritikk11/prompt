@@ -103,6 +103,20 @@ export type PostSummary = Pick<
   | 'featuredAt'
 >;
 
+// The only post fields the client islands on a post page actually read.
+// Passing this instead of the full Post keeps the RSC flight payload free of
+// extendedDescription, faqs, referenceImages and duplicated image prompts.
+export interface PostClientMeta {
+  id: string;
+  slug?: string;
+  title: string;
+  isPremium?: boolean;
+  views?: number;
+  likes?: number;
+  likedByUser?: boolean;
+  bookmarkedByUser?: boolean;
+}
+
 export interface PostComment {
   id: string;
   postId: string;
@@ -375,6 +389,7 @@ export interface SiteSettings {
   authors?: any;
   categories?: any;
   categoryPresets?: CategoryPreset[];
+  tagPresets?: CategoryPreset[];
   defaultAuthorId?: string;
   cloudinaryCloudName?: string;
   cloudinaryUploadPreset?: string;
