@@ -201,6 +201,7 @@ function SiteHeader() {
   const routeTimerRef = useRef<number | null>(null);
   const routeIntervalRef = useRef<number | null>(null);
   const routeFallbackRef = useRef<number | null>(null);
+  const routeStartRef = useRef<number>(0);
   // On mobile, a tap on the theme toggle can land while a scroll gesture is
   // still settling (rubber-band/momentum). That produces a stray `scroll` event
   // right after the tap, which the visibility logic reads as "user scrolled
@@ -261,8 +262,11 @@ function SiteHeader() {
 
   const startRouteProgress = useCallback((targetHref?: string) => {
     stopRouteTimers();
-    setRouteProgress(10);
-    routeTimerRef.current = window.setTimeout(() => setRouteProgress(34), 120);
+    routeStartRef.current = Date.now();
+    // Jump straight to a visible chunk so a tap gives instant feedback, then
+    // creep toward 88%. Starting at ~8% was a sliver nobody noticed.
+    setRouteProgress(28);
+    routeTimerRef.current = window.setTimeout(() => setRouteProgress(48), 120);
     routeIntervalRef.current = window.setInterval(() => {
       setRouteProgress(prev => (prev > 0 && prev < 88 ? Math.min(prev + 8, 88) : prev));
     }, 420);
@@ -280,9 +284,23 @@ function SiteHeader() {
   }, [stopRouteTimers]);
 
   const finishRouteProgress = useCallback(() => {
-    stopRouteTimers();
-    setRouteProgress(100);
-    routeTimerRef.current = window.setTimeout(() => setRouteProgress(0), 320);
+    // Guarantee the bar is on screen long enough to register. A prefetched/warm
+    // route can resolve in <100ms, which finished the bar before it ever
+    // painted — the reason it felt like nothing happened on tap. Hold the fill
+    // until it has been visible for a minimum, then complete + fade.
+    const MIN_VISIBLE_MS = 420;
+    const elapsed = Date.now() - (routeStartRef.current || Date.now());
+    const complete = () => {
+      stopRouteTimers();
+      setRouteProgress(100);
+      routeTimerRef.current = window.setTimeout(() => setRouteProgress(0), 320);
+    };
+    if (elapsed < MIN_VISIBLE_MS) {
+      // Keep the creep running for the remaining time, then snap to 100.
+      routeTimerRef.current = window.setTimeout(complete, MIN_VISIBLE_MS - elapsed);
+    } else {
+      complete();
+    }
   }, [stopRouteTimers]);
 
   useEffect(() => {
