@@ -201,7 +201,6 @@ function SiteHeader() {
   const routeTimerRef = useRef<number | null>(null);
   const routeIntervalRef = useRef<number | null>(null);
   const routeFallbackRef = useRef<number | null>(null);
-  const routeStartRef = useRef<number>(0);
   // On mobile, a tap on the theme toggle can land while a scroll gesture is
   // still settling (rubber-band/momentum). That produces a stray `scroll` event
   // right after the tap, which the visibility logic reads as "user scrolled
@@ -262,9 +261,8 @@ function SiteHeader() {
 
   const startRouteProgress = useCallback((targetHref?: string) => {
     stopRouteTimers();
-    routeStartRef.current = Date.now();
-    // Jump straight to a visible chunk so a tap gives instant feedback, then
-    // creep toward 88%. Starting at ~8% was a sliver nobody noticed.
+    // Jump straight to a visible chunk so navigation shows immediate progress,
+    // then creep toward 88%.
     setRouteProgress(28);
     routeTimerRef.current = window.setTimeout(() => setRouteProgress(48), 120);
     routeIntervalRef.current = window.setInterval(() => {
@@ -284,23 +282,9 @@ function SiteHeader() {
   }, [stopRouteTimers]);
 
   const finishRouteProgress = useCallback(() => {
-    // Guarantee the bar is on screen long enough to register. A prefetched/warm
-    // route can resolve in <100ms, which finished the bar before it ever
-    // painted — the reason it felt like nothing happened on tap. Hold the fill
-    // until it has been visible for a minimum, then complete + fade.
-    const MIN_VISIBLE_MS = 420;
-    const elapsed = Date.now() - (routeStartRef.current || Date.now());
-    const complete = () => {
-      stopRouteTimers();
-      setRouteProgress(100);
-      routeTimerRef.current = window.setTimeout(() => setRouteProgress(0), 320);
-    };
-    if (elapsed < MIN_VISIBLE_MS) {
-      // Keep the creep running for the remaining time, then snap to 100.
-      routeTimerRef.current = window.setTimeout(complete, MIN_VISIBLE_MS - elapsed);
-    } else {
-      complete();
-    }
+    stopRouteTimers();
+    setRouteProgress(100);
+    routeTimerRef.current = window.setTimeout(() => setRouteProgress(0), 260);
   }, [stopRouteTimers]);
 
   useEffect(() => {
@@ -581,20 +565,6 @@ function SiteHeader() {
           className="h-full origin-left bg-gradient-to-r from-google-blue via-[#669df6] to-primary-500 shadow-[0_0_12px_rgba(66,133,244,0.55)] transition-[transform,opacity] duration-200 ease-out"
           style={{ transform: `scaleX(${routeProgress / 100})`, opacity: routeProgress > 0 ? 1 : 0 }}
         />
-      </div>
-
-      {/* Instant tap feedback: a centered spinner the moment a navigation
-          starts, so a tap immediately "looks like the page is loading" even
-          before the next route paints. pointer-events-none so it never traps a
-          tap; driven by the same routeProgress lifecycle as the bar (which
-          holds it on screen a minimum time so it doesn't flash-and-vanish). */}
-      <div
-        className={`fixed inset-0 z-[9998] flex items-center justify-center pointer-events-none transition-opacity duration-150 ${routeProgress > 0 ? 'opacity-100' : 'opacity-0'}`}
-        aria-hidden={routeProgress === 0}
-      >
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black/60 shadow-xl backdrop-blur-md">
-          <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-        </span>
       </div>
 
       {/* Fixed, not sticky: the search / mobile / mega panels expand INSIDE the
