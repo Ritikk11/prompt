@@ -118,10 +118,19 @@ const PrefetchLink = forwardRef<HTMLAnchorElement, Props>(function PrefetchLink(
       }}
       onTouchStart={(event) => {
         onTouchStart?.(event);
-        if (!event.defaultPrevented && prefetch !== 'intent') warm();
+        // Touch has no hover, so this is the only pre-navigation signal we get
+        // on mobile. It fires ~100-300ms before the actual tap-triggered nav,
+        // which is enough to warm the RSC payload without prefetching every
+        // card that merely scrolls past (scrolling doesn't fire touchstart on
+        // a link the way an intentional tap does).
+        if (!event.defaultPrevented) warm();
       }}
       onPointerDown={(event) => {
         onPointerDown?.(event);
+        // Mouse pointerdown on an 'intent' link means the hover-warm already
+        // fired (or the click is happening fast enough that it doesn't
+        // matter); only fall through here for non-mouse pointers we haven't
+        // otherwise covered.
         if (!event.defaultPrevented && prefetch !== 'intent') warm();
       }}
     />
