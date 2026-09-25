@@ -583,6 +583,20 @@ function SiteHeader() {
         />
       </div>
 
+      {/* Instant tap feedback: a centered spinner the moment a navigation
+          starts, so a tap immediately "looks like the page is loading" even
+          before the next route paints. pointer-events-none so it never traps a
+          tap; driven by the same routeProgress lifecycle as the bar (which
+          holds it on screen a minimum time so it doesn't flash-and-vanish). */}
+      <div
+        className={`fixed inset-0 z-[9998] flex items-center justify-center pointer-events-none transition-opacity duration-150 ${routeProgress > 0 ? 'opacity-100' : 'opacity-0'}`}
+        aria-hidden={routeProgress === 0}
+      >
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black/60 shadow-xl backdrop-blur-md">
+          <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        </span>
+      </div>
+
       {/* Fixed, not sticky: the search / mobile / mega panels expand INSIDE the
           bar, and in normal flow that growth would shove the page down instead
           of overlaying it. The h-14 spacer in app/layout.tsx reserves the row. */}
