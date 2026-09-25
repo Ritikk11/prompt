@@ -11,13 +11,14 @@ import {
   ExternalLink,
   ZoomIn,
 } from 'lucide-react';
-import type { ImagePrompt, Post, SiteSettings } from '@/lib/types';
+import type { ImagePrompt, PostClientMeta, SiteSettings } from '@/lib/types';
 import { getDefaultImageModel, getToolInfo, getToolForImageModel } from '@/lib/constants';
 import ToolBadge from '@/components/ToolBadge';
 import CopyButton from '@/components/CopyButton';
 import TemplatePrompt from '@/components/TemplatePrompt';
 import { LoadingImg } from '@/components/LoadingImage';
-import { getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
+import { downloadImage, getPromptImageUrl, getThumbnailImageUrl } from '@/lib/image-url';
+import { showToast } from '@/components/ui/ToastContainer';
 import { usePostPage } from './PostPageProvider';
 
 // Native lazy images can use their actual laid-out width. The fallback matches
@@ -36,7 +37,7 @@ const hasTemplateVariables = (text?: string) =>
 interface PromptItemCardProps {
   img: ImagePrompt;
   index: number;
-  post: Post;
+  post: PostClientMeta;
   settings?: SiteSettings;
   showSkeleton?: boolean;
 }
@@ -140,17 +141,10 @@ export default function PromptItemCard({
   };
 
   const handleDownload = async (url: string, filename: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch {}
+    const result = await downloadImage(url, filename);
+    showToast(result === 'downloaded'
+      ? 'Image saved to your device'
+      : 'Could not save automatically — the image opened in a new tab; long-press it to save');
   };
 
   const getTryToolUrl = (tool: string, prompt: string) => {
@@ -307,7 +301,7 @@ export default function PromptItemCard({
                   if (activeUrl) {
                     handleDownload(
                       activeUrl,
-                      `prompt_${post.title}_${index + 1}_v${safeActiveIdx + 1}.png`
+                      `prompt_${post.title}_${index + 1}_v${safeActiveIdx + 1}.webp`
                     );
                   }
                 }}

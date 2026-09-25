@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 };
 
 import { fetchSections, fetchSettings, fetchPostSummaries, getPostsForSection } from '@/lib/data';
+import { getClientSettings } from '@/lib/constants';
 import FeaturedSlider from '@/components/FeaturedSlider';
 import HomeSection from '@/components/HomeSection';
 import HomeLinkBlocks from '@/components/HomeLinkBlocks';
@@ -51,11 +52,16 @@ export default async function Home() {
   // Parallelize the three independent homepage reads (settings, sections,
   // post summaries) instead of awaiting them sequentially — cuts the
   // data-fetch waterfall that was adding latency to every homepage render.
-  const [sections, settings, allPosts] = await Promise.all([
+  const [sections, rawSettings, allPosts] = await Promise.all([
     fetchSections(),
     fetchSettings(),
     fetchPostSummaries(),
   ]);
+  // Everything below hands settings to client components (HomeSection,
+  // HomeSupportedTools, FeaturedSlider…), so strip the server-only content
+  // bodies before they serialize into the flight payload. No server read here
+  // touches those keys.
+  const settings = getClientSettings(rawSettings);
   const featuredPosts = allPosts
     .filter(p => p.featured && (p.status === 'published' || !p.status) && p.visibility !== 'private')
     .sort((a, b) => {

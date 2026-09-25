@@ -2,20 +2,21 @@
 
 import CopyButton from '@/components/CopyButton';
 import { usePostPage } from './PostPageProvider';
-import type { Post, SiteSettings } from '@/lib/types';
+import type { SiteSettings } from '@/lib/types';
 
 interface CopyCollectionBannerProps {
-  post: Post;
+  post: { isPremium?: boolean };
+  images: { prompt: string; aiTool: string }[];
   settings?: SiteSettings;
 }
 
-export default function CopyCollectionBanner({ post, settings }: CopyCollectionBannerProps) {
+export default function CopyCollectionBanner({ post, images, settings }: CopyCollectionBannerProps) {
   const { user } = usePostPage();
 
   const isLocked = settings?.features?.premiumPrompts && post.isPremium && !user;
   const allPromptsText = isLocked
     ? 'Premium Collection - Please sign in to view full prompts.'
-    : (post.images || [])
+    : (images || [])
         .map((img, i) => `Image ${i + 1} (${img.aiTool || 'AI'}):\n${img.prompt}`)
         .join('\n\n');
 
@@ -29,9 +30,9 @@ export default function CopyCollectionBanner({ post, settings }: CopyCollectionB
           Copy Entire Collection
         </h3>
         <p className="text-white/80 text-base md:text-lg mb-8 max-w-xl mx-auto font-medium">
-          {post.images.length === 1
+          {images.length === 1
             ? 'Copy this prompt instantly to use in your favorite AI generator.'
-            : `Grab all ${post.images.length} creative prompts instantly to use in your favorite AI generator.`}
+            : `Grab all ${images.length} creative prompts instantly to use in your favorite AI generator.`}
         </p>
         <div className="flex justify-center">
           <CopyButton

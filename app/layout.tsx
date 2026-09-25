@@ -12,18 +12,27 @@ import AdSlot from '@/components/AdSlot';
 import SiteBackground from '@/components/SiteBackground';
 import MaintenanceBouncer from '@/components/MaintenanceBouncer';
 import { fetchSections, fetchSettings } from '@/lib/data';
+import { getClientSettings } from '@/lib/constants';
 import { stringifyJsonLd } from '@/lib/json-ld';
 
+// preload: false on all three — in production Next emits one
+// <link rel="preload" as="font"> per family, so every page (including posts
+// that never render the italic accent) fires three high-priority font
+// downloads that race the LCP hero image on slow connections. CSS-triggered
+// loading with display:swap and metrics-matched local fallbacks keeps layout
+// stable (no CLS) while the early bandwidth goes to the hero.
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',
+  preload: false,
 });
 
 const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-heading',
   display: 'swap',
+  preload: false,
 });
 
 const playfair = Playfair_Display({
@@ -34,6 +43,7 @@ const playfair = Playfair_Display({
   weight: ['700'],
   variable: '--font-serif-italic',
   display: 'swap',
+  preload: false,
 });
 
 function toOrigin(value?: string | null) {
@@ -103,10 +113,16 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [initialSettings, initialSections] = await Promise.all([
+  const [fullSettings, initialSections] = await Promise.all([
     fetchSettings(),
     fetchSections(),
   ]);
+  // The client DataProvider gets settings WITHOUT the server-only content
+  // bodies (legal/static page markdown, article overrides): ~80 kB of the
+  // flight payload on every page that no client component reads. Server pages
+  // call fetchSettings() themselves and the admin re-fetches full settings
+  // via /api/admin on mount, so nothing loses data.
+  const initialSettings = getClientSettings(fullSettings);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
   const orgName = initialSettings.siteTitle || 'PromptSoul';
@@ -248,7 +264,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             external network fetch to first user interaction or idle to protect FCP/LCP */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-3SM2DNE8VW');(function(){var l=false;function init(){if(l)return;l=true;['scroll','touchstart','pointerdown','keydown'].forEach(function(e){window.removeEventListener(e,init,{passive:true})});var s=document.createElement('script');s.src='https://www.googletagmanager.com/gtag/js?id=G-3SM2DNE8VW';s.async=true;document.head.appendChild(s);};['scroll','touchstart','pointerdown','keydown'].forEach(function(e){window.addEventListener(e,init,{passive:true,once:true})});setTimeout(init,7000);})();`,
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-3SM2DNE8VW',{allow_google_signals:false,allow_ad_personalization_signals:false});(function(){var l=false;function init(){if(l)return;l=true;['scroll','touchstart','pointerdown','keydown'].forEach(function(e){window.removeEventListener(e,init,{passive:true})});var s=document.createElement('script');s.src='https://www.googletagmanager.com/gtag/js?id=G-3SM2DNE8VW';s.async=true;document.head.appendChild(s);};['scroll','touchstart','pointerdown','keydown'].forEach(function(e){window.addEventListener(e,init,{passive:true,once:true})});setTimeout(init,7000);})();`,
           }}
         />
       </head>

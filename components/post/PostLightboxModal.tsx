@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Download, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import ToolBadge from '@/components/ToolBadge';
 import { getToolInfo } from '@/lib/constants';
-import { getThumbnailImageUrl } from '@/lib/image-url';
+import { downloadImage, getThumbnailImageUrl } from '@/lib/image-url';
+import { showToast } from '@/components/ui/ToastContainer';
 
 export interface LightboxState {
   images: string[];
@@ -68,17 +69,10 @@ export default function PostLightboxModal({
   }, [handleClose, goTo, activeIdx, state.images.length]);
 
   const handleDownload = async (url: string, filename: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch {}
+    const result = await downloadImage(url, filename);
+    showToast(result === 'downloaded'
+      ? 'Image saved to your device'
+      : 'Could not save automatically — the image opened in a new tab; long-press it to save');
   };
 
   const currentUrl = state.images[activeIdx];
@@ -121,7 +115,7 @@ export default function PostLightboxModal({
               if (currentUrl) {
                 handleDownload(
                   currentUrl,
-                  `prompt_${postId}_${state.promptIndex + 1}_v${activeIdx + 1}.png`
+                  `prompt_${postId}_${state.promptIndex + 1}_v${activeIdx + 1}.webp`
                 );
               }
             }}

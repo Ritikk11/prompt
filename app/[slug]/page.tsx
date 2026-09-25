@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import { preload, preconnect } from 'react-dom';
 import { getPostBySlugOrId, fetchPostSummaries, fetchSeoPages, getSeoPageBySlug, isPublicPost, fetchSettings } from '@/lib/data';
 import { getThumbnailImageUrl } from '@/lib/image-url';
+import { getClientSettings } from '@/lib/constants';
 import { getPostHeroImageProps } from '@/lib/post-image';
 import { stringifyJsonLd } from '@/lib/json-ld';
 import { isSafePublicSlug } from '@/lib/slug-guard';
@@ -174,7 +175,7 @@ export default async function PostPage({ params }: Props) {
       <SeoPageContent
         seoPage={seoPage}
         allPosts={allPosts as Post[]}
-        settings={settings}
+        settings={getClientSettings(settings)}
         introContent={seoPage.introContent ? <MarkdownRenderer>{seoPage.introContent}</MarkdownRenderer> : null}
       />
     );
@@ -187,15 +188,24 @@ export default async function PostPage({ params }: Props) {
   const rawRelatedPosts = getRelatedPosts(post, allPosts as Post[], { limit: 8 });
   const rawRecommendedPosts = getRecommendedPosts(post, allPosts as Post[], rawRelatedPosts, { limit: 6 });
 
+  // Related/recommended posts reach client islands (MasonryGrid/PostCard), so
+  // everything here is serialized into the flight payload. Strip every field
+  // the card UI cannot render: the cards need only titles, slugs, thumbs,
+  // tools and counts.
   const stripHeavyPostData = (p: Post): Post => ({
     ...p,
     description: '',
+    extendedDescription: '',
     faqs: [],
     comments: [],
+    referenceImages: [],
+    seoKeywords: [],
     images: (p.images || []).map(img => ({
       id: img.id,
       url: img.url,
       aiTool: img.aiTool,
+      aiTools: img.aiTools,
+      model: img.model,
       prompt: '',
       width: img.width,
       height: img.height,
@@ -392,7 +402,7 @@ export default async function PostPage({ params }: Props) {
       )}
       <PostContent
         post={post}
-        settings={settings}
+        settings={getClientSettings(settings)}
         relatedPosts={relatedPosts}
         recommendedPosts={recommendedPosts}
       />

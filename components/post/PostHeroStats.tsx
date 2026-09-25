@@ -4,10 +4,10 @@ import { useEffect, useRef } from 'react';
 import { Eye, Heart, Bookmark } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import { usePostPage } from './PostPageProvider';
-import type { Post } from '@/lib/types';
+import type { Post, PostClientMeta } from '@/lib/types';
 
 interface PostHeroStatsProps {
-  post: Post;
+  post: PostClientMeta;
   showViewCount?: boolean;
   showLikeCount?: boolean;
   showSaveButton?: boolean;
@@ -22,6 +22,10 @@ export default function PostHeroStats({
   const { incrementViews, toggleLike, toggleBookmark, posts } = useData();
   const { user, handleLogin } = usePostPage();
   const viewIncrementedRef = useRef(false);
+  // The DataContext mutation fallbacks take a full Post, but only read the
+  // summary fields carried here; the cast keeps the slim client prop from
+  // dragging the article body through the RSC boundary.
+  const postArg = post as unknown as Post;
 
   // Read reactive stats from DataContext if present, otherwise fallback to server post props
   const contextPost = posts.find((p) => p.id === post.id);
@@ -40,7 +44,7 @@ export default function PostHeroStats({
     const run = () => {
       if (viewIncrementedRef.current) return;
       viewIncrementedRef.current = true;
-      incrementViews(post.id, post);
+      incrementViews(post.id, postArg);
     };
     const idleId = requestIdle
       ? requestIdle(run, { timeout: 3500 })
@@ -61,7 +65,7 @@ export default function PostHeroStats({
       return;
     }
     try {
-      await toggleBookmark(post.id, post);
+      await toggleBookmark(post.id, postArg);
       if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
         (window as any).gtag('event', bookmarkedByUser ? 'prompt_unsaved' : 'prompt_saved');
       }
@@ -71,7 +75,7 @@ export default function PostHeroStats({
   };
 
   const handleLikeClick = () => {
-    toggleLike(post.id, post);
+    toggleLike(post.id, postArg);
   };
 
   return (

@@ -15,7 +15,7 @@ import {
   Layers,
   ClipboardCheck,
 } from 'lucide-react';
-import type { Post, SiteSettings } from '@/lib/types';
+import type { Post, PostClientMeta, SiteSettings } from '@/lib/types';
 import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
 import { isUserOwnedPost, EDITORIAL_TEAM_NAME } from '@/lib/authors';
 import { getThumbnailImageUrl } from '@/lib/image-url';
@@ -85,6 +85,25 @@ export default function PostContent({
       </div>
     );
   }
+
+  // Client islands get only the fields they read. Shipping the full Post
+  // through the RSC boundary duplicated extendedDescription, faqs,
+  // referenceImages and every image prompt into the flight payload for no
+  // client-side use — this slim slice replaces it.
+  const clientMeta: PostClientMeta = {
+    id: post.id,
+    slug: post.slug,
+    title: post.title,
+    isPremium: post.isPremium,
+    views: post.views,
+    likes: post.likes,
+    likedByUser: post.likedByUser,
+    bookmarkedByUser: post.bookmarkedByUser,
+  };
+  const clientImages = (post.images || []).map(img => ({
+    prompt: img.prompt || '',
+    aiTool: img.aiTool || '',
+  }));
 
   const showSkeleton = settings.features?.skeletonLoaders ?? false;
   const showLikeCount = settings.features?.showLikeCount ?? true;
@@ -156,7 +175,10 @@ export default function PostContent({
   const renderAuthorByline = () => {
     const isUserOwned = isUserOwnedPost(post.authorId);
     if (!isUserOwned) {
-      const siteLogo = settings.siteLogo || '/icon-190x190.webp';
+      // 72px, not 190px: the byline avatar renders at 20px, and the header
+      // already loads this exact file on every page — so this costs zero
+      // extra network instead of a 12.7 kB duplicate download.
+      const siteLogo = settings.siteLogo || '/icon-72x72.webp';
       return (
         <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-xs text-white/90 backdrop-blur-xl shadow-sm transition-all duration-300 ease-out hover:scale-105 hover:border-white/30 hover:bg-white/15 hover:text-white antialiased transform-gpu will-change-transform [backface-visibility:hidden] origin-center">
           <div className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full ring-1 ring-white/30 bg-black/40">
@@ -321,7 +343,7 @@ export default function PostContent({
             {/* Stats & Actions (Row 1) and Author Byline (Row 2: centered on mobile, left-aligned on desktop) */}
             <div className="flex flex-col items-center lg:items-start gap-2.5 sm:gap-3">
               <PostHeroStats
-                post={post}
+                post={clientMeta}
                 showViewCount={showViewCount}
                 showLikeCount={showLikeCount}
                 showSaveButton={showSaveButton}
@@ -629,7 +651,7 @@ export default function PostContent({
                     <PromptItemCard
                       img={img}
                       index={index}
-                      post={post}
+                      post={clientMeta}
                       settings={settings}
                       showSkeleton={showSkeleton}
                     />
@@ -650,7 +672,7 @@ export default function PostContent({
 
             {/* Copy All Prompts Banner */}
             {showCopyCollection && (post.images?.length || 0) > 1 && (
-              <CopyCollectionBanner post={post} settings={settings} />
+              <CopyCollectionBanner post={clientMeta} images={clientImages} settings={settings} />
             )}
 
             {/* How to Use Section (Server Rendered HTML with content-visibility optimization) */}

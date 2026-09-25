@@ -140,3 +140,30 @@ export function getArticleImageUrl(url?: string, options: ThumbnailOptions = {})
     fit: options.fit ?? 'scale-down',
   });
 }
+
+// Save an image to the device. Fetching the SAME-ORIGIN cdn-cgi variant (not the
+// raw cross-origin upload URL) keeps CORS out of the picture on phones, where
+// the cross-origin fetch is what fails or opens a new tab. Returns the outcome
+// so callers can toast honestly.
+export async function downloadImage(url?: string, filename?: string): Promise<'downloaded' | 'opened'> {
+  if (!url) return 'opened';
+  const same = getPromptImageUrl(url, { width: 4096, quality: 95 });
+  const name = filename || 'image.webp';
+  try {
+    const res = await fetch(same);
+    if (!res.ok) throw new Error(`fetch ${res.status}`);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+    return 'downloaded';
+  } catch {
+    window.open(same, '_blank', 'noopener');
+    return 'opened';
+  }
+}

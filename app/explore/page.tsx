@@ -1,4 +1,5 @@
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
+import { getClientSettings } from '@/lib/constants';
 import ExploreClient from './ExploreClient';
 import type { Metadata } from 'next';
 import { stringifyJsonLd } from '@/lib/json-ld';
@@ -66,7 +67,7 @@ export default async function ExplorePage() {
       <Suspense fallback={<div className="min-h-screen" />}>
         <ExploreClient
           posts={posts}
-          settings={settings}
+          settings={getClientSettings(settings)}
         />
       </Suspense>
     </>
