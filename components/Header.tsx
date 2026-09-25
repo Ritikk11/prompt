@@ -11,7 +11,7 @@ import { getSupabaseClient } from '@/lib/supabase-lazy';
 import type { User } from '@supabase/supabase-js';
 import type { Post } from '@/lib/types';
 import { getPostPath } from '@/lib/sections';
-import { getToolInfo } from '@/lib/constants';
+import { getAllTools, getToolInfo } from '@/lib/constants';
 import { buildHeaderNavItems } from '@/lib/header-nav';
 import { hasStoredSupabaseSession } from '@/lib/browser-auth-state';
 import SmartLink from '@/components/SmartLink';
@@ -488,26 +488,9 @@ function SiteHeader() {
       .slice(0, 5);
   })();
 
-  // Per-result context line: prefer whichever field actually matched the query,
-  // and fall back to general context so the line is never empty.
-  const resultMeta = (post: Post) => {
-    const q = query.trim().toLowerCase();
-    if (!q) return '';
-    const parts: string[] = [];
-    if (post.category && post.category.toLowerCase().includes(q)) parts.push(post.category);
-    const tool =
-      post.aiTools?.find(t => t.toLowerCase().includes(q)) ||
-      post.images?.find(img => img.aiTool?.toLowerCase().includes(q))?.aiTool;
-    if (tool) parts.push(tool);
-    const tag = post.tags?.find(t => t.toLowerCase().includes(q));
-    if (tag) parts.push(`#${tag}`);
-    if (parts.length === 0) {
-      if (post.category) parts.push(post.category);
-      const anyTool = post.aiTools?.[0] || post.images?.find(img => img.aiTool)?.aiTool;
-      if (anyTool && anyTool !== post.category) parts.push(anyTool);
-    }
-    return parts.slice(0, 3).join(' · ');
-  };
+  // Per-result context line: the post's tools only (all of them, deduped) —
+  // tags and categories stay searchable but never appear in the result rows.
+  const resultMeta = (post: Post) => getAllTools(post).join(' · ');
 
   const submitSearch = () => {
     if (!query.trim()) return;

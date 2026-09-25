@@ -2,7 +2,7 @@ import Link from '@/components/PrefetchLink';
 import Image from 'next/image';
 import { ArrowRight, Bookmark, CheckCircle2, Flame, Heart, Layers, Search } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
-import { getToolInfo } from '@/lib/constants';
+import { getActiveTools, getToolInfo } from '@/lib/constants';
 
 type HomeLibraryHeroProps = {
   featuredPosts: Post[];
@@ -30,11 +30,11 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
   const content = settings.heroContent || {};
   const totalLikes = featuredPosts.reduce((sum, post) => sum + (post.likes || 0), 0);
   const totalSaves = featuredPosts.reduce((sum, post) => sum + (post.bookmarkedBy?.length || 0), 0);
-  const toolNames = (settings.aiTools || []).filter(Boolean);
+  const toolNames = getActiveTools(settings).filter(Boolean);
   // heroContent.title/subtitle (admin-editable) win; the legacy top-level
   // heroTitle/heroSubtitle are the next fallback, then the built-in default.
   const title = content.title || settings.heroTitle || 'Better Image Prompts Start Here';
-  const subtitle = content.subtitle || settings.heroSubtitle || 'Discover tested prompts for ChatGPT, Gemini, Grok, Qwen, and other image tools. Copy, customize, and build stronger artwork from one organized library.';
+  const subtitle = content.subtitle || settings.heroSubtitle || 'Discover tested prompts for ChatGPT and Gemini. Copy, customize, and build stronger artwork from one organized library.';
   const statLabels = content.statLabels || {};
   const popularTags = content.popularTags?.filter(Boolean) || ['Portraits', 'Cinematic', 'Anime', 'Wallpaper', 'Architecture', 'Logos'];
   const trustBadges = content.trustBadges?.filter(Boolean) || ['100% Free to Copy', 'Tested & Verified Outputs', 'Exact Model Parameters Included'];
@@ -71,7 +71,7 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
           <Flame className="h-4 w-4 text-amber-400" />
           <span>
             {content.kickerPrefix || 'Curated prompts for'}{' '}
-            {toolNames.slice(0, 4).join(', ') || 'ChatGPT, Gemini, Grok & Qwen'}
+            {toolNames.slice(0, 4).join(', ') || 'ChatGPT & Gemini'}
           </span>
         </div>
 

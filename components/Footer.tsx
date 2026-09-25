@@ -8,6 +8,7 @@ import { ChevronUp } from 'lucide-react';
 import { useData } from '@/components/context/DataContext';
 import type { FooterLinkGroup } from '@/lib/types';
 import { XLogo, InstagramLogo, YouTubeLogo, FacebookLogo, PinterestLogo } from '@/components/SocialLogos';
+import { getActiveTools } from '@/lib/constants';
 import { SiteTitle } from '@/components/Header';
 
 const fallbackFooterGroups: FooterLinkGroup[] = [
@@ -57,8 +58,8 @@ function FooterContent() {
     ? [...footerGroups, { title: 'Content', links: contentLinks }]
     : footerGroups;
   // Tools configured in settings always render a page (empty state when no
-  // posts yet), so link them all.
-  const footerTools = (settings.aiTools || []).slice(0, 10);
+  // posts yet), so link them all — except ones the admin marked inactive.
+  const footerTools = getActiveTools(settings).slice(0, 10);
   // w-fit keeps the clickable area on the text only, not the whole column width.
   const footerLinkClass = 'block w-fit text-sm text-surface-600 dark:text-surface-300 hover:text-primary-600 dark:hover:text-primary-300 transition-colors';
   const social = settings.socialLinks || {};

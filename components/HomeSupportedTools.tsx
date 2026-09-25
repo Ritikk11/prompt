@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from '@/components/PrefetchLink';
 import { ArrowRight, BookmarkCheck, Check, Cpu, Gauge, Layers, Zap } from 'lucide-react';
 import type { Post, SiteSettings } from '@/lib/types';
-import { getAllTools, getDefaultImageModel, getToolInfo } from '@/lib/constants';
+import { getAllTools, getActiveTools, getDefaultImageModel, getToolInfo, isToolActive } from '@/lib/constants';
 import ScrollReveal from '@/components/ScrollReveal';
 import SectionHeader from '@/components/SectionHeader';
 
@@ -34,11 +34,14 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
     const key = tool.toLowerCase();
     toolCounts.set(key, (toolCounts.get(key) || 0) + 1);
   }));
-  const tools = (settings.aiTools || Array.from(toolCounts.keys()))
-    .filter(Boolean)
-    // Tools configured in settings always render a page (empty state when no
-    // posts yet), so no has-posts filter here.
-    .slice(0, 4);
+  // Active configured tools always render a card (empty state when no posts
+  // yet). If the admin hasn't configured any, fall back to the tools actually
+  // in use by posts — but still drop ones marked inactive.
+  const configured = getActiveTools(settings).filter(Boolean);
+  const fallback = Array.from(toolCounts.keys())
+    .filter(tool => isToolActive(tool, settings.toolDetails))
+    .sort((a, b) => (toolCounts.get(b) || 0) - (toolCounts.get(a) || 0));
+  const tools = (configured.length ? configured : fallback).slice(0, 4);
   const getNotesForTool = (tool: string) => {
     const normalizedTool = tool.toLowerCase();
     const matchedCustomNotes = Object.entries(toolNotes).find(([name]) => {
@@ -51,9 +54,18 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
 
   if (tools.length === 0) return null;
 
+  // Fit the grid to however many tools are active: with two tools a fixed
+  // 4-column row leaves half the section as empty space.
+  const toolGridCols = tools.length >= 4
+    ? 'sm:grid-cols-2 lg:grid-cols-4'
+    : tools.length === 3
+      ? 'sm:grid-cols-2 lg:grid-cols-3'
+      : 'sm:grid-cols-2';
+  const toolGridWidth = tools.length >= 4 ? 'max-w-6xl' : tools.length === 3 ? 'max-w-5xl' : 'max-w-3xl';
+
   return (
     <section className="relative w-full overflow-hidden px-5 py-16 sm:px-8">
-      <div className="mx-auto max-w-6xl">
+      <div className={`mx-auto ${toolGridWidth}`}>
         <ScrollReveal slide>
           <SectionHeader
             icon={<Zap className="h-4 w-4" />}
@@ -64,7 +76,7 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
           />
         </ScrollReveal>
 
-        <ScrollReveal stagger className="mx-auto grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <ScrollReveal stagger className={`mx-auto grid gap-6 ${toolGridCols}`}>
           {tools.map((tool, index) => {
             const info = getToolInfo(tool, settings.toolDetails);
             const model = getDefaultImageModel(tool) || 'Image prompts';

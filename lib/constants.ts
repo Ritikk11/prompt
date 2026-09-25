@@ -84,6 +84,18 @@ export function getAllTools(post: any): string[] {
   return Array.from(toolsSet);
 }
 
+// Admin can mark a tool inactive (AI Tools > Customize). Inactive tools must not
+// surface on any public list — footer chips, home cards, hero, submit form.
+export function isToolActive(tool: string, toolDetails?: Record<string, { active?: boolean }>) {
+  if (!tool || !toolDetails) return true;
+  const key = Object.keys(toolDetails).find(name => name.toLowerCase() === tool.trim().toLowerCase());
+  return !key || toolDetails[key]?.active !== false;
+}
+
+export function getActiveTools(settings?: { aiTools?: string[]; toolDetails?: Record<string, { active?: boolean }> } | null): string[] {
+  return (settings?.aiTools || []).filter(tool => isToolActive(tool, settings?.toolDetails));
+}
+
 export function getToolInfo(tool: string, customDetails?: Record<string, {logo?: string; color?: string; logoScale?: number}>) {
   const normalizedTool = tool?.trim();
   const fallbackEntry = Object.entries(fallbackToolInfo).find(([name]) => name.toLowerCase() === normalizedTool?.toLowerCase());
@@ -110,4 +122,18 @@ export function getToolInfo(tool: string, customDetails?: Record<string, {logo?:
     };
   }
   return { color: localFallback?.color || 'bg-surface-500', logo: localFallback?.logo || '', logoScale: localFallback?.logoScale };
+}
+
+// Server-only settings bodies (legal/static page markdown, article overrides)
+// that no client component reads. Stripping them wherever full settings
+// crosses into a client tree keeps ~80 kB out of every page's flight payload.
+const SERVER_ONLY_SETTINGS_KEYS = [
+  'staticPages', 'pageTerms', 'pagePrivacy', 'pageCookies', 'pageDisclaimer',
+  'pageAbout', 'pageContact', 'pageDmca', 'articleOverrides', 'articleThumbnails',
+] as const;
+
+export function getClientSettings<T extends Record<string, any>>(settings: T): T {
+  const copy: Record<string, any> = { ...settings };
+  for (const key of SERVER_ONLY_SETTINGS_KEYS) delete copy[key];
+  return copy as T;
 }

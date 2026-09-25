@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { Upload, Plus, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import type { HeroPalette, ImagePrompt } from '@/lib/types';
-import { getImageModelForTools } from '@/lib/constants';
+import { getActiveTools, getImageModelForTools } from '@/lib/constants';
 import { optimizeImageFile } from '@/lib/client-image-optimizer';
 import { extractHeroPalette } from '@/lib/client-hero-palette';
 import { uploadImageFileToProvider } from '@/lib/client-upload';
@@ -97,7 +97,7 @@ export default function SubmitPage() {
         title || undefined
       );
       
-      const defaultTool = settings.aiTools[0] || 'ChatGPT';
+      const defaultTool = getActiveTools(settings)[0] || 'ChatGPT';
       setImages(prev => [...prev, { id: generateId(), url, prompt: '', aiTool: defaultTool, model: getImageModelForTools([defaultTool]) }]);
       if (palette) setHeroPalette(current => current || palette);
     } catch (e: any) {
@@ -222,7 +222,7 @@ export default function SubmitPage() {
                 </div>
                 <div className="flex-1 min-w-0 space-y-3">
                   <div className="flex flex-wrap gap-2">
-                    {settings.aiTools.map(tool => {
+                    {getActiveTools(settings).map(tool => {
                       const isSelected = img.aiTools ? img.aiTools.includes(tool) : img.aiTool === tool;
                       return (
                         <label key={tool} className="flex items-center gap-1.5 cursor-pointer bg-white/40 dark:bg-white/5 border border-white/80 dark:border-white/10 px-2 py-1.5 rounded text-xs">
