@@ -63,7 +63,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
   const post = posts.find(p => p.id === initialPost.id) || initialPost;
   
   const allTools = getAllTools(post);
-  const primaryTool = allTools.length > 0 ? allTools[0] : (post.images[0]?.aiTool || '');
+  const primaryTool = allTools.length > 0 ? allTools[0] : (post.images?.[0]?.aiTool || '');
   const toolInfo = getToolInfo(primaryTool, settings?.toolDetails);
   
   // v2 is the site's card design; v1 stays available as the flat alternative.
@@ -156,7 +156,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
             {post.title}
           </h3>
           <div className="flex items-center justify-between text-surface-500 dark:text-surface-400">
-             <span className="text-[10px] font-medium text-surface-600 dark:text-surface-400">{post.images.length} {post.images.length === 1 ? 'Prompt' : 'Prompts'}</span>
+             <span className="text-[10px] font-medium text-surface-600 dark:text-surface-400">{post.images?.length ?? 0} {(post.images?.length ?? 0) === 1 ? 'Prompt' : 'Prompts'}</span>
              {(showLikeCount || showViewCount) && <div className="flex gap-2.5">
                {showViewCount && <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-medium"><Eye className="w-3.5 h-3.5" />{post.views}</span>}
                {showLikeCount && <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-medium"><Heart className="w-3.5 h-3.5" />{post.likes}</span>}
@@ -245,7 +245,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
       {/* Bottom-left prompt count — the one always-on cue on every device. */}
       <div className="absolute bottom-2.5 left-2.5 z-10 pointer-events-none transition-opacity duration-300 [@media(hover:hover)]:group-hover:opacity-0">
         <span className="flex items-center gap-1.5 px-2 py-1 rounded-full text-[9px] font-bold bg-black/40 text-white backdrop-blur-md italic border border-white/10">
-          {post.images.length} {post.images.length === 1 ? 'PROMPT' : 'PROMPTS'}
+          {post.images?.length ?? 0} {(post.images?.length ?? 0) === 1 ? 'PROMPT' : 'PROMPTS'}
         </span>
       </div>
     </Link>

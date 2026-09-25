@@ -103,9 +103,11 @@ export type PostSummary = Pick<
   | 'featuredAt'
 >;
 
-// The only post fields the client islands on a post page actually read.
-// Passing this instead of the full Post keeps the RSC flight payload free of
-// extendedDescription, faqs, referenceImages and duplicated image prompts.
+// The fields the client islands on a post page read, PLUS the summary shape
+// PostCard/DataContext need. PostHeroStats' like/save/view mutations insert
+// this object into the DataContext store as a fallback, and PostCard later
+// renders it from the store — so it must carry a real (thumbnail-only, no
+// prompt text) images array or PostCard's images[0] access throws.
 export interface PostClientMeta {
   id: string;
   slug?: string;
@@ -115,6 +117,14 @@ export interface PostClientMeta {
   likes?: number;
   likedByUser?: boolean;
   bookmarkedByUser?: boolean;
+  thumbnailUrl?: string;
+  thumbnailWidth?: number;
+  thumbnailHeight?: number;
+  aiTools?: string[];
+  tags?: string[];
+  category?: string;
+  categories?: string[];
+  images?: ImagePrompt[];
 }
 
 export interface PostComment {

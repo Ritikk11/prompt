@@ -89,7 +89,9 @@ export default function PostContent({
   // Client islands get only the fields they read. Shipping the full Post
   // through the RSC boundary duplicated extendedDescription, faqs,
   // referenceImages and every image prompt into the flight payload for no
-  // client-side use — this slim slice replaces it.
+  // client-side use. This slim slice keeps a thumbnail-only images array
+  // (prompt text stripped) so that when PostHeroStats' like/view mutation
+  // seeds it into the DataContext store, PostCard can still render it.
   const clientMeta: PostClientMeta = {
     id: post.id,
     slug: post.slug,
@@ -99,6 +101,23 @@ export default function PostContent({
     likes: post.likes,
     likedByUser: post.likedByUser,
     bookmarkedByUser: post.bookmarkedByUser,
+    thumbnailUrl: post.thumbnailUrl,
+    thumbnailWidth: post.thumbnailWidth,
+    thumbnailHeight: post.thumbnailHeight,
+    aiTools: post.aiTools,
+    tags: post.tags,
+    category: post.category,
+    categories: post.categories,
+    images: (post.images || []).map(img => ({
+      id: img.id,
+      url: img.url,
+      prompt: '',
+      aiTool: img.aiTool,
+      aiTools: img.aiTools,
+      model: img.model,
+      width: img.width,
+      height: img.height,
+    })),
   };
   const clientImages = (post.images || []).map(img => ({
     prompt: img.prompt || '',
