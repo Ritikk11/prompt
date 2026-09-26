@@ -26,10 +26,32 @@ export interface PostFaq {
   answer: string;
 }
 
+export type PostType = 'standard' | 'roundup';
+
+export interface RoundupItem {
+  id: string;
+  postId?: string;
+  sourcePostId?: string;
+  sourcePostSlug?: string;
+  title?: string;
+  imageUrl: string;
+  imageWidth?: number;
+  imageHeight?: number;
+  prompt: string;
+  aiTool?: string;
+  model?: string;
+  description?: string;
+  shortDescription?: string;
+  order?: number;
+  tags?: string[];
+}
+
 export interface Post {
   id: string;
   slug: string;
   title: string;
+  postType?: PostType;
+  roundupItems?: RoundupItem[];
   description: string;
   extendedDescription?: string;
   seoTitle?: string;
@@ -101,6 +123,8 @@ export type PostSummary = Pick<
   | 'visibility'
   | 'createdAt'
   | 'featuredAt'
+  | 'postType'
+  | 'roundupItems'
 >;
 
 // The fields the client islands on a post page read, PLUS the summary shape
@@ -112,6 +136,7 @@ export interface PostClientMeta {
   id: string;
   slug?: string;
   title: string;
+  postType?: PostType;
   isPremium?: boolean;
   views?: number;
   likes?: number;

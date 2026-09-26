@@ -182,8 +182,10 @@ export async function generatePromptsSitemapXml(): Promise<string> {
     publishedPosts.forEach(post => {
       const slug = post.slug || post.id;
       if (!slug) return;
+      const isRoundup = post.postType === 'roundup' || post.category === 'Collection' || post.categories?.includes('Collection');
+      const path = isRoundup ? `/collection/${slug}` : `/${slug}`;
       entries.push({
-        url: `${baseUrl}/${slug}`,
+        url: `${baseUrl}${path}`,
         lastModified: post.updatedAt || post.createdAt || now,
       });
     });

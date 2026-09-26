@@ -4,7 +4,7 @@
 export const revalidate = 43200;
 
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { preload, preconnect } from 'react-dom';
 import { getPostBySlugOrId, fetchPostSummaries, fetchSeoPages, getSeoPageBySlug, isPublicPost, fetchSettings } from '@/lib/data';
 import { getThumbnailImageUrl } from '@/lib/image-url';
@@ -182,6 +182,10 @@ export default async function PostPage({ params }: Props) {
   }
 
   if (!post) notFound();
+
+  if (post.postType === 'roundup' || (post.category === 'Collection' && (post.roundupItems?.length || 0) > 0)) {
+    permanentRedirect(`/collection/${post.slug || post.id}`);
+  }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://promptsoul.in';
   const [allPosts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);

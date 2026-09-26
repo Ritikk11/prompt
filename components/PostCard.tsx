@@ -87,12 +87,21 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
   const cardH = post?.thumbnailHeight || post?.images?.[0]?.height;
   const cardRatio = cardW && cardH ? cardW / cardH : undefined;
 
+  const isRoundup = post.postType === 'roundup' || post.category === 'Collection' || post.categories?.includes('Collection');
+  const postHref = isRoundup ? `/collection/${post.slug || post.id}` : `/${post.slug || post.id}`;
+
   const renderBadges = (className = "") => (
     <div className="flex flex-wrap gap-1">
-      {allTools.slice(0, 3).map((tool) => (
-        <Badge key={tool} style={badgeStyle} toolName={tool} toolInfo={getToolInfo(tool, settings?.toolDetails)} className={className} />
-      ))}
-      {allTools.length > 3 && (
+      {isRoundup ? (
+        <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wider bg-gradient-to-r from-amber-500 via-pink-500 to-primary-500 text-white shadow-md shadow-pink-500/20 backdrop-blur-md ${className}`}>
+          <span>✨ Collection</span>
+        </div>
+      ) : (
+        allTools.slice(0, 3).map((tool) => (
+          <Badge key={tool} style={badgeStyle} toolName={tool} toolInfo={getToolInfo(tool, settings?.toolDetails)} className={className} />
+        ))
+      )}
+      {!isRoundup && allTools.length > 3 && (
         <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase bg-black/50 backdrop-blur text-white shadow-md ${className}`}>
           +{allTools.length - 3}
         </div>
@@ -103,7 +112,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
   if (cardStyle === 'v2') {
     return (
       <Link
-        href={`/${post.slug || post.id}`}
+        href={postHref}
         prefetch="intent"
         /* Glass frame around an opaque thumbnail: the frost lives on the mat,
            never on the image. Only border-color and box-shadow transition —
@@ -156,7 +165,9 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
             {post.title}
           </h3>
           <div className="flex items-center justify-between text-surface-500 dark:text-surface-400">
-             <span className="text-[10px] font-medium text-surface-600 dark:text-surface-400">{post.images?.length ?? 0} {(post.images?.length ?? 0) === 1 ? 'Prompt' : 'Prompts'}</span>
+             <span className="text-[10px] font-medium text-surface-600 dark:text-surface-400">
+               {isRoundup ? `${post.roundupItems?.length || post.images?.length || 1} Prompts in Collection` : `${post.images?.length ?? 0} ${(post.images?.length ?? 0) === 1 ? 'Prompt' : 'Prompts'}`}
+             </span>
              {(showLikeCount || showViewCount) && <div className="flex gap-2.5">
                {showViewCount && <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-medium"><Eye className="w-3.5 h-3.5" />{post.views}</span>}
                {showLikeCount && <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-medium"><Heart className="w-3.5 h-3.5" />{post.likes}</span>}
@@ -192,7 +203,7 @@ export default function PostCard({ post: initialPost, index, aspect, cardStyleOv
 
   return (
     <Link
-      href={`/${post.slug || post.id}`}
+      href={postHref}
       prefetch="intent"
       className={`group block relative rounded-2xl overflow-hidden bg-black/[0.04] dark:bg-white/[0.06] transition-all duration-300 hover:shadow-xl active:scale-[0.98] active:shadow-md break-inside-avoid ${aspect ? aspect : ''}`}
       style={{ animationDelay: `${(index || 0) * 80}ms` }}
