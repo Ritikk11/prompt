@@ -80,8 +80,6 @@ export async function generateMainSitemapXml(): Promise<string> {
   const entries: SitemapItem[] = [
     { url: `${baseUrl}`, lastModified: now },
     { url: `${baseUrl}/explore`, lastModified: now },
-    { url: `${baseUrl}/blog`, lastModified: now },
-    { url: `${baseUrl}/guides`, lastModified: now },
   ];
 
   try {
@@ -98,12 +96,18 @@ export async function generateMainSitemapXml(): Promise<string> {
     const staticPaths = ['about', 'contact', 'privacy', 'terms', 'dmca', 'disclaimer', 'cookies'];
 
     // 1. Blog & Guide articles
-    getArticlesForSettings(settings).forEach(article => {
-      entries.push({
-        url: `${baseUrl}/${article.category === 'guide' ? 'guides' : 'blog'}/${article.slug}`,
-        lastModified: new Date(article.dateModified || article.datePublished),
+    if (include.articles ?? false) {
+      entries.push(
+        { url: `${baseUrl}/blog`, lastModified: now },
+        { url: `${baseUrl}/guides`, lastModified: now }
+      );
+      getArticlesForSettings(settings).forEach(article => {
+        entries.push({
+          url: `${baseUrl}/${article.category === 'guide' ? 'guides' : 'blog'}/${article.slug}`,
+          lastModified: new Date(article.dateModified || article.datePublished),
+        });
       });
-    });
+    }
 
     // 2. AI Tools
     if (include.tools ?? true) {

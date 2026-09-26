@@ -166,7 +166,8 @@ const defaultSettings: SiteSettings = {
       "posts": true,
       "tools": true,
       "sections": true,
-      "staticPages": true
+      "staticPages": true,
+      "articles": false
     },
     "bingVerification": "",
     "metaTitleTemplate": "%post_title% | PromptSoul",

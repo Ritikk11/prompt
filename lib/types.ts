@@ -258,6 +258,7 @@ export interface SeoSettings {
     tags?: boolean;
     tools?: boolean;
     staticPages?: boolean;
+    articles?: boolean;
   };
   enableJsonLd?: boolean;
   schemaType?: 'Article' | 'CreativeWork' | 'HowTo';

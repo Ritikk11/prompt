@@ -44,7 +44,7 @@ const defaultSeoSettings: SeoSettings = {
   bingVerification: '',
   pinterestVerification: '',
   robotsText: 'User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\n\nSitemap: https://promptsoul.in/sitemap.xml\nSitemap: https://promptsoul.in/sitemap-prompts.xml',
-  sitemapInclude: { posts: true, sections: true, tags: true, tools: true, staticPages: true },
+  sitemapInclude: { posts: true, sections: true, tags: false, tools: true, staticPages: true, articles: false },
   enableJsonLd: true,
   schemaType: 'Article',
   enableBreadcrumbList: true,
@@ -513,18 +513,19 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                   <button type="button" onClick={() => window.open('/sitemap-prompts.xml', '_blank')} className="rounded-xl px-2.5 py-1.5 text-xs font-bold text-surface-700 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-800 border border-black/5 dark:border-white/10 transition-colors">Prompts Sitemap</button>
                 </div>
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                 {[
                   ['posts', 'Posts'],
                   ['sections', 'Sections'],
                   ['tags', 'Tags'],
                   ['tools', 'Tool pages'],
                   ['staticPages', 'Static pages'],
+                  ['articles', 'Articles'],
                 ].map(([key, label]) => (
                   <div key={key} className="flex items-center justify-between gap-3 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 px-3 py-2 text-xs font-bold text-surface-700 dark:text-surface-300">
                     <span>{label}</span>
                     <Toggle
-                      checked={Boolean((seoSettings.sitemapInclude as any)?.[key] ?? true)}
+                      checked={Boolean((seoSettings.sitemapInclude as any)?.[key] ?? (key === 'articles' || key === 'tags' ? false : true))}
                       onChange={checked => updateSeoSettings({ sitemapInclude: { [key]: checked } as any })}
                     />
                   </div>

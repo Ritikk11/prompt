@@ -10,7 +10,7 @@ import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
 import { formatTitleWithBrand, generateCollectionJsonLd } from '@/lib/seo-helpers';
 import { stringifyJsonLd } from '@/lib/json-ld';
-import { getAllTools } from '@/lib/constants';
+import { getAllTools, getActiveTools, isToolActive } from '@/lib/constants';
 
 interface Props {
   params: Promise<{ tool: string }>;
@@ -18,13 +18,40 @@ interface Props {
 
 type PostSummary = Awaited<ReturnType<typeof fetchPostSummaries>>[number];
 
-// Tools configured in settings get a page even with no posts yet (ToolContent
-// renders an empty state); anything else only exists if a post uses it.
+function findToolKey(tool: string, settings: Awaited<ReturnType<typeof fetchSettings>>): string | null {
+  const normalized = tool.trim().toLowerCase();
+  if (!normalized) return null;
+
+  const fromDetails = Object.keys(settings.toolDetails || {}).find(name => {
+    if (name.toLowerCase() === normalized) return true;
+    const slug = (settings.toolDetails?.[name] as any)?.slug;
+    return slug && slug.toLowerCase() === normalized;
+  });
+  if (fromDetails) return fromDetails;
+
+  const fromAiTools = (settings.aiTools || []).find(name => name.toLowerCase() === normalized);
+  if (fromAiTools) return fromAiTools;
+
+  return null;
+}
+
+// Active tools configured in settings get a page; inactive tools return 404 (notFound).
 function isKnownTool(tool: string, posts: PostSummary[], settings: Awaited<ReturnType<typeof fetchSettings>>) {
   const normalizedTool = tool.trim().toLowerCase();
   if (!normalizedTool) return false;
-  if ((settings.aiTools || []).some(name => name.toLowerCase() === normalizedTool)) return true;
-  return getPublicToolPosts(posts, tool).length > 0;
+
+  const toolKey = findToolKey(tool, settings);
+  if (toolKey) {
+    if (!isToolActive(toolKey, settings.toolDetails)) return false;
+    return true;
+  }
+
+  const publicPosts = getPublicToolPosts(posts, tool);
+  if (publicPosts.length > 0) {
+    return isToolActive(tool, settings.toolDetails);
+  }
+
+  return false;
 }
 
 function getPublicToolPosts(posts: PostSummary[], tool: string) {
@@ -40,10 +67,10 @@ function getPublicToolPosts(posts: PostSummary[], tool: string) {
 }
 
 function getDisplayTool(tool: string, posts: Awaited<ReturnType<typeof fetchPostSummaries>>, settings: Awaited<ReturnType<typeof fetchSettings>>) {
-  const normalizedTool = tool.trim().toLowerCase();
-  const fromSettings = Object.keys(settings.toolDetails || {}).find(name => name.toLowerCase() === normalizedTool);
-  if (fromSettings) return fromSettings;
+  const toolKey = findToolKey(tool, settings);
+  if (toolKey) return toolKey;
 
+  const normalizedTool = tool.trim().toLowerCase();
   for (const post of posts) {
     const match = getAllTools(post).find(name => name.toLowerCase() === normalizedTool);
     if (match) return match;
@@ -155,11 +182,14 @@ export async function generateStaticParams() {
   try {
     const [posts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);
     const tools = new Set<string>();
-    (settings.aiTools || []).forEach(t => {
-      if (t) tools.add(t.toLowerCase());
+    getActiveTools(settings).forEach(t => {
+      const slug = (settings.toolDetails?.[t] as any)?.slug || t.toLowerCase();
+      if (slug) tools.add(slug);
     });
     (posts || []).forEach(p => getAllTools(p).forEach(t => {
-      if (t) tools.add(t.toLowerCase());
+      if (t && isToolActive(t, settings.toolDetails)) {
+        tools.add(t.toLowerCase());
+      }
     }));
     return Array.from(tools).filter(Boolean).map(tool => ({ tool }));
   } catch (error) {
