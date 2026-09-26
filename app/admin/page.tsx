@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback, Suspense } from 'react';
 import { useData } from '@/components/context/DataContext';
 
-import type { Post, Section, ImagePrompt, HeroPalette, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, CreativeDirectionItem, ShareTarget, DiscoveryPageSettings, ArticleSettingsOverride, CategoryPreset, PostType, RoundupItem } from '@/lib/types';
+import type { Post, Section, ImagePrompt, HeroPalette, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, CreativeDirectionItem, ShareTarget, DiscoveryPageSettings, ArticleSettingsOverride, CategoryPreset } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
@@ -10,7 +10,7 @@ import {
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload, Copy,
   Settings, Check, Filter, Search, RotateCcw, GripVertical, Image as ImageIcon,
   Zap, Layers, Info, LayoutTemplate, BarChart2, LayoutDashboard, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass, Menu, Mail, FolderTree,
-  Ban, Shield, Flag, CheckCircle, Cpu, BookOpen, Newspaper, Share2, Loader2, KeyRound, LogOut, ExternalLink
+  Ban, Shield, Flag, CheckCircle, Cpu, BookOpen, Newspaper, Share2, Loader2, KeyRound, LogOut
 } from 'lucide-react';
 import { showToast } from '@/components/ui/ToastContainer';
 import { ConfirmDialogHost, confirmAction } from '@/components/ui/ConfirmDialog';
@@ -1151,11 +1151,6 @@ function AdminInner() {
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
   const [images, setImages] = useState<ImagePrompt[]>([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
   const [assignedSections, setAssignedSections] = useState<string[]>([]);
-  const [postType, setPostType] = useState<PostType>('standard');
-  const [roundupItems, setRoundupItems] = useState<RoundupItem[]>([]);
-  const [showPromptPickerModal, setShowPromptPickerModal] = useState(false);
-  const [promptPickerSearch, setPromptPickerSearch] = useState('');
-  const [promptPickerTool, setPromptPickerTool] = useState('');
 
   // --- Draft persistence (sessionStorage) ---
   // Debounce-save the in-progress post form so even a genuine reload (browser
@@ -1172,7 +1167,6 @@ function AdminInner() {
         referenceImages, seoTitle, seoDescription, schemaType, faqs,
         tagsStr, category, categoriesStr, selectedAiTools, featured,
         status, visibility, images, assignedSections,
-        postType, roundupItems,
         savedAt: Date.now(),
       };
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
@@ -1181,7 +1175,7 @@ function AdminInner() {
     showPostForm, editingPost, title, slug, description, extendedDescription,
     thumbnailUrl, heroPalette, referenceImages, seoTitle, seoDescription, schemaType, faqs,
     tagsStr, category, categoriesStr, selectedAiTools, featured, status,
-    visibility, images, assignedSections, postType, roundupItems,
+    visibility, images, assignedSections,
   ]);
 
   // Debounce draft saves to every 500ms
@@ -1236,8 +1230,6 @@ function AdminInner() {
       if (draft.visibility) setVisibility(draft.visibility);
       if (draft.images?.length) setImages(draft.images);
       if (draft.assignedSections) setAssignedSections(draft.assignedSections);
-      if (draft.postType) setPostType(draft.postType);
-      if (draft.roundupItems?.length) setRoundupItems(draft.roundupItems);
       setShowPostForm(true);
       showToast('Restored your unsaved draft', 'info');
     } catch { /* corrupt draft — ignore */ }
@@ -1246,24 +1238,6 @@ function AdminInner() {
   const clearDraft = useCallback(() => {
     try { sessionStorage.removeItem(DRAFT_KEY); } catch {}
   }, []);
-
-  const eligiblePublishedPosts = useMemo(() => {
-    return posts.filter(p => {
-      const isRoundup = p.postType === 'roundup' || p.category === 'Collection' || p.categories?.includes('Collection');
-      if (isRoundup) return false;
-      if (promptPickerTool && !getAllTools(p).some(t => t.toLowerCase() === promptPickerTool.toLowerCase())) {
-        return false;
-      }
-      if (promptPickerSearch) {
-        const query = promptPickerSearch.toLowerCase().trim();
-        const titleMatch = p.title.toLowerCase().includes(query);
-        const promptMatch = (p.images || []).some(img => img.prompt?.toLowerCase().includes(query));
-        const tagMatch = (p.tags || []).some(t => t.toLowerCase().includes(query));
-        if (!titleMatch && !promptMatch && !tagMatch) return false;
-      }
-      return true;
-    });
-  }, [posts, promptPickerTool, promptPickerSearch]);
 
 
   // Section form
@@ -1789,7 +1763,6 @@ function AdminInner() {
   const resetForm = () => {
     setTitle(''); setSlug(''); setDescription(''); setExtendedDescription(''); setThumbnailUrl(''); setThumbnailWidth(undefined); setThumbnailHeight(undefined); setHeroPalette(undefined); setReferenceImages([]); setSeoTitle(''); setSeoDescription(''); setSchemaType((settings.seoSettings?.schemaType as Post['schemaType']) || 'Article'); setFaqs([]); setTagsStr(''); setCategory(''); setCategoriesStr(''); setSelectedAiTools([]);
     setFeatured(false); setImages([{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
-    setPostType('standard'); setRoundupItems([]); setShowPromptPickerModal(false); setPromptPickerSearch(''); setPromptPickerTool('');
     setStatus('published'); setVisibility('public');
     setEditingPost(null); setShowPostForm(false); setAssignedSections([]);
     clearDraft();
@@ -1809,24 +1782,6 @@ function AdminInner() {
 
   const startEdit = (post: Post) => {
     setEditingPost(post);
-    const isRoundup = post.postType === 'roundup' || post.category === 'Collection' || post.categories?.includes('Collection');
-    setPostType(isRoundup ? 'roundup' : (post.postType || 'standard'));
-    if (post.roundupItems && post.roundupItems.length > 0) {
-      setRoundupItems(post.roundupItems);
-    } else if (isRoundup && post.images && post.images.length > 0) {
-      setRoundupItems(post.images.map((img, idx) => ({
-        id: img.id || generateId(),
-        title: `Prompt #${idx + 1}`,
-        imageUrl: img.url,
-        prompt: img.prompt,
-        aiTool: img.aiTool || post.aiTools?.[0] || 'ChatGPT',
-        model: img.model,
-        shortDescription: '',
-        order: idx + 1
-      })));
-    } else {
-      setRoundupItems([]);
-    }
     setTitle(post.title);
     setSlug(post.slug || '');
     setDescription(post.description);
@@ -1841,7 +1796,7 @@ function AdminInner() {
     setSchemaType(post.schemaType || (settings.seoSettings?.schemaType as Post['schemaType']) || 'Article');
     setFaqs(post.faqs || []);
     setTagsStr(post.tags.join(', '));
-    setCategory(post.category || (isRoundup ? 'Collection' : ''));
+    setCategory(post.category || '');
     setCategoriesStr(post.categories?.join(', ') || '');
     setSelectedAiTools(post.aiTools || []);
     setFeatured(post.featured);
@@ -1917,72 +1872,6 @@ function AdminInner() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
-
-  const handleAddBlankRoundupItem = () => {
-    setRoundupItems(prev => [
-      ...prev,
-      {
-        id: generateId(),
-        title: `Prompt #${prev.length + 1}`,
-        imageUrl: '',
-        prompt: '',
-        aiTool: selectedAiTools[0] || 'ChatGPT',
-        model: getDefaultImageModel(selectedAiTools[0] || 'ChatGPT'),
-        shortDescription: '',
-        order: prev.length + 1
-      }
-    ]);
-  };
-
-  const handleSelectPublishedPostIntoRoundup = (publishedPost: Post) => {
-    const primaryImg = publishedPost.images?.[0];
-    const newItem: RoundupItem = {
-      id: generateId(),
-      sourcePostId: publishedPost.id,
-      sourcePostSlug: publishedPost.slug || publishedPost.id,
-      title: publishedPost.title,
-      imageUrl: publishedPost.thumbnailUrl || primaryImg?.url || '',
-      imageWidth: publishedPost.thumbnailWidth,
-      imageHeight: publishedPost.thumbnailHeight,
-      prompt: primaryImg?.prompt || publishedPost.description || '',
-      aiTool: primaryImg?.aiTool || publishedPost.aiTools?.[0] || 'ChatGPT',
-      model: primaryImg?.model,
-      shortDescription: publishedPost.description || '',
-      order: roundupItems.length + 1
-    };
-    setRoundupItems(prev => [...prev, newItem]);
-    if (!thumbnailUrl && newItem.imageUrl) {
-      setThumbnailUrl(newItem.imageUrl);
-      if (publishedPost.heroPalette) setHeroPalette(publishedPost.heroPalette);
-      if (publishedPost.thumbnailWidth) setThumbnailWidth(publishedPost.thumbnailWidth);
-      if (publishedPost.thumbnailHeight) setThumbnailHeight(publishedPost.thumbnailHeight);
-    }
-    showToast(`Added "${publishedPost.title}" to collection`, 'success');
-  };
-
-  const handleUpdateRoundupItem = (idx: number, patch: Partial<RoundupItem>) => {
-    setRoundupItems(prev => {
-      const copy = [...prev];
-      copy[idx] = { ...copy[idx], ...patch };
-      return copy;
-    });
-  };
-
-  const handleRemoveRoundupItem = (idx: number) => {
-    setRoundupItems(prev => prev.filter((_, i) => i !== idx).map((it, i) => ({ ...it, order: i + 1 })));
-  };
-
-  const handleMoveRoundupItem = (idx: number, direction: 'up' | 'down') => {
-    setRoundupItems(prev => {
-      const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
-      const copy = [...prev];
-      const temp = copy[idx];
-      copy[idx] = copy[targetIdx];
-      copy[targetIdx] = temp;
-      return copy.map((it, i) => ({ ...it, order: i + 1 }));
-    });
-  };
 
   const addImageField = () => {
     setImages(prev => [...prev, { id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
@@ -2438,17 +2327,8 @@ function AdminInner() {
   };
 
   const handleSavePost = async () => {
-    let effectiveThumbnail = thumbnailUrl;
-    if (!effectiveThumbnail && postType === 'roundup' && roundupItems.length > 0) {
-      effectiveThumbnail = roundupItems.find(i => i.imageUrl)?.imageUrl || '';
-    }
-    if (!effectiveThumbnail) {
-      showToast(postType === 'roundup' ? 'Please add at least one prompt with an image or provide a cover thumbnail.' : 'Thumbnail URL is required', 'error');
-      return;
-    }
-
-    if (postType === 'roundup' && roundupItems.length === 0) {
-      showToast('A curated collection requires at least one prompt item.', 'error');
+    if (!thumbnailUrl) {
+      showToast('Thumbnail URL is required', 'error');
       return;
     }
 
@@ -2462,33 +2342,17 @@ function AdminInner() {
     }
 
     const postId = editingPost?.id || generateId();
-    const isFinished = postType === 'roundup'
-      ? title.trim() !== '' && roundupItems.length > 0 && roundupItems.some(i => i.imageUrl || i.prompt)
-      : title.trim() !== '' && description.trim() !== '' && images.length > 0 && images.some(i => i.url || i.prompt);
+    const isFinished = title.trim() !== '' && description.trim() !== '' && images.length > 0 && images.some(i => i.url || i.prompt);
     let finalStatus = status;
     if (!isFinished && status === 'published') {
       finalStatus = 'draft';
     }
 
     let resolvedHeroPalette = heroPalette;
-    if (!resolvedHeroPalette && effectiveThumbnail && !effectiveThumbnail.startsWith('Uploading')) {
-      resolvedHeroPalette = await extractHeroPalette(getThumbnailImageUrl(effectiveThumbnail, { width: 64, quality: 50 }));
+    if (!resolvedHeroPalette && thumbnailUrl && !thumbnailUrl.startsWith('Uploading')) {
+      resolvedHeroPalette = await extractHeroPalette(getThumbnailImageUrl(thumbnailUrl, { width: 64, quality: 50 }));
       if (resolvedHeroPalette) setHeroPalette(resolvedHeroPalette);
     }
-
-    const postImages = postType === 'roundup'
-      ? roundupItems.map(item => ({
-          id: item.id || generateId(),
-          url: item.imageUrl,
-          prompt: item.prompt,
-          aiTool: item.aiTool || 'ChatGPT',
-          model: item.model || getDefaultImageModel(item.aiTool || 'ChatGPT')
-        }))
-      : images.filter(i => i.url || i.prompt || i.aiTool);
-
-    const postAiTools = postType === 'roundup'
-      ? Array.from(new Set([...selectedAiTools, ...roundupItems.map(i => i.aiTool).filter(Boolean)]))
-      : selectedAiTools;
 
     const post: any = {
       id: postId,
@@ -2500,18 +2364,16 @@ function AdminInner() {
       faqs: faqs
         .map(item => ({ question: item.question.trim(), answer: item.answer.trim() }))
         .filter(item => item.question && item.answer),
-      thumbnailUrl: effectiveThumbnail,
+      thumbnailUrl,
       thumbnailWidth: thumbnailWidth || undefined,
       thumbnailHeight: thumbnailHeight || undefined,
       heroPalette: resolvedHeroPalette,
       referenceImages: referenceImages.filter(Boolean),
-      images: postImages,
+      images: images.filter(i => i.url || i.prompt || i.aiTool),
       tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
-      category: postType === 'roundup' ? (category || 'Collection') : (category || undefined),
+      category: category || undefined,
       categories: categoriesStr.split(',').map(c => c.trim()).filter(Boolean),
-      aiTools: postAiTools,
-      postType: postType || 'standard',
-      roundupItems: postType === 'roundup' ? roundupItems : undefined,
+      aiTools: selectedAiTools,
       authorId: editingPost?.authorId,
       authorName: editingPost?.authorName,
       authorUsername: editingPost?.authorUsername,
@@ -4330,59 +4192,6 @@ function AdminInner() {
                 </button>
               </div>
 
-              {/* Post Format Selector */}
-              <div className="mb-6 p-1.5 rounded-2xl bg-black/[0.04] dark:bg-white/[0.04] border border-black/[0.08] dark:border-white/10 flex flex-col sm:flex-row gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPostType('standard')}
-                  className={`flex-1 flex items-center gap-3 py-3 px-4 rounded-xl text-xs font-bold transition-all text-left ${
-                    postType === 'standard'
-                      ? 'bg-white dark:bg-surface-800 text-surface-900 dark:text-white shadow-sm border border-black/[0.08] dark:border-white/10'
-                      : 'text-surface-500 hover:text-surface-900 dark:hover:text-white'
-                  }`}
-                >
-                  <div className={`p-2 rounded-lg ${postType === 'standard' ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400' : 'bg-black/5 dark:bg-white/5 text-surface-400'}`}>
-                    <ImageIcon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div>Standard Prompt Post</div>
-                    <div className="text-[10px] font-normal text-surface-400">Single or multi-variant prompt showcase</div>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPostType('roundup');
-                    if (!category) setCategory('Collection');
-                  }}
-                  className={`flex-1 flex items-center gap-3 py-3 px-4 rounded-xl text-xs font-bold transition-all text-left ${
-                    postType === 'roundup'
-                      ? 'bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-primary-500/15 text-surface-900 dark:text-white shadow-sm border border-amber-500/30'
-                      : 'text-surface-500 hover:text-surface-900 dark:hover:text-white'
-                  }`}
-                >
-                  <div className={`p-2 rounded-lg ${postType === 'roundup' ? 'bg-amber-500/20 text-amber-500' : 'bg-black/5 dark:bg-white/5 text-surface-400'}`}>
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div>Curated Collection / Roundup</div>
-                    <div className="text-[10px] font-normal text-surface-400">Editorial article with multiple prompts & commentary</div>
-                  </div>
-                </button>
-              </div>
-
-              {postType === 'roundup' && (
-                <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-xs text-surface-700 dark:text-surface-300 flex items-start gap-3">
-                  <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <p className="font-semibold text-surface-900 dark:text-white">Curated Collection Mode Active</p>
-                    <p>
-                      This post will publish as a dedicated article at <span className="font-mono font-medium text-primary-600 dark:text-primary-400">/collection/{slug || '[slug]'}</span> and display across site feeds with a collection badge. You can pick published prompts from your database or add custom prompts below with editorial commentary.
-                    </p>
-                  </div>
-                </div>
-              )}
-
               <div className="mb-8 p-5 bg-primary-500/10 dark:bg-primary-500/[0.08] border border-primary-500/25 dark:border-primary-400/20 rounded-2xl backdrop-blur-xl shadow-sm space-y-4">
                 <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400 font-medium">
                   <Zap className="w-5 h-5" />
@@ -4982,299 +4791,7 @@ function AdminInner() {
                   </div>
                 )}
 
-                {/* Images or Curated Collection Items */}
-                {postType === 'roundup' ? (
-                  <div className="space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-primary-500/10 border border-amber-500/25">
-                      <div>
-                        <div className="flex items-center gap-2 font-bold text-sm text-surface-900 dark:text-white">
-                          <Sparkles className="w-4 h-4 text-amber-500" />
-                          <span>Collection Prompts ({roundupItems.length})</span>
-                        </div>
-                        <p className="text-xs text-surface-500 mt-0.5">
-                          Combine selected published prompts with custom manual additions and per-prompt commentary.
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPromptPickerSearch('');
-                            setShowPromptPickerModal(true);
-                          }}
-                          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-500 text-white hover:bg-primary-600 text-xs font-bold shadow-sm transition-all active:scale-95"
-                        >
-                          <Search className="w-3.5 h-3.5" />
-                          Select Published Prompts
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleAddBlankRoundupItem}
-                          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-surface-800 text-surface-900 dark:text-white hover:bg-black/5 dark:hover:bg-white/5 text-xs font-bold transition-all active:scale-95"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                          Add Manual Item
-                        </button>
-                      </div>
-                    </div>
-
-                    {roundupItems.length === 0 ? (
-                      <div className="text-center py-12 px-6 rounded-2xl border-2 border-dashed border-black/10 dark:border-white/10 space-y-3">
-                        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center mx-auto text-amber-500">
-                          <Sparkles className="w-6 h-6" />
-                        </div>
-                        <h4 className="text-base font-bold">No prompts in this collection yet</h4>
-                        <p className="text-xs text-surface-400 max-w-md mx-auto">
-                          Start adding prompts by picking already published posts from your library, or add brand-new manual prompts with custom editorial commentary.
-                        </p>
-                        <div className="flex justify-center gap-3 pt-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPromptPickerSearch('');
-                              setShowPromptPickerModal(true);
-                            }}
-                            className="px-4 py-2 rounded-xl bg-primary-500 text-white text-xs font-bold hover:bg-primary-600 transition-colors"
-                          >
-                            Browse Published Prompts
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleAddBlankRoundupItem}
-                            className="px-4 py-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                          >
-                            Add Manual Prompt
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {roundupItems.map((item, idx) => (
-                          <div
-                            key={item.id}
-                            className="p-5 rounded-2xl border border-white/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.05] backdrop-blur-md shadow-sm space-y-4"
-                          >
-                            {/* Card Top Action Bar */}
-                            <div className="flex items-center justify-between pb-3 border-b border-black/[0.06] dark:border-white/[0.06]">
-                              <div className="flex items-center gap-2">
-                                <span className="w-6 h-6 rounded-lg bg-black/5 dark:bg-white/10 font-bold text-xs flex items-center justify-center text-surface-600 dark:text-surface-300">
-                                  #{idx + 1}
-                                </span>
-                                {item.sourcePostId ? (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                    🔗 Published Prompt
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20">
-                                    ✍️ Manual Prompt
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  disabled={idx === 0}
-                                  onClick={() => handleMoveRoundupItem(idx, 'up')}
-                                  className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-surface-500 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                                  title="Move up"
-                                >
-                                  <ChevronUp className="w-4 h-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={idx === roundupItems.length - 1}
-                                  onClick={() => handleMoveRoundupItem(idx, 'down')}
-                                  className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-surface-500 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                                  title="Move down"
-                                >
-                                  <ChevronDown className="w-4 h-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveRoundupItem(idx)}
-                                  className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-500 transition-colors ml-1"
-                                  title="Remove from collection"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Item Heading / Sub-title */}
-                            <div>
-                              <label className="block text-xs font-semibold text-surface-500 mb-1">
-                                Item Heading / Title (Optional)
-                              </label>
-                              <input
-                                type="text"
-                                value={item.title || ''}
-                                onChange={e => handleUpdateRoundupItem(idx, { title: e.target.value })}
-                                placeholder={`e.g. Prompt #${idx + 1} - Cyberpunk Detective`}
-                                className="w-full px-3.5 py-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-xs"
-                              />
-                            </div>
-
-                            {/* 2-Column Item Details: Image Left, Prompt/Desc Right */}
-                            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                              {/* Left Column: Image & Tool */}
-                              <div className="md:col-span-5 space-y-3">
-                                <div>
-                                  <label className="block text-xs font-semibold text-surface-500 mb-1">
-                                    Image URL or Upload *
-                                  </label>
-                                  <div className="flex gap-1.5">
-                                    <input
-                                      type="text"
-                                      value={item.imageUrl}
-                                      onChange={e => handleUpdateRoundupItem(idx, { imageUrl: e.target.value })}
-                                      placeholder="https://..."
-                                      className="flex-1 px-3 py-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-xs min-w-0"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => setMediaLibraryCallback(() => (url: string) => handleUpdateRoundupItem(idx, { imageUrl: url }))}
-                                      className="p-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] hover:border-primary-500 text-surface-500 shrink-0"
-                                      title="Choose from media library"
-                                    >
-                                      <ImageIcon className="w-3.5 h-3.5" />
-                                    </button>
-                                    <label className="p-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] hover:border-primary-500 text-surface-500 shrink-0 cursor-pointer">
-                                      <Upload className="w-3.5 h-3.5" />
-                                      <input
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={async e => {
-                                          const file = e.target.files?.[0];
-                                          if (file) {
-                                            try {
-                                              const meta = await uploadImageFileWithMeta(file, 'prompt', item.title || `item-${idx + 1}`);
-                                              handleUpdateRoundupItem(idx, {
-                                                imageUrl: meta.url,
-                                                imageWidth: meta.width,
-                                                imageHeight: meta.height
-                                              });
-                                            } catch (err: any) {
-                                              showToast('Failed to upload image: ' + (err?.message || err), 'error');
-                                            }
-                                          }
-                                        }}
-                                      />
-                                    </label>
-                                  </div>
-                                </div>
-
-                                {/* Image Preview Thumbnail */}
-                                {item.imageUrl && (
-                                  <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-black/10 dark:border-white/10 bg-black/5 group">
-                                    <Image
-                                      src={item.imageUrl}
-                                      alt={item.title || `Item ${idx + 1}`}
-                                      fill
-                                      className="object-cover"
-                                      unoptimized
-                                    />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setThumbnailUrl(item.imageUrl);
-                                          showToast('Set as collection cover thumbnail', 'success');
-                                        }}
-                                        className="px-2.5 py-1.5 rounded-lg bg-emerald-500 text-white text-[11px] font-bold shadow hover:bg-emerald-600 transition-colors"
-                                      >
-                                        ★ Set as Cover
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleUpdateRoundupItem(idx, { imageUrl: '' })}
-                                        className="p-1.5 rounded-lg bg-red-500 text-white text-[11px] font-bold shadow hover:bg-red-600 transition-colors"
-                                        title="Clear image"
-                                      >
-                                        <X className="w-3.5 h-3.5" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* AI Tool selection */}
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div>
-                                    <label className="block text-[11px] font-semibold text-surface-500 mb-1">
-                                      AI Tool
-                                    </label>
-                                    <select
-                                      value={item.aiTool}
-                                      onChange={e => handleUpdateRoundupItem(idx, {
-                                        aiTool: e.target.value,
-                                        model: getDefaultImageModel(e.target.value)
-                                      })}
-                                      className="w-full px-2.5 py-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] text-xs font-medium outline-none focus:border-primary-500"
-                                    >
-                                      {(settings.aiTools && settings.aiTools.length > 0
-                                        ? settings.aiTools
-                                        : ['ChatGPT', 'Midjourney', 'DALL-E', 'Flux', 'Stable Diffusion', 'Ideogram', 'Leonardo AI', 'Civitai', 'Fooocus']
-                                      ).map(tool => (
-                                        <option key={tool} value={tool}>{tool}</option>
-                                      ))}
-                                    </select>
-                                  </div>
-                                  <div>
-                                    <label className="block text-[11px] font-semibold text-surface-500 mb-1">
-                                      Model / Version
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={item.model || ''}
-                                      onChange={e => handleUpdateRoundupItem(idx, { model: e.target.value })}
-                                      placeholder="e.g. v6.1 / Schnell"
-                                      className="w-full px-2.5 py-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] text-xs outline-none focus:border-primary-500"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Right Column: Prompt Textarea & Commentary */}
-                              <div className="md:col-span-7 space-y-3">
-                                <div>
-                                  <div className="flex items-center justify-between mb-1">
-                                    <label className="text-xs font-semibold text-surface-500">
-                                      Prompt Code / Text *
-                                    </label>
-                                    <span className="text-[10px] text-surface-400">
-                                      {item.prompt.length} chars
-                                    </span>
-                                  </div>
-                                  <textarea
-                                    value={item.prompt}
-                                    onChange={e => handleUpdateRoundupItem(idx, { prompt: e.target.value })}
-                                    rows={4}
-                                    placeholder="Enter the full AI generation prompt here..."
-                                    className="w-full p-3 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-xs font-mono resize-y"
-                                  />
-                                </div>
-
-                                <div>
-                                  <label className="block text-xs font-semibold text-surface-500 mb-1">
-                                    Short Description / Editorial Commentary
-                                  </label>
-                                  <textarea
-                                    value={item.shortDescription || ''}
-                                    onChange={e => handleUpdateRoundupItem(idx, { shortDescription: e.target.value })}
-                                    rows={3}
-                                    placeholder="Why this prompt works, recommendations for aspect ratio, style keywords, lighting tips..."
-                                    className="w-full p-3 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-xs resize-y"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                /* Images */
+                {/* Images */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <label className="text-sm font-medium flex items-center gap-2">
@@ -5500,7 +5017,6 @@ function AdminInner() {
                     ))}
                   </div>
                 </div>
-                )}
 
                 <div className="flex flex-wrap gap-3 pt-4">
                   <ActionButton onClick={handleSavePost} className="flex-1 py-2.5 sm:flex-none">
@@ -5511,144 +5027,6 @@ function AdminInner() {
                   </ActionButton>
                 </div>
               </div>
-
-              {/* Published Prompt Picker Modal */}
-              {showPromptPickerModal && (
-                <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-                  <div className="bg-white dark:bg-surface-900 border border-black/10 dark:border-white/10 rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                    {/* Modal Header */}
-                    <div className="p-6 border-b border-black/[0.08] dark:border-white/[0.08] flex items-center justify-between shrink-0">
-                      <div>
-                        <h3 className="text-lg font-bold text-surface-900 dark:text-white flex items-center gap-2">
-                          <Sparkles className="w-5 h-5 text-amber-500" />
-                          Select from Published Prompts
-                        </h3>
-                        <p className="text-xs text-surface-500 mt-0.5">
-                          Pick existing published prompts from your database to feature in this collection.
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowPromptPickerModal(false)}
-                        className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 transition-colors"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    {/* Filter / Search Bar */}
-                    <div className="p-4 bg-surface-50/50 dark:bg-white/[0.02] border-b border-black/[0.06] dark:border-white/[0.06] flex flex-col sm:flex-row gap-3 shrink-0">
-                      <div className="relative flex-1">
-                        <Search className="w-4 h-4 text-surface-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                        <input
-                          type="text"
-                          value={promptPickerSearch}
-                          onChange={e => setPromptPickerSearch(e.target.value)}
-                          placeholder="Search prompts by title, prompt text, or tags..."
-                          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-black/[0.08] bg-white dark:border-white/10 dark:bg-surface-800 text-xs outline-none focus:border-primary-500"
-                        />
-                      </div>
-                      <select
-                        value={promptPickerTool}
-                        onChange={e => setPromptPickerTool(e.target.value)}
-                        className="px-3.5 py-2.5 rounded-xl border border-black/[0.08] bg-white dark:border-white/10 dark:bg-surface-800 text-xs outline-none focus:border-primary-500 shrink-0 font-medium"
-                      >
-                        <option value="">All AI Tools</option>
-                        {(settings.aiTools && settings.aiTools.length > 0 ? settings.aiTools : ['ChatGPT', 'Midjourney', 'DALL-E', 'Flux', 'Stable Diffusion', 'Ideogram']).map(t => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Posts Grid */}
-                    <div className="p-6 overflow-y-auto flex-1 divide-y divide-black/[0.06] dark:divide-white/[0.06]">
-                      {eligiblePublishedPosts.length === 0 ? (
-                        <div className="text-center py-16 text-surface-400 text-sm">
-                          No published prompts found matching your search.
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {eligiblePublishedPosts.map(p => {
-                            const isAlreadyIn = roundupItems.some(item => item.sourcePostId === p.id);
-                            const primaryImg = p.images?.[0];
-                            const thumb = p.thumbnailUrl || primaryImg?.url || '';
-                            const tool = primaryImg?.aiTool || p.aiTools?.[0] || 'ChatGPT';
-
-                            return (
-                              <div
-                                key={p.id}
-                                className={`p-4 rounded-2xl border transition-all flex gap-3.5 items-start ${
-                                  isAlreadyIn
-                                    ? 'border-emerald-500/30 bg-emerald-500/[0.03]'
-                                    : 'border-black/[0.08] dark:border-white/10 bg-white dark:bg-surface-800/60 hover:border-primary-500/50'
-                                }`}
-                              >
-                                {thumb ? (
-                                  <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-black/10">
-                                    <Image src={thumb} alt={p.title} fill className="object-cover" unoptimized />
-                                  </div>
-                                ) : (
-                                  <div className="w-16 h-16 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center shrink-0">
-                                    <ImageIcon className="w-6 h-6 text-surface-400" />
-                                  </div>
-                                )}
-
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary-500/10 text-primary-600 dark:text-primary-400">
-                                      {tool}
-                                    </span>
-                                    {isAlreadyIn && (
-                                      <span className="text-[10px] font-bold text-emerald-500 flex items-center gap-0.5">
-                                        <Check className="w-3 h-3" /> In Collection
-                                      </span>
-                                    )}
-                                  </div>
-                                  <h4 className="text-xs font-bold text-surface-900 dark:text-white truncate">
-                                    {p.title}
-                                  </h4>
-                                  <p className="text-[11px] text-surface-500 line-clamp-2 mt-0.5 font-mono">
-                                    {primaryImg?.prompt || p.description || 'No prompt text'}
-                                  </p>
-
-                                  <div className="mt-2.5 flex items-center justify-between">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleSelectPublishedPostIntoRoundup(p)}
-                                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                                        isAlreadyIn
-                                          ? 'bg-black/5 dark:bg-white/10 text-surface-700 dark:text-surface-300 hover:bg-primary-500 hover:text-white'
-                                          : 'bg-primary-500 hover:bg-primary-600 text-white shadow-sm active:scale-95'
-                                      }`}
-                                    >
-                                      <Plus className="w-3 h-3" />
-                                      {isAlreadyIn ? 'Add Again' : 'Add to Collection'}
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Modal Footer */}
-                    <div className="p-4 bg-surface-50/50 dark:bg-white/[0.02] border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between shrink-0 text-xs">
-                      <span className="text-surface-400">
-                        {eligiblePublishedPosts.length} published prompts available
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowPromptPickerModal(false)}
-                        className="px-4 py-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 font-bold transition-colors"
-                      >
-                        Done ({roundupItems.length} selected)
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>

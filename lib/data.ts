@@ -837,8 +837,6 @@ export function toPostSummary(post: Post): Post {
     status: post.status,
     visibility: post.visibility,
     createdAt: post.createdAt,
-    postType: post.postType || (post.category === 'Collection' || (post.categories || []).includes('Collection') ? 'roundup' : undefined),
-    roundupItems: post.roundupItems,
   };
 }
 
@@ -946,7 +944,6 @@ function mapSummaryRow(row: PostSummaryRow): PostSummary {
     visibility: (row.visibility || 'public') as Post['visibility'],
     createdAt: row.created_at || '',
     featuredAt: row.featured_at || undefined,
-    postType: row.category === 'Collection' || (row.categories || []).includes('Collection') ? 'roundup' : undefined,
   };
 }
 
