@@ -59,7 +59,7 @@ function FooterContent() {
     : footerGroups;
   // Tools configured in settings always render a page (empty state when no
   // posts yet), so link them all — except ones the admin marked inactive.
-  const footerTools = getActiveTools(settings).slice(0, 10);
+  const footerTools = (typeof getActiveTools === 'function' ? getActiveTools(settings) : (settings?.aiTools || [])).slice(0, 10);
   // w-fit keeps the clickable area on the text only, not the whole column width.
   const footerLinkClass = 'block w-fit text-sm text-surface-600 dark:text-surface-300 hover:text-primary-600 dark:hover:text-primary-300 transition-colors';
   const social = settings.socialLinks || {};

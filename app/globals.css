@@ -322,6 +322,33 @@ textarea {
   animation: fadeIn 0.4s ease-out;
 }
 
+@keyframes pageSurfaceRise {
+  from {
+    transform: translateY(14px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageContentFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.page-enter {
+  animation: pageSurfaceRise 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  will-change: transform;
+}
+
+.page-enter-content {
+  animation: pageContentFade 0.35s ease-out backwards;
+}
+
 @keyframes slideInRight {
   from {
     transform: translateX(100%);
@@ -949,6 +976,7 @@ body {
   @apply border border-white/60 backdrop-blur-md backdrop-saturate-150 dark:border-white/10 transform-gpu;
   background-color: transparent;
   backface-visibility: hidden;
+  will-change: backdrop-filter;
 }
 
 /* glass-surface + the default radius and shadow. Self-contained rather than
@@ -957,6 +985,7 @@ body {
   @apply rounded-2xl shadow-lg shadow-slate-900/5 border border-white/60 backdrop-blur-md backdrop-saturate-150 dark:border-white/10 transform-gpu;
   background-color: transparent;
   backface-visibility: hidden;
+  will-change: backdrop-filter;
 }
 
 /* ── Blur Budget: Cap generic card/panel backdrops at 4px for 60fps mobile scroll ── */

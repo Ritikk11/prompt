@@ -11,7 +11,11 @@ import { filterPostsForSection } from '@/lib/sections';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
 import { formatTitleWithBrand, generateCollectionJsonLd } from '@/lib/seo-helpers';
 import { stringifyJsonLd } from '@/lib/json-ld';
-import SectionContent from './SectionContent';
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+import GridPageSkeleton from '@/components/GridPageSkeleton';
+
+const SectionContent = dynamic(() => import('./SectionContent'));
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -98,13 +102,22 @@ export default async function SectionPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: stringifyJsonLd(jsonLd) }}
       />
-      <SectionContent
-        section={section}
-        posts={filteredPosts}
-        heroTitle={heroTitle}
-        heroDescription={heroDescription}
-        settings={settings}
-      />
+      <Suspense fallback={
+        <GridPageSkeleton
+          posts={filteredPosts.slice(0, 16)}
+          heroVariant={section.heroStyle === 'simple' ? 'simple' : 'container'}
+          showBreadcrumbs={true}
+          showHeroStats={settings.discoveryPages?.showHeroStats ?? true}
+        />
+      }>
+        <SectionContent
+          section={section}
+          posts={filteredPosts}
+          heroTitle={heroTitle}
+          heroDescription={heroDescription}
+          settings={settings}
+        />
+      </Suspense>
     </>
   );
 }

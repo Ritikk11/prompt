@@ -1,6 +1,9 @@
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import { getClientSettings } from '@/lib/constants';
-import ExploreClient from './ExploreClient';
+import dynamic from 'next/dynamic';
+import GridPageSkeleton from '@/components/GridPageSkeleton';
+
+const ExploreClient = dynamic(() => import('./ExploreClient'));
 import type { Metadata } from 'next';
 import { stringifyJsonLd } from '@/lib/json-ld';
 import { formatTitleWithBrand, generateCollectionJsonLd } from '@/lib/seo-helpers';
@@ -64,7 +67,14 @@ export default async function ExplorePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: stringifyJsonLd(jsonLd) }}
       />
-      <Suspense fallback={<div className="min-h-screen" />}>
+      <Suspense fallback={
+        <GridPageSkeleton
+          posts={posts.slice(0, 16)}
+          heroVariant={discovery.heroStyle === 'simple' ? 'simple' : 'container'}
+          showBreadcrumbs={false}
+          showHeroStats={discovery.showHeroStats ?? true}
+        />
+      }>
         <ExploreClient
           posts={posts}
           settings={getClientSettings(settings)}

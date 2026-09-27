@@ -18,6 +18,8 @@ import dynamic from 'next/dynamic';
 import type { Post } from '@/lib/types';
 import { generateSeoPageMetadata, formatTitleWithBrand } from '@/lib/seo-helpers';
 import { getRelatedPosts, getRecommendedPosts } from '@/lib/related-posts';
+import { Suspense } from 'react';
+import GridPageSkeleton from '@/components/GridPageSkeleton';
 
 const SeoPageContent = dynamic(() => import('@/components/SeoPageContent'));
 
@@ -172,12 +174,21 @@ export default async function PostPage({ params }: Props) {
       }
     }
     return (
-      <SeoPageContent
-        seoPage={seoPage}
-        allPosts={allPosts as Post[]}
-        settings={getClientSettings(settings)}
-        introContent={seoPage.introContent ? <MarkdownRenderer>{seoPage.introContent}</MarkdownRenderer> : null}
-      />
+      <Suspense fallback={
+        <GridPageSkeleton
+          posts={sorted.slice(0, 16)}
+          heroVariant={seoPage.heroStyle === 'simple' ? 'simple' : 'container'}
+          showBreadcrumbs={true}
+          showHeroStats={true}
+        />
+      }>
+        <SeoPageContent
+          seoPage={seoPage}
+          allPosts={allPosts as Post[]}
+          settings={getClientSettings(settings)}
+          introContent={seoPage.introContent ? <MarkdownRenderer>{seoPage.introContent}</MarkdownRenderer> : null}
+        />
+      </Suspense>
     );
   }
 

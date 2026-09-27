@@ -11,7 +11,7 @@ import Footer from '@/components/Footer';
 import AdSlot from '@/components/AdSlot';
 import SiteBackground from '@/components/SiteBackground';
 import MaintenanceBouncer from '@/components/MaintenanceBouncer';
-import { fetchSections, fetchSettings } from '@/lib/data';
+import { fetchSections, fetchSettings, fetchSeoPages } from '@/lib/data';
 import { getClientSettings } from '@/lib/constants';
 import { stringifyJsonLd } from '@/lib/json-ld';
 
@@ -110,10 +110,16 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [fullSettings, initialSections] = await Promise.all([
+  const [fullSettings, initialSections, rawSeoPages] = await Promise.all([
     fetchSettings(),
     fetchSections(),
+    fetchSeoPages(),
   ]);
+  const initialSeoPages = (rawSeoPages || []).map((p: any) => ({
+    id: p.id,
+    slug: p.slug,
+    heroStyle: p.heroStyle,
+  }));
   // The client DataProvider gets settings WITHOUT the server-only content
   // bodies (legal/static page markdown, article overrides): ~80 kB of the
   // flight payload on every page that no client component reads. Server pages
@@ -276,6 +282,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <DataProvider
             initialSettings={initialSettings}
             initialSections={initialSections}
+            initialSeoPages={initialSeoPages}
             initialPosts={[]}
           >
             {/* No Suspense around Header: a boundary here lets React stream the
