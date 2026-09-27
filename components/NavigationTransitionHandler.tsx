@@ -36,11 +36,23 @@ const NON_PROMPT_PREFIXES = new Set([
 type TransitionType = 'prompt' | 'seo' | 'grid';
 
 let globalLastPopStateTime = 0;
+let globalLastTouchStartTime = 0;
 if (typeof window !== 'undefined') {
   window.addEventListener(
     'popstate',
     () => {
       globalLastPopStateTime = Date.now();
+    },
+    { passive: true }
+  );
+  // Track touch starts so ghost-click guard also covers the touchstart→click delay
+  window.addEventListener(
+    'touchstart',
+    () => {
+      // Only record if this touchstart happens within 200ms of a popstate
+      if (Date.now() - globalLastPopStateTime < 200) {
+        globalLastTouchStartTime = Date.now();
+      }
     },
     { passive: true }
   );
@@ -93,11 +105,17 @@ export default function NavigationTransitionHandler({ children }: { children: Re
   useEffect(() => {
     const handleCancel = () => {
       globalLastPopStateTime = Date.now();
+      // Cancel immediately, then also cancel on the next tick to cover
+      // any state that was queued before the popstate fired
       setTransition(null);
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
+      // Belt-and-suspenders: also clear on next tick in case React batched
+      setTimeout(() => {
+        setTransition(null);
+      }, 0);
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -119,15 +137,22 @@ export default function NavigationTransitionHandler({ children }: { children: Re
     if (!showSkeleton) return;
 
     const handleDocumentClick = (event: MouseEvent) => {
-      // 1. Ignore if within 500ms of any Back/Forward navigation (prevents ghost clicks on cards)
       const now = Date.now();
+
+      // 1. Ignore if within 800ms of any Back/Forward navigation (prevents ghost clicks on cards)
       const lastBackTime = Math.max(
         globalLastPopStateTime,
+        globalLastTouchStartTime,
         typeof window !== 'undefined' ? (window as any).__lastBackNavTime || 0 : 0
       );
-      if (now - lastBackTime < 500) {
+      if (now - lastBackTime < 800) {
         event.preventDefault();
         event.stopPropagation();
+        return;
+      }
+
+      // 2. Ignore if a transition is already in-flight — never stack two transitions
+      if (transition) {
         return;
       }
 
