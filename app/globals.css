@@ -107,13 +107,17 @@ html {
    (`rounded-full`/`rounded-xl`). That leaves footer chips, tool badges, icon
    buttons, inputs and other small bg-white/60 UI with their fill intact.
    Outside @layer so these win over Tailwind's layered utilities.
-   will-change promotes each panel to its own GPU compositing layer so the
-   browser caches the blurred+saturated backdrop instead of recomputing it on
-   the first paint — that layer promotion (not removing saturate) is what stops
-   the "paint delay" flash. The heroes never flashed because .glass-surface
-   already ships transform-gpu; this gives the bg-white/60 panels the same. */
+   Promotion to a GPU compositing layer (transform: translateZ(0) +
+   backface-visibility) is what actually stops the flash: it makes the
+   compositor apply the blurred+saturated backdrop from the first painted
+   frame, instead of showing the flat background-color for a frame while the
+   filter lands. will-change is kept as a supporting hint. The heroes never
+   flashed because .glass-surface already ships transform-gpu; this gives the
+   bg-white/60 panels the same treatment. */
 .bg-white\/60.backdrop-blur-xl:not(.rounded-full):not(.rounded-xl) {
   background-color: transparent;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   will-change: backdrop-filter;
 }
 .dark\:bg-white\/\[0\.08\].backdrop-blur-xl:not(.rounded-full):not(.rounded-xl):where(.dark, .dark *) {

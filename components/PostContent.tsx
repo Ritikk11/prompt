@@ -279,7 +279,7 @@ export default function PostContent({
 
     return (
       <div
-        className="relative mb-12 w-full overflow-hidden rounded-[32px] border border-white/10 text-white shadow-2xl lg:backdrop-blur-2xl p-5 sm:p-8 lg:p-12"
+        className="relative mb-12 w-full overflow-hidden rounded-[32px] border border-white/10 text-white shadow-2xl lg:backdrop-blur-2xl transform-gpu [backface-visibility:hidden] p-5 sm:p-8 lg:p-12"
         style={{ backgroundColor: cardBg }}
       >
         {/* Aurora Nebula: Compact centered on mobile, expansive corner-reaching only on desktop.
@@ -609,7 +609,7 @@ export default function PostContent({
                 )}
               </>
             )}
-            <span className="shrink-0">/</span>
+            <ChevronRight className="w-3.5 h-3.5 opacity-50 shrink-0" />
             <span
               className="block max-w-[120px] truncate font-medium text-surface-900 dark:text-surface-100 sm:max-w-[220px] md:max-w-md"
               title={post.title}
