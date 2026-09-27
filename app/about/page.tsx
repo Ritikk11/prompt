@@ -27,7 +27,7 @@ export default async function About() {
       </div>
       <div className="glass-surface relative overflow-hidden rounded-3xl p-8 md:p-12 shadow-xl dark:shadow-none">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-        <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary-500 hover:prose-a:text-primary-600 prose-img:rounded-2xl relative z-10">
+        <div className="page-enter-content prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary-500 hover:prose-a:text-primary-600 prose-img:rounded-2xl relative z-10">
           <Markdown>{page.body}</Markdown>
         </div>
       </div>
