@@ -1,7 +1,5 @@
-// 1h TTL: on-demand revalidation (admin edits) refreshes pages instantly, so the
-// time-based fallback only bounds staleness of view/like counts, which update the
-// DB without revalidatePath. 300s caused a cold ~2.5s SSR miss every 5 minutes.
-export const revalidate = 43200;
+// 30 days TTL: on-demand revalidation (admin edits) refreshes pages instantly via revalidatePath.
+export const revalidate = 2592000;
 
 import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';

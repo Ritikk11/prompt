@@ -1,4 +1,4 @@
-export const revalidate = 43200;
+export const revalidate = 2592000;
 
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import SearchClient from './SearchClient';

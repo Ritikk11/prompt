@@ -5,10 +5,8 @@ import type { Metadata } from 'next';
 import { stringifyJsonLd } from '@/lib/json-ld';
 import { formatTitleWithBrand, generateCollectionJsonLd } from '@/lib/seo-helpers';
 
-// 1h TTL: on-demand revalidation (admin edits) refreshes pages instantly, so the
-// time-based fallback only bounds staleness of view/like counts, which update the
-// DB without revalidatePath. 300s caused a cold ~2.5s SSR miss every 5 minutes.
-export const revalidate = 43200;
+// 30 days TTL: on-demand revalidation (admin edits) refreshes pages instantly via revalidatePath.
+export const revalidate = 2592000;
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await fetchSettings();
