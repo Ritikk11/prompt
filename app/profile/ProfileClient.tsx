@@ -212,7 +212,7 @@ function ProfileContent({ posts, settings }: { posts: Post[], settings: SiteSett
     : posts.filter(p => p.authorId === user.id);
 
   return (
-    <div className="max-w-7xl mx-auto px-1 py-6 sm:py-8 page-enter">
+    <div className="max-w-7xl mx-auto px-1 py-6 sm:py-8 fade-in">
       <div className="flex flex-col md:flex-row gap-8 items-start">
         {/* Sidebar */}
         <div className="w-full md:w-64 shrink-0 bg-white/40 dark:bg-white/5 border border-white/80 dark:border-white/10 rounded-2xl p-6 relative">

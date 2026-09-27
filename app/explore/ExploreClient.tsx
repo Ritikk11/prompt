@@ -172,7 +172,7 @@ export default function ExploreClient({
   const visiblePosts = filtered.slice(0, displayedCount);
 
   return (
-    <div className="max-w-7xl mx-auto px-2 py-6 sm:py-8 page-enter">
+    <div className="max-w-7xl mx-auto px-2 py-6 sm:py-8 fade-in">
       <DiscoveryPageHero
         badge={discovery.exploreBadge || 'Prompt Library'}
         title={discovery.exploreTitle || 'Explore curated AI image prompts'}

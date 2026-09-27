@@ -5,16 +5,12 @@ export const revalidate = 43200;
 
 import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
+import ToolContent from './ToolContent';
 import { fetchPostSummaries, fetchSettings } from '@/lib/data';
 import { fillDiscoveryTemplate } from '@/lib/discovery-pages';
 import { formatTitleWithBrand, generateCollectionJsonLd } from '@/lib/seo-helpers';
 import { stringifyJsonLd } from '@/lib/json-ld';
 import { getAllTools, getActiveTools, isToolActive } from '@/lib/constants';
-import GridPageSkeleton from '@/components/GridPageSkeleton';
-
-const ToolContent = dynamic(() => import('./ToolContent'));
 
 interface Props {
   params: Promise<{ tool: string }>;
@@ -177,16 +173,7 @@ export default async function ToolPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: stringifyJsonLd(jsonLd) }}
       />
-      <Suspense fallback={
-        <GridPageSkeleton
-          posts={matchingPosts.slice(0, 16)}
-          heroVariant={discovery.heroStyle === 'simple' ? 'simple' : 'container'}
-          showBreadcrumbs={true}
-          showHeroStats={discovery.showHeroStats ?? true}
-        />
-      }>
-        <ToolContent posts={posts} settings={settings} />
-      </Suspense>
+      <ToolContent posts={posts} settings={settings} />
     </>
   );
 }

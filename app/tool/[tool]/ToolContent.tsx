@@ -80,7 +80,7 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-2 py-8 md:py-12 page-enter">
+    <div className="max-w-7xl mx-auto px-2 py-8 md:py-12 fade-in">
       {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-surface-500 mb-6">
           <Link href="/" prefetch={true} className="hover:text-primary-500 transition-colors">Home</Link>

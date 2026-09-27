@@ -60,7 +60,7 @@ export default function DiscoveryPageHero({
     /* glass-surface + an explicit radius: glass-card's rounded-2xl is unlayered
        and would override the 30px corner. */
     <section className="glass-surface relative mb-8 overflow-hidden rounded-[30px] px-5 py-10 shadow-[0_22px_70px_rgba(15,23,42,0.08)] dark:shadow-[0_22px_70px_rgba(0,0,0,0.35)] sm:px-8 lg:px-10">
-      <div className="page-enter-content relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+      <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div>
           {badge && (
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/75 px-4 py-2 text-xs font-black text-primary-700 shadow-sm dark:border-white/10 dark:bg-white/[0.14] dark:text-primary-200">
