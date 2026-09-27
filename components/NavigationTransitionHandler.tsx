@@ -36,19 +36,28 @@ const NON_PROMPT_PREFIXES = new Set([
 type TransitionType = 'prompt' | 'seo' | 'grid';
 
 // ─── Module-level back-navigation dead zone ────────────────────────────────
-// Using a boolean flag (not just timing) so it's reliable regardless of
-// clock skew. Set to true on any popstate / back gesture; cleared after
-// BACK_DEAD_ZONE_MS to re-enable normal forward navigation clicks.
-const BACK_DEAD_ZONE_MS = 1200;
+// Uses CSS pointer-events:none on body — this is the ONLY reliable approach.
+// It blocks ghost taps at CSS hit-test time, before ANY JS listener (ours or
+// Next.js internals) can fire. JS event blocking (stopImmediatePropagation)
+// is listener-order dependent and can't catch listeners registered before ours.
+const BACK_DEAD_ZONE_MS = 800;
 let isInBackDeadZone = false;
 let backDeadZoneTimer: ReturnType<typeof setTimeout> | null = null;
 
 function enterBackDeadZone() {
   isInBackDeadZone = true;
+  // Block all pointer interactions so ghost taps can't reach any link or card
+  if (typeof document !== 'undefined' && document.body) {
+    document.body.style.pointerEvents = 'none';
+  }
   if (backDeadZoneTimer) clearTimeout(backDeadZoneTimer);
   backDeadZoneTimer = setTimeout(() => {
     isInBackDeadZone = false;
     backDeadZoneTimer = null;
+    // Restore pointer events once ghost tap window has passed
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.style.pointerEvents = '';
+    }
   }, BACK_DEAD_ZONE_MS);
 }
 
@@ -56,6 +65,7 @@ if (typeof window !== 'undefined') {
   // Fired by browser back/forward gesture or router.back()
   window.addEventListener('popstate', () => enterBackDeadZone(), { passive: true });
 }
+
 
 // Called externally by BackButton so the dead zone starts at button-click time
 // (before the async popstate fires), catching very fast ghost taps.
