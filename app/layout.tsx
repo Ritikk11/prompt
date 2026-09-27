@@ -11,6 +11,7 @@ import Footer from '@/components/Footer';
 import AdSlot from '@/components/AdSlot';
 import SiteBackground from '@/components/SiteBackground';
 import MaintenanceBouncer from '@/components/MaintenanceBouncer';
+import NavigationTransitionHandler from '@/components/NavigationTransitionHandler';
 import { fetchSections, fetchSettings, fetchSeoPages } from '@/lib/data';
 import { getClientSettings } from '@/lib/constants';
 import { stringifyJsonLd } from '@/lib/json-ld';
@@ -297,7 +298,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <div className="h-14 shrink-0" aria-hidden />
             <AdSlot placement="header" className="max-w-7xl mx-auto w-full px-4" />
             <main className="flex-1 w-full min-h-[80vh]">
-              {children}
+              <NavigationTransitionHandler>
+                {children}
+              </NavigationTransitionHandler>
             </main>
             <Footer />
           </DataProvider>
