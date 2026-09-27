@@ -949,6 +949,7 @@ body {
   @apply border border-white/60 backdrop-blur-md backdrop-saturate-150 dark:border-white/10 transform-gpu;
   background-color: transparent;
   backface-visibility: hidden;
+  will-change: backdrop-filter;
 }
 
 /* glass-surface + the default radius and shadow. Self-contained rather than
@@ -957,6 +958,7 @@ body {
   @apply rounded-2xl shadow-lg shadow-slate-900/5 border border-white/60 backdrop-blur-md backdrop-saturate-150 dark:border-white/10 transform-gpu;
   background-color: transparent;
   backface-visibility: hidden;
+  will-change: backdrop-filter;
 }
 
 /* ── Blur Budget: Cap generic card/panel backdrops at 4px for 60fps mobile scroll ── */
