@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useRef } from 'react';
 import { ArrowLeft } from 'lucide-react';
 
 interface BackButtonProps {
@@ -9,16 +10,30 @@ interface BackButtonProps {
 }
 
 export default function BackButton({
-  fallbackHref = '/',
+  fallbackHref = '/explore',
   className = '',
 }: BackButtonProps) {
   const router = useRouter();
+  const isNavigatingRef = useRef(false);
 
-  const handleBack = () => {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push(fallbackHref);
+  const handleBack = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Prevent rapid double-clicks from jumping multiple history steps
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 600);
+
+    if (typeof window !== 'undefined') {
+      (window as any).__lastBackNavTime = Date.now();
+      if (window.history.length > 1) {
+        router.back();
+      } else {
+        router.push(fallbackHref);
+      }
     }
   };
 

@@ -5,11 +5,36 @@ import { useData } from '@/components/context/DataContext';
 import PromptSkeleton from '@/components/PromptSkeleton';
 import GridPageSkeleton from '@/components/GridPageSkeleton';
 
+const NON_SLUG_ROUTES = new Set([
+  '',
+  'explore',
+  'about',
+  'contact',
+  'cookies',
+  'disclaimer',
+  'dmca',
+  'privacy',
+  'terms',
+  'search',
+  'admin',
+  'api',
+  'profile',
+  'login',
+  'submit',
+  'user',
+]);
+
 export default function Loading() {
   const pathname = usePathname();
   const { seoPages, posts } = useData();
-  const slug = pathname?.replace(/^\/+/, '').split('/')[0];
-  const seoPage = seoPages?.find(p => p.slug === slug || p.id === slug);
+  const slug = pathname?.replace(/^\/+/, '').split('/')[0]?.toLowerCase();
+
+  // If navigating away to a known non-slug route, never render a prompt skeleton
+  if (!slug || NON_SLUG_ROUTES.has(slug)) {
+    return null;
+  }
+
+  const seoPage = seoPages?.find(p => (p.slug || p.id)?.toLowerCase() === slug);
 
   if (seoPage) {
     const heroVariant = seoPage.heroStyle === 'simple' ? 'simple' : 'container';

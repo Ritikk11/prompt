@@ -7,6 +7,7 @@ import PromptSkeleton from '@/components/PromptSkeleton';
 import GridPageSkeleton from '@/components/GridPageSkeleton';
 
 const NON_PROMPT_PREFIXES = new Set([
+  '',
   'about',
   'admin',
   'api',
@@ -32,48 +33,67 @@ const NON_PROMPT_PREFIXES = new Set([
   'user',
 ]);
 
-type TransitionType = 'prompt' | 'seo' | 'grid' | null;
+type TransitionType = 'prompt' | 'seo' | 'grid';
+
+let globalLastPopStateTime = 0;
+if (typeof window !== 'undefined') {
+  window.addEventListener(
+    'popstate',
+    () => {
+      globalLastPopStateTime = Date.now();
+    },
+    { passive: true }
+  );
+}
 
 export default function NavigationTransitionHandler({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { seoPages, sections, settings, posts } = useData();
-  const [targetPath, setTargetPath] = useState<string | null>(null);
-  const [transitionType, setTransitionType] = useState<TransitionType>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Active transition info: remembers origin and destination
+  const [transition, setTransition] = useState<{
+    originPath: string;
+    targetPath: string;
+    type: TransitionType;
+  } | null>(null);
+
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showSkeleton = settings?.features?.skeletonLoaders ?? true;
 
-  // Derive transition state during render:
-  // If targetPath is set and pathname hasn't updated yet, we are transitioning.
-  // The moment Next.js commits the new route (pathname === targetPath), isTransitioning is instantly false.
+  // Derive whether we are actively transitioning:
+  // ONLY true if transition was initiated AND we are still on the origin page.
+  // The moment pathname changes away from originPath, isTransitioning is instantly false.
   const isTransitioning = Boolean(
-    showSkeleton && targetPath && pathname && targetPath.toLowerCase() !== pathname.toLowerCase()
+    showSkeleton &&
+      transition &&
+      pathname &&
+      pathname.toLowerCase() === transition.originPath.toLowerCase() &&
+      pathname.toLowerCase() !== transition.targetPath.toLowerCase()
   );
 
-  // Clear targetPath once route has committed
+  // Clear transition once route has committed away from origin
   useEffect(() => {
-    if (targetPath && pathname && targetPath.toLowerCase() === pathname.toLowerCase()) {
-      setTargetPath(null);
-      setTransitionType(null);
+    if (transition && pathname && pathname.toLowerCase() !== transition.originPath.toLowerCase()) {
+      setTransition(null);
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
     }
-  }, [pathname, targetPath]);
+  }, [pathname, transition]);
 
-  // Clean up on unmount
+  // Clean up timeout on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
 
-  // Listen to popstate (back/forward) and Escape key to cancel any pending transition
+  // Listen to popstate (back/forward) and Escape key to immediately cancel any transition
   useEffect(() => {
-    const handlePopState = () => {
-      setTargetPath(null);
-      setTransitionType(null);
+    const handleCancel = () => {
+      globalLastPopStateTime = Date.now();
+      setTransition(null);
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
@@ -82,14 +102,14 @@ export default function NavigationTransitionHandler({ children }: { children: Re
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        handlePopState();
+        handleCancel();
       }
     };
 
-    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('popstate', handleCancel, { passive: true });
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('popstate', handleCancel);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
@@ -99,6 +119,18 @@ export default function NavigationTransitionHandler({ children }: { children: Re
     if (!showSkeleton) return;
 
     const handleDocumentClick = (event: MouseEvent) => {
+      // 1. Ignore if within 500ms of any Back/Forward navigation (prevents ghost clicks on cards)
+      const now = Date.now();
+      const lastBackTime = Math.max(
+        globalLastPopStateTime,
+        typeof window !== 'undefined' ? (window as any).__lastBackNavTime || 0 : 0
+      );
+      if (now - lastBackTime < 500) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
       if (
         event.defaultPrevented ||
         event.button !== 0 ||
@@ -133,7 +165,7 @@ export default function NavigationTransitionHandler({ children }: { children: Re
         }
 
         // Determine destination type
-        let type: TransitionType = null;
+        let type: TransitionType | null = null;
 
         if (nextPath.startsWith('/explore')) {
           type = 'grid';
@@ -153,15 +185,17 @@ export default function NavigationTransitionHandler({ children }: { children: Re
           // Instantly scroll to top so the skeleton starts from the top of the viewport
           window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
 
-          setTargetPath(nextPath);
-          setTransitionType(type);
+          setTransition({
+            originPath: currentPath,
+            targetPath: nextPath,
+            type,
+          });
 
-          // 6-second safety fallback: in case navigation is cancelled or network fails
+          // 5-second safety fallback: in case navigation is cancelled or network fails
           if (timeoutRef.current) clearTimeout(timeoutRef.current);
           timeoutRef.current = setTimeout(() => {
-            setTargetPath(null);
-            setTransitionType(null);
-          }, 6000);
+            setTransition(null);
+          }, 5000);
         }
       } catch {
         // Safe fallback
@@ -175,13 +209,13 @@ export default function NavigationTransitionHandler({ children }: { children: Re
   }, [showSkeleton, seoPages]);
 
   // Render the instant skeleton if transitioning
-  if (isTransitioning) {
-    if (transitionType === 'prompt') {
+  if (isTransitioning && transition) {
+    if (transition.type === 'prompt') {
       return <PromptSkeleton />;
     }
 
-    if (transitionType === 'seo') {
-      const slug = targetPath?.replace(/^\/+/, '').split('/')[0].toLowerCase();
+    if (transition.type === 'seo') {
+      const slug = transition.targetPath.replace(/^\/+/, '').split('/')[0].toLowerCase();
       const seoPage = seoPages?.find(p => (p.slug || p.id).toLowerCase() === slug);
       const heroVariant = seoPage?.heroStyle === 'simple' ? 'simple' : 'container';
       return (
@@ -194,22 +228,22 @@ export default function NavigationTransitionHandler({ children }: { children: Re
       );
     }
 
-    if (transitionType === 'grid') {
+    if (transition.type === 'grid') {
       let heroVariant: 'container' | 'simple' = 'container';
       let showBreadcrumbs = false;
       let showHero = true;
 
-      if (targetPath?.startsWith('/section/')) {
-        const slug = targetPath.replace(/^\/section\//i, '').split('/')[0].toLowerCase();
+      if (transition.targetPath.startsWith('/section/')) {
+        const slug = transition.targetPath.replace(/^\/section\//i, '').split('/')[0].toLowerCase();
         const section = sections?.find(s => (s.slug || s.id).toLowerCase() === slug);
         heroVariant = section?.heroStyle === 'simple' ? 'simple' : 'container';
         showBreadcrumbs = true;
-      } else if (targetPath?.startsWith('/tool/')) {
+      } else if (transition.targetPath.startsWith('/tool/')) {
         heroVariant = settings.discoveryPages?.heroStyle === 'simple' ? 'simple' : 'container';
         showBreadcrumbs = true;
-      } else if (targetPath?.startsWith('/explore')) {
+      } else if (transition.targetPath.startsWith('/explore')) {
         heroVariant = settings.discoveryPages?.heroStyle === 'simple' ? 'simple' : 'container';
-      } else if (targetPath?.startsWith('/search')) {
+      } else if (transition.targetPath.startsWith('/search')) {
         showHero = false;
       }
 
