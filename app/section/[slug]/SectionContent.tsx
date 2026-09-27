@@ -67,7 +67,7 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
   const heroVariant: 'container' | 'simple' = section.heroStyle === 'simple' ? 'simple' : 'container';
 
   return (
-    <div className="max-w-7xl mx-auto px-2 py-8 sm:py-12">
+    <div className="max-w-7xl mx-auto px-2 py-8 sm:py-12 page-enter">
       <nav className="flex items-center gap-2 text-sm text-surface-400 mb-8 font-medium">
         <Link href="/" prefetch={true} className="hover:text-primary-500 transition-colors">Home</Link>
         <ChevronRight className="w-3.5 h-3.5 opacity-50" />

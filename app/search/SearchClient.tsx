@@ -31,7 +31,7 @@ function SearchContent({ posts, settings }: { posts: Post[], settings: SiteSetti
   const results = searchPosts(query);
 
   return (
-    <div className="max-w-7xl mx-auto px-2 py-4 sm:py-6 fade-in">
+    <div className="max-w-7xl mx-auto px-2 py-4 sm:py-6 page-enter">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <SearchIcon className="w-6 h-6 text-primary-500" />

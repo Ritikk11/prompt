@@ -26,3 +26,5 @@ ReferenceSites/
 .zcode/
 scratch/
 .seo-cache/
+app/collection-preview/
+load-test-report.md

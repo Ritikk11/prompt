@@ -107,17 +107,27 @@ html {
    (`rounded-full`/`rounded-xl`). That leaves footer chips, tool badges, icon
    buttons, inputs and other small bg-white/60 UI with their fill intact.
    Outside @layer so these win over Tailwind's layered utilities.
-   will-change promotes each panel to its own GPU compositing layer so the
-   browser caches the blurred+saturated backdrop instead of recomputing it on
-   the first paint — that layer promotion (not removing saturate) is what stops
-   the "paint delay" flash. The heroes never flashed because .glass-surface
-   already ships transform-gpu; this gives the bg-white/60 panels the same. */
+   Promotion to a GPU compositing layer (transform: translateZ(0) +
+   backface-visibility) is what actually stops the flash: it makes the
+   compositor apply the blurred+saturated backdrop from the first painted
+   frame, instead of showing the flat background-color for a frame while the
+   filter lands. will-change is kept as a supporting hint. Both standard and
+   -webkit- prefixes are supplied for mobile iOS Safari support. */
 .bg-white\/60.backdrop-blur-xl:not(.rounded-full):not(.rounded-xl) {
   background-color: transparent;
-  will-change: backdrop-filter;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: backdrop-filter, -webkit-backdrop-filter;
 }
 .dark\:bg-white\/\[0\.08\].backdrop-blur-xl:not(.rounded-full):not(.rounded-xl):where(.dark, .dark *) {
   background-color: transparent;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: backdrop-filter, -webkit-backdrop-filter;
 }
 
 /* Match native UI (select dropdowns, date pickers, scrollbars) to the active
@@ -320,6 +330,35 @@ textarea {
 
 .fade-in {
   animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes pageSurfaceRise {
+  from {
+    transform: translateY(14px);
+    opacity: 0.95;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pageContentFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.page-enter {
+  animation: pageSurfaceRise 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  will-change: transform;
+}
+
+.page-enter-content {
+  animation: pageContentFade 0.35s ease-out backwards;
 }
 
 @keyframes slideInRight {
@@ -949,6 +988,10 @@ body {
   @apply border border-white/60 backdrop-blur-md backdrop-saturate-150 dark:border-white/10 transform-gpu;
   background-color: transparent;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: backdrop-filter, -webkit-backdrop-filter;
 }
 
 /* glass-surface + the default radius and shadow. Self-contained rather than
@@ -957,6 +1000,10 @@ body {
   @apply rounded-2xl shadow-lg shadow-slate-900/5 border border-white/60 backdrop-blur-md backdrop-saturate-150 dark:border-white/10 transform-gpu;
   background-color: transparent;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: backdrop-filter, -webkit-backdrop-filter;
 }
 
 /* ── Blur Budget: Cap generic card/panel backdrops at 4px for 60fps mobile scroll ── */

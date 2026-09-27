@@ -26,6 +26,7 @@ interface DataContextType {
   loadAdminData: () => Promise<any>;
   setPosts: (posts: Post[]) => void;
   setSections: (sections: Section[]) => void;
+  seoPages: { id: string; slug: string; heroStyle?: 'container' | 'simple' }[];
   loading: boolean;
 }
 
@@ -79,9 +80,22 @@ async function postRequest(payload: any) {
   return json;
 }
 
-export function DataProvider({ children, initialPosts = [], initialSections = [], initialSettings }: { children: ReactNode, initialPosts?: Post[], initialSections?: Section[], initialSettings: SiteSettings }) {
+export function DataProvider({
+  children,
+  initialPosts = [],
+  initialSections = [],
+  initialSeoPages = [],
+  initialSettings,
+}: {
+  children: ReactNode;
+  initialPosts?: Post[];
+  initialSections?: Section[];
+  initialSeoPages?: { id: string; slug: string; heroStyle?: 'container' | 'simple' }[];
+  initialSettings: SiteSettings;
+}) {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [sections, setSections] = useState<Section[]>(initialSections);
+  const [seoPages, setSeoPages] = useState<{ id: string; slug: string; heroStyle?: 'container' | 'simple' }[]>(initialSeoPages);
   const [settings, setSettings] = useState<SiteSettings>(initialSettings);
   const [loading, setLoading] = useState(false);
   const [localLikes, setLocalLikes] = useState<string[]>([]);
@@ -405,7 +419,7 @@ export function DataProvider({ children, initialPosts = [], initialSections = []
 
   return (
     <DataContext.Provider value={{
-      posts: enrichedPosts, sections, settings, addPost, updatePost, deletePost,
+      posts: enrichedPosts, sections, seoPages, settings, addPost, updatePost, deletePost,
       incrementViews, toggleLike, toggleBookmark, addSection, updateSection, deleteSection,
       updateSettings, getPostById, searchPosts, ensurePostsLoaded, resetData, deleteMockData,
       loadAdminData, setPosts, setSections, loading
