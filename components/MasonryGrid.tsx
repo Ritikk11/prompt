@@ -12,6 +12,7 @@ interface MasonryGridProps {
   renderAdSlot?: boolean;
   className?: string;
   disablePriority?: boolean;
+  animationKey?: string | number;
 }
 
 export default function MasonryGrid({
@@ -21,6 +22,7 @@ export default function MasonryGrid({
   renderAdSlot = true,
   className = '',
   disablePriority = false,
+  animationKey,
 }: MasonryGridProps) {
   const { settings: contextSettings } = useData();
   const effectiveSettings = settings || contextSettings;
@@ -54,6 +56,33 @@ export default function MasonryGrid({
     return () => window.removeEventListener('resize', updateColumns);
   }, [mobileColsSetting, desktopColsSetting]);
 
+  // Stable animation key to trigger the image load/fade animation on cards
+  // whenever filters, chips, or sorting change, WITHOUT remounting the container
+  // or triggering the ScrollReveal card rise.
+  const gridAnimKey = useMemo(() => {
+    if (animationKey !== undefined && animationKey !== null && animationKey !== '') {
+      return String(animationKey);
+    }
+    // Fallback: auto-detect filter/sort change by inspecting the first 8 post IDs
+    return posts.slice(0, 8).map(p => p.id).join('-');
+  }, [animationKey, posts]);
+
+  const isFirstMountRef = React.useRef(true);
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const initialKeyRef = React.useRef(gridAnimKey);
+
+  useEffect(() => {
+    if (isFirstMountRef.current) {
+      isFirstMountRef.current = false;
+      return;
+    }
+    if (gridAnimKey !== initialKeyRef.current) {
+      setHasInteracted(true);
+    }
+  }, [gridAnimKey]);
+
+  const effectiveDisablePriority = disablePriority || hasInteracted;
+
   // Distribute posts across active columns
   const columns = useMemo(() => {
     const count = Math.max(1, columnCount);
@@ -81,11 +110,11 @@ export default function MasonryGrid({
       {columns.map((colPosts, colIndex) => (
         <div key={colIndex} className="flex flex-col gap-3 sm:gap-4 w-full">
           {colPosts.map(({ post, index }) => (
-            <div key={post.id} className="w-full">
+            <div key={`${post.id}-${gridAnimKey}`} className="w-full">
               <PostCard
                 post={post}
                 index={index}
-                priority={!disablePriority && index < 2}
+                priority={!effectiveDisablePriority && index < 2}
                 cardStyleOverride={cardStyleOverride as any}
                 imageSizes={imageSizes}
               />

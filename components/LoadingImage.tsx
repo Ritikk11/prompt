@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type ImgHTMLAttributes } from 'react';
+import { useEffect, useMemo, useRef, useState, type ImgHTMLAttributes } from 'react';
 import Image, { type ImageProps } from 'next/image';
 
 const IMAGE_WAIT_TIMEOUT_MS = 12000;
@@ -64,15 +64,31 @@ export default function LoadingImage({
   const failed = isCurrentSrc && imageState.failed;
   const timedOut = isCurrentSrc && imageState.timedOut;
 
+  const srcString = typeof srcValue === 'string' ? srcValue : (srcValue as any)?.src || '';
+  const isCached = useMemo(() => {
+    if (typeof window === 'undefined' || !srcString) return false;
+    const img = new window.Image();
+    img.src = srcString;
+    return img.complete && img.naturalWidth > 0;
+  }, [srcString]);
+
   useEffect(() => {
     // One-shot check for every image: if the image already finished loading
-    // (from browser HTTP cache or before hydration), update state immediately
-    // rather than staying hidden behind opacity-0 for extra frames.
+    // (from browser HTTP cache or before hydration), update state. When reveal
+    // is enabled, defer by one paint tick (20ms) so the starting frame
+    // (opacity-0 blur-md scale-[1.03]) paints before transitioning to settled.
     const initial = imageRef.current;
     if (initial?.complete) {
       if (initial.naturalWidth > 0) {
-        setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
-        return;
+        if (reveal) {
+          const timer = window.setTimeout(() => {
+            setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+          }, 20);
+          return () => window.clearTimeout(timer);
+        } else {
+          setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+          return;
+        }
       } else {
         setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
         return;
@@ -148,7 +164,7 @@ export default function LoadingImage({
     />
   );
 
-  const shimmer = enabled && !settled ? (
+  const shimmer = enabled && !settled && !isCached ? (
     <span className="pointer-events-none absolute inset-0 z-[1] image-shimmer" aria-hidden="true" />
   ) : null;
   const fallback = failed && !loaded ? <ImageFallback /> : null;
@@ -214,15 +230,31 @@ export function LoadingImg({
   const failed = isCurrentSrc && imageState.failed;
   const timedOut = isCurrentSrc && imageState.timedOut;
 
+  const srcString = typeof srcValue === 'string' ? srcValue : (srcValue as any)?.src || '';
+  const isCached = useMemo(() => {
+    if (typeof window === 'undefined' || !srcString) return false;
+    const img = new window.Image();
+    img.src = srcString;
+    return img.complete && img.naturalWidth > 0;
+  }, [srcString]);
+
   useEffect(() => {
     // One-shot: if the image already finished loading (from HTTP cache or
-    // before hydration), update state immediately so it is not hidden behind
-    // opacity-0 for extra frames.
+    // before hydration), update state. When reveal is enabled, defer setting loaded
+    // by one paint tick (20ms) so the browser paints the starting frame
+    // (opacity-0 blur-md scale-[1.03]) before transitioning to settled.
     const initial = imageRef.current;
     if (initial?.complete) {
       if (initial.naturalWidth > 0) {
-        setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
-        return;
+        if (reveal) {
+          const timer = window.setTimeout(() => {
+            setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+          }, 20);
+          return () => window.clearTimeout(timer);
+        } else {
+          setImageState({ src: srcValue, loaded: true, failed: false, timedOut: false });
+          return;
+        }
       } else {
         setImageState({ src: srcValue, loaded: false, failed: true, timedOut: false });
         return;
@@ -302,7 +334,7 @@ export function LoadingImg({
       className={`relative block overflow-hidden${placeholderSizing} ${wrapperClassName}`}
       style={aspectRatio ? { aspectRatio: `${aspectRatio}` } : undefined}
     >
-      {(reveal || failed) && !settled ? (
+      {(reveal || failed) && !settled && !isCached ? (
         <span className="pointer-events-none absolute inset-0 z-[1] image-shimmer" aria-hidden="true" />
       ) : null}
       {failed && !loaded ? <ImageFallback compact /> : null}

@@ -484,6 +484,7 @@ export default function FilterChipRail({
             settings={settings}
             cardStyleOverride={cardStyleOverride}
             disablePriority={disableGridPriority}
+            animationKey={`${active.kind}:${active.value}:${sortValue || ''}`}
           />
           {filteredPosts.length === 0 && (
             <div className="py-14 text-center">

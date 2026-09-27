@@ -291,6 +291,7 @@ export default function ExploreClient({
             <MasonryGrid
               posts={visiblePosts}
               settings={settings}
+              animationKey={`${activeCategory || ''}:${activeTag || ''}:${sortBy}`}
             />
           </ScrollReveal>
           

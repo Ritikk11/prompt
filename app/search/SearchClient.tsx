@@ -49,6 +49,7 @@ function SearchContent({ posts, settings }: { posts: Post[], settings: SiteSetti
           <MasonryGrid
             posts={results}
             settings={settings}
+            animationKey={query}
           />
         </ScrollReveal>
       ) : (

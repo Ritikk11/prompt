@@ -219,6 +219,7 @@ export default function SeoPageContent({ seoPage, allPosts, settings, introConte
               posts={sortedPosts}
               settings={settings}
               cardStyleOverride={seoPage.cardStyle}
+              animationKey={sortBy}
             />
           </ScrollReveal>
         </div>

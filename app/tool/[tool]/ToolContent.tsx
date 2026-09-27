@@ -162,6 +162,7 @@ export default function ToolContent({ posts, settings }: { posts: Post[], settin
           <MasonryGrid
             posts={filtered}
             settings={settings}
+            animationKey={sortBy}
           />
         </ScrollReveal>
       )}

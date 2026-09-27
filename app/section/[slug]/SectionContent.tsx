@@ -192,6 +192,7 @@ export default function SectionContent({ section, posts, heroTitle, heroDescript
             posts={filtered}
             settings={settings}
             cardStyleOverride={section.cardStyle}
+            animationKey={sortBy}
           />
         </ScrollReveal>
       )}
