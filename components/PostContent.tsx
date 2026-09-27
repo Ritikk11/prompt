@@ -14,6 +14,7 @@ import {
   Eye,
   Layers,
   ClipboardCheck,
+  ChevronRight,
 } from 'lucide-react';
 import type { Post, PostClientMeta, SiteSettings } from '@/lib/types';
 import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
@@ -582,7 +583,7 @@ export default function PostContent({
             >
               Home
             </Link>
-            <span className="shrink-0">/</span>
+            <ChevronRight className="w-3.5 h-3.5 opacity-50 shrink-0" />
             <Link
               href="/explore"
               prefetch={true}
@@ -592,7 +593,7 @@ export default function PostContent({
             </Link>
             {primaryTool && (
               <>
-                <span className="hidden shrink-0 sm:inline">/</span>
+                <ChevronRight className="hidden sm:inline w-3.5 h-3.5 opacity-50 shrink-0" />
                 {hasMultipleTools ? (
                   <span className="hidden shrink-0 text-surface-700 dark:text-surface-300 sm:inline">
                     {heroToolName}
