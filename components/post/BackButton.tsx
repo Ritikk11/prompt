@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { markBackNavigation } from '@/components/NavigationTransitionHandler';
 
 interface BackButtonProps {
   fallbackHref?: string;
@@ -29,10 +28,7 @@ export default function BackButton({
     }, 600);
 
     if (typeof window !== 'undefined') {
-      // Mark back navigation BEFORE router.back() so the dead zone is active
-      // immediately, catching ghost taps that fire before the async popstate.
-      markBackNavigation();
-
+      (window as any).__lastBackNavTime = Date.now();
       if (window.history.length > 1) {
         router.back();
       } else {

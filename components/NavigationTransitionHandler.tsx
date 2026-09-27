@@ -35,45 +35,15 @@ const NON_PROMPT_PREFIXES = new Set([
 
 type TransitionType = 'prompt' | 'seo' | 'grid';
 
-// ─── Module-level back-navigation dead zone ────────────────────────────────
-// Uses CSS pointer-events:none on body — this is the ONLY reliable approach.
-// It blocks ghost taps at CSS hit-test time, before ANY JS listener (ours or
-// Next.js internals) can fire. JS event blocking (stopImmediatePropagation)
-// is listener-order dependent and can't catch listeners registered before ours.
-const BACK_DEAD_ZONE_MS = 800;
-let isInBackDeadZone = false;
-let backDeadZoneTimer: ReturnType<typeof setTimeout> | null = null;
-
-function enterBackDeadZone() {
-  isInBackDeadZone = true;
-  // Block all pointer interactions so ghost taps can't reach any link or card
-  if (typeof document !== 'undefined' && document.body) {
-    document.body.style.pointerEvents = 'none';
-  }
-  if (backDeadZoneTimer) clearTimeout(backDeadZoneTimer);
-  backDeadZoneTimer = setTimeout(() => {
-    isInBackDeadZone = false;
-    backDeadZoneTimer = null;
-    // Restore pointer events once ghost tap window has passed
-    if (typeof document !== 'undefined' && document.body) {
-      document.body.style.pointerEvents = '';
-    }
-  }, BACK_DEAD_ZONE_MS);
-}
-
+let globalLastPopStateTime = 0;
 if (typeof window !== 'undefined') {
-  // Fired by browser back/forward gesture or router.back()
-  window.addEventListener('popstate', () => enterBackDeadZone(), { passive: true });
-}
-
-
-// Called externally by BackButton so the dead zone starts at button-click time
-// (before the async popstate fires), catching very fast ghost taps.
-export function markBackNavigation() {
-  if (typeof window !== 'undefined') {
-    (window as any).__lastBackNavTime = Date.now();
-  }
-  enterBackDeadZone();
+  window.addEventListener(
+    'popstate',
+    () => {
+      globalLastPopStateTime = Date.now();
+    },
+    { passive: true }
+  );
 }
 
 export default function NavigationTransitionHandler({ children }: { children: ReactNode }) {
@@ -86,12 +56,6 @@ export default function NavigationTransitionHandler({ children }: { children: Re
     targetPath: string;
     type: TransitionType;
   } | null>(null);
-
-  // Ref always holds the current transition value so click handler avoids stale closure
-  const transitionRef = useRef(transition);
-  useEffect(() => {
-    transitionRef.current = transition;
-  }, [transition]);
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showSkeleton = settings?.features?.skeletonLoaders ?? true;
@@ -128,18 +92,12 @@ export default function NavigationTransitionHandler({ children }: { children: Re
   // Listen to popstate (back/forward) and Escape key to immediately cancel any transition
   useEffect(() => {
     const handleCancel = () => {
-      enterBackDeadZone();
+      globalLastPopStateTime = Date.now();
       setTransition(null);
-      transitionRef.current = null;
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
-      // Belt-and-suspenders: also clear on next tick in case React batched
-      setTimeout(() => {
-        setTransition(null);
-        transitionRef.current = null;
-      }, 0);
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -161,27 +119,15 @@ export default function NavigationTransitionHandler({ children }: { children: Re
     if (!showSkeleton) return;
 
     const handleDocumentClick = (event: MouseEvent) => {
-      // ── 1. Dead zone: block ALL anchor clicks during/after back navigation ──
-      // Uses a boolean flag (not timing) so it's reliable. Also checks
-      // the timestamp fallback for cases where enterBackDeadZone wasn't called.
-      if (isInBackDeadZone) {
-        event.preventDefault();
-        event.stopImmediatePropagation(); // kills ALL listeners, including React's
-        return;
-      }
-
-      // Fallback timing guard (e.g. if module reloaded between events)
+      // 1. Ignore if within 500ms of any Back/Forward navigation (prevents ghost clicks on cards)
+      const now = Date.now();
       const lastBackTime = Math.max(
+        globalLastPopStateTime,
         typeof window !== 'undefined' ? (window as any).__lastBackNavTime || 0 : 0
       );
-      if (lastBackTime && Date.now() - lastBackTime < BACK_DEAD_ZONE_MS) {
+      if (now - lastBackTime < 500) {
         event.preventDefault();
-        event.stopImmediatePropagation();
-        return;
-      }
-
-      // ── 2. Ignore if a transition is already in-flight (ref-based, no stale closure) ──
-      if (transitionRef.current) {
+        event.stopPropagation();
         return;
       }
 
@@ -239,19 +185,16 @@ export default function NavigationTransitionHandler({ children }: { children: Re
           // Instantly scroll to top so the skeleton starts from the top of the viewport
           window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
 
-          const newTransition = {
+          setTransition({
             originPath: currentPath,
             targetPath: nextPath,
             type,
-          };
-          setTransition(newTransition);
-          transitionRef.current = newTransition;
+          });
 
           // 5-second safety fallback: in case navigation is cancelled or network fails
           if (timeoutRef.current) clearTimeout(timeoutRef.current);
           timeoutRef.current = setTimeout(() => {
             setTransition(null);
-            transitionRef.current = null;
           }, 5000);
         }
       } catch {

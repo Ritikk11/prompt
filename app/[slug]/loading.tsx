@@ -34,15 +34,6 @@ export default function Loading() {
     return null;
   }
 
-  // Suppress skeleton entirely during back/forward navigation (popstate).
-  // BackButton sets __lastBackNavTime before calling router.back().
-  if (
-    typeof window !== 'undefined' &&
-    Date.now() - ((window as any).__lastBackNavTime || 0) < 1000
-  ) {
-    return null;
-  }
-
   const seoPage = seoPages?.find(p => (p.slug || p.id)?.toLowerCase() === slug);
 
   if (seoPage) {
