@@ -42,7 +42,7 @@
     }
   ],
   "vars": {
-    "CACHE_PURGE_ZONE_ID": "a33cd99c0aef37417fa37f5c8da6d1f9",
+    "CACHE_PURGE_ZONE_ID": "e3f03b29dca8095cd473ef25c0c610be",
     "NEXT_PUBLIC_SITE_URL": "https://promptsoul.in",
     "NEXT_PUBLIC_ENABLE_CLOUDFLARE_IMAGE_RESIZE": "true",
     "NEXT_PUBLIC_SUPABASE_URL": "https://fcmmcgyqovqbxbqfeaho.supabase.co",

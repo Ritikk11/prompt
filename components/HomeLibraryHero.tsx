@@ -70,8 +70,12 @@ export default function HomeLibraryHero({ featuredPosts, settings, postCount }: 
         <div className={`mb-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold text-surface-700 sm:mb-7 ${glassPill}`}>
           <Flame className="h-4 w-4 text-amber-400" />
           <span>
-            {content.kickerPrefix || 'Curated prompts for'}{' '}
-            {toolNames.slice(0, 4).join(', ') || 'ChatGPT & Gemini'}
+            {(() => {
+              const prefix = content.kickerPrefix?.trim();
+              if (!prefix) return `Curated prompts for ${toolNames.slice(0, 4).join(', ') || 'ChatGPT & Gemini'}`;
+              const hasToolsInPrefix = toolNames.some(t => prefix.toLowerCase().includes(t.toLowerCase()));
+              return hasToolsInPrefix ? prefix : `${prefix} ${toolNames.slice(0, 4).join(', ') || 'ChatGPT & Gemini'}`;
+            })()}
           </span>
         </div>
 
