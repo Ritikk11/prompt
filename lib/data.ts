@@ -743,7 +743,7 @@ function sanitizeSettings(settings: SiteSettings): SiteSettings {
     ...settings,
     siteTitle,
     siteDescription: cleanPublicCopy(settings.siteDescription) || settings.siteDescription,
-    heroSubtitle: cleanPublicCopy(settings.heroSubtitle) || settings.heroSubtitle,
+    heroSubtitle: settings.heroSubtitle,
     siteLogo: isInlineImage(settings.siteLogo) ? '' : settings.siteLogo,
     articleThumbnails: {
       ...defaultArticleThumbnails,

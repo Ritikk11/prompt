@@ -7,13 +7,11 @@ import doShardedTagCache from '@opennextjs/cloudflare/overrides/tag-cache/do-sha
 
 export default defineCloudflareConfig({
   // Serve repeat reads directly from the local data center (BOM/DEL/MAA/BLR in India).
-  // bypassTagCacheOnCacheHit: true prevents blocking on a cross-continental RPC round-trip
-  // to the US Durable Object on every regional cache hit, delivering instant ~15ms responses.
-  // Direct cache purge (cachePurge below) handles on-demand admin revalidations immediately.
+  // Tag cache is cached regionally for 10s via doShardedTagCache, ensuring instant ~15ms hits
+  // while allowing on-demand admin revalidations (revalidatePath) to refresh the cache.
   incrementalCache: withRegionalCache(r2IncrementalCache, {
     mode: 'long-lived',
     defaultLongLivedTtlSec: 2592000,
-    bypassTagCacheOnCacheHit: true,
   }),
   // revalidatePath/revalidateTag need a real tag cache; without one they are
   // silent no-ops and pages only refresh when their ISR TTL expires.
