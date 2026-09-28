@@ -312,7 +312,18 @@ function SiteHeader() {
       const nextUrl = new URL(anchor.href, window.location.href);
       const currentUrl = new URL(window.location.href);
       if (nextUrl.origin !== currentUrl.origin) return;
-      if (nextUrl.pathname === currentUrl.pathname && nextUrl.search === currentUrl.search) return;
+      if (nextUrl.pathname === currentUrl.pathname && nextUrl.search === currentUrl.search) {
+        if (nextUrl.hash) {
+          const targetId = decodeURIComponent(nextUrl.hash.slice(1));
+          const targetEl = document.getElementById(targetId) || document.querySelector(nextUrl.hash);
+          if (targetEl) {
+            event.preventDefault();
+            targetEl.scrollIntoView({ behavior: 'smooth' });
+            window.history.pushState(null, '', nextUrl.hash);
+          }
+        }
+        return;
+      }
 
       startRouteProgress();
     };
