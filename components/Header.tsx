@@ -1,8 +1,8 @@
 'use client';
-import { useState, useRef, useEffect, useCallback, Suspense, type FormEvent } from 'react';
+import { useState, useRef, useEffect, useCallback, type FormEvent } from 'react';
 import Link from '@/components/PrefetchLink';
 import Image from 'next/image';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { Search, Sun, Moon, X, User as UserIcon, LogOut, Plus, ChevronRight, ChevronDown, Compass, ArrowRight, Wand2 } from 'lucide-react';
 import { useTheme } from '@/components/context/ThemeContext';
@@ -56,11 +56,6 @@ const panelOpen = 'grid-rows-[1fr] opacity-100 border-t border-black/5 dark:bord
    the page that swallows clicks. */
 const panelClosed = 'grid-rows-[0fr] opacity-0 border-t-0 pointer-events-none';
 
-/* useSearchParams() forces everything up to the nearest <Suspense> boundary
-   into client-only rendering — with the whole Header inside that hook's
-   component, the server HTML had no header at all and the page jumped down
-   by the header height once React mounted it. Isolate the hook in a
-   render-nothing child so the header itself stays in the server HTML. */
 let isPopStateNavigation = false;
 if (typeof window !== 'undefined') {
   window.addEventListener('popstate', () => {
@@ -79,50 +74,6 @@ if (typeof window !== 'undefined') {
       }
     }, 120);
   }, { passive: true });
-}
-
-function RouteChangeComplete({ onRouteChange }: { onRouteChange: () => void }) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const didMountRef = useRef(false);
-
-  useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true;
-      return;
-    }
-    if (isPopStateNavigation) {
-      isPopStateNavigation = false;
-      try {
-        const saved = sessionStorage.getItem('ps_scroll_' + pathname);
-        if (saved) {
-          const y = parseInt(saved, 10);
-          if (y > 0) {
-            requestAnimationFrame(() => {
-              window.scrollTo({ top: y, behavior: 'instant' });
-            });
-            setTimeout(() => {
-              window.scrollTo({ top: y, behavior: 'instant' });
-            }, 60);
-          }
-        }
-      } catch {}
-      onRouteChange();
-      return;
-    }
-    if (!window.location.hash) {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-      requestAnimationFrame(() => {
-        if (!window.location.hash && window.scrollY > 0) {
-          window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-        }
-      });
-    }
-    onRouteChange();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, searchParams]);
-
-  return null;
 }
 
 /** "Tools Prompts" → "Tools": the menu chips show the bare brand name. */
@@ -200,7 +151,8 @@ function SiteHeader() {
   const scrollFrameRef = useRef<number | null>(null);
   const routeTimerRef = useRef<number | null>(null);
   const routeIntervalRef = useRef<number | null>(null);
-  const routeFallbackRef = useRef<number | null>(null);
+  const routeSafetyTimeoutRef = useRef<number | null>(null);
+  const prevPathnameRef = useRef(pathname);
   // On mobile, a tap on the theme toggle can land while a scroll gesture is
   // still settling (rubber-band/momentum). That produces a stray `scroll` event
   // right after the tap, which the visibility logic reads as "user scrolled
@@ -253,13 +205,13 @@ function SiteHeader() {
   const stopRouteTimers = useCallback(() => {
     if (routeTimerRef.current) window.clearTimeout(routeTimerRef.current);
     if (routeIntervalRef.current) window.clearInterval(routeIntervalRef.current);
-    if (routeFallbackRef.current) window.clearTimeout(routeFallbackRef.current);
+    if (routeSafetyTimeoutRef.current) window.clearTimeout(routeSafetyTimeoutRef.current);
     routeTimerRef.current = null;
     routeIntervalRef.current = null;
-    routeFallbackRef.current = null;
+    routeSafetyTimeoutRef.current = null;
   }, []);
 
-  const startRouteProgress = useCallback((targetHref?: string) => {
+  const startRouteProgress = useCallback(() => {
     stopRouteTimers();
     // Jump straight to a visible chunk so navigation shows immediate progress,
     // then creep toward 88%.
@@ -268,23 +220,29 @@ function SiteHeader() {
     routeIntervalRef.current = window.setInterval(() => {
       setRouteProgress(prev => (prev > 0 && prev < 88 ? Math.min(prev + 8, 88) : prev));
     }, 420);
-    // Soft-navigation rescue: on flaky mobile networks (or a stale build after a
-    // deploy) the router's RSC fetch can hang or reject, leaving the bar stuck
-    // and the page never changing. If the route hasn't changed after 8s, fall
-    // back to a full browser navigation, which always works.
-    if (targetHref) {
-      const from = window.location.pathname + window.location.search;
-      routeFallbackRef.current = window.setTimeout(() => {
-        const now = window.location.pathname + window.location.search;
-        if (now === from) window.location.assign(targetHref);
-      }, 8000);
-    }
+    // Auto-dismiss safety: if navigation was cancelled, stalled, or aborted,
+    // clear the progress bar after 8s without forcing any redirect.
+    routeSafetyTimeoutRef.current = window.setTimeout(() => {
+      stopRouteTimers();
+      setRouteProgress(0);
+    }, 8000);
   }, [stopRouteTimers]);
 
   const finishRouteProgress = useCallback(() => {
     stopRouteTimers();
     setRouteProgress(100);
     routeTimerRef.current = window.setTimeout(() => setRouteProgress(0), 260);
+  }, [stopRouteTimers]);
+
+  // On browser Back/Forward (popstate), instantly stop any progress bar
+  useEffect(() => {
+    const handlePopState = () => {
+      isPopStateNavigation = true;
+      stopRouteTimers();
+      setRouteProgress(0);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, [stopRouteTimers]);
 
   useEffect(() => {
@@ -356,7 +314,7 @@ function SiteHeader() {
       if (nextUrl.origin !== currentUrl.origin) return;
       if (nextUrl.pathname === currentUrl.pathname && nextUrl.search === currentUrl.search) return;
 
-      startRouteProgress(nextUrl.pathname + nextUrl.search);
+      startRouteProgress();
     };
 
     document.addEventListener('click', handleDocumentClick, true);
@@ -365,16 +323,40 @@ function SiteHeader() {
 
   useEffect(() => stopRouteTimers, [stopRouteTimers]);
 
-  // Close panels, reset header scroll state, and scroll to top on route change.
+  // Close panels, finish route progress, and manage scroll on route change.
   useEffect(() => {
+    if (prevPathnameRef.current === pathname) {
+      return;
+    }
+    prevPathnameRef.current = pathname;
+
     setMenuOpen(false);
     setActiveMenuId(null);
     setSearchOpen(false);
     setShowLiveResults(false);
+    finishRouteProgress();
+
+    // On browser Back/Forward (popstate), restore saved scroll position and skip scrolling to top
+    if (isPopStateNavigation) {
+      isPopStateNavigation = false;
+      try {
+        const saved = sessionStorage.getItem('ps_scroll_' + pathname);
+        if (saved) {
+          const y = parseInt(saved, 10);
+          if (y > 0) {
+            requestAnimationFrame(() => {
+              window.scrollTo({ top: y, behavior: 'instant' });
+            });
+            setTimeout(() => {
+              window.scrollTo({ top: y, behavior: 'instant' });
+            }, 60);
+          }
+        }
+      } catch {}
+      return;
+    }
+
     if (!window.location.hash) {
-      if (isPopStateNavigation) {
-        return;
-      }
       lastScrollYRef.current = 0;
       setScrolled(false);
       setIsVisible(true);
@@ -391,7 +373,7 @@ function SiteHeader() {
         }
       });
     }
-  }, [pathname]);
+  }, [pathname, finishRouteProgress]);
 
   useEffect(() => {
     // Skip loading the Supabase auth client entirely when accounts are off.
@@ -497,7 +479,9 @@ function SiteHeader() {
   const submitSearch = () => {
     if (!query.trim()) return;
     const target = `/search?q=${encodeURIComponent(query.trim())}`;
-    startRouteProgress(target);
+    if (pathname !== '/search') {
+      startRouteProgress();
+    }
     navigate.push(target);
     closeSearch();
     setMenuOpen(false);
@@ -555,9 +539,7 @@ function SiteHeader() {
 
   return (
     <>
-      <Suspense fallback={null}>
-        <RouteChangeComplete onRouteChange={finishRouteProgress} />
-      </Suspense>
+
 
       {/* Route-change indicator */}
       <div className="fixed inset-x-0 top-0 z-[9999] h-[3px] bg-transparent pointer-events-none">

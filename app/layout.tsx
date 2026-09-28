@@ -287,8 +287,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           >
             {/* No Suspense around Header: a boundary here lets React stream the
                 header after the page body, so it pops in late and shifts the
-                whole page down. The useSearchParams() call that once required
-                a boundary is isolated inside Header (RouteChangeComplete). */}
+                whole page down. Header is fully self-contained and manages its
+                own route lifecycle without client Suspense deopts. */}
             <Header />
             {/* Reserves the fixed bar's row. The header has to be `fixed` so its
                 search / mobile / mega panels overlay the page instead of pushing
