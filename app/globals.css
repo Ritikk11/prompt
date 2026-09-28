@@ -94,6 +94,10 @@ html {
   --color-surface-950: #020617;
 }
 
+html {
+  scroll-behavior: auto;
+}
+
 
 /* Glass containers only: drop the white/dark tint fill so the big frosted
    panels (cards, hero, prompt gallery, section panels) carry their look from
