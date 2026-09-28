@@ -256,12 +256,13 @@ export function resolveDirectImageUrl(post: Post): string {
   }
 
   // Handle relative or bare R2 filenames
+  const uploadOrigin = (process.env.CLOUDFLARE_UPLOAD_PUBLIC_URL || 'https://uploads.promptsoul.in').replace(/\/$/, '');
   if (url.startsWith('/')) {
-    return `https://uploads.aipromptmatrix.in${url}`;
+    return `${uploadOrigin}${url}`;
   }
 
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    return `https://uploads.aipromptmatrix.in/${url}`;
+    return `${uploadOrigin}/${url}`;
   }
 
   return url;

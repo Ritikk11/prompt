@@ -5,12 +5,14 @@ type ThumbnailOptions = {
 };
 
 const DEFAULT_SITE_ORIGIN = 'https://promptsoul.in';
-const DEFAULT_UPLOAD_ORIGIN = 'https://uploads.aipromptmatrix.in';
+const DEFAULT_UPLOAD_ORIGIN = 'https://uploads.promptsoul.in';
 const RESIZE_ELIGIBLE_HOSTS = new Set([
   'promptsoul.in',
   'www.promptsoul.in',
+  'uploads.promptsoul.in',
   'aipromptmatrix.in',
   'www.aipromptmatrix.in',
+  'uploads.aipromptmatrix.in',
 ]);
 
 function getUploadOrigin() {

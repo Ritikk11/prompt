@@ -5,6 +5,7 @@
 const ALLOWED_HOSTS = new Set([
   'promptsoul.in',
   'www.promptsoul.in',
+  'uploads.promptsoul.in',
   'uploads.aipromptmatrix.in',
   'aipromptmatrix.in',
   'www.aipromptmatrix.in',

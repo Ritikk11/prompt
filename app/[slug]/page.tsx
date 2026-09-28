@@ -242,7 +242,7 @@ export default async function PostPage({ params }: Props) {
     // image is served straight from uploads.aipromptmatrix.in.
     try {
       const origin = new URL(target.url).origin;
-      if (origin !== siteUrl && !origin.includes('aipromptmatrix.in') && !origin.includes('localhost')) {
+      if (origin !== siteUrl && !origin.includes('promptsoul.in') && !origin.includes('aipromptmatrix.in') && !origin.includes('localhost')) {
         preconnect(origin);
       }
     } catch {

@@ -199,7 +199,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const imagePreconnectOrigins = process.env.NEXT_PUBLIC_ENABLE_CLOUDFLARE_IMAGE_RESIZE === 'true'
     ? []
     : Array.from(new Set([
-      toOrigin(process.env.CLOUDFLARE_UPLOAD_PUBLIC_URL || 'https://uploads.aipromptmatrix.in'),
+      toOrigin(process.env.CLOUDFLARE_UPLOAD_PUBLIC_URL || 'https://uploads.promptsoul.in'),
       toOrigin(process.env.NEXT_PUBLIC_SUPABASE_URL),
     ].filter(Boolean)));
 

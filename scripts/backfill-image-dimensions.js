@@ -22,7 +22,7 @@ function resolveImageUrl(url) {
   if (!url) return '';
   const trimmed = url.trim();
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
-  const uploadOrigin = (process.env.CLOUDFLARE_UPLOAD_PUBLIC_URL || 'https://uploads.aipromptmatrix.in').replace(/\/$/, '');
+  const uploadOrigin = (process.env.CLOUDFLARE_UPLOAD_PUBLIC_URL || 'https://uploads.promptsoul.in').replace(/\/$/, '');
   return `${uploadOrigin}/${trimmed.replace(/^\/+/, '')}`;
 }
 
