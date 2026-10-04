@@ -11,62 +11,109 @@ export function getPostPath(post: Pick<Post, 'slug' | 'id'>) {
 export function matchesTool(post: Post, tool?: string) {
   if (!tool) return false;
   const target = tool.toLowerCase();
-  return Boolean(
-    post.aiTools?.some((item) => item.toLowerCase() === target) ||
-    post.images?.some((image) =>
-      image.aiTool?.toLowerCase() === target ||
-      image.aiTools?.some((item) => item.toLowerCase() === target)
-    )
-  );
+  const tools = post.aiTools;
+  if (tools) {
+    for (let i = 0; i < tools.length; i++) {
+      if (tools[i].toLowerCase() === target) return true;
+    }
+  }
+  const images = post.images;
+  if (images) {
+    for (let i = 0; i < images.length; i++) {
+      const img = images[i];
+      if (img.aiTool && img.aiTool.toLowerCase() === target) return true;
+      if (img.aiTools) {
+        for (let j = 0; j < img.aiTools.length; j++) {
+          if (img.aiTools[j].toLowerCase() === target) return true;
+        }
+      }
+    }
+  }
+  return false;
 }
 
 export function matchesCategory(post: Post, category?: string) {
   if (!category) return false;
   const target = category.toLowerCase();
-  return Boolean(post.category?.toLowerCase() === target || post.categories?.some((item) => item.toLowerCase() === target));
+  if (post.category && post.category.toLowerCase() === target) return true;
+  const categories = post.categories;
+  if (categories) {
+    for (let i = 0; i < categories.length; i++) {
+      if (categories[i].toLowerCase() === target) return true;
+    }
+  }
+  return false;
 }
 
 export function matchesTag(post: Post, tag?: string) {
   if (!tag) return false;
   const target = tag.toLowerCase();
-  return Boolean(post.tags?.some((item) => item.toLowerCase() === target));
+  const tags = post.tags;
+  if (tags) {
+    for (let i = 0; i < tags.length; i++) {
+      if (tags[i].toLowerCase() === target) return true;
+    }
+  }
+  return false;
 }
 
 export function filterPostsForSection(section: Section, posts: Post[], settings: SiteSettings, applyLimit = true) {
-  let filtered = posts.filter((post) => (post.status === 'published' || !post.status) && post.visibility !== 'private');
+  const filtered: Post[] = [];
+  for (let i = 0; i < posts.length; i++) {
+    const post = posts[i];
+    if ((post.status === 'published' || !post.status) && post.visibility !== 'private') {
+      filtered.push(post);
+    }
+  }
+
+  let matched: Post[] = filtered;
 
   switch (section.type) {
-    case 'ai-tool':
-      filtered = filtered.filter((post) => matchesTool(post, section.aiTool));
+    case 'ai-tool': {
+      const targetTool = section.aiTool?.trim().toLowerCase();
+      if (!targetTool) return [];
+      matched = filtered.filter((post) => matchesTool(post, targetTool));
       break;
-    case 'tag':
-      filtered = filtered.filter((post) => matchesTag(post, section.tag));
+    }
+    case 'tag': {
+      const targetTag = section.tag?.trim().toLowerCase();
+      if (!targetTag) return [];
+      matched = filtered.filter((post) => matchesTag(post, targetTag));
       break;
-    case 'category':
-      filtered = filtered.filter((post) => matchesCategory(post, section.category));
+    }
+    case 'category': {
+      const targetCat = section.category?.trim().toLowerCase();
+      if (!targetCat) return [];
+      matched = filtered.filter((post) => matchesCategory(post, targetCat));
       break;
+    }
     case 'latest':
-      filtered = [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      matched.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       break;
     case 'popular':
-      filtered = [...filtered].sort((a, b) => (b.views || 0) - (a.views || 0));
+      matched.sort((a, b) => (b.views || 0) - (a.views || 0));
       break;
     case 'trending': {
       const viewsWeight = settings.features?.trendingViewsWeight ?? 1;
       const likesWeight = settings.features?.trendingLikesWeight ?? 2;
-      filtered = [...filtered].sort(
+      matched.sort(
         (a, b) =>
           ((b.views || 0) * viewsWeight + (b.likes || 0) * likesWeight) -
           ((a.views || 0) * viewsWeight + (a.likes || 0) * likesWeight)
       );
       break;
     }
-    case 'custom':
-      filtered = (section.postIds || [])
-        .map((postId) => filtered.find((post) => post.id === postId))
+    case 'custom': {
+      const idMap = new Map<string, Post>();
+      for (let i = 0; i < filtered.length; i++) {
+        idMap.set(filtered[i].id, filtered[i]);
+      }
+      matched = (section.postIds || [])
+        .map((postId) => idMap.get(postId))
         .filter((post): post is Post => Boolean(post));
       break;
+    }
   }
 
-  return applyLimit && section.type !== 'latest' ? filtered.slice(0, section.limit || 12) : filtered;
+  return applyLimit && section.type !== 'latest' ? matched.slice(0, section.limit || 12) : matched;
 }

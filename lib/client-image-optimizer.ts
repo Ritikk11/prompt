@@ -16,7 +16,7 @@ type OptimizeOptions = {
 // stay high-quality (Cloudflare Transformations handles per-device delivery).
 const presets: Record<ImageOptimizePreset, OptimizeOptions> = {
   thumbnail: { maxSizeKB: 250, targetWidth: 720, maxDimension: 1100, startQuality: 0.82, minQuality: 0.6, mimeType: 'image/webp' },
-  prompt: { maxSizeKB: 1200, maxDimension: 1600, startQuality: 0.85, minQuality: 0.6, mimeType: 'image/webp' },
+  prompt: { maxSizeKB: 800, maxDimension: 1200, startQuality: 0.85, minQuality: 0.6, mimeType: 'image/webp' },
   reference: { maxSizeKB: 1600, maxDimension: 1600, startQuality: 0.85, minQuality: 0.6, mimeType: 'image/webp' },
   logo: { maxSizeKB: 120, maxDimension: 240, startQuality: 0.85, minQuality: 0.6, mimeType: 'image/webp' },
   aistudio: { maxSizeKB: 1400, maxDimension: 1600, startQuality: 0.85, minQuality: 0.6, mimeType: 'image/webp' },
