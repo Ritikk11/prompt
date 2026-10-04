@@ -12,6 +12,7 @@ export default defineCloudflareConfig({
   incrementalCache: withRegionalCache(r2IncrementalCache, {
     mode: 'long-lived',
     defaultLongLivedTtlSec: 2592000,
+    bypassTagCacheOnCacheHit: false,
   }),
   // revalidatePath/revalidateTag need a real tag cache; without one they are
   // silent no-ops and pages only refresh when their ISR TTL expires.
