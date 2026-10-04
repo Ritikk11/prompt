@@ -31,7 +31,7 @@ export default function DiscoveryPageHero({
     return (
       <header className="mb-10 text-center max-w-3xl mx-auto">
         {badge && (
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-surface-200/80 dark:border-surface-800 bg-surface-100/80 dark:bg-surface-800/60 px-4 py-1.5 text-xs font-black text-primary-700 dark:text-primary-300 shadow-sm">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-surface-200/80 bg-white/80 px-4 py-1.5 text-xs font-black text-primary-700 shadow-sm backdrop-blur-md dark:border-white/15 dark:bg-white/[0.10] dark:text-primary-200 dark:shadow-[0_2px_12px_rgba(0,0,0,0.3)]">
             {logoIcon?.logo ? (
               <span className="relative h-4 w-4 overflow-hidden rounded-full bg-white" style={logoIcon.logoScale ? { transform: `scale(${logoIcon.logoScale})` } : undefined}>
                 <Image src={logoIcon.logo} alt={`${logoIcon.label} logo`} width={16} height={16} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
