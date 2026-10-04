@@ -139,10 +139,8 @@ export default async function PostPage({ params }: Props) {
   const { slug } = await params;
   if (!isSafePublicSlug(slug)) notFound();
 
-  const [post, seoPage] = await Promise.all([
-    getPostBySlugOrId(slug),
-    getSeoPageBySlug(slug),
-  ]);
+  const post = await getPostBySlugOrId(slug);
+  const seoPage = post ? null : await getSeoPageBySlug(slug);
 
   if (!post && seoPage) {
     const [allPosts, settings] = await Promise.all([fetchPostSummaries(), fetchSettings()]);

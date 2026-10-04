@@ -1,3 +1,6 @@
+// 30 days TTL: on-demand revalidation (admin edits) refreshes pages instantly via revalidatePath.
+export const revalidate = 2592000;
+
 import { fetchSettings } from '@/lib/data';
 import Markdown from '@/components/MarkdownRenderer';
 import { notFound } from 'next/navigation';
