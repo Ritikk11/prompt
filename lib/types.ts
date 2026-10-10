@@ -224,6 +224,7 @@ export interface SiteFeatures {
 export interface AdSettings {
   publisherId?: string;
   autoAdsEnabled?: boolean;
+  adsTxt?: string;
   header: { enabled: boolean; code: string };
   inFeed: { enabled: boolean; code: string; frequency: number };
   postTop: { enabled: boolean; code: string };

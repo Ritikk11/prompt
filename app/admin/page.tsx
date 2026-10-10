@@ -9257,6 +9257,24 @@ function AdminInner() {
                    </p>
                 </div>
 
+                {/* ads.txt */}
+                <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
+                   <div className="flex items-center justify-between mb-3">
+                     <span className="font-bold text-base text-surface-900 dark:text-white">ads.txt Content</span>
+                     <span className="text-xs text-primary-500 font-medium">Served at /ads.txt</span>
+                   </div>
+                   <textarea
+                     value={adsConfig.adsTxt || ''}
+                     onChange={(e) => setAdsConfig(prev => ({ ...prev, adsTxt: e.target.value }))}
+                     rows={3}
+                     placeholder={adsConfig.publisherId ? `google.com, ${adsConfig.publisherId.replace(/^ca-/, '')}, DIRECT, f08c47fec0942fa0` : 'google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0'}
+                     className={`${adminInput} resize-y font-mono text-xs`}
+                   />
+                   <p className="mt-2 text-xs text-surface-500">
+                     Leave blank to automatically generate from your Google AdSense Account ID, or paste custom entries for Google AdSense and other ad partners.
+                   </p>
+                </div>
+
                 {/* Header Ad */}
                 <div className="p-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-800/50">
                    <div className="flex items-center justify-between mb-3">
