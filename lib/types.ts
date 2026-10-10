@@ -537,6 +537,14 @@ export interface SiteSettings {
   staticPages?: Record<string, StaticPageSettings>;
   ads?: AdSettings;
   imageProvider?: 'supabase' | 'cloudflare';
+  /** Primary AI platform: 'gemini' (Google Gemini) or 'maas' (Alibaba Cloud Model Studio) */
+  aiProvider?: 'gemini' | 'maas';
+  /** Active default model name */
+  aiDefaultModel?: string;
+  /** Default Google Gemini model (e.g. 'gemini-3.8-flash') */
+  geminiDefaultModel?: string;
+  /** Default Alibaba Cloud MaaS model (e.g. 'deepseek-v4-pro') */
+  maasDefaultModel?: string;
   features?: SiteFeatures;
   adminEmails?: string[];
   pageAbout?: string;

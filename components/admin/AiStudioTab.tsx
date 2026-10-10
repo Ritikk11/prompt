@@ -20,48 +20,57 @@ import MessageBubble from '@/components/admin/aistudio/MessageBubble';
 import type { Post } from '@/lib/types';
 
 export type AiStudioModelId =
+  | 'gemini-3.8-flash'
+  | 'gemini-flash-latest'
+  | 'gemini-3.7-flash'
+  | 'gemini-3.5-flash'
+  | 'gemini-3.5-flash-lite'
   | 'deepseek-v4-pro'
   | 'deepseek-v4-flash'
   | 'qwen3.7-max'
   | 'qwen3.8-flash'
   | 'glm-5.1'
-  | 'gemini-2.5-flash'
-  | 'gemini-2.5-flash-lite'
   | 'imagen-3.0-generate-002';
 
 export type GeminiModelId = AiStudioModelId;
 
 interface AiStudioTabProps {
   posts: Post[];
+  defaultModel?: string;
   onCreateArticleFromAi?: (content: string) => void;
   onCreatePostFromAi?: (promptText: string, imageUrl?: string) => void;
 }
 
 const models: { id: AiStudioModelId; label: string; short: string; icon: any; emoji: string }[] = [
+  { id: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash (Recommended)', short: 'Gemini 3.8', icon: Zap, emoji: '⚡' },
+  { id: 'gemini-flash-latest', label: 'Gemini Flash Latest', short: 'Gemini Latest', icon: Sparkles, emoji: '✨' },
+  { id: 'gemini-3.7-flash', label: 'Gemini 3.7 Flash', short: 'Gemini 3.7', icon: Zap, emoji: '⚡' },
+  { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash', short: 'Gemini 3.5', icon: Zap, emoji: '⚡' },
+  { id: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite', short: 'Gemini Lite', icon: Cpu, emoji: '🚀' },
   { id: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro (Reasoning)', short: 'DeepSeek Pro', icon: Brain, emoji: '🧠' },
   { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', short: 'DeepSeek Flash', icon: Zap, emoji: '⚡' },
   { id: 'qwen3.7-max', label: 'Qwen 3.7 Max', short: 'Qwen Max', icon: Sparkles, emoji: '💎' },
   { id: 'qwen3.8-flash', label: 'Qwen 3.8 Flash (1M Context)', short: 'Qwen Flash', icon: Cpu, emoji: '🚀' },
   { id: 'glm-5.1', label: 'GLM 5.1', short: 'GLM 5.1', icon: Bot, emoji: '🔮' },
-  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', short: 'Gemini Flash', icon: Zap, emoji: '⚡' },
-  { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', short: 'Gemini Lite', icon: Cpu, emoji: '✨' },
   { id: 'imagen-3.0-generate-002', label: 'Imagen 3 (Image Gen)', short: 'Imagen 3', icon: Palette, emoji: '🎨' },
 ];
 
 const modelLabel = (id?: string) => models.find(m => m.id === id)?.label || id;
 
 const presets = [
-  { title: 'Write an Article', icon: FileText, prompt: "Write a detailed markdown article about 'How to write ChatGPT Image Prompts'. Include practical tips, structural steps, and example prompts.", model: 'deepseek-v4-pro' as AiStudioModelId },
+  { title: 'Write an Article', icon: FileText, prompt: "Write a detailed markdown article about 'How to write ChatGPT Image Prompts'. Include practical tips, structural steps, and example prompts.", model: 'gemini-3.8-flash' as AiStudioModelId },
   { title: 'Generate AI Image', icon: Palette, prompt: 'A futuristic cyberpunk cat wearing neon goggles sitting on a rain-slicked Tokyo street at night, 8k resolution, photorealistic', model: 'imagen-3.0-generate-002' as AiStudioModelId },
-  { title: 'Brainstorm Tags', icon: Tag, prompt: 'Suggest 10 trending AI image prompt tags and categories for a prompt gallery site. Return them as a markdown table with columns Tag, Category, Why it works.', model: 'deepseek-v4-flash' as AiStudioModelId },
+  { title: 'Brainstorm Tags', icon: Tag, prompt: 'Suggest 10 trending AI image prompt tags and categories for a prompt gallery site. Return them as a markdown table with columns Tag, Category, Why it works.', model: 'gemini-3.8-flash' as AiStudioModelId },
   { title: 'Deep Coding & Logic', icon: Brain, prompt: 'Write a TypeScript utility function to parse and validate AI prompt tags from markdown frontmatter with unit test examples.', model: 'deepseek-v4-pro' as AiStudioModelId },
 ];
 
-export default function AiStudioTab({ posts, onCreateArticleFromAi, onCreatePostFromAi }: AiStudioTabProps) {
+export default function AiStudioTab({ posts, defaultModel, onCreateArticleFromAi, onCreatePostFromAi }: AiStudioTabProps) {
   const chat = useConversations();
   const [inputPrompt, setInputPrompt] = useState('');
   const [attachedImageUrl, setAttachedImageUrl] = useState('');
-  const [selectedModel, setSelectedModel] = useState<AiStudioModelId>('deepseek-v4-pro');
+  const [selectedModel, setSelectedModel] = useState<AiStudioModelId>(
+    (defaultModel && models.some(m => m.id === defaultModel) ? defaultModel : 'gemini-3.8-flash') as AiStudioModelId
+  );
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [busy, setBusy] = useState(false);           // any generation in flight

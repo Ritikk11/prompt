@@ -10,7 +10,8 @@ import {
   Save, X, FileText, LayoutGrid, Star, StarOff, Upload, Copy,
   Settings, Check, Filter, Search, RotateCcw, GripVertical, Image as ImageIcon,
   Zap, Layers, Info, LayoutTemplate, BarChart2, LayoutDashboard, Sparkles, Wand2, Tag, ArrowRight, Users, MessageCircle, Grid3X3, Compass, Menu, Mail, FolderTree,
-  Ban, Shield, Flag, CheckCircle, Cpu, BookOpen, Newspaper, Share2, Loader2, KeyRound, LogOut
+  Ban, Shield, Flag, CheckCircle, Cpu, BookOpen, Newspaper, Share2, Loader2, KeyRound, LogOut,
+  Bot, Brain
 } from 'lucide-react';
 import { showToast } from '@/components/ui/ToastContainer';
 import { ConfirmDialogHost, confirmAction } from '@/components/ui/ConfirmDialog';
@@ -18,6 +19,7 @@ import { ConfirmDialogHost, confirmAction } from '@/components/ui/ConfirmDialog'
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { imageModelOptions, getAllTools, getDefaultImageModel, getImageModelForTools, getToolInfo, getToolModels, getAllModelOptionsForTools, getPromptImageMetas } from '@/lib/constants';
+import { GEMINI_MODELS, MAAS_MODELS, DEFAULT_GEMINI_MODEL, DEFAULT_MAAS_MODEL } from '@/lib/ai-config';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
@@ -51,11 +53,11 @@ import MediaLibraryModal from '@/components/admin/MediaLibraryModal';
 type AdminTab = 'dashboard' | 'stats' | 'posts' | 'sections' | 'articles' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages' | 'ai-studio';
 const DiscoveryPageIds = ['explore', 'blog', 'guides', 'tool', 'tag'] as const;
 export type DiscoveryPageId = typeof DiscoveryPageIds[number];
-type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share' | 'categories' | 'tags' | 'pinterest';
+type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'ai-engine' | 'comments' | 'share' | 'categories' | 'tags' | 'pinterest';
 type SectionLocationFilter = 'homepage' | 'header' | 'footer' | 'all';
 
 const adminTabKeys: AdminTab[] = ['dashboard', 'stats', 'posts', 'sections', 'articles', 'settings', 'submissions', 'comments', 'users', 'seo', 'pages', 'ai-studio'];
-const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'discovery', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'comments', 'share', 'categories', 'tags', 'pinterest'];
+const settingsSubTabKeys: SettingsSubTab[] = ['general', 'homepage', 'discovery', 'navigation', 'footer', 'features', 'ads', 'ai-tools', 'ai-engine', 'comments', 'share', 'categories', 'tags', 'pinterest'];
 const sectionLocationKeys: SectionLocationFilter[] = ['homepage', 'header', 'footer', 'all'];
 
 function parseAdminTab(value: string | null): AdminTab {
@@ -69,6 +71,7 @@ function parseAdminTab(value: string | null): AdminTab {
 
 function parseSettingsSubTab(value: string | null): SettingsSubTab {
   if (value === 'aitools') return 'ai-tools';
+  if (value === 'aiengine' || value === 'ai-engine') return 'ai-engine';
   if (value === 'explore') return 'discovery';
   if (value && settingsSubTabKeys.includes(value as SettingsSubTab)) return value as SettingsSubTab;
   return 'general';
@@ -80,7 +83,9 @@ function parseSectionLocation(value: string | null): SectionLocationFilter {
 }
 
 function settingsSubTabParam(value: SettingsSubTab) {
-  return value === 'ai-tools' ? 'aitools' : value;
+  if (value === 'ai-tools') return 'aitools';
+  if (value === 'ai-engine') return 'aiengine';
+  return value;
 }
 
 function cleanAdminPublicCopy(value?: string) {
@@ -1301,6 +1306,9 @@ function AdminInner() {
   const [aiPromptInstruction, setAiPromptInstruction] = useState('');
 
   const [maintenanceMode, setMaintenanceMode] = useState(settings.maintenanceMode || false);
+  const [aiProvider, setAiProvider] = useState<'gemini' | 'maas'>(settings.aiProvider || 'gemini');
+  const [geminiDefaultModel, setGeminiDefaultModel] = useState(settings.geminiDefaultModel || DEFAULT_GEMINI_MODEL);
+  const [maasDefaultModel, setMaasDefaultModel] = useState(settings.maasDefaultModel || DEFAULT_MAAS_MODEL);
   const [siteTitle, setSiteTitle] = useState(settings.siteTitle);
   const [siteLogo, setSiteLogo] = useState(settings.siteLogo || '');
   const [siteDescription, setSiteDescription] = useState(cleanAdminPublicCopy(settings.siteDescription) || settings.siteDescription);
@@ -1549,6 +1557,9 @@ function AdminInner() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (settings.aiProvider !== undefined) setAiProvider(settings.aiProvider);
+    if (settings.geminiDefaultModel !== undefined) setGeminiDefaultModel(settings.geminiDefaultModel);
+    if (settings.maasDefaultModel !== undefined) setMaasDefaultModel(settings.maasDefaultModel);
     if (settings.siteTitle !== undefined) setSiteTitle(settings.siteTitle);
     if (settings.siteLogo !== undefined) setSiteLogo(settings.siteLogo);
     if (settings.siteDescription !== undefined) setSiteDescription(cleanAdminPublicCopy(settings.siteDescription) || settings.siteDescription);
@@ -3215,6 +3226,10 @@ function AdminInner() {
     updateSettings({
       ...settings,
       maintenanceMode,
+      aiProvider,
+      geminiDefaultModel,
+      maasDefaultModel,
+      aiDefaultModel: aiProvider === 'maas' ? maasDefaultModel : geminiDefaultModel,
       siteTitle,
       siteLogo,
       siteDescription,
@@ -6467,6 +6482,7 @@ function AdminInner() {
               <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
                 {[
                   { id: 'general', label: 'General', icon: <Settings className="w-4 h-4" /> },
+                  { id: 'ai-engine', label: 'AI Engine & Models', icon: <Bot className="w-4 h-4" /> },
                   { id: 'homepage', label: 'Homepage Blocks', icon: <Layers className="w-4 h-4" /> },
                   { id: 'discovery', label: 'Discovery Pages', icon: <Compass className="w-4 h-4" /> },
                   { id: 'navigation', label: 'Navigation Menu', icon: <Menu className="w-4 h-4" /> },
@@ -7731,6 +7747,177 @@ function AdminInner() {
                   <p className="text-[11px] text-surface-500">
                     With zero configuration, one &ldquo;Tools&rdquo; menu contains every header section and updates itself as sections are added. The first change you make here switches to a saved, explicit setup.
                   </p>
+                </div>
+              </Panel>
+            </div>
+          )}
+
+          {settingsSubTab === 'ai-engine' && (
+            <div className="space-y-6">
+              <TabBanner
+                icon={<Bot className="w-5 h-5" />}
+                title="AI Engine & Models Configuration"
+                text="Configure which AI platform powers generation across PromptSoul (post details, articles, magic wand copy, and AI Studio) and set the default model."
+                action={
+                  <ActionButton onClick={handleSaveSettings}>
+                    <Save className="w-3.5 h-3.5" /> Save Changes
+                  </ActionButton>
+                }
+              />
+
+              <Panel>
+                <PanelHeader
+                  title="1. Primary AI Platform"
+                  subtitle="Select the default platform. If the active platform is ever temporarily unavailable or runs out of quota, PromptSoul automatically falls back to the other platform."
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Google Gemini Card */}
+                  <div
+                    onClick={() => setAiProvider('gemini')}
+                    className={`cursor-pointer rounded-2xl p-5 border transition-all ${
+                      aiProvider === 'gemini'
+                        ? 'border-primary-500 bg-primary-500/10 dark:bg-primary-500/[0.08] ring-2 ring-primary-500/20 shadow-md'
+                        : 'border-black/[0.08] dark:border-white/10 bg-white/50 dark:bg-white/[0.04] hover:border-primary-500/40 hover:bg-white/80'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                          <Zap className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-surface-900 dark:text-white flex items-center gap-2">
+                            Google Gemini API
+                            {aiProvider === 'gemini' && (
+                              <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full bg-primary-500 text-white">Active</span>
+                            )}
+                          </h4>
+                          <p className="text-xs text-surface-500 dark:text-surface-400 mt-0.5">Google DeepMind multimodal AI models</p>
+                        </div>
+                      </div>
+                      <input
+                        type="radio"
+                        name="aiProvider"
+                        checked={aiProvider === 'gemini'}
+                        onChange={() => setAiProvider('gemini')}
+                        className="mt-1 h-4 w-4 text-primary-600 cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/[0.06] space-y-3">
+                      <label className={adminLabel}>Default Gemini Model</label>
+                      <AdminSelect
+                        value={geminiDefaultModel}
+                        onChange={v => setGeminiDefaultModel(v)}
+                        className="w-full text-xs"
+                      >
+                        {GEMINI_MODELS.map(m => (
+                          <option key={m.id} value={m.id}>{m.label}</option>
+                        ))}
+                      </AdminSelect>
+                      <p className="text-[11px] text-surface-500 dark:text-surface-400">
+                        {GEMINI_MODELS.find(m => m.id === geminiDefaultModel)?.description || 'Selected Gemini generation model.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Alibaba Cloud Model Studio (MaaS) Card */}
+                  <div
+                    onClick={() => setAiProvider('maas')}
+                    className={`cursor-pointer rounded-2xl p-5 border transition-all ${
+                      aiProvider === 'maas'
+                        ? 'border-primary-500 bg-primary-500/10 dark:bg-primary-500/[0.08] ring-2 ring-primary-500/20 shadow-md'
+                        : 'border-black/[0.08] dark:border-white/10 bg-white/50 dark:bg-white/[0.04] hover:border-primary-500/40 hover:bg-white/80'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                          <Brain className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-surface-900 dark:text-white flex items-center gap-2">
+                            Alibaba Cloud Model Studio
+                            {aiProvider === 'maas' && (
+                              <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full bg-primary-500 text-white">Active</span>
+                            )}
+                          </h4>
+                          <p className="text-xs text-surface-500 dark:text-surface-400 mt-0.5">DeepSeek Reasoning, Qwen & GLM models</p>
+                        </div>
+                      </div>
+                      <input
+                        type="radio"
+                        name="aiProvider"
+                        checked={aiProvider === 'maas'}
+                        onChange={() => setAiProvider('maas')}
+                        className="mt-1 h-4 w-4 text-primary-600 cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/[0.06] space-y-3">
+                      <label className={adminLabel}>Default MaaS Model</label>
+                      <AdminSelect
+                        value={maasDefaultModel}
+                        onChange={v => setMaasDefaultModel(v)}
+                        className="w-full text-xs"
+                      >
+                        {MAAS_MODELS.map(m => (
+                          <option key={m.id} value={m.id}>{m.label}</option>
+                        ))}
+                      </AdminSelect>
+                      <p className="text-[11px] text-surface-500 dark:text-surface-400">
+                        {MAAS_MODELS.find(m => m.id === maasDefaultModel)?.description || 'Selected Model Studio generation model.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Panel>
+
+              {/* Cloudflare CFL Environment Variables Notice */}
+              <Panel>
+                <PanelHeader
+                  title="2. Production Environment (Cloudflare CFL)"
+                  subtitle="Make sure your production environment variables are configured in Cloudflare Pages / Workers."
+                />
+
+                <div className="p-4 rounded-2xl border border-sky-500/20 bg-sky-500/5 dark:bg-sky-500/10 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-xl bg-sky-500/20 text-sky-600 dark:text-sky-400 shrink-0">
+                      <KeyRound className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h5 className="text-xs font-bold text-surface-900 dark:text-white">Cloudflare Environment Variables</h5>
+                      <p className="text-xs text-surface-600 dark:text-surface-300 mt-1 leading-relaxed">
+                        For production deployments on Cloudflare, add these variables in the Cloudflare Dashboard under{' '}
+                        <span className="font-semibold text-sky-600 dark:text-sky-400">Workers &amp; Pages &gt; promptsoul &gt; Settings &gt; Variables and Secrets</span>:
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div className="p-3 rounded-xl bg-white/70 dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08]">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-xs font-bold text-surface-900 dark:text-white">GEMINI_API_KEY</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">Gemini</span>
+                      </div>
+                      <p className="text-[11px] text-surface-500 mt-1">Google AI Studio API key (starts with AQ... or AIza...)</p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-white/70 dark:bg-white/[0.05] border border-black/[0.06] dark:border-white/[0.08]">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-xs font-bold text-surface-900 dark:text-white">MAAS_API_KEY</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">MaaS</span>
+                      </div>
+                      <p className="text-[11px] text-surface-500 mt-1">Alibaba Cloud Model Studio API key (sk-ws-...)</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <ActionButton onClick={handleSaveSettings}>
+                    <Save className="w-3.5 h-3.5" /> Save AI Engine Settings
+                  </ActionButton>
                 </div>
               </Panel>
             </div>
@@ -11443,6 +11630,7 @@ function AdminInner() {
       {tab === 'ai-studio' && (
         <AiStudioTab
           posts={posts}
+          defaultModel={aiProvider === 'maas' ? maasDefaultModel : geminiDefaultModel}
           onCreateArticleFromAi={(content) => {
             navigator.clipboard.writeText(content);
             pushAdminRoute('articles');

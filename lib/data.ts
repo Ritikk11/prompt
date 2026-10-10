@@ -51,6 +51,10 @@ const defaultSettings: SiteSettings = {
       "enabled": false
     }
   },
+  "aiProvider": "gemini",
+  "aiDefaultModel": "gemini-3.8-flash",
+  "geminiDefaultModel": "gemini-3.8-flash",
+  "maasDefaultModel": "deepseek-v4-pro",
   "aiTools": [
     "ChatGPT",
     "Gemini",

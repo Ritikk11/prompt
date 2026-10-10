@@ -2,7 +2,9 @@ import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { safeFetchImage, MAX_IMAGE_BYTES } from "@/lib/safe-fetch";
+import { fetchSettings } from "@/lib/data";
 import { isMaasConfigured, isMaasModel, callMaasWithFallback, DEFAULT_POST_ARTICLE_FALLBACKS, getMaasDefaultModel } from "@/lib/admin/maas-client";
+import { getActiveAiProvider, getGeminiModel, getMaasModel, GEMINI_FALLBACKS } from "@/lib/ai-config";
 
 // Only inert raster types — same allowlist as the upload route. Without this
 // check a caller could pass data:image/svg+xml (or any other active MIME) and
@@ -70,109 +72,144 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 1. If requested model is a MaaS model (DeepSeek, Qwen, etc.) or MaaS is configured
-    if (isMaasConfigured() && (isMaasModel(requestedModel) || !requestedModel)) {
-      try {
-        const maasMessages: any[] = [];
-        if (systemContext) {
-          maasMessages.push({
-            role: 'system',
-            content: `${systemContext}\n\nPlease respond with clear, well-formatted markdown. If writing code, enclose code in proper markdown backticks with language tags (e.g. \`\`\`typescript ... \`\`\`).`,
-          });
-        }
-        maasMessages.push({ role: 'user', content: prompt });
+    const settings = await fetchSettings();
+    const preferredProvider = getActiveAiProvider(settings);
 
-        const targetModel = requestedModel || getMaasDefaultModel();
-        const result = await callMaasWithFallback({
-          models: [targetModel, ...DEFAULT_POST_ARTICLE_FALLBACKS],
-          messages: maasMessages,
-          json: Boolean(json),
-          enableSearch: Boolean(enableSearch),
-        });
-
-        return NextResponse.json({ text: result.content });
-      } catch (maasErr: any) {
-        console.warn(`MaaS text generation failed, falling back to Gemini:`, maasErr?.message);
-        if (!process.env.GEMINI_API_KEY) {
-          throw maasErr;
-        }
+    // Determine target provider:
+    // If a specific model was requested, match its provider; otherwise use the admin's preferred provider.
+    let targetProvider: 'gemini' | 'maas' = preferredProvider;
+    if (requestedModel) {
+      if (isMaasModel(requestedModel)) {
+        targetProvider = 'maas';
+      } else {
+        targetProvider = 'gemini';
       }
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json(
-        { error: 'Gemini API Key is missing.' },
-        { status: 500 }
-      );
+    async function executeMaaS(): Promise<string | null> {
+      if (!isMaasConfigured()) return null;
+      const maasMessages: any[] = [];
+      if (systemContext) {
+        maasMessages.push({
+          role: 'system',
+          content: `${systemContext}\n\nPlease respond with clear, well-formatted markdown. If writing code, enclose code in proper markdown backticks with language tags (e.g. \`\`\`typescript ... \`\`\`).`,
+        });
+      }
+      maasMessages.push({ role: 'user', content: prompt });
+
+      const model = requestedModel && isMaasModel(requestedModel)
+        ? requestedModel
+        : getMaasModel(settings);
+
+      const modelsToTry = Array.from(new Set([model, ...DEFAULT_POST_ARTICLE_FALLBACKS]));
+      const result = await callMaasWithFallback({
+        models: modelsToTry,
+        messages: maasMessages,
+        json: Boolean(json),
+        enableSearch: Boolean(enableSearch),
+      });
+
+      return result.content;
     }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    async function executeGemini(): Promise<string | null> {
+      if (!process.env.GEMINI_API_KEY) return null;
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-    // Determine model (fallback to gemini-2.5-flash)
-    const validModels = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
-    const targetModel = validModels.includes(requestedModel) ? requestedModel : 'gemini-2.5-flash';
-    
-    let fullPrompt = prompt;
-    if (systemContext) {
-      fullPrompt = `System Context:\n${systemContext}\n\nUser Prompt:\n${prompt}\n\nPlease respond with clear, well-formatted markdown. If writing code, enclose code in proper markdown backticks with language tags (e.g. \`\`\`typescript ... \`\`\`).`;
-    }
+      const model = requestedModel && !isMaasModel(requestedModel)
+        ? requestedModel
+        : getGeminiModel(settings);
 
-    const contents: any[] = [{ text: fullPrompt }];
+      let fullPrompt = prompt;
+      if (systemContext) {
+        fullPrompt = `System Context:\n${systemContext}\n\nUser Prompt:\n${prompt}\n\nPlease respond with clear, well-formatted markdown. If writing code, enclose code in proper markdown backticks with language tags (e.g. \`\`\`typescript ... \`\`\`).`;
+      }
 
-    if (imageUrl) {
-      try {
-        if (imageUrl.startsWith('data:')) {
-          const match = imageUrl.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
-          // Guard: reject non-raster MIME types (e.g. image/svg+xml) from data URLs.
-          if (match && ALLOWED_IMAGE_MIME_TYPES.has(match[1])) {
-            contents.push({
-              inlineData: {
-                mimeType: match[1],
-                data: match[2],
-              },
-            });
-          }
-        } else {
-          const imgRes = await safeFetchImage(imageUrl);
-          if (imgRes && imgRes.ok) {
-            const arrayBuffer = await imgRes.arrayBuffer();
-            // Guard: skip oversized images to avoid exhausting Worker memory.
-            if (arrayBuffer.byteLength <= MAX_IMAGE_BYTES) {
-              const buffer = Buffer.from(arrayBuffer);
-              const base64Data = buffer.toString('base64');
-              const mimeType = imgRes.headers.get('content-type') || 'image/jpeg';
+      const contents: any[] = [{ text: fullPrompt }];
+
+      if (imageUrl) {
+        try {
+          if (imageUrl.startsWith('data:')) {
+            const match = imageUrl.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+            if (match && ALLOWED_IMAGE_MIME_TYPES.has(match[1])) {
               contents.push({
                 inlineData: {
-                  data: base64Data,
-                  mimeType,
+                  mimeType: match[1],
+                  data: match[2],
                 },
               });
             }
+          } else {
+            const imgRes = await safeFetchImage(imageUrl);
+            if (imgRes && imgRes.ok) {
+              const arrayBuffer = await imgRes.arrayBuffer();
+              if (arrayBuffer.byteLength <= MAX_IMAGE_BYTES) {
+                const buffer = Buffer.from(arrayBuffer);
+                contents.push({
+                  inlineData: {
+                    data: buffer.toString('base64'),
+                    mimeType: imgRes.headers.get('content-type') || 'image/jpeg',
+                  },
+                });
+              }
+            }
           }
+        } catch (err) {
+          console.error('Failed to process image for Gemini:', err);
         }
-      } catch (err) {
-        console.error('Failed to process image for AI Studio:', err);
+      }
+
+      const modelsToTry = Array.from(new Set([model, ...GEMINI_FALLBACKS]));
+      for (const m of modelsToTry) {
+        try {
+          const res = await ai.models.generateContent({
+            model: m,
+            contents: contents,
+            ...(json ? { config: { responseMimeType: 'application/json' } } : {}),
+          });
+          const txt = res.text || '';
+          if (txt) return txt;
+        } catch (err: any) {
+          console.warn(`Gemini model ${m} failed for text generation:`, err?.message);
+        }
+      }
+      return null;
+    }
+
+    let generatedText: string | null = null;
+    if (targetProvider === 'gemini') {
+      try {
+        generatedText = await executeGemini();
+      } catch (err: any) {
+        console.warn('Gemini execution error, falling back to MaaS:', err?.message);
+      }
+      if (!generatedText && isMaasConfigured()) {
+        try {
+          generatedText = await executeMaaS();
+        } catch (err: any) {
+          console.warn('Fallback to MaaS also failed:', err?.message);
+        }
+      }
+    } else {
+      try {
+        generatedText = await executeMaaS();
+      } catch (err: any) {
+        console.warn('MaaS execution error, falling back to Gemini:', err?.message);
+      }
+      if (!generatedText && process.env.GEMINI_API_KEY) {
+        try {
+          generatedText = await executeGemini();
+        } catch (err: any) {
+          console.warn('Fallback to Gemini also failed:', err?.message);
+        }
       }
     }
 
-    let response;
-    try {
-      response = await ai.models.generateContent({
-        model: targetModel,
-        contents: contents,
-        ...(json ? { config: { responseMimeType: "application/json" } } : {}),
-      });
-    } catch (modelErr: any) {
-      console.warn(`Primary model ${targetModel} failed (${modelErr.message}), falling back to gemini-2.5-flash-lite...`);
-      response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-lite",
-        contents: contents,
-        ...(json ? { config: { responseMimeType: "application/json" } } : {}),
-      });
+    if (!generatedText) {
+      return NextResponse.json({ error: 'AI generation failed across all available providers and fallback models.' }, { status: 500 });
     }
 
-    const text = response.text || "";
-    return NextResponse.json({ text: text.trim() });
+    return NextResponse.json({ text: generatedText.trim() });
   } catch (error: any) {
     console.error('Error generating text:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

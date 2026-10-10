@@ -5,6 +5,7 @@ import { safeFetchImage, MAX_IMAGE_BYTES } from "@/lib/safe-fetch";
 import { fetchSettings } from "@/lib/data";
 import { TOOLS_MODELS_RULES, HUMAN_WRITING_RULES } from "@/lib/admin/wandPrompts";
 import { isMaasConfigured, callMaasWithFallback, DEFAULT_POST_ARTICLE_FALLBACKS } from "@/lib/admin/maas-client";
+import { getActiveAiProvider, getGeminiModel, getMaasModel, GEMINI_FALLBACKS } from "@/lib/ai-config";
 
 export const dynamic = 'force-dynamic';
 
@@ -173,10 +174,73 @@ export async function POST(req: NextRequest) {
     const siteTools = settings.aiTools && settings.aiTools.length > 0 ? settings.aiTools.join(', ') : 'ChatGPT, Gemini, Grok, Qwen';
     const SITE_CONTEXT = getSiteContext(siteTools);
 
-    // 1. Try DeepSeek V4 via Model Studio (MaaS) with full model fallback cascade
-    if (isMaasConfigured()) {
-      try {
-        const maasPrompt = `You are an expert copywriter and SEO specialist working on posts for this specific site.
+    const preferredProvider = getActiveAiProvider(settings);
+    const geminiModel = getGeminiModel(settings);
+    const maasModel = getMaasModel(settings);
+
+    async function tryGemini() {
+      if (!process.env.GEMINI_API_KEY) return null;
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const systemPrompt = `You are an expert copywriter and SEO specialist working on posts for this specific site.
+
+${SITE_CONTEXT}
+${taxonomyText}${recentPostsText}${customInstructionText}${focusNotice}${currentFieldsText}
+Here are the text prompts the user used to create the images:
+${formattedImages}
+
+Please visually analyze the attached images (lighting, composition, art style, subject matter) and combine that with the text prompts to generate the following field(s) in JSON format:
+${fieldInstructionsText}
+
+Output JSON only, no markdown formatting (like \`\`\`json).
+`;
+
+      const imageParts: any[] = [];
+      const imagesToFetch = images.filter((img: any) => img.url).slice(0, 3);
+      for (const img of imagesToFetch) {
+        try {
+          const imgRes = await safeFetchImage(img.url);
+          if (imgRes && imgRes.ok) {
+            const arrayBuffer = await imgRes.arrayBuffer();
+            if (arrayBuffer.byteLength > MAX_IMAGE_BYTES) continue;
+            const buffer = Buffer.from(arrayBuffer);
+            imageParts.push({
+              inlineData: {
+                data: buffer.toString('base64'),
+                mimeType: imgRes.headers.get('content-type') || 'image/jpeg',
+              },
+            });
+          }
+        } catch (err) {
+          console.error('Failed to fetch image for AI analysis:', img.url, err);
+        }
+      }
+
+      const contents = [systemPrompt, ...imageParts];
+      const modelCandidates = Array.from(new Set([geminiModel, ...GEMINI_FALLBACKS]));
+
+      for (const m of modelCandidates) {
+        try {
+          const response = await ai.models.generateContent({
+            model: m,
+            contents: contents,
+            config: {
+              responseMimeType: 'application/json',
+              responseSchema: buildResponseSchema(fieldsToGenerate),
+            },
+          });
+          const text = response.text || '{}';
+          const parsed = JSON.parse(text);
+          if (fieldsToGenerate.some(f => f in parsed)) return parsed;
+        } catch (err: any) {
+          console.warn(`Gemini model ${m} failed for post generation:`, err?.message);
+        }
+      }
+      return null;
+    }
+
+    async function tryMaaS() {
+      if (!isMaasConfigured()) return null;
+      const maasPrompt = `You are an expert copywriter and SEO specialist working on posts for this specific site.
 
 ${SITE_CONTEXT}
 ${taxonomyText}${recentPostsText}${customInstructionText}${focusNotice}${currentFieldsText}
@@ -189,8 +253,10 @@ ${fieldInstructionsText}
 You MUST return a JSON object with EXACTLY these top-level keys: ${fieldsToGenerate.map(f => `"${f}"`).join(', ')}.
 Output pure JSON only, no markdown ticks, no conversational filler.`;
 
+      const modelCandidates = Array.from(new Set([maasModel, ...DEFAULT_POST_ARTICLE_FALLBACKS]));
+      try {
         const result = await callMaasWithFallback({
-          models: DEFAULT_POST_ARTICLE_FALLBACKS,
+          models: modelCandidates,
           messages: [
             {
               role: 'system',
@@ -208,77 +274,33 @@ Output pure JSON only, no markdown ticks, no conversational filler.`;
         const raw = result.content.trim();
         const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
         const parsed = JSON.parse(cleaned);
-
-        // Verify at least one requested field is present
-        if (fieldsToGenerate.some(f => f in parsed)) {
-          return NextResponse.json(parsed);
-        }
+        if (fieldsToGenerate.some(f => f in parsed)) return parsed;
       } catch (maasErr: any) {
-        console.warn('All MaaS fallback models failed for post generation:', maasErr?.message);
+        console.warn('MaaS failed for post generation:', maasErr?.message);
+      }
+      return null;
+    }
+
+    let parsedResult = null;
+    if (preferredProvider === 'gemini') {
+      parsedResult = await tryGemini();
+      if (!parsedResult) {
+        console.warn('Gemini failed or unconfigured, falling back to MaaS...');
+        parsedResult = await tryMaaS();
+      }
+    } else {
+      parsedResult = await tryMaaS();
+      if (!parsedResult) {
+        console.warn('MaaS failed or unconfigured, falling back to Gemini...');
+        parsedResult = await tryGemini();
       }
     }
 
-    // 2. Fallback to Gemini if MaaS is unconfigured or failed
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('MaaS generation failed and GEMINI_API_KEY is not configured.');
+    if (!parsedResult) {
+      throw new Error('All AI providers (Gemini and MaaS) failed to generate post fields. Please check your API keys and quotas.');
     }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-    const systemPrompt = `You are an expert copywriter and SEO specialist working on posts for this specific site.
-
-${SITE_CONTEXT}
-${taxonomyText}${recentPostsText}${customInstructionText}${focusNotice}${currentFieldsText}
-Here are the text prompts the user used to create the images:
-${formattedImages}
-
-Please visually analyze the attached images (lighting, composition, art style, subject matter) and combine that with the text prompts to generate the following field(s) in JSON format:
-${fieldInstructionsText}
-
-Output JSON only, no markdown formatting (like \`\`\`json).
-`;
-
-    // Fetch up to 3 images to send to Gemini Vision
-    const imageParts: any[] = [];
-    const imagesToFetch = images.filter((img: any) => img.url).slice(0, 3);
-
-    for (const img of imagesToFetch) {
-      try {
-        const imgRes = await safeFetchImage(img.url);
-        if (imgRes && imgRes.ok) {
-          const arrayBuffer = await imgRes.arrayBuffer();
-          if (arrayBuffer.byteLength > MAX_IMAGE_BYTES) continue;
-          const buffer = Buffer.from(arrayBuffer);
-          const base64Data = buffer.toString('base64');
-          const mimeType = imgRes.headers.get('content-type') || 'image/jpeg';
-
-          imageParts.push({
-            inlineData: {
-              data: base64Data,
-              mimeType
-            }
-          });
-        }
-      } catch (err) {
-        console.error('Failed to fetch image for AI analysis:', img.url, err);
-      }
-    }
-
-    const contents = [systemPrompt, ...imageParts];
-
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: contents,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: buildResponseSchema(fieldsToGenerate),
-      }
-    });
-
-    const text = response.text || "{}";
-    const data = JSON.parse(text);
-
-    return NextResponse.json(data);
+    return NextResponse.json(parsedResult);
   } catch (error: any) {
     console.error('Error generating post:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

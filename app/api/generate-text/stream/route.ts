@@ -2,7 +2,9 @@ import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { safeFetchImage, MAX_IMAGE_BYTES } from "@/lib/safe-fetch";
+import { fetchSettings } from "@/lib/data";
 import { isMaasConfigured, isMaasModel, streamMaasWithFallback, DEFAULT_POST_ARTICLE_FALLBACKS, getMaasDefaultModel, type MaasChatMessage } from "@/lib/admin/maas-client";
+import { getActiveAiProvider, getGeminiModel, getMaasModel, GEMINI_FALLBACKS } from "@/lib/ai-config";
 
 // Only inert raster types — mirrors the upload route and generate-text allowlist.
 const ALLOWED_IMAGE_MIME_TYPES = new Set([
@@ -63,12 +65,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'messages array is required' }, { status: 400 });
     }
 
-    if (!isMaasConfigured() && !process.env.GEMINI_API_KEY) {
-      return NextResponse.json({ error: 'AI API Key is missing (neither MAAS_API_KEY nor GEMINI_API_KEY configured).' }, { status: 500 });
+    const settings = await fetchSettings();
+    const preferredProvider = getActiveAiProvider(settings);
+
+    let targetProvider: 'gemini' | 'maas' = preferredProvider;
+    if (requestedModel) {
+      targetProvider = isMaasModel(requestedModel) ? 'maas' : 'gemini';
     }
 
-    // 1. If requested model is a MaaS model (DeepSeek, Qwen, etc.) or MaaS is configured
-    if (isMaasConfigured() && (isMaasModel(requestedModel) || !requestedModel)) {
+    if (targetProvider === 'maas' && isMaasConfigured()) {
       try {
         const maasMessages: MaasChatMessage[] = [];
         if (systemContext) {
@@ -84,7 +89,10 @@ export async function POST(req: NextRequest) {
           });
         }
 
-        const targetModel = requestedModel || getMaasDefaultModel();
+        const targetModel = (requestedModel && isMaasModel(requestedModel))
+          ? requestedModel
+          : getMaasModel(settings);
+
         const { stream } = await streamMaasWithFallback({
           models: [targetModel, ...DEFAULT_POST_ARTICLE_FALLBACKS],
           messages: maasMessages,
@@ -107,13 +115,39 @@ export async function POST(req: NextRequest) {
     }
 
     if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json({ error: 'Gemini API Key is missing.' }, { status: 500 });
+      // If MaaS was configured, try MaaS as secondary fallback before erroring
+      if (isMaasConfigured()) {
+        const maasMessages: MaasChatMessage[] = [];
+        if (systemContext) {
+          maasMessages.push({
+            role: 'system',
+            content: `${systemContext}\n\nPlease respond with clear, well-formatted markdown. If writing code, enclose code in proper markdown backticks with language tags (e.g. \`\`\`typescript ... \`\`\`).`,
+          });
+        }
+        for (const m of messages) {
+          maasMessages.push({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content });
+        }
+        const { stream } = await streamMaasWithFallback({
+          models: [getMaasModel(settings), ...DEFAULT_POST_ARTICLE_FALLBACKS],
+          messages: maasMessages,
+          enableSearch: Boolean(enableSearch),
+        });
+        return new Response(stream, {
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Cache-Control': 'no-cache, no-transform',
+            'X-Accel-Buffering': 'no',
+          },
+        });
+      }
+      return NextResponse.json({ error: 'AI API Key is missing.' }, { status: 500 });
     }
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-    const validModels = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
-    const targetModel = validModels.includes(requestedModel || '') ? requestedModel! : 'gemini-2.5-flash';
+    const targetModel = (requestedModel && !isMaasModel(requestedModel))
+      ? requestedModel
+      : getGeminiModel(settings);
 
     // Build multi-turn contents. Only the latest user message carries an image
     // attachment (older turns keep just their text to stay light).
@@ -130,14 +164,20 @@ export async function POST(req: NextRequest) {
 
     const config = systemContext ? { systemInstruction: systemContext } : undefined;
 
-    // Try the requested model; on failure fall back to flash-lite. The fallback
-    // happens before the first token, so the client always sees a clean stream.
-    let streamResult;
-    try {
-      streamResult = await ai.models.generateContentStream({ model: targetModel, contents, config });
-    } catch (modelErr: any) {
-      console.warn(`Stream model ${targetModel} failed (${modelErr?.message}), falling back to flash-lite...`);
-      streamResult = await ai.models.generateContentStream({ model: 'gemini-2.5-flash-lite', contents, config });
+    // Try the requested model; on failure fall back through candidate models
+    const modelsToTry = Array.from(new Set([targetModel, ...GEMINI_FALLBACKS]));
+    let streamResult: any = null;
+    for (const m of modelsToTry) {
+      try {
+        streamResult = await ai.models.generateContentStream({ model: m, contents, config });
+        break;
+      } catch (modelErr: any) {
+        console.warn(`Stream model ${m} failed (${modelErr?.message}), trying next candidate...`);
+      }
+    }
+
+    if (!streamResult) {
+      throw new Error('All Gemini streaming models failed.');
     }
 
     const encoder = new TextEncoder();
