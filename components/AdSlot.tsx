@@ -31,11 +31,24 @@ export default function AdSlot({ placement, className = '', inFeedIndex }: AdSlo
 
       adRef.current.innerHTML = '';
       adRef.current.appendChild(documentFragment);
+
+      if (typeof window !== 'undefined' && adRef.current.querySelector('ins.adsbygoogle')) {
+        try {
+          ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+        } catch {
+          // Ignore if already requested
+        }
+      }
     } catch (e) {
       console.warn('Failed to inject ad code', e);
       // Fallback
       if (adRef.current) {
         adRef.current.innerHTML = adConfig.code;
+        if (typeof window !== 'undefined' && adRef.current.querySelector('ins.adsbygoogle')) {
+          try {
+            ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+          } catch {}
+        }
       }
     }
   }, [adConfig, placement, inFeedIndex, settings?.ads?.inFeed?.frequency]);
