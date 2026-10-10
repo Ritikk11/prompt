@@ -239,14 +239,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {imagePreconnectOrigins.map((origin) => (
           <link key={origin} rel="preconnect" href={origin} crossOrigin="" />
         ))}
-        {adsensePublisherId && initialSettings.ads?.autoAdsEnabled && (
-          <Script
-            id="adsbygoogle-init"
-            strategy="afterInteractive"
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsensePublisherId}`}
-            crossOrigin="anonymous"
-          />
+        {adsensePublisherId && (
+          <>
+            <meta name="google-adsense-account" content={adsensePublisherId} />
+            {initialSettings.ads?.autoAdsEnabled !== false && (
+              <Script
+                id="adsbygoogle-init"
+                strategy="afterInteractive"
+                async
+                src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsensePublisherId}`}
+                crossOrigin="anonymous"
+              />
+            )}
+          </>
         )}
         <meta property="og:site_name" content={orgName} />
         {initialSettings.seoSettings?.googleVerification && (
