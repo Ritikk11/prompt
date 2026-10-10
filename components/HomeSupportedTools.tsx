@@ -79,8 +79,8 @@ export default function HomeSupportedTools({ posts, settings }: { posts: Post[];
         <ScrollReveal stagger className={`mx-auto grid gap-6 ${toolGridCols}`}>
           {tools.map((tool, index) => {
             const info = getToolInfo(tool, settings.toolDetails);
-            const model = getDefaultImageModel(tool) || 'Image prompts';
             const details = settings.toolDetails?.[tool];
+            const model = details?.defaultModel?.trim() || details?.models?.[0]?.trim() || getDefaultImageModel(tool, settings.toolDetails) || 'Image prompts';
             const notes = details?.checks?.length ? details.checks : getNotesForTool(tool);
             const stats = details?.stats?.length ? details.stats : [
               { label: 'Prompt Power', value: 'Optimized' },

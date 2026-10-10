@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation';
 import { preload, preconnect } from 'react-dom';
 import { getPostBySlugOrId, fetchPostSummaries, fetchSeoPages, getSeoPageBySlug, isPublicPost, fetchSettings } from '@/lib/data';
 import { getThumbnailImageUrl } from '@/lib/image-url';
-import { getClientSettings } from '@/lib/constants';
+import { getClientSettings, getImageDisplayModel } from '@/lib/constants';
 import { getPostHeroImageProps } from '@/lib/post-image';
 import { stringifyJsonLd } from '@/lib/json-ld';
 import { isSafePublicSlug } from '@/lib/slug-guard';
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   if (!isSafePublicSlug(slug)) {
     return {
-      title: 'Page Not Found | PromptSoul',
+      title: 'Page Not Found',
       description: 'The requested page could not be found.',
     };
   }
@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!post && !seoPage) {
     return {
-      title: 'Page Not Found | PromptSoul',
+      title: 'Page Not Found',
       description: 'The requested page could not be found.',
     };
   }
@@ -201,7 +201,7 @@ export default async function PostPage({ params }: Props) {
       url: img.url,
       aiTool: img.aiTool,
       aiTools: img.aiTools,
-      model: img.model,
+      model: getImageDisplayModel(img, settings?.toolDetails),
       prompt: '',
       width: img.width,
       height: img.height,

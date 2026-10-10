@@ -4,7 +4,7 @@ import { UserX, ArrowLeft } from 'lucide-react';
 import LoginClient from './LoginClient';
 
 export const metadata = {
-  title: 'Sign In | PromptSoul',
+  title: 'Sign In',
   description: 'Sign in or sign up to access your saved prompts, comments, and public creator profile on PromptSoul.',
 };
 

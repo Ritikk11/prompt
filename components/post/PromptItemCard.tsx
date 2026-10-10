@@ -12,7 +12,7 @@ import {
   ZoomIn,
 } from 'lucide-react';
 import type { ImagePrompt, PostClientMeta, SiteSettings } from '@/lib/types';
-import { getDefaultImageModel, getToolInfo, getToolForImageModel } from '@/lib/constants';
+import { getDefaultImageModel, getToolInfo, getToolForImageModel, getImageDisplayModel, getPromptImageMetas } from '@/lib/constants';
 import ToolBadge from '@/components/ToolBadge';
 import CopyButton from '@/components/CopyButton';
 import TemplatePrompt from '@/components/TemplatePrompt';
@@ -100,14 +100,32 @@ export default function PromptItemCard({
     }
   };
 
+  const promptImageMetas = useMemo(() => {
+    return getPromptImageMetas(img, settings?.toolDetails);
+  }, [img, settings?.toolDetails]);
+
   const images = useMemo(() => {
+    if (promptImageMetas.length > 0) return promptImageMetas.map(m => m.url);
     if (img.urls && img.urls.length > 0) return img.urls.filter(Boolean);
     return [img.url].filter(Boolean);
-  }, [img.urls, img.url]);
+  }, [promptImageMetas, img.urls, img.url]);
 
   const safeActiveIdx = activeIdx < images.length ? activeIdx : 0;
   const activeUrl = images[safeActiveIdx] || img.url || '';
-  const tools = img.aiTool ? img.aiTool.split(',').map((t) => t.trim()).filter(Boolean) : [];
+  const activeMeta = promptImageMetas[safeActiveIdx];
+
+  const activeTools = useMemo(() => {
+    if (activeMeta?.aiTools && activeMeta.aiTools.length > 0) return activeMeta.aiTools;
+    if (activeMeta?.aiTool) return [activeMeta.aiTool];
+    if (img.aiTools && img.aiTools.length > 0) return img.aiTools;
+    if (img.aiTool) return img.aiTool.split(',').map((t) => t.trim()).filter(Boolean);
+    return [];
+  }, [activeMeta, img.aiTools, img.aiTool]);
+
+  const activeModel = useMemo(() => {
+    const metaToResolve = activeMeta || img;
+    return getImageDisplayModel(metaToResolve, settings?.toolDetails);
+  }, [activeMeta, img, settings?.toolDetails]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -185,14 +203,9 @@ export default function PromptItemCard({
   };
 
   const getTryToolsForImage = () => {
-    const selectedTools = (img.aiTools || []).filter(Boolean);
-    if (selectedTools.length > 0) return selectedTools;
-
-    const fallbackTools = [img.aiTool].filter(Boolean);
-    const modelTool = getToolForImageModel(img.model);
-    return modelTool && fallbackTools.some((tool) => tool.toLowerCase() === modelTool.toLowerCase())
-      ? [modelTool]
-      : fallbackTools;
+    if (activeTools.length > 0) return activeTools;
+    const modelTool = getToolForImageModel(activeModel, settings?.toolDetails);
+    return modelTool ? [modelTool] : [];
   };
 
   const tryTools = getTryToolsForImage();
@@ -210,7 +223,7 @@ export default function PromptItemCard({
           >
             <div
               className="relative flex w-full min-h-[300px] sm:min-h-[420px] cursor-zoom-in items-center justify-center overflow-hidden rounded-xl bg-black/[0.04] dark:bg-white/[0.06]"
-              onClick={() => openLightbox(images, safeActiveIdx, index, tools)}
+              onClick={() => openLightbox(images, safeActiveIdx, index, activeTools)}
             >
               <div
                 className="flex w-full transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-transform"
@@ -242,8 +255,8 @@ export default function PromptItemCard({
             </div>
 
             {/* Top-Left Tool Badges */}
-            <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-2 pointer-events-none">
-              {tools.map((tool) => {
+            <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-2 pointer-events-none transition-all duration-300">
+              {activeTools.map((tool) => {
                 const info = getToolInfo(tool, settings?.toolDetails);
                 return <ToolBadge key={tool} toolName={tool} toolInfo={info} size="sm" />;
               })}
@@ -289,7 +302,7 @@ export default function PromptItemCard({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  openLightbox(images, safeActiveIdx, index, tools);
+                  openLightbox(images, safeActiveIdx, index, activeTools);
                 }}
                 className="p-2.5 sm:p-3 rounded-full bg-white/20 hover:bg-white/35 active:bg-white/40 text-white backdrop-blur-xl border border-white/35 hover:border-white/60 hover:scale-110 active:scale-95 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
                 title="Zoom in (Fullscreen)"
@@ -319,25 +332,34 @@ export default function PromptItemCard({
           {/* Variations Thumbnail Strip */}
           {images.length > 1 && (
             <div className="mt-3 flex items-center justify-center gap-2 overflow-x-auto p-1.5 no-scrollbar">
-              {images.map((u, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setActiveIdx(i)}
-                  className={`relative flex-none w-12 h-12 rounded-xl overflow-hidden transition-all ${
-                    i === safeActiveIdx
-                      ? 'ring-2 ring-primary-500 scale-105 shadow-md'
-                      : 'opacity-50 hover:opacity-100 hover:scale-100'
-                  }`}
-                >
-                  <img
-                    src={getThumbnailImageUrl(u, { width: 100, quality: 65 })}
-                    alt={`Variation ${i + 1}`}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </button>
-              ))}
+              {images.map((u, i) => {
+                const thumbMeta = promptImageMetas[i];
+                const thumbTool = thumbMeta?.aiTool;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setActiveIdx(i)}
+                    className={`relative flex-none w-14 h-14 rounded-xl overflow-hidden transition-all ${
+                      i === safeActiveIdx
+                        ? 'ring-2 ring-primary-500 scale-105 shadow-md'
+                        : 'opacity-60 hover:opacity-100 hover:scale-100'
+                    }`}
+                  >
+                    <img
+                      src={getThumbnailImageUrl(u, { width: 100, quality: 65 })}
+                      alt={`Variation ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    {thumbTool && (
+                      <span className="absolute bottom-0 inset-x-0 bg-black/75 backdrop-blur-xs text-[8px] font-bold text-white text-center py-0.5 truncate px-1 pointer-events-none">
+                        {thumbTool}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -414,16 +436,16 @@ export default function PromptItemCard({
             )}
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-bold text-surface-600 dark:text-surface-400 uppercase tracking-widest">
+          <div className="flex items-center gap-2 text-xs font-bold text-surface-600 dark:text-surface-400 uppercase tracking-widest transition-all duration-300">
             <Clock className="w-4 h-4 text-primary-500/50" />
             Model:{' '}
             <span className="text-surface-600 dark:text-surface-200">
-              {img.model || getDefaultImageModel(img.aiTool) || img.aiTool}
+              {activeModel || activeTools[0] || 'AI Model'}
             </span>
           </div>
 
           {settings?.features?.showTryButtons !== false && tryTools.length > 0 && img.prompt.trim() && (
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2 transition-all duration-300">
               {Array.from(new Set(tryTools.filter(Boolean))).map((tool) => {
                 const info = getToolInfo(tool, settings?.toolDetails);
                 return (

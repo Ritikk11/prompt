@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Edit3, X, Save, Search, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Edit3, X, Save, Search, Sparkles, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase-client';
 import type { SeoSettings, SiteSettings } from '@/lib/types';
 import { WandButton } from '@/components/admin/MagicWand';
 import { seoPrompts } from '@/lib/admin/wandPrompts';
-import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, CharCount, Toggle, AdminSelect, adminInput } from '@/components/admin/AdminUI';
+import { TabBanner, Panel, PanelHeader, SectionEyebrow, Field, EditableCard, CharCount, Toggle, AdminSelect, ActionButton, adminInput } from '@/components/admin/AdminUI';
 import { showToast } from '@/components/ui/ToastContainer';
 import { confirmAction } from '@/components/ui/ConfirmDialog';
 
@@ -101,22 +101,50 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
   const [cardStyle, setCardStyle] = useState('');
   const [heroStyle, setHeroStyle] = useState<'container' | 'simple'>('container');
   const [loadingPages, setLoadingPages] = useState(true);
-  const seoSettings = { ...defaultSeoSettings, ...(settings?.seoSettings || {}) };
+  const [localSeoSettings, setLocalSeoSettings] = useState<SeoSettings>(() => ({
+    ...defaultSeoSettings,
+    ...(settings?.seoSettings || {}),
+  }));
+  const [isSavingGlobalSeo, setIsSavingGlobalSeo] = useState(false);
+
+  useEffect(() => {
+    if (settings?.seoSettings) {
+      setLocalSeoSettings({
+        ...defaultSeoSettings,
+        ...settings.seoSettings,
+      });
+    }
+  }, [settings?.seoSettings]);
 
   const updateSeoSettings = (patch: Partial<SeoSettings>) => {
-    if (!settings || !updateSettings) return;
-    updateSettings({
-      ...settings,
-      seoSettings: {
-        ...seoSettings,
-        ...patch,
-        sitemapInclude: {
-          ...seoSettings.sitemapInclude,
-          ...(patch.sitemapInclude || {}),
-        },
+    setLocalSeoSettings(prev => ({
+      ...prev,
+      ...patch,
+      sitemapInclude: {
+        ...prev.sitemapInclude,
+        ...(patch.sitemapInclude || {}),
       },
-    });
+    }));
   };
+
+  const handleSaveGlobalSeo = async () => {
+    if (!settings || !updateSettings) return;
+    setIsSavingGlobalSeo(true);
+    try {
+      await updateSettings({
+        ...settings,
+        seoSettings: localSeoSettings,
+      });
+      showToast('Global SEO settings saved successfully', 'success');
+    } catch (err: any) {
+      console.error('Failed to save SEO settings:', err);
+      showToast(`Failed to save SEO settings: ${err.message || 'Unknown error'}`, 'error');
+    } finally {
+      setIsSavingGlobalSeo(false);
+    }
+  };
+
+  const seoSettings = localSeoSettings;
 
   const fetchPages = useCallback(async () => {
     try {
@@ -393,6 +421,21 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
           <PanelHeader
             title="Global SEO"
             subtitle="Default metadata, verification tags, split sitemap rules, robots text, structured data, and IndexNow"
+            actions={
+              <ActionButton
+                variant="primary"
+                onClick={handleSaveGlobalSeo}
+                disabled={isSavingGlobalSeo}
+                className="gap-2"
+              >
+                {isSavingGlobalSeo ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Save className="w-3.5 h-3.5" />
+                )}
+                {isSavingGlobalSeo ? 'Saving...' : 'Save SEO settings'}
+              </ActionButton>
+            }
           />
 
           <div className="space-y-4">
@@ -699,6 +742,25 @@ export default function SeoPagesTab({ settings, updateSettings, mode = 'all' }: 
                 ))}
               </div>
               <button type="button" onClick={() => updateSeoSettings({ redirects: [...(seoSettings.redirects || []), { from: '', to: '', status: 301 }] })} className="flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-xs font-bold text-white hover:bg-primary-600 transition-colors"><Plus className="w-3.5 h-3.5" /> Add redirect</button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-surface-200 dark:border-surface-800">
+              <p className="text-xs text-surface-500">
+                Remember to save your changes. Auto-save is disabled to prevent accidental updates.
+              </p>
+              <ActionButton
+                variant="primary"
+                onClick={handleSaveGlobalSeo}
+                disabled={isSavingGlobalSeo}
+                className="gap-2 w-full sm:w-auto"
+              >
+                {isSavingGlobalSeo ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Save className="w-3.5 h-3.5" />
+                )}
+                {isSavingGlobalSeo ? 'Saving SEO settings...' : 'Save SEO settings'}
+              </ActionButton>
             </div>
           </div>
         </Panel>

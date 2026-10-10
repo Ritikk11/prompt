@@ -7,8 +7,8 @@
 export const TOOLS_MODELS_RULES = `SUPPORTED TOOLS & MODELS (strict — never deviate):
 - This site supports ONLY these AI image tools: ChatGPT, Gemini.
 - Current models, name them exactly like this:
-  - ChatGPT → "GPT Image 2" (never "DALL-E", "DALL-E 3", or "GPT-4o image")
-  - Gemini → "Nano Banana 2" or "Nano Banana Pro" (never "Imagen")
+  - ChatGPT → "GPT IMAGE 2.5" (never "DALL-E", "DALL-E 3", or "GPT-4o image")
+  - Gemini → "Nano Banana Pro" (never "Imagen")
 - NEVER mention or recommend any other AI tool or model — no Grok, Qwen, Grok Imagine, Qwen-Image, Midjourney, DALL-E, Stable Diffusion, Claude, Leonardo, Ideogram, Flux, Firefly, Perplexity, Imagen, etc. Not in prose, examples, comparisons, tables, :::model callouts, FAQs, or tags.
 - If existing content or the instruction mentions an unsupported tool, silently swap it for the closest supported tool (Grok → ChatGPT, Qwen → Gemini) instead of repeating it.`;
 
@@ -71,7 +71,7 @@ const META_TITLE_RULES = `Strict SEO title, max 55-60 characters, front-load the
 const META_DESC_RULES = `Strict SEO meta description (this is conversion copy, not ranking copy — it earns the click):
 - 120-155 characters total, with the full core message inside the first ~110 (mobile SERPs truncate near 120; desktop near 160).
 - Unique to this page: expand on the title, never repeat or paraphrase it. Zero boilerplate — no "Discover the best...", "Welcome to...", "Explore our..." openings, and never the same sentence shape as another page's description. If the copy is generic, Google rewrites it or replaces it with generated text.
-- Active voice, verb-led where natural, the searcher as the subject ("Copy the prompt, paste it into GPT Image 2, and...") — passive and stuffed phrasing reads dull and gets skipped.
+- Active voice, verb-led where natural, the searcher as the subject ("Copy the prompt, paste it into GPT IMAGE 2.5, and...") — passive and stuffed phrasing reads dull and gets skipped.
 - One concrete hook: a number, a visual detail from the images, the exact model name, or what's included free. No exclamation marks, no false urgency.
 - Weave the main keyword in once, naturally; never list keywords. No double quotes (they break the HTML attribute).`;
 

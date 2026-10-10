@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback, Suspense } from 'react';
 import { useData } from '@/components/context/DataContext';
 
-import type { Post, Section, ImagePrompt, HeroPalette, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, CreativeDirectionItem, ShareTarget, DiscoveryPageSettings, ArticleSettingsOverride, CategoryPreset } from '@/lib/types';
+import type { Post, Section, ImagePrompt, AttachedImageMeta, HeroPalette, PostFaq, AdSettings, SiteSettings, SiteFeatures, FooterLinkGroup, HomeLinkBlock, HomepageBlockContent, KeepExploringSettings, NavLink, AdminUserSummary, FilterRailItem, CreativeDirectionItem, ShareTarget, DiscoveryPageSettings, ArticleSettingsOverride, CategoryPreset } from '@/lib/types';
 import { createClient as createSupabaseClient } from '@/lib/supabase-client';
 import type { User } from '@supabase/supabase-js';
 import {
@@ -17,7 +17,7 @@ import { ConfirmDialogHost, confirmAction } from '@/components/ui/ConfirmDialog'
 
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { imageModelOptions, getAllTools, getDefaultImageModel, getImageModelForTools, getToolInfo } from '@/lib/constants';
+import { imageModelOptions, getAllTools, getDefaultImageModel, getImageModelForTools, getToolInfo, getToolModels, getAllModelOptionsForTools, getPromptImageMetas } from '@/lib/constants';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import SeoPagesTab from '@/components/admin/SeoPagesTab';
 import StaticPagesTab from '@/components/admin/StaticPagesTab';
@@ -49,7 +49,7 @@ import { getArticlesForSettings } from '@/lib/content';
 import MediaLibraryModal from '@/components/admin/MediaLibraryModal';
 
 type AdminTab = 'dashboard' | 'stats' | 'posts' | 'sections' | 'articles' | 'settings' | 'submissions' | 'comments' | 'users' | 'seo' | 'pages' | 'ai-studio';
-const DiscoveryPageIds = ['explore', 'tool', 'tag'] as const;
+const DiscoveryPageIds = ['explore', 'blog', 'guides', 'tool', 'tag'] as const;
 export type DiscoveryPageId = typeof DiscoveryPageIds[number];
 type SettingsSubTab = 'general' | 'homepage' | 'discovery' | 'navigation' | 'footer' | 'features' | 'ads' | 'ai-tools' | 'comments' | 'share' | 'categories' | 'tags' | 'pinterest';
 type SectionLocationFilter = 'homepage' | 'header' | 'footer' | 'all';
@@ -259,6 +259,18 @@ const defaultDiscoveryPages: Required<DiscoveryPageSettings> = {
   exploreSeoTitle: 'Explore AI Prompts',
   exploreSeoDescription: 'Browse curated AI prompt collections.',
   exploreOgImage: '',
+  blogBadge: 'Blog',
+  blogTitle: 'The AI Prompting Blog',
+  blogDescription: 'Techniques, comparisons, and plain-English explanations that make your AI images better — written for creators, not researchers.',
+  blogSeoTitle: 'AI Prompting Blog',
+  blogSeoDescription: 'Practical articles on writing better AI image prompts — techniques, tool comparisons, trends, and how image generation actually works.',
+  blogOgImage: '',
+  guidesBadge: 'Guides',
+  guidesTitle: 'AI Prompt Guides',
+  guidesDescription: 'Follow-along tutorials that take you from a blank prompt box to a finished image — viral trends, photo edits, and professional results included.',
+  guidesSeoTitle: 'AI Prompt Guides & Tutorials',
+  guidesSeoDescription: 'Step-by-step AI image tutorials — trending photo styles, Gemini and ChatGPT walkthroughs, photo restoration, headshots, and more.',
+  guidesOgImage: '',
   toolTitleTemplate: '%tool% Prompts',
   toolDescriptionTemplate: 'Browse %count% prompt collections organized for %tool%.',
   toolSeoTitleTemplate: '%tool% Prompts',
@@ -828,6 +840,7 @@ function AdminInner() {
   const [tab, setTabState] = useState<AdminTab>(() => parseAdminTab(searchParams.get('tab')));
   const [sectionLocationFilter, setSectionLocationFilterState] = useState<SectionLocationFilter>(() => parseSectionLocation(searchParams.get('loc')));
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [isSavingPost, setIsSavingPost] = useState(false);
   const [showPostForm, setShowPostForm] = useState(false);
   // Remembers where the user was (the tapped post card) when the inline editor
   // opens, so closing it can return the viewport there instead of leaving the
@@ -1275,7 +1288,7 @@ function AdminInner() {
   const [editSectionUseCustomRail, setEditSectionUseCustomRail] = useState(false);
   const [editSectionRailItems, setEditSectionRailItems] = useState<FilterRailItem[]>([]);
   const [pagesSubTab, setPagesSubTab] = useState<'static' | 'seo'>('static');
-  const [discoveryTab, setDiscoveryTab] = useState<'explore' | 'tool' | 'tag'>('explore');
+  const [discoveryTab, setDiscoveryTab] = useState<DiscoveryPageId>('explore');
   const [pickingPostsForSection, setPickingPostsForSection] = useState<string | null>(null);
   const [postPickerSearch, setPostPickerSearch] = useState('');
   const [sectionPostSearch, setSectionPostSearch] = useState('');
@@ -1802,10 +1815,14 @@ function AdminInner() {
     setFeatured(post.featured);
     setStatus(post.status || 'published');
     setVisibility(post.visibility || 'public');
-    setImages(post.images.length > 0 ? post.images.map(image => ({
-      ...image,
-      model: image.model || getImageModelForTools(image.aiTools || [image.aiTool].filter(Boolean))
-    })) : [{ id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
+    setImages(post.images.length > 0 ? post.images.map(image => {
+      const metas = getPromptImageMetas(image, settings.toolDetails);
+      return {
+        ...image,
+        model: image.model || getImageModelForTools(image.aiTools || [image.aiTool].filter(Boolean), undefined, settings.toolDetails),
+        imageMetas: image.imageMetas && image.imageMetas.length > 0 ? image.imageMetas : metas
+      };
+    }) : [{ id: generateId(), url: '', urls: [], prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT', settings.toolDetails), imageMetas: [] }]);
     // Find which custom sections contain this post
     const inSections = sections
       .filter(s => s.type === 'custom' && s.postIds?.includes(post.id))
@@ -1874,7 +1891,20 @@ function AdminInner() {
   }, [searchParams]);
 
   const addImageField = () => {
-    setImages(prev => [...prev, { id: generateId(), url: '', prompt: '', aiTool: 'ChatGPT', model: getDefaultImageModel('ChatGPT') }]);
+    const defaultTool = (settings.aiTools && settings.aiTools[0]) || 'ChatGPT';
+    setImages(prev => [
+      ...prev,
+      {
+        id: generateId(),
+        url: '',
+        urls: [],
+        prompt: '',
+        aiTool: defaultTool,
+        aiTools: [defaultTool],
+        model: getDefaultImageModel(defaultTool, settings.toolDetails),
+        imageMetas: []
+      }
+    ]);
   };
 
   const updateImage = (idx: number, field: keyof ImagePrompt | Partial<ImagePrompt>, value?: any) => {
@@ -1887,28 +1917,62 @@ function AdminInner() {
     }));
   };
 
-  const getModelSelectValue = (model?: string) => {
-    if (!model?.trim()) return AUTO_MODEL_VALUE;
-    return DEFAULT_MODEL_OPTIONS.includes(model) ? model : CUSTOM_MODEL_VALUE;
+  const getAvailableModelsForImage = (img: ImagePrompt) => {
+    const selectedTools = (img.aiTools && img.aiTools.length > 0 ? img.aiTools : [img.aiTool]).filter(Boolean);
+    if (selectedTools.length > 0) {
+      const models = getAllModelOptionsForTools(selectedTools, settings.toolDetails);
+      if (models.length > 0) return models;
+    }
+    const allToolModels = (settings.aiTools || []).flatMap(t => getToolModels(t, settings.toolDetails)).filter(Boolean);
+    if (allToolModels.length > 0) return Array.from(new Set(allToolModels));
+    return DEFAULT_MODEL_OPTIONS;
   };
 
-  const handleModelSelect = (idx: number, img: ImagePrompt, value: string) => {
+  const getModelSelectValue = (model?: string, availableModels: string[] = DEFAULT_MODEL_OPTIONS) => {
+    if (!model?.trim()) return AUTO_MODEL_VALUE;
+    const match = availableModels.find(m => m.toLowerCase() === model.trim().toLowerCase());
+    if (match) return match;
+    const legacyDefaults = ['gpt image 2', 'gpt image 1', 'dall-e 3', 'nano banana 2', 'flux.1', 'imagen 3', 'qwen-image'];
+    if (legacyDefaults.includes(model.trim().toLowerCase())) {
+      return AUTO_MODEL_VALUE;
+    }
+    return CUSTOM_MODEL_VALUE;
+  };
+
+  const handleModelSelect = (idx: number, img: ImagePrompt, value: string, availableModels: string[] = DEFAULT_MODEL_OPTIONS) => {
     const selectedTools = img.aiTools || [img.aiTool].filter(Boolean);
     if (value === AUTO_MODEL_VALUE) {
-      updateImage(idx, 'model', getImageModelForTools(selectedTools));
+      updateImage(idx, 'model', getImageModelForTools(selectedTools, undefined, settings.toolDetails));
       return;
     }
     if (value === CUSTOM_MODEL_VALUE) {
-      updateImage(idx, 'model', DEFAULT_MODEL_OPTIONS.includes(img.model || '') ? '' : img.model || '');
+      updateImage(idx, 'model', availableModels.includes(img.model || '') ? '' : img.model || '');
       return;
     }
     updateImage(idx, 'model', value);
   };
 
-  const normalizeImageModel = (image: ImagePrompt) => {
-    const tools = image.aiTools || [image.aiTool].filter(Boolean);
-    const model = getImageModelForTools(tools, image.model);
-    return model && model !== image.model ? { ...image, model } : image;
+  const normalizeImageModel = (image: ImagePrompt): ImagePrompt => {
+    const metas = getPromptImageMetas(image, settings.toolDetails);
+    const updatedMetas = metas.map(m => {
+      const tool = m.aiTool || image.aiTool || (settings.aiTools && settings.aiTools[0]) || 'ChatGPT';
+      const tools = m.aiTools && m.aiTools.length > 0 ? m.aiTools : [tool];
+      const model = getImageModelForTools(tools, m.model, settings.toolDetails);
+      return { ...m, aiTool: tool, aiTools: tools, model: model || m.model || '' };
+    });
+
+    const primaryMeta = updatedMetas[0];
+    const primaryTool = primaryMeta?.aiTool || image.aiTool || (settings.aiTools && settings.aiTools[0]) || 'ChatGPT';
+    const allTools = Array.from(new Set(updatedMetas.flatMap(m => m.aiTools || [m.aiTool]).filter((t): t is string => Boolean(t))));
+    const primaryModel = primaryMeta?.model || getImageModelForTools([primaryTool], image.model, settings.toolDetails);
+
+    return {
+      ...image,
+      aiTool: primaryTool,
+      aiTools: allTools.length > 0 ? allTools : [primaryTool],
+      model: primaryModel,
+      imageMetas: updatedMetas
+    };
   };
 
   const handleBackfillModels = async () => {
@@ -2004,12 +2068,29 @@ function AdminInner() {
       const { url, width, height } = await uploadImageFileWithMeta(file, 'prompt', title || slug);
       const updated = [...currentUrls, url];
       const becomesPrimary = updated[0] === url;
+
+      const currentMetas = getPromptImageMetas(images[idx], settings.toolDetails);
+      const fallbackTool = images[idx].aiTool || (settings.aiTools && settings.aiTools[0]) || 'ChatGPT';
+      const fallbackModel = getDefaultImageModel(fallbackTool, settings.toolDetails);
+      const newMeta: AttachedImageMeta = {
+        url,
+        aiTool: fallbackTool,
+        aiTools: [fallbackTool],
+        model: fallbackModel,
+        width,
+        height
+      };
+      const updatedMetas = [...currentMetas, newMeta];
+      const allTools = Array.from(new Set(updatedMetas.flatMap(m => m.aiTools || [m.aiTool]).filter((t): t is string => Boolean(t))));
+
       updateImage(idx, {
         urls: updated,
         url: updated[0] || '',
+        imageMetas: updatedMetas,
+        aiTools: allTools,
         // Only record dims when the uploaded image is the primary/cover — width
         // and height describe `url`, not the appended variations.
-        ...(becomesPrimary ? { width, height } : {}),
+        ...(becomesPrimary ? { width, height, aiTool: updatedMetas[0]?.aiTool, model: updatedMetas[0]?.model } : {}),
       });
     } catch (err) {
       console.error(err);
@@ -2038,13 +2119,28 @@ function AdminInner() {
       const newUrls = uploaded.map(u => u.url);
 
       const finalUrls = [...currentUrls, ...newUrls];
-      // If the batch became the primary/cover (no prior images), record the
-      // dims of that first uploaded image so `url` has a reserved box.
       const primaryMeta = currentUrls.length === 0 ? uploaded[0] : undefined;
+
+      const currentMetas = getPromptImageMetas(images[idx], settings.toolDetails);
+      const fallbackTool = images[idx].aiTool || (settings.aiTools && settings.aiTools[0]) || 'ChatGPT';
+      const fallbackModel = getDefaultImageModel(fallbackTool, settings.toolDetails);
+      const newMetas: AttachedImageMeta[] = uploaded.map(u => ({
+        url: u.url,
+        aiTool: fallbackTool,
+        aiTools: [fallbackTool],
+        model: fallbackModel,
+        width: u.width,
+        height: u.height
+      }));
+      const updatedMetas = [...currentMetas, ...newMetas];
+      const allTools = Array.from(new Set(updatedMetas.flatMap(m => m.aiTools || [m.aiTool]).filter((t): t is string => Boolean(t))));
+
       updateImage(idx, {
         urls: finalUrls,
         url: finalUrls[0] || '',
-        ...(primaryMeta ? { width: primaryMeta.width, height: primaryMeta.height } : {}),
+        imageMetas: updatedMetas,
+        aiTools: allTools,
+        ...(primaryMeta ? { width: primaryMeta.width, height: primaryMeta.height, aiTool: updatedMetas[0]?.aiTool, model: updatedMetas[0]?.model } : {}),
       });
       showToast(`Uploaded ${newUrls.length} image${newUrls.length === 1 ? '' : 's'}`);
     } catch (err: any) {
@@ -2060,17 +2156,34 @@ function AdminInner() {
 
   const addPromptImageUrl = async (idx: number, url: string) => {
     if (!url.trim()) return;
+    const trimmed = url.trim();
     const currentUrls = (images[idx].urls && images[idx].urls!.length > 0 ? images[idx].urls! : [images[idx].url]).filter(Boolean);
-    if (!currentUrls.includes(url.trim())) {
-      const updated = [...currentUrls, url.trim()];
-      const becomesPrimary = updated[0] === url.trim();
+    if (!currentUrls.includes(trimmed)) {
+      const updated = [...currentUrls, trimmed];
+      const becomesPrimary = updated[0] === trimmed;
+
+      const currentMetas = getPromptImageMetas(images[idx], settings.toolDetails);
+      const fallbackTool = images[idx].aiTool || (settings.aiTools && settings.aiTools[0]) || 'ChatGPT';
+      const fallbackModel = getDefaultImageModel(fallbackTool, settings.toolDetails);
+      const newMeta: AttachedImageMeta = {
+        url: trimmed,
+        aiTool: fallbackTool,
+        aiTools: [fallbackTool],
+        model: fallbackModel
+      };
+      const updatedMetas = [...currentMetas, newMeta];
+      const allTools = Array.from(new Set(updatedMetas.flatMap(m => m.aiTools || [m.aiTool]).filter((t): t is string => Boolean(t))));
+
       updateImage(idx, {
         urls: updated,
-        url: updated[0] || ''
+        url: updated[0] || '',
+        imageMetas: updatedMetas,
+        aiTools: allTools,
+        ...(becomesPrimary ? { aiTool: updatedMetas[0]?.aiTool, model: updatedMetas[0]?.model } : {})
       });
       // Pasted URLs carry no upload metadata; decode to reserve the box.
       if (becomesPrimary) {
-        const dims = await getImageDimensions(url.trim());
+        const dims = await getImageDimensions(trimmed);
         if (dims) updateImage(idx, dims);
       }
     }
@@ -2079,9 +2192,16 @@ function AdminInner() {
   const removePromptImageUrl = async (promptIdx: number, imgIdx: number) => {
     const currentUrls = (images[promptIdx].urls && images[promptIdx].urls!.length > 0 ? images[promptIdx].urls! : [images[promptIdx].url]).filter(Boolean);
     const updated = currentUrls.filter((_, i) => i !== imgIdx);
+    const currentMetas = getPromptImageMetas(images[promptIdx], settings.toolDetails);
+    const updatedMetas = currentMetas.filter((_, i) => i !== imgIdx);
+    const allTools = Array.from(new Set(updatedMetas.flatMap(m => m.aiTools || [m.aiTool]).filter((t): t is string => Boolean(t))));
+
     updateImage(promptIdx, {
       urls: updated,
-      url: updated[0] || ''
+      url: updated[0] || '',
+      imageMetas: updatedMetas,
+      aiTools: allTools,
+      ...(updatedMetas[0] ? { aiTool: updatedMetas[0].aiTool, model: updatedMetas[0].model } : {})
     });
     // Removing the cover promotes a new primary — refresh its reserved-box dims.
     if (imgIdx === 0 && updated[0]) {
@@ -2096,14 +2216,151 @@ function AdminInner() {
     const target = currentUrls[imgIdx];
     const remaining = currentUrls.filter((_, i) => i !== imgIdx);
     const reordered = [target, ...remaining];
+
+    const currentMetas = getPromptImageMetas(images[promptIdx], settings.toolDetails);
+    let reorderedMetas: AttachedImageMeta[] = [];
+    if (currentMetas[imgIdx]) {
+      const targetMeta = currentMetas[imgIdx];
+      const remainingMetas = currentMetas.filter((_, i) => i !== imgIdx);
+      reorderedMetas = [targetMeta, ...remainingMetas];
+    } else {
+      reorderedMetas = currentMetas;
+    }
+
+    const firstMeta = reorderedMetas[0];
     updateImage(promptIdx, {
       urls: reordered,
-      url: target
+      url: target,
+      imageMetas: reorderedMetas,
+      ...(firstMeta ? { aiTool: firstMeta.aiTool, model: firstMeta.model } : {})
     });
     // The cover drives width/height; the new primary usually differs in ratio,
     // so decode it to keep the reserved box accurate.
     const dims = await getImageDimensions(target);
     if (dims) updateImage(promptIdx, dims);
+  };
+
+  const splitPromptImageToNewPrompt = async (promptIdx: number, imgIdx: number) => {
+    const parent = images[promptIdx];
+    if (!parent) return;
+    const currentUrls = (parent.urls && parent.urls.length > 0 ? parent.urls : [parent.url]).filter(Boolean);
+    const targetUrl = currentUrls[imgIdx];
+    if (!targetUrl) return;
+
+    const currentMetas = getPromptImageMetas(parent, settings.toolDetails);
+    const targetMeta = currentMetas[imgIdx];
+    const remainingMetas = currentMetas.filter((_, i) => i !== imgIdx);
+    const remainingUrls = currentUrls.filter((_, i) => i !== imgIdx);
+    const remainingTools = Array.from(new Set(remainingMetas.flatMap(m => m.aiTools || [m.aiTool]).filter((t): t is string => Boolean(t))));
+
+    // Remove from parent
+    updateImage(promptIdx, {
+      urls: remainingUrls,
+      url: remainingUrls[0] || '',
+      imageMetas: remainingMetas,
+      aiTools: remainingTools,
+      ...(remainingMetas[0] ? { aiTool: remainingMetas[0].aiTool, model: remainingMetas[0].model } : {})
+    });
+
+    // Create a new image prompt with target image's tool & model preserved
+    const splitTool = targetMeta?.aiTool || parent.aiTool || 'ChatGPT';
+    const splitModel = targetMeta?.model || parent.model || getDefaultImageModel(splitTool, settings.toolDetails);
+    const dims = await getImageDimensions(targetUrl);
+    const newImage: ImagePrompt = {
+      id: generateId(),
+      url: targetUrl,
+      urls: [targetUrl],
+      prompt: parent.prompt || '',
+      aiTool: splitTool,
+      aiTools: [splitTool],
+      model: splitModel,
+      imageMetas: [{
+        url: targetUrl,
+        aiTool: splitTool,
+        aiTools: [splitTool],
+        model: splitModel,
+        ...(dims || {})
+      }],
+      ...(dims || {})
+    };
+
+    setImages(prev => {
+      const copy = [...prev];
+      copy.splice(promptIdx + 1, 0, newImage);
+      return copy;
+    });
+    showToast('Image moved to a new prompt block with its selected tool and model preserved.');
+  };
+
+  const updateAttachedImageTool = (promptIdx: number, imgIndex: number, newTool: string) => {
+    const parent = images[promptIdx];
+    if (!parent) return;
+    const metas = getPromptImageMetas(parent, settings.toolDetails);
+    const currentMeta = metas[imgIndex] || { url: (parent.urls && parent.urls[imgIndex]) || parent.url || '' };
+    const defaultModel = getDefaultImageModel(newTool, settings.toolDetails);
+    
+    const updatedMetas = [...metas];
+    updatedMetas[imgIndex] = {
+      ...currentMeta,
+      aiTool: newTool,
+      aiTools: [newTool],
+      model: defaultModel
+    };
+
+    const allTools = Array.from(new Set(updatedMetas.flatMap(m => m.aiTools || [m.aiTool]).filter((t): t is string => Boolean(t))));
+    const isPrimary = imgIndex === 0;
+
+    updateImage(promptIdx, {
+      imageMetas: updatedMetas,
+      aiTools: allTools,
+      ...(isPrimary ? { aiTool: newTool, model: defaultModel } : {})
+    });
+  };
+
+  const updateAttachedImageModel = (promptIdx: number, imgIndex: number, newModel: string) => {
+    const parent = images[promptIdx];
+    if (!parent) return;
+    const metas = getPromptImageMetas(parent, settings.toolDetails);
+    const currentMeta = metas[imgIndex] || { url: (parent.urls && parent.urls[imgIndex]) || parent.url || '' };
+    
+    const updatedMetas = [...metas];
+    updatedMetas[imgIndex] = {
+      ...currentMeta,
+      model: newModel
+    };
+
+    const isPrimary = imgIndex === 0;
+    updateImage(promptIdx, {
+      imageMetas: updatedMetas,
+      ...(isPrimary ? { model: newModel } : {})
+    });
+  };
+
+  const handleAttachedModelSelect = (
+    promptIdx: number,
+    imgIndex: number,
+    value: string,
+    availableModels: string[] = DEFAULT_MODEL_OPTIONS
+  ) => {
+    const parent = images[promptIdx];
+    if (!parent) return;
+    const metas = getPromptImageMetas(parent, settings.toolDetails);
+    const currentMeta = metas[imgIndex];
+    const tool = currentMeta?.aiTool || parent.aiTool || 'ChatGPT';
+
+    if (value === AUTO_MODEL_VALUE) {
+      updateAttachedImageModel(promptIdx, imgIndex, getDefaultImageModel(tool, settings.toolDetails));
+      return;
+    }
+    if (value === CUSTOM_MODEL_VALUE) {
+      updateAttachedImageModel(
+        promptIdx,
+        imgIndex,
+        availableModels.includes(currentMeta?.model || '') ? '' : currentMeta?.model || ''
+      );
+      return;
+    }
+    updateAttachedImageModel(promptIdx, imgIndex, value);
   };
 
   // "Use as thumbnail": re-encode the chosen prompt image at thumbnail size into
@@ -2326,71 +2583,90 @@ function AdminInner() {
     }
   };
 
-  const handleSavePost = async () => {
-    if (!thumbnailUrl) {
-      showToast('Thumbnail URL is required', 'error');
-      return;
+  const handleSavePost = async (overrideStatus?: 'published' | 'draft' | 'pending') => {
+    if (isSavingPost) return;
+
+    const targetStatus = overrideStatus || status;
+    const isDraft = targetStatus === 'draft';
+
+    // Mandatory field validation: only enforced for published/pending posts, NOT drafts!
+    if (!isDraft) {
+      const resolvedThumb = thumbnailUrl || images.find(i => i.url)?.url || '';
+      if (!resolvedThumb) {
+        showToast('Thumbnail image is required to publish.', 'error');
+        return;
+      }
+      if (!title.trim()) {
+        showToast('Post title is required to publish.', 'error');
+        return;
+      }
     }
 
-    const finalSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || generateId();
+    let finalSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || `post-${generateId()}`;
 
     // Check for duplicate slugs
     const slugInUse = posts.some(p => p.slug === finalSlug && p.id !== (editingPost?.id || ''));
     if (slugInUse) {
-      showToast('This slug is already in use. Please choose a different one.', 'error');
-      return;
+      if (isDraft) {
+        finalSlug = `${finalSlug}-${generateId().slice(0, 4)}`;
+      } else {
+        showToast('This slug is already in use. Please choose a different one.', 'error');
+        return;
+      }
     }
 
     const postId = editingPost?.id || generateId();
     const isFinished = title.trim() !== '' && description.trim() !== '' && images.length > 0 && images.some(i => i.url || i.prompt);
-    let finalStatus = status;
-    if (!isFinished && status === 'published') {
+    let finalStatus = targetStatus;
+    if (!isDraft && !isFinished && targetStatus === 'published') {
       finalStatus = 'draft';
     }
 
-    let resolvedHeroPalette = heroPalette;
-    if (!resolvedHeroPalette && thumbnailUrl && !thumbnailUrl.startsWith('Uploading')) {
-      resolvedHeroPalette = await extractHeroPalette(getThumbnailImageUrl(thumbnailUrl, { width: 64, quality: 50 }));
-      if (resolvedHeroPalette) setHeroPalette(resolvedHeroPalette);
-    }
-
-    const post: any = {
-      id: postId,
-      slug: finalSlug,
-      title: title || 'Untitled Post',
-      description: description || '',
-      extendedDescription: extendedDescription || '',
-      schemaType: schemaType || undefined,
-      faqs: faqs
-        .map(item => ({ question: item.question.trim(), answer: item.answer.trim() }))
-        .filter(item => item.question && item.answer),
-      thumbnailUrl,
-      thumbnailWidth: thumbnailWidth || undefined,
-      thumbnailHeight: thumbnailHeight || undefined,
-      heroPalette: resolvedHeroPalette,
-      referenceImages: referenceImages.filter(Boolean),
-      images: images.filter(i => i.url || i.prompt || i.aiTool),
-      tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
-      category: category || undefined,
-      categories: categoriesStr.split(',').map(c => c.trim()).filter(Boolean),
-      aiTools: selectedAiTools,
-      authorId: editingPost?.authorId,
-      authorName: editingPost?.authorName,
-      authorUsername: editingPost?.authorUsername,
-      authorAvatar: editingPost?.authorAvatar,
-      featured,
-      featuredAt: featured ? ((editingPost?.featured && editingPost?.featuredAt) ? editingPost.featuredAt : new Date().toISOString()) : undefined,
-      views: editingPost?.views || 0,
-      likes: editingPost?.likes || 0,
-      likedByUser: editingPost?.likedByUser,
-      createdAt: editingPost?.createdAt || new Date().toISOString(),
-      status: finalStatus,
-      visibility,
-    };
-    if (seoTitle) post.seoTitle = seoTitle;
-    if (seoDescription) post.seoDescription = seoDescription;
+    setIsSavingPost(true);
 
     try {
+      let resolvedHeroPalette = heroPalette;
+      if (!resolvedHeroPalette && thumbnailUrl && !thumbnailUrl.startsWith('Uploading')) {
+        resolvedHeroPalette = await extractHeroPalette(getThumbnailImageUrl(thumbnailUrl, { width: 64, quality: 50 }));
+        if (resolvedHeroPalette) setHeroPalette(resolvedHeroPalette);
+      }
+
+      const post: any = {
+        id: postId,
+        slug: finalSlug,
+        title: title.trim() || (isDraft ? 'Untitled Draft' : 'Untitled Post'),
+        description: description || '',
+        extendedDescription: extendedDescription || '',
+        schemaType: schemaType || undefined,
+        faqs: faqs
+          .map(item => ({ question: item.question.trim(), answer: item.answer.trim() }))
+          .filter(item => item.question && item.answer),
+        thumbnailUrl: thumbnailUrl || images.find(i => i.url)?.url || '',
+        thumbnailWidth: thumbnailWidth || undefined,
+        thumbnailHeight: thumbnailHeight || undefined,
+        heroPalette: resolvedHeroPalette,
+        referenceImages: referenceImages.filter(Boolean),
+        images: images.filter(i => i.url || i.prompt || i.aiTool).map(normalizeImageModel),
+        tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
+        category: category || undefined,
+        categories: categoriesStr.split(',').map(c => c.trim()).filter(Boolean),
+        aiTools: selectedAiTools,
+        authorId: editingPost?.authorId,
+        authorName: editingPost?.authorName,
+        authorUsername: editingPost?.authorUsername,
+        authorAvatar: editingPost?.authorAvatar,
+        featured,
+        featuredAt: featured ? ((editingPost?.featured && editingPost?.featuredAt) ? editingPost.featuredAt : new Date().toISOString()) : undefined,
+        views: editingPost?.views || 0,
+        likes: editingPost?.likes || 0,
+        likedByUser: editingPost?.likedByUser,
+        createdAt: editingPost?.createdAt || new Date().toISOString(),
+        status: finalStatus,
+        visibility: isDraft ? 'private' : visibility,
+      };
+      if (seoTitle) post.seoTitle = seoTitle;
+      if (seoDescription) post.seoDescription = seoDescription;
+
       if (featured) {
         const otherFeatured = posts.filter(p => p.id !== postId && p.featured);
         if (otherFeatured.length >= 6) {
@@ -2411,7 +2687,7 @@ function AdminInner() {
         await updatePost(post);
       }
 
-    // Update custom sections - add/remove post from sections
+      // Update custom sections - add/remove post from sections
       for (const section of customSections) {
         const wasAssigned = section.postIds?.includes(postId) || false;
         const isAssigned = assignedSections.includes(section.id);
@@ -2424,12 +2700,19 @@ function AdminInner() {
 
       await loadAdminData();
       closePostForm();
-      showToast(!isFinished && status === 'published'
-        ? 'Post saved as draft because some required fields (title, description, or images) are missing.'
-        : 'Post saved successfully.', !isFinished && status === 'published' ? 'info' : 'success');
+
+      if (isDraft) {
+        showToast('Draft saved successfully.', 'success');
+      } else if (!isFinished && targetStatus === 'published') {
+        showToast('Post saved as draft because some required fields (title, description, or images) are missing.', 'info');
+      } else {
+        showToast(editingPost ? 'Post updated successfully.' : 'Post created successfully.', 'success');
+      }
     } catch (error: any) {
       console.error('Failed to save post:', error);
       showToast(`Failed to save post: ${error?.message || 'Unknown error'}`, 'error');
+    } finally {
+      setIsSavingPost(false);
     }
   };
 
@@ -4187,9 +4470,19 @@ function AdminInner() {
             <div className="max-w-3xl">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold">{editingPost ? 'Edit Post' : 'Create New Post'}</h2>
-                <button onClick={closePostForm} className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800">
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <ActionButton
+                    onClick={() => handleSavePost()}
+                    disabled={isSavingPost}
+                    className="py-1.5 px-3 text-xs gap-1.5"
+                  >
+                    {isSavingPost ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    {isSavingPost ? 'Saving...' : (status === 'draft' ? 'Save draft' : editingPost ? 'Update' : 'Publish')}
+                  </ActionButton>
+                  <button onClick={closePostForm} disabled={isSavingPost} className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 disabled:opacity-50">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="mb-8 p-5 bg-primary-500/10 dark:bg-primary-500/[0.08] border border-primary-500/25 dark:border-primary-400/20 rounded-2xl backdrop-blur-xl shadow-sm space-y-4">
@@ -4793,15 +5086,21 @@ function AdminInner() {
 
                 {/* Images */}
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-sm font-medium flex items-center gap-2">
-                      <ImageIcon className="w-4 h-4" /> Images & Prompts *
-                    </label>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                    <div>
+                      <label className="text-sm font-bold flex items-center gap-2 text-surface-900 dark:text-white">
+                        <ImageIcon className="w-4 h-4 text-primary-500" /> Prompts & Images *
+                      </label>
+                      <p className="text-[11px] text-surface-500">
+                        Each prompt block has its own tool, model, and prompt text. Click &quot;+ Add Prompt Item&quot; to add an image generated by a different tool.
+                      </p>
+                    </div>
                     <button
+                      type="button"
                       onClick={addImageField}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-500/10 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400 text-xs font-bold hover:bg-primary-500/20 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-500 text-white text-xs font-bold hover:bg-primary-600 shadow-sm transition-colors shrink-0"
                     >
-                      <Plus className="w-3.5 h-3.5" /> Add Image
+                      <Plus className="w-3.5 h-3.5" /> Add Prompt Item
                     </button>
                   </div>
 
@@ -4809,106 +5108,50 @@ function AdminInner() {
                     {images.map((img, idx) => (
                       <div key={img.id} className="p-5 rounded-2xl border border-white/80 dark:border-white/10 bg-white/50 dark:bg-white/[0.05] backdrop-blur-md shadow-sm space-y-3">
                         <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-semibold text-surface-400 flex items-center gap-1.5">
-                            <ImageIcon className="w-3 h-3" /> Image #{idx + 1}
+                          <span className="text-xs font-bold text-surface-700 dark:text-surface-300 flex items-center gap-1.5">
+                            <ImageIcon className="w-3.5 h-3.5 text-primary-500" /> Prompt #{idx + 1}
                           </span>
-                          <button onClick={() => removeImage(idx)} className="text-red-400 hover:text-red-500">
+                          <button onClick={() => removeImage(idx)} className="text-red-400 hover:text-red-500 p-1" title="Delete prompt block">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                          <div>
-                            <label className="block text-xs text-surface-400 mb-1">Add Images (URL or Multi-Upload)</label>
-                            <div className="flex gap-2">
+                        <div className="mb-3">
+                          <label className="block text-xs text-surface-400 mb-1">Add Image URL or Upload (Variations for Prompt #{idx + 1})</label>
+                          <div className="flex gap-2">
+                            <input
+                              value={img.url}
+                              onChange={e => updateImage(idx, 'url', e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  addPromptImageUrl(idx, img.url);
+                                }
+                              }}
+                              className="flex-1 px-3 py-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-xs"
+                              placeholder="https://... (Press Enter to add)"
+                            />
+                            <button 
+                              type="button" 
+                              onClick={() => setMediaLibraryCallback(() => (url: string) => addPromptImageUrl(idx, url))}
+                              className="p-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] cursor-pointer hover:border-primary-500 transition-colors shrink-0"
+                              title="Choose from Library"
+                            >
+                              <ImageIcon className="w-3.5 h-3.5 text-surface-400" />
+                            </button>
+                            <label className="p-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] cursor-pointer hover:border-primary-500 transition-colors shrink-0 flex items-center gap-1">
+                              <Upload className="w-3.5 h-3.5 text-surface-400" />
                               <input
-                                value={img.url}
-                                onChange={e => updateImage(idx, 'url', e.target.value)}
-                                onKeyDown={e => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    addPromptImageUrl(idx, img.url);
-                                  }
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="hidden"
+                                onChange={e => {
+                                  const files = Array.from(e.target.files || []);
+                                  if (files.length > 0) handlePromptImagesUpload(idx, files);
                                 }}
-                                className="flex-1 px-3 py-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] outline-none focus:border-primary-500 text-xs"
-                                placeholder="https://... (Press Enter to add)"
                               />
-                              <button 
-                                type="button" 
-                                onClick={() => setMediaLibraryCallback(() => (url: string) => addPromptImageUrl(idx, url))}
-                                className="p-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] cursor-pointer hover:border-primary-500 transition-colors shrink-0"
-                                title="Choose from Library"
-                              >
-                                <ImageIcon className="w-3.5 h-3.5 text-surface-400" />
-                              </button>
-                              <label className="p-2 rounded-xl border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] cursor-pointer hover:border-primary-500 transition-colors shrink-0 flex items-center gap-1">
-                                <Upload className="w-3.5 h-3.5 text-surface-400" />
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  multiple
-                                  className="hidden"
-                                  onChange={e => {
-                                    const files = Array.from(e.target.files || []);
-                                    if (files.length > 0) handlePromptImagesUpload(idx, files);
-                                  }}
-                                />
-                              </label>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="col-span-2">
-                              <label className="block text-xs text-surface-400 mb-1">AI Tools</label>
-                              <div className="flex flex-wrap gap-2">
-                                {(settings.aiTools || []).map(tool => {
-                                  const isSelected = img.aiTools ? img.aiTools.includes(tool) : img.aiTool === tool;
-                                  return (
-                                    <label key={tool} className="flex items-center gap-1.5 cursor-pointer border border-black/[0.08] bg-white/80 dark:border-white/10 dark:bg-white/[0.06] px-2.5 py-1.5 rounded-xl text-xs hover:bg-white dark:hover:bg-white/10 transition-colors">
-                                      <input
-                                        type="checkbox"
-                                        checked={isSelected}
-                                        onChange={(e) => {
-                                          let newTools = img.aiTools ? [...img.aiTools] : [img.aiTool].filter(Boolean);
-                                          if (e.target.checked && !newTools.includes(tool)) newTools.push(tool);
-                                          else newTools = newTools.filter(t => t !== tool);
-                                          updateImage(idx, {
-                                            aiTools: newTools,
-                                            aiTool: newTools[0] || '',
-                                            model: getImageModelForTools(newTools, img.model)
-                                          });
-                                        }}
-                                        className="w-3.5 h-3.5 rounded text-primary-500 focus:ring-primary-500"
-                                      />
-                                      {tool}
-                                    </label>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                            <div className="col-span-2">
-                              <label className="block text-xs text-surface-400 mb-1">Model</label>
-                              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                                <AdminSelect
-                                  value={getModelSelectValue(img.model)}
-                                  onChange={v => handleModelSelect(idx, img, v)}
-                                  className="w-full rounded-xl border border-black/[0.08] bg-white/80 px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-white/10 dark:bg-white/[0.06]"
-                                >
-                                  <option value={AUTO_MODEL_VALUE}>Auto default</option>
-                                  {DEFAULT_MODEL_OPTIONS.map(model => (
-                                    <option key={model} value={model}>{model}</option>
-                                  ))}
-                                  <option value={CUSTOM_MODEL_VALUE}>Custom</option>
-                                </AdminSelect>
-                                {getModelSelectValue(img.model) === CUSTOM_MODEL_VALUE && (
-                                  <input
-                                    value={img.model || ''}
-                                    onChange={e => updateImage(idx, 'model', e.target.value)}
-                                    placeholder="Custom model"
-                                    className="w-full rounded-xl border border-black/[0.08] bg-white/80 px-3 py-2 text-xs outline-none focus:border-primary-500 dark:border-white/10 dark:bg-white/[0.06]"
-                                  />
-                                )}
-                              </div>
-                            </div>
+                            </label>
                           </div>
                         </div>
 
@@ -4923,23 +5166,38 @@ function AdminInner() {
                           />
                         </div>
 
-                        {/* Multi-Image Thumbnails Gallery */}
+                        {/* Multi-Image Thumbnails Gallery with Per-Image Tool & Model Controls */}
                         {(() => {
                           const promptUrls = (img.urls && img.urls.length > 0 ? img.urls : [img.url]).filter(Boolean);
                           if (promptUrls.length === 0) return null;
+                          const promptMetas = getPromptImageMetas(img, settings.toolDetails);
                           return (
                             <div className="mt-3">
-                              <label className="block text-[11px] font-semibold text-surface-400 mb-1.5 uppercase tracking-wider">
-                                Attached Images ({promptUrls.length}) — First is Cover
-                              </label>
-                              <div className="flex flex-wrap gap-2.5">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <label className="block text-[11px] font-semibold text-surface-400 uppercase tracking-wider">
+                                  Gallery Images & Settings ({promptUrls.length}) — First is Cover
+                                </label>
+                                <span className="text-[10px] text-surface-400">
+                                  Selected tool & model apply per image
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-3">
                                 {promptUrls.map((u, imgIndex) => {
                                   const isUploading = u === 'Uploading...';
                                   const isCover = imgIndex === 0;
+                                  const currentMeta = promptMetas[imgIndex] || {
+                                    url: u,
+                                    aiTool: img.aiTool || (settings.aiTools && settings.aiTools[0]) || 'ChatGPT',
+                                    aiTools: [img.aiTool || (settings.aiTools && settings.aiTools[0]) || 'ChatGPT'],
+                                    model: img.model || ''
+                                  };
+                                  const toolModels = getToolModels(currentMeta.aiTool, settings.toolDetails);
+                                  const availableModels = toolModels.length > 0 ? toolModels : DEFAULT_MODEL_OPTIONS;
+
                                   return (
                                     <div 
                                       key={imgIndex} 
-                                      className={`flex flex-col w-32 sm:w-36 rounded-xl border bg-white/70 dark:bg-white/[0.04] p-1.5 shadow-sm transition-all ${
+                                      className={`flex flex-col w-44 sm:w-52 rounded-2xl border bg-white/80 dark:bg-white/[0.05] p-2 shadow-sm transition-all ${
                                         isCover 
                                           ? 'border-primary-500/60 ring-2 ring-primary-500/20' 
                                           : 'border-black/[0.08] dark:border-white/10 hover:border-black/20 dark:hover:border-white/20'
@@ -4947,7 +5205,7 @@ function AdminInner() {
                                     >
                                       {/* Clean Image Preview (Zero Overlays Blocking View) */}
                                       <div 
-                                        className="relative w-full aspect-square rounded-lg overflow-hidden border border-black/5 dark:border-white/5 bg-surface-100 dark:bg-surface-800 shrink-0 group/img cursor-pointer"
+                                        className="relative w-full aspect-square rounded-xl overflow-hidden border border-black/5 dark:border-white/5 bg-surface-100 dark:bg-surface-800 shrink-0 group/img cursor-pointer"
                                         onClick={() => !isUploading && window.open(u, '_blank')}
                                         title={isUploading ? 'Uploading...' : 'Click to preview full image'}
                                       >
@@ -4963,11 +5221,11 @@ function AdminInner() {
                                               alt={`Attached ${imgIndex + 1}`} 
                                               fill 
                                               className="object-cover transition-transform duration-200 group-hover/img:scale-105" 
-                                              sizes="(max-width: 640px) 128px, 144px" 
+                                              sizes="(max-width: 640px) 176px, 208px" 
                                               referrerPolicy="no-referrer" 
                                             />
                                             {isCover && (
-                                              <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-primary-600/90 text-white text-[8px] font-bold uppercase tracking-wider shadow-xs pointer-events-none backdrop-blur-xs">
+                                              <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-primary-600/90 text-white text-[9px] font-bold uppercase tracking-wider shadow-sm pointer-events-none backdrop-blur-xs">
                                                 Cover
                                               </span>
                                             )}
@@ -4975,9 +5233,54 @@ function AdminInner() {
                                         )}
                                       </div>
 
+                                      {/* Per-Image Tool & Model Settings */}
+                                      {!isUploading && (
+                                        <div className="mt-2 space-y-1.5">
+                                          <div>
+                                            <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-0.5">
+                                              AI Tool
+                                            </label>
+                                            <AdminSelect
+                                              value={currentMeta.aiTool || (settings.aiTools && settings.aiTools[0]) || 'ChatGPT'}
+                                              onChange={v => updateAttachedImageTool(idx, imgIndex, v)}
+                                              className="w-full text-xs py-1 px-2 rounded-lg border border-black/[0.08] dark:border-white/10 bg-white/90 dark:bg-surface-800 outline-none focus:border-primary-500"
+                                            >
+                                              {(settings.aiTools || []).map(t => (
+                                                <option key={t} value={t}>{t}</option>
+                                              ))}
+                                            </AdminSelect>
+                                          </div>
+
+                                          <div>
+                                            <label className="block text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-0.5">
+                                              Model
+                                            </label>
+                                            <AdminSelect
+                                              value={getModelSelectValue(currentMeta.model, availableModels)}
+                                              onChange={v => handleAttachedModelSelect(idx, imgIndex, v, availableModels)}
+                                              className="w-full text-xs py-1 px-2 rounded-lg border border-black/[0.08] dark:border-white/10 bg-white/90 dark:bg-surface-800 outline-none focus:border-primary-500"
+                                            >
+                                              <option value={AUTO_MODEL_VALUE}>Auto default</option>
+                                              {availableModels.map(m => (
+                                                <option key={m} value={m}>{m}</option>
+                                              ))}
+                                              <option value={CUSTOM_MODEL_VALUE}>Custom</option>
+                                            </AdminSelect>
+                                            {getModelSelectValue(currentMeta.model, availableModels) === CUSTOM_MODEL_VALUE && (
+                                              <input
+                                                value={currentMeta.model || ''}
+                                                onChange={e => updateAttachedImageModel(idx, imgIndex, e.target.value)}
+                                                placeholder="Custom model"
+                                                className="w-full mt-1 text-xs py-1 px-2 rounded-lg border border-black/[0.08] dark:border-white/10 bg-white/90 dark:bg-surface-800 outline-none focus:border-primary-500"
+                                              />
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+
                                       {/* Action Controls Outside of the Image */}
                                       {!isUploading && (
-                                        <div className="flex items-center gap-1 mt-1.5 w-full">
+                                        <div className="flex items-center gap-1 mt-2 pt-2 border-t border-black/[0.06] dark:border-white/10 w-full">
                                           {!isCover && (
                                             <button
                                               type="button"
@@ -4996,6 +5299,16 @@ function AdminInner() {
                                           >
                                             ✦ Thumb
                                           </button>
+                                          {promptUrls.length > 1 && (
+                                            <button
+                                              type="button"
+                                              onClick={() => splitPromptImageToNewPrompt(idx, imgIndex)}
+                                              className="flex-1 py-1 px-1 rounded-md bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-colors active:scale-95"
+                                              title="Move this image into its own separate prompt block so it can have a different tool, model, and prompt"
+                                            >
+                                              ⇄ Split
+                                            </button>
+                                          )}
                                           <button
                                             type="button"
                                             onClick={() => removePromptImageUrl(idx, imgIndex)}
@@ -5018,11 +5331,41 @@ function AdminInner() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3 pt-4">
-                  <ActionButton onClick={handleSavePost} className="flex-1 py-2.5 sm:flex-none">
-                    <Save className="w-4 h-4" /> {editingPost ? 'Update post' : 'Create post'}
+                <div className="flex flex-wrap items-center gap-3 pt-4">
+                  <ActionButton
+                    onClick={() => handleSavePost()}
+                    disabled={isSavingPost}
+                    className="flex-1 py-2.5 sm:flex-none gap-2 min-w-[140px]"
+                  >
+                    {isSavingPost ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )}
+                    {isSavingPost
+                      ? (status === 'draft' ? 'Saving draft...' : editingPost ? 'Updating...' : 'Publishing...')
+                      : (status === 'draft' ? (editingPost ? 'Update draft' : 'Save draft') : (editingPost ? 'Update post' : 'Create post'))}
                   </ActionButton>
-                  <ActionButton variant="outline" onClick={closePostForm} className="flex-1 py-2.5 sm:flex-none">
+
+                  {status !== 'draft' && (
+                    <ActionButton
+                      variant="outline"
+                      type="button"
+                      onClick={() => handleSavePost('draft')}
+                      disabled={isSavingPost}
+                      className="flex-1 py-2.5 sm:flex-none gap-2"
+                    >
+                      <FileText className="w-4 h-4" /> Save as draft
+                    </ActionButton>
+                  )}
+
+                  <ActionButton
+                    variant="outline"
+                    type="button"
+                    onClick={closePostForm}
+                    disabled={isSavingPost}
+                    className="flex-1 py-2.5 sm:flex-none"
+                  >
                     Cancel
                   </ActionButton>
                 </div>
@@ -6452,6 +6795,8 @@ function AdminInner() {
                 <div className="flex flex-wrap gap-2">
                   {[
                     { id: 'explore', label: 'Explore Page', icon: Compass },
+                    { id: 'blog', label: 'Blog Page', icon: BookOpen },
+                    { id: 'guides', label: 'Guides Page', icon: Newspaper },
                     { id: 'tool', label: 'AI Tool Pages', icon: Cpu },
                     { id: 'tag', label: 'Tag Pages', icon: Tag },
                   ].map(tab => {
@@ -6617,6 +6962,206 @@ function AdminInner() {
                           checked={discoveryPages.showHeroStats ?? true}
                           onChange={(checked) => setDiscoveryPages(prev => ({ ...prev, showHeroStats: checked }))}
                         />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Blog Page Tab View */}
+                  {discoveryTab === 'blog' && (
+                    <>
+                      {/* Header */}
+                      <div className="flex items-start gap-4 pb-4 border-b border-surface-100 dark:border-surface-800">
+                        <div className="w-11 h-11 rounded-xl bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold shrink-0">
+                          <BookOpen className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2.5">
+                            <h3 className="font-bold text-base text-surface-900 dark:text-white">Blog Page</h3>
+                            <span className="px-2 py-0.5 text-xs font-semibold rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">/blog</span>
+                          </div>
+                          <p className="text-xs text-surface-500 mt-0.5">Controls /blog — your main articles & insights landing page</p>
+                        </div>
+                      </div>
+
+                      {/* Hero Controls */}
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Hero badge</label>
+                            <input
+                              value={discoveryPages.blogBadge || ''}
+                              onChange={e => setDiscoveryPages(prev => ({ ...prev, blogBadge: e.target.value }))}
+                              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
+                              placeholder="Blog"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Hero heading</label>
+                            <textarea rows={2}
+                              value={discoveryPages.blogTitle || ''}
+                              onChange={e => setDiscoveryPages(prev => ({ ...prev, blogTitle: e.target.value }))}
+                              className="resize-y w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
+                              placeholder="The AI Prompting Blog"
+                            />
+                            <CharCount value={discoveryPages.blogTitle || ''} recommended={60} />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Hero description</label>
+                          <textarea
+                            value={discoveryPages.blogDescription || ''}
+                            onChange={e => setDiscoveryPages(prev => ({ ...prev, blogDescription: e.target.value }))}
+                            rows={2}
+                            className={`${adminInputOnCard} min-h-[80px] resize-y`}
+                            placeholder="Techniques, comparisons, and plain-English explanations that make your AI images better — written for creators, not researchers."
+                          />
+                          <CharCount value={discoveryPages.blogDescription || ''} recommended={160} />
+                        </div>
+                      </div>
+
+                      {/* SEO & Social Card */}
+                      <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-surface-50/50 dark:bg-surface-800/30 space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 flex items-center justify-center text-primary-500 shrink-0">
+                            <Info className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-sm text-surface-900 dark:text-white">SEO & social</h4>
+                            <p className="text-xs text-surface-500">Meta tags for /blog</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Meta title</label>
+                            <textarea rows={2}
+                              value={discoveryPages.blogSeoTitle || ''}
+                              onChange={e => setDiscoveryPages(prev => ({ ...prev, blogSeoTitle: e.target.value }))}
+                              className="resize-y w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
+                              placeholder="AI Prompting Blog"
+                            />
+                            <CharCount value={discoveryPages.blogSeoTitle || ''} recommended={60} />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">OG image URL</label>
+                            <input
+                              value={discoveryPages.blogOgImage || ''}
+                              onChange={e => setDiscoveryPages(prev => ({ ...prev, blogOgImage: e.target.value }))}
+                              className="w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
+                              placeholder="https://... or /og-image.webp"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Meta description</label>
+                          <textarea
+                            value={discoveryPages.blogSeoDescription || ''}
+                            onChange={e => setDiscoveryPages(prev => ({ ...prev, blogSeoDescription: e.target.value }))}
+                            rows={2}
+                            className={`${adminInput} min-h-[70px] resize-y`}
+                            placeholder="Practical articles on writing better AI image prompts — techniques, tool comparisons, trends, and how image generation actually works."
+                          />
+                          <CharCount value={discoveryPages.blogSeoDescription || ''} recommended={160} />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Guides Page Tab View */}
+                  {discoveryTab === 'guides' && (
+                    <>
+                      {/* Header */}
+                      <div className="flex items-start gap-4 pb-4 border-b border-surface-100 dark:border-surface-800">
+                        <div className="w-11 h-11 rounded-xl bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold shrink-0">
+                          <Newspaper className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2.5">
+                            <h3 className="font-bold text-base text-surface-900 dark:text-white">Guides Page</h3>
+                            <span className="px-2 py-0.5 text-xs font-semibold rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">/guides</span>
+                          </div>
+                          <p className="text-xs text-surface-500 mt-0.5">Controls /guides — your step-by-step tutorials & walkthroughs</p>
+                        </div>
+                      </div>
+
+                      {/* Hero Controls */}
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Hero badge</label>
+                            <input
+                              value={discoveryPages.guidesBadge || ''}
+                              onChange={e => setDiscoveryPages(prev => ({ ...prev, guidesBadge: e.target.value }))}
+                              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
+                              placeholder="Guides"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Hero heading</label>
+                            <textarea rows={2}
+                              value={discoveryPages.guidesTitle || ''}
+                              onChange={e => setDiscoveryPages(prev => ({ ...prev, guidesTitle: e.target.value }))}
+                              className="resize-y w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-800 text-surface-900 dark:text-white"
+                              placeholder="AI Prompt Guides"
+                            />
+                            <CharCount value={discoveryPages.guidesTitle || ''} recommended={60} />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Hero description</label>
+                          <textarea
+                            value={discoveryPages.guidesDescription || ''}
+                            onChange={e => setDiscoveryPages(prev => ({ ...prev, guidesDescription: e.target.value }))}
+                            rows={2}
+                            className={`${adminInputOnCard} min-h-[80px] resize-y`}
+                            placeholder="Follow-along tutorials that take you from a blank prompt box to a finished image — viral trends, photo edits, and professional results included."
+                          />
+                          <CharCount value={discoveryPages.guidesDescription || ''} recommended={160} />
+                        </div>
+                      </div>
+
+                      {/* SEO & Social Card */}
+                      <div className="p-5 rounded-xl border border-surface-200 dark:border-surface-800 bg-surface-50/50 dark:bg-surface-800/30 space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700 flex items-center justify-center text-primary-500 shrink-0">
+                            <Info className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-sm text-surface-900 dark:text-white">SEO & social</h4>
+                            <p className="text-xs text-surface-500">Meta tags for /guides</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Meta title</label>
+                            <textarea rows={2}
+                              value={discoveryPages.guidesSeoTitle || ''}
+                              onChange={e => setDiscoveryPages(prev => ({ ...prev, guidesSeoTitle: e.target.value }))}
+                              className="resize-y w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
+                              placeholder="AI Prompt Guides & Tutorials"
+                            />
+                            <CharCount value={discoveryPages.guidesSeoTitle || ''} recommended={60} />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">OG image URL</label>
+                            <input
+                              value={discoveryPages.guidesOgImage || ''}
+                              onChange={e => setDiscoveryPages(prev => ({ ...prev, guidesOgImage: e.target.value }))}
+                              className="w-full rounded-xl border border-surface-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-surface-700 dark:bg-surface-900 text-surface-900 dark:text-white"
+                              placeholder="https://... or /og-image.webp"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-surface-600 dark:text-surface-400 mb-1.5">Meta description</label>
+                          <textarea
+                            value={discoveryPages.guidesSeoDescription || ''}
+                            onChange={e => setDiscoveryPages(prev => ({ ...prev, guidesSeoDescription: e.target.value }))}
+                            rows={2}
+                            className={`${adminInput} min-h-[70px] resize-y`}
+                            placeholder="Step-by-step AI image tutorials — trending photo styles, Gemini and ChatGPT walkthroughs, photo restoration, headshots, and more."
+                          />
+                          <CharCount value={discoveryPages.guidesSeoDescription || ''} recommended={160} />
+                        </div>
                       </div>
                     </>
                   )}
@@ -6975,7 +7520,7 @@ function AdminInner() {
                   <div className="pt-4 border-t border-surface-200 dark:border-surface-800 flex flex-wrap items-center justify-between gap-4">
                     <p className="text-xs text-surface-500">Changes apply to your live configuration.</p>
                     <ActionButton onClick={handleSaveSettings}>
-                      <Save className="w-4 h-4" /> Save {discoveryTab === 'explore' ? 'Explore' : discoveryTab === 'tool' ? 'AI Tool' : 'Tag'} page
+                      <Save className="w-4 h-4" /> Save {discoveryTab === 'explore' ? 'Explore' : discoveryTab === 'blog' ? 'Blog' : discoveryTab === 'guides' ? 'Guides' : discoveryTab === 'tool' ? 'AI Tool' : 'Tag'} page
                     </ActionButton>
                   </div>
                 </div>

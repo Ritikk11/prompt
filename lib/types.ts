@@ -1,5 +1,14 @@
 import type { ArticleIcon } from './content/types';
 
+export interface AttachedImageMeta {
+  url: string;
+  aiTool?: string;
+  aiTools?: string[];
+  model?: string;
+  width?: number;
+  height?: number;
+}
+
 export interface ImagePrompt {
   id: string;
   url: string;
@@ -8,11 +17,9 @@ export interface ImagePrompt {
   aiTool: string;
   aiTools?: string[];
   model?: string;
-  // Intrinsic pixel dimensions of the primary `url`. Used to reserve the layout
-  // box before the image loads (zero CLS) and to shape the loading shimmer to
-  // match the final image. Optional: legacy posts backfill lazily.
   width?: number;
   height?: number;
+  imageMetas?: AttachedImageMeta[];
 }
 
 export interface HeroPalette {
@@ -354,6 +361,18 @@ export interface DiscoveryPageSettings {
   exploreSeoTitle?: string;
   exploreSeoDescription?: string;
   exploreOgImage?: string;
+  blogBadge?: string;
+  blogTitle?: string;
+  blogDescription?: string;
+  blogSeoTitle?: string;
+  blogSeoDescription?: string;
+  blogOgImage?: string;
+  guidesBadge?: string;
+  guidesTitle?: string;
+  guidesDescription?: string;
+  guidesSeoTitle?: string;
+  guidesSeoDescription?: string;
+  guidesOgImage?: string;
   toolTitleTemplate?: string;
   toolDescriptionTemplate?: string;
   toolSeoTitleTemplate?: string;

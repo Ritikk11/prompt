@@ -17,7 +17,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import type { Post, PostClientMeta, SiteSettings } from '@/lib/types';
-import { getDefaultImageModel, getToolInfo, getAllTools } from '@/lib/constants';
+import { getDefaultImageModel, getToolInfo, getAllTools, getImageDisplayModel } from '@/lib/constants';
 import { isUserOwnedPost, EDITORIAL_TEAM_NAME } from '@/lib/authors';
 import { getThumbnailImageUrl } from '@/lib/image-url';
 import { getPostHeroImageProps } from '@/lib/post-image';
@@ -115,7 +115,7 @@ export default function PostContent({
       prompt: '',
       aiTool: img.aiTool,
       aiTools: img.aiTools,
-      model: img.model,
+      model: getImageDisplayModel(img, settings?.toolDetails),
       width: img.width,
       height: img.height,
     })),

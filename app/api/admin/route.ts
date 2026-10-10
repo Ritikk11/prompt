@@ -15,7 +15,7 @@ function getAllToolsFromPost(post: Partial<Post>) {
 
 // Content pages are ISR-cached; on-demand revalidation keeps them fresh right after an
 // admin edit instead of waiting for the time-based revalidate window to expire.
-function revalidateContent(resource: string, data: any, id?: string, admin?: any) {
+async function revalidateContent(resource: string, data: any, id?: string, admin?: any) {
   revalidatePath('/sitemap.xml');
   revalidatePath('/sitemap-main.xml');
   revalidatePath('/sitemap-prompts.xml');
@@ -33,7 +33,8 @@ function revalidateContent(resource: string, data: any, id?: string, admin?: any
 
     // Automatically purge all active SEO landing pages so the new post appears immediately without manual page edits
     if (admin) {
-      admin.from('seoPages').select('data').then(({ data: rows }: any) => {
+      try {
+        const { data: rows } = await admin.from('seoPages').select('data');
         (rows || []).forEach((row: any) => {
           const spSlug = row?.data?.slug;
           if (spSlug) {
@@ -41,7 +42,9 @@ function revalidateContent(resource: string, data: any, id?: string, admin?: any
             revalidatePath(`/page/${spSlug}`);
           }
         });
-      }).catch(() => {});
+      } catch (err) {
+        console.error('Failed to revalidate seoPages on post update:', err);
+      }
     }
     return;
   }
@@ -306,7 +309,7 @@ export async function POST(request: Request) {
     }
     const { error } = await admin.from(table).upsert({ id: rowId, data });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    revalidateContent(resource, data, rowId, admin);
+    await revalidateContent(resource, data, rowId, admin);
 
     // Auto-publish to Pinterest in background if post is published and auto-publish is enabled
     if (resource === 'posts' && data.status === 'published' && !data.pinterestPinId) {
@@ -340,7 +343,7 @@ export async function POST(request: Request) {
 
     const { error } = await admin.from(table).delete().eq('id', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    revalidateContent(resource, itemSlug ? { slug: itemSlug, id } : null, id, admin);
+    await revalidateContent(resource, itemSlug ? { slug: itemSlug, id } : null, id, admin);
     return NextResponse.json({ ok: true });
   }
 

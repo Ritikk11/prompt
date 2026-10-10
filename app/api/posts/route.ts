@@ -18,7 +18,7 @@ function getAllToolsFromPost(post: Partial<Post>) {
 
 // Only new/published submissions need on-demand revalidation. view/like/bookmark/comment
 // fire on nearly every page load — revalidating there would defeat ISR caching entirely.
-function revalidateNewPost(post: Post) {
+async function revalidateNewPost(post: Post) {
   const slug = post.slug || post.id;
   if (slug) revalidatePath(`/${slug}`);
   getAllToolsFromPost(post).forEach((tool) => revalidatePath(`/tool/${encodeURIComponent(tool.toLowerCase())}`));
@@ -30,14 +30,17 @@ function revalidateNewPost(post: Post) {
   revalidatePath('/api/posts');
 
   // Purge all SEO landing pages so the new post displays on them immediately
-  fetchSeoPages().then((pages) => {
+  try {
+    const pages = await fetchSeoPages();
     (pages || []).forEach((p: any) => {
       if (p?.slug) {
         revalidatePath(`/${p.slug}`);
         revalidatePath(`/page/${p.slug}`);
       }
     });
-  }).catch(() => {});
+  } catch (err) {
+    console.error('Failed to revalidate SEO pages on new post:', err);
+  }
 
   if (slug && isPublicPost(post)) {
     // Non-blocking IndexNow notification for newly published prompts
@@ -231,7 +234,7 @@ export async function POST(request: Request) {
     // switched to the submissions table.
     const { error } = await admin.from('posts').upsert({ id: cleanPost.id, data: cleanPost });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    if (cleanPost.status === 'published') revalidateNewPost(cleanPost);
+    if (cleanPost.status === 'published') await revalidateNewPost(cleanPost);
     return NextResponse.json({ ok: true, post: cleanPost });
   }
 

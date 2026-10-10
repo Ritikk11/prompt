@@ -167,7 +167,7 @@ const defaultSettings: SiteSettings = {
       "tools": true,
       "sections": true,
       "staticPages": true,
-      "articles": false
+      "articles": true
     },
     "bingVerification": "",
     "metaTitleTemplate": "%post_title% | PromptSoul",
@@ -201,7 +201,7 @@ const defaultSettings: SiteSettings = {
     "ChatGPT": {
       "logo": "/tool-logos/chatgpt.svg",
       "slug": "chatgpt",
-      "badge": "Optimized for GPT Image 2",
+      "badge": "Optimized for GPT Image 2.5",
       "color": "bg-green-500",
       "stats": [
         {
@@ -224,13 +224,13 @@ const defaultSettings: SiteSettings = {
         "Reference image support"
       ],
       "models": [
-        "GPT IMAGE 2"
+        "GPT IMAGE 2.5"
       ],
       "featured": true,
       "logoScale": 1,
       "showInHero": true,
-      "description": "Explore professionally written AI image prompts for ChatGPT GPT Image 2. Find prompt collections for realistic portraits, anime, illustrations, logos, product photography, concept art, cinematic scenes, and more to create high-quality AI images.",
-      "defaultModel": "GPT IMAGE 2",
+      "description": "Explore professionally written AI image prompts for ChatGPT GPT Image 2.5. Find prompt collections for realistic portraits, anime, illustrations, logos, product photography, concept art, cinematic scenes, and more to create high-quality AI images.",
+      "defaultModel": "GPT IMAGE 2.5",
       "showInFooter": true
     },
     "Qwen Image": {
@@ -302,10 +302,22 @@ const defaultSettings: SiteSettings = {
     "toolRailItems": [],
     "exploreOgImage": "",
     "exploreSeoTitle": "Premium AI Image Prompts for ChatGPT, Gemini & More | PromptSoul",
+    "blogBadge": "Blog",
+    "blogTitle": "The AI Prompting Blog",
+    "blogDescription": "Techniques, comparisons, and plain-English explanations that make your AI images better — written for creators, not researchers.",
+    "blogSeoTitle": "AI Prompting Blog",
+    "blogSeoDescription": "Practical articles on writing better AI image prompts — techniques, tool comparisons, trends, and how image generation actually works.",
+    "blogOgImage": "",
+    "guidesBadge": "Guides",
+    "guidesTitle": "AI Prompt Guides",
+    "guidesDescription": "Follow-along tutorials that take you from a blank prompt box to a finished image — viral trends, photo edits, and professional results included.",
+    "guidesSeoTitle": "AI Prompt Guides & Tutorials",
+    "guidesSeoDescription": "Step-by-step AI image tutorials — trending photo styles, Gemini and ChatGPT walkthroughs, photo restoration, headshots, and more.",
+    "guidesOgImage": "",
     "exploreRailItems": [
       {
         "type": "tool",
-        "label": "ChatGPT | GPT image 2",
+        "label": "ChatGPT | GPT image 2.5",
         "value": "ChatGPT"
       },
       {

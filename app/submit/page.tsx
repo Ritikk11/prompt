@@ -98,7 +98,7 @@ export default function SubmitPage() {
       );
       
       const defaultTool = getActiveTools(settings)[0] || 'ChatGPT';
-      setImages(prev => [...prev, { id: generateId(), url, prompt: '', aiTool: defaultTool, model: getImageModelForTools([defaultTool]) }]);
+      setImages(prev => [...prev, { id: generateId(), url, prompt: '', aiTool: defaultTool, model: getImageModelForTools([defaultTool], undefined, settings.toolDetails) }]);
       if (palette) setHeroPalette(current => current || palette);
     } catch (e: any) {
       showToast(e.message || "Error uploading image", 'error');
@@ -236,7 +236,7 @@ export default function SubmitPage() {
                               updateImage(idx, {
                                 aiTools: newTools,
                                 aiTool: newTools[0] || '',
-                                model: getImageModelForTools(newTools, img.model)
+                                model: getImageModelForTools(newTools, img.model, settings.toolDetails)
                               });
                             }}
                             className="w-3.5 h-3.5 rounded text-primary-500 focus:ring-primary-500"

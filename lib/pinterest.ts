@@ -1,4 +1,5 @@
 import type { Post, SiteSettings, PinterestSettings } from './types';
+import { getImageDisplayModel } from './constants';
 
 export const DEFAULT_PINTEREST_APP_ID = '1610432';
 export const DEFAULT_PINTEREST_BOARD_ID = '1124703775633314110';
@@ -284,7 +285,7 @@ export function formatPinterestTitle(post: Post): string {
 /**
  * Formats a Pinterest description (max 800 chars) with prompt details, hashtags, and model
  */
-export function formatPinterestDescription(post: Post): string {
+export function formatPinterestDescription(post: Post, toolDetails?: Record<string, any>): string {
   const parts: string[] = [];
 
   const mainDesc = post.description?.trim();
@@ -298,7 +299,7 @@ export function formatPinterestDescription(post: Post): string {
   }
 
   const tool = post.images?.[0]?.aiTool || post.aiTools?.[0] || 'AI';
-  const model = post.images?.[0]?.model;
+  const model = getImageDisplayModel(post.images?.[0] || {}, toolDetails);
   parts.push(model ? `Generated with: ${tool} (${model})` : `Generated with: ${tool}`);
 
   if (post.tags && post.tags.length > 0) {

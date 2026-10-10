@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Search, Home, Compass, FileQuestion } from 'lucide-react';
 
 export const metadata = {
-  title: '404 - Page Not Found | PromptSoul',
+  title: '404 - Page Not Found',
   description: "The page you are looking for doesn't exist or has been moved.",
 };
 
